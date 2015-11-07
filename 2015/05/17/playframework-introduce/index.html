@@ -1,0 +1,853 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="playframework,scala," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="好久没写博了，因为工作忙成狗了  →_→  ， 还有一个原因就在最近还在看scala in action这本书。 in action系列的就不用多介绍了，像我这种英文渣渣都能看的懂。 →_→。
+几个web框架说明一下：
+grails：工作上使用的框架，grails虽然开发也很快，但是是用groovy语言写的，不是很喜欢groovy。grails老是遇到一些莫名其妙的问题，之前还碰到过domain有">
+<meta property="og:type" content="article">
+<meta property="og:title" content="playframework简介">
+<meta property="og:url" content="http://fangjian0423.github.io/2015/05/17/playframework-introduce/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="好久没写博了，因为工作忙成狗了  →_→  ， 还有一个原因就在最近还在看scala in action这本书。 in action系列的就不用多介绍了，像我这种英文渣渣都能看的懂。 →_→。
+几个web框架说明一下：
+grails：工作上使用的框架，grails虽然开发也很快，但是是用groovy语言写的，不是很喜欢groovy。grails老是遇到一些莫名其妙的问题，之前还碰到过domain有">
+<meta property="og:updated_time" content="2015-11-07T08:26:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="playframework简介">
+<meta name="twitter:description" content="好久没写博了，因为工作忙成狗了  →_→  ， 还有一个原因就在最近还在看scala in action这本书。 in action系列的就不用多介绍了，像我这种英文渣渣都能看的懂。 →_→。
+几个web框架说明一下：
+grails：工作上使用的框架，grails虽然开发也很快，但是是用groovy语言写的，不是很喜欢groovy。grails老是遇到一些莫名其妙的问题，之前还碰到过domain有">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> playframework简介 | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                playframework简介
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-05-17T23:56:38+08:00" content="2015-05-17">
+              2015-05-17
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jvm/" itemprop="url" rel="index">
+                    <span itemprop="name">jvm</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/05/17/playframework-introduce/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/05/17/playframework-introduce/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><p>好久没写博了，因为工作忙成狗了  →_→  ， 还有一个原因就在最近还在看scala in action这本书。 in action系列的就不用多介绍了，像我这种英文渣渣都能看的懂。 →_→。</p>
+<p>几个web框架说明一下：</p>
+<p>grails：工作上使用的框架，grails虽然开发也很快，但是是用groovy语言写的，不是很喜欢groovy。grails老是遇到一些莫名其妙的问题，之前还碰到过domain有个enum类型的属性，使用ordinal映射，但是数据库中字段的类型。domain做query查询，debug居然提示Variable没有找到。后来在try catch块内找到了相对正确一点的error message。而且groovy语法感觉设计地很糟糕，完全不能跟scala对比。<br>SpringMVC：不用多说了，还看过源码，还是不错的。当年写java的时候的第一选择。虽然现在还在写 →_→。<br>Struts2：不想说了，不好用，不知道现在用的人还多不。<br>Playframework：java，scala都可以使用。跟grails一样，开发速度也很快。</p>
+<h2 id="Playframework简介">Playframework简介</h2><p>记录一下play常用的功能，做个笔记。</p>
+<p>从MVC角度分别说明一下。</p>
+<h3 id="Controller">Controller</h3><p>play的controller需要继承Controller，controller中的每个方法都是一个Action。一个Action本质上就是一个 (play.api.mvc.Request =&gt; play.api.mvc.Result) 函数，这个函数处理请求并生成对应的结果。</p>
+<p>1最简单的Controller：</p>
+<pre><code><span class="keyword">package</span> controllers
+
+<span class="keyword">import</span> play.api._
+<span class="keyword">import</span> play.api.mvc._
+
+<span class="class"><span class="keyword">object</span> <span class="title">Application</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Controller</span> {</span>
+
+  <span class="function"><span class="keyword">def</span> <span class="title">index</span> =</span> <span class="type">Action</span> {
+    <span class="type">Ok</span>(<span class="string">"This is index page"</span>)
+  }
+
+}
+</code></pre><p>index方法就是一个Action。Ok代表一个返回值为200的Response。</p>
+<p>Action可以带request参数：</p>
+<pre><code><span class="function"><span class="keyword">def</span> <span class="title">index</span></span> = <span class="constant">Action </span>{ request =&gt;
+    <span class="constant">Ok(</span><span class="string">"request: "</span> + request)
+}
+</code></pre><p>request可以加上implicit，这样其他的api也可以使用：</p>
+<pre><code>def <span class="built_in">index</span> = <span class="keyword">Action</span> { <span class="type">implicit</span> request =&gt;
+    Ok(<span class="string">"request: "</span> + request)
+}
+</code></pre><p>响应json：</p>
+<pre><code>val list = <span class="keyword">Action</span> { <span class="type">implicit</span> request =&gt;
+  val items = Item.findAll
+  render {
+    <span class="keyword">case</span> Accepts.Html() =&gt; Ok(views.html.list(items))
+    <span class="keyword">case</span> Accepts.Json() =&gt; Ok(Json.toJson(items))
+  }
+}
+</code></pre><p>除了Ok返回，还有一些其他封装好的方法(这些方法都是在play.api.mvc.Results中定义的)：</p>
+<pre><code>NotFound
+BadRequest
+InternalServerError
+<span class="keyword">Status</span>
+TODO // def <span class="built_in">index</span>(<span class="keyword">name</span>: String) = TODO
+Redirect
+</code></pre><p>还可以自定义header和response：</p>
+<pre><code><span class="function"><span class="keyword">def</span> <span class="title">index</span></span> = <span class="constant">Action </span>{
+    <span class="constant">Result(</span>
+        header = <span class="constant">ResponseHeader(</span><span class="number">200</span>, <span class="constant">Map(CONTENT_TYPE </span>-&gt; <span class="string">"text/plain"</span>)),
+        body = <span class="constant">Enumerator(</span><span class="string">"Hello World!"</span>.getBytes())
+    )
+}
+</code></pre><p><strong>controller中定义的方法如果想被http访问，需要在routes中定义路由规则和对应的controller中的方法</strong>。 这点是我不大爽的地方，项目一大，routes中的配置内容也会变多。</p>
+<pre><code>GET   /clients/:id          controllers.Clients.show(id: Long)
+GET   /items/$id&lt;[<span class="number">0</span>-<span class="number">9</span>]+&gt;    controllers.Items.show(id: Long)
+<span class="comment">// 默认值</span>
+GET   /clients              controllers.Clients.<span class="built_in">list</span>(page: Int ?= <span class="number">1</span>)
+<span class="comment">// Option类型的参数不需要一定传递</span>
+GET   /api/<span class="built_in">list</span>-all         controllers.Api.<span class="built_in">list</span>(version: Option[String])
+</code></pre><h3 id="View">View</h3><p>play的模板引擎中可以写一些scala代码。</p>
+<p>play的模板引擎会根据对应的模板文件，生成一个类，这个类有个apply方法。</p>
+<p>比如views目录下有个index.scala.html文件，play会生成一个views.html.index类。</p>
+<p>也可以使用views.html.index方法得到对应的html文本：</p>
+<pre><code>val <span class="attribute">content</span> = views<span class="class">.html</span><span class="class">.index</span>(c, o)
+</code></pre><p>一段简单的模板代码：</p>
+<pre><code><span class="comment">@(customer: Customer, orders: List[Order])</span>
+
+<span class="variable">&lt;h1&gt;</span>Welcome <span class="comment">@customer.name!&lt;/h1&gt;</span>
+
+<span class="variable">&lt;ul&gt;</span>
+<span class="comment">@for(order &lt;- orders) {</span>
+  <span class="variable">&lt;li&gt;</span><span class="comment">@order.title&lt;/li&gt;</span>
+}
+<span class="variable">&lt;/ul&gt;</span>
+</code></pre><p>一般模板文件第一行会定义参数。然后接下来就是具体的逻辑。</p>
+<p>play的模板引擎使用@来表示scala代码。之前例子的for循环就是使用了@。</p>
+<p>还有if：</p>
+<pre><code>@<span class="keyword">if</span>(<span class="built_in">items</span>.isEmpty) {
+    &lt;h1&gt;Nothing&lt;/h1&gt;
+} <span class="keyword">else</span> {
+    &lt;h1&gt;&lt;@<span class="built_in">items</span>.<span class="built_in">size</span> <span class="built_in">items</span>/h1&gt;
+}
+</code></pre><p>模板中还可以定义函数：</p>
+<pre><code><span class="variable">@display</span>(<span class="attribute">product</span>: Product) = {
+  <span class="variable">@product</span>.name ($<span class="variable">@product</span>.price)
+}
+
+&lt;ul&gt;
+<span class="variable">@for</span>(product &lt;- products) {
+  <span class="variable">@display</span>(product)
+}
+&lt;/ul
+</code></pre><p>模板的继承：</p>
+<pre><code>@(title: String)(content: Html)
+<span class="doctype">&lt;!DOCTYPE html&gt;</span>
+<span class="tag">&lt;<span class="title">html</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">head</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">title</span>&gt;</span>@title<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
+  <span class="tag">&lt;/<span class="title">head</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">body</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">section</span> <span class="attribute">class</span>=<span class="value">"content"</span>&gt;</span>@content<span class="tag">&lt;/<span class="title">section</span>&gt;</span>
+  <span class="tag">&lt;/<span class="title">body</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">html</span>&gt;</span>
+
+@main(title = "Home") {
+
+  <span class="tag">&lt;<span class="title">h1</span>&gt;</span>Home page<span class="tag">&lt;/<span class="title">h1</span>&gt;</span>
+
+}
+</code></pre><p>2个子模板：</p>
+<pre><code>@(title: String)(sidebar: Html)(content: Html)
+<span class="doctype">&lt;!DOCTYPE html&gt;</span>
+<span class="tag">&lt;<span class="title">html</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">head</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">title</span>&gt;</span>@title<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
+  <span class="tag">&lt;/<span class="title">head</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">body</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">section</span> <span class="attribute">class</span>=<span class="value">"sidebar"</span>&gt;</span>@sidebar<span class="tag">&lt;/<span class="title">section</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">section</span> <span class="attribute">class</span>=<span class="value">"content"</span>&gt;</span>@content<span class="tag">&lt;/<span class="title">section</span>&gt;</span>
+  <span class="tag">&lt;/<span class="title">body</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">html</span>&gt;</span>
+
+@main("Home") {
+  <span class="tag">&lt;<span class="title">h1</span>&gt;</span>Sidebar<span class="tag">&lt;/<span class="title">h1</span>&gt;</span>
+
+} {
+  <span class="tag">&lt;<span class="title">h1</span>&gt;</span>Home page<span class="tag">&lt;/<span class="title">h1</span>&gt;</span>
+
+}
+</code></pre><p>或者：</p>
+<pre><code><span class="comment">@sidebar = {</span>
+  <span class="variable">&lt;h1&gt;</span>Sidebar<span class="variable">&lt;/h1&gt;</span>
+}
+
+<span class="comment">@main("Home")(sidebar) {</span>
+  <span class="variable">&lt;h1&gt;</span>Home page<span class="variable">&lt;/h1&gt;</span>
+
+}
+</code></pre><h3 id="Model">Model</h3><p>play的Model使用的是Ebean这个ORM框架</p>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/playframework/" rel="tag">#playframework</a>
+          
+            <a href="/tags/scala/" rel="tag">#scala</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/03/30/mac-jdk/" rel="next" title="macos中jdk版本切换">
+                <i class="fa fa-chevron-left"></i> macos中jdk版本切换
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/05/31/scala-introduction/" rel="prev" title="Scala基础">
+                Scala基础 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Playframework简介"><span class="nav-number">1.</span> <span class="nav-text">Playframework简介</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Controller"><span class="nav-number">1.1.</span> <span class="nav-text">Controller</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#View"><span class="nav-number">1.2.</span> <span class="nav-text">View</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Model"><span class="nav-number">1.3.</span> <span class="nav-text">Model</span></a></li></ol></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2015/05/17/playframework-introduce/';
+      var disqus_title = 'playframework简介';
+      var disqus_url = 'http://fangjian0423.github.io/2015/05/17/playframework-introduce/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

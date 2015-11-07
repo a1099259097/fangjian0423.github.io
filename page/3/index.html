@@ -1,0 +1,2277 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="java,scala,big data,javascript" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="吃饭睡觉撸代码">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Format's Notes">
+<meta property="og:url" content="http://fangjian0423.github.io/page/3/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="吃饭睡觉撸代码">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Format's Notes">
+<meta name="twitter:description" content="吃饭睡觉撸代码">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column 
+   page-home 
+">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+  <section id="posts" class="posts-expand">
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/07/24/java-poolthread/" itemprop="url">
+                  java内置的线程池笔记
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-07-24T20:32:33+08:00" content="2015-07-24">
+              2015-07-24
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jvm/" itemprop="url" rel="index">
+                    <span itemprop="name">jvm</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/07/24/java-poolthread/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/24/java-poolthread/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p>目前的工作是接触大数据相关的内容，自己也缺少高并发的知识，刚好前几天看了flume的源码，里面也用到了各种线程池内容，刚好学习一下，做个笔记。</p>
+<p>写这篇博客的时候又刚好想起了当时自己实习的时候遇到的一个问题。1000个爬虫任务使用了多线程的处理方式，比如开5个线程处理这1000个任务，每个线程分200个任务，然后各个线程处理那200个爬虫任务→_→，太笨了。其实更合理的方法是使用阻塞队列+线程池的方法。</p>
+<h2 id="ExecutorService">ExecutorService</h2><p>ExecutorService就是线程池的概念，ExecutorService的初始化可以使用Executors类的静态方法。</p>
+<p>Executors提供了很多方法用来初始化ExecutorService，可以初始化指定数目个线程的线城市或者单个线程的线程池。</p>
+<p>比如构造一个10个线程的线程池，使用了guava的ThreadFactoryBuilder，guava的ThreadFactoryBuilder可以传入一个namFormat参数用户来表示线程的name，它内部会使用数字增量表示%d，比如一下的nameFormat，10个线程，名字分别是thread-call-runner-1，thread-call-runner-2 … thread-call-runner-10:</p>
+<pre><code>Executors.newFixedThreadPool(<span class="number">10</span>, <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"thread-call-runner-%d"</span>).build());
+</code></pre><p>ExecutorService线程池使用线程执行任务例子：</p>
+<p>1.阻塞队列里有10个元素，初始化带有2个线程的线程池，跑2个线程分别去阻塞队列里取数据执行。</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test01</span><span class="params">()</span> throws Exception </span>{
+    ExecutorService es = Executors.newFixedThreadPool(<span class="number">2</span>, <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"thread-call-runner-%d"</span>).build());
+    final LinkedBlockingDeque&lt;String&gt; <span class="built_in">deque</span> = <span class="keyword">new</span> LinkedBlockingDeque&lt;String&gt;();
+    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">10</span>; i ++) {
+        <span class="built_in">deque</span>.add(i + <span class="string">""</span>);
+    }
+    es.submit(<span class="keyword">new</span> Runnable() {
+        @<span class="function">Override
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+            <span class="keyword">while</span>(!<span class="built_in">deque</span>.isEmpty()) {
+                System.out.println(<span class="built_in">deque</span>.poll() + <span class="string">"-"</span> + Thread.currentThread().getName());
+            }
+        }
+    });
+    es.submit(<span class="keyword">new</span> Runnable() {
+        @<span class="function">Override
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+            <span class="keyword">while</span>(!<span class="built_in">deque</span>.isEmpty()) {
+                System.out.println(<span class="built_in">deque</span>.poll() + <span class="string">"-"</span> + Thread.currentThread().getName());
+            }
+        }
+    });
+    Thread.sleep(<span class="number">10000l</span>);
+}
+</code></pre><p>打印，2个线程都会执行：</p>
+<pre><code><span class="number">1</span>-thread-call-runner-<span class="number">0</span>
+<span class="number">2</span>-thread-call-runner-<span class="number">0</span>
+<span class="number">3</span>-thread-call-runner-<span class="number">1</span>
+<span class="number">4</span>-thread-call-runner-<span class="number">0</span>
+<span class="number">5</span>-thread-call-runner-<span class="number">0</span>
+<span class="number">6</span>-thread-call-runner-<span class="number">1</span>
+<span class="number">7</span>-thread-call-runner-<span class="number">0</span>
+<span class="number">8</span>-thread-call-runner-<span class="number">1</span>
+<span class="number">9</span>-thread-call-runner-<span class="number">0</span>
+<span class="number">10</span>-thread-call-runner-<span class="number">0</span>
+</code></pre><p>2.执行Callable线程，Callable线程和Runnable线程的区别就是Callable的线程会有返回值，这个返回值是Future，未来的意思，而且这Future是个接口，提供了几个实用的方法，比如cancel, idDone, isCancelled, get等方法。</p>
+<pre><code>@<span class="type">Test</span>
+public <span class="type">void</span> test02() throws <span class="type">Exception</span> {
+    <span class="type">ExecutorService</span> es = <span class="type">Executors</span>.newFixedThreadPool(<span class="number">2</span>, new <span class="type">ThreadFactoryBuilder</span>().setNameFormat(<span class="string">"thread-call-runner-%d"</span>).build());
+    final <span class="type">LinkedBlockingDeque</span>&lt;<span class="type">String</span>&gt; deque = new <span class="type">LinkedBlockingDeque</span>&lt;<span class="type">String</span>&gt;();
+    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">500</span>; i ++) {
+        deque.add(i + <span class="string">""</span>);
+    }
+    <span class="type">Future</span>&lt;<span class="type">String</span>&gt; <span class="literal">result</span> = es.submit(new <span class="type">Callable</span>&lt;<span class="type">String</span>&gt;() {
+        @<span class="type">Override</span>
+        public <span class="type">String</span> call() throws <span class="type">Exception</span> {
+            <span class="keyword">while</span> (!deque.isEmpty()) {
+                <span class="type">System</span>.<span class="keyword">out</span>.println(deque.poll() + <span class="string">"-"</span> + <span class="type">Thread</span>.currentThread().getName());
+            }
+            <span class="keyword">return</span> <span class="string">"done"</span>;
+        }
+    });
+    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="literal">result</span>.isDone());
+    // get方法会阻塞
+    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="literal">result</span>.get());
+    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"exec next"</span>);
+}
+</code></pre><p>打印：</p>
+<pre><code>先打印出几百个 数字-thread-call-runner-<span class="number">0</span>
+然后打印出 isDone的结果， 是<span class="literal">false</span>
+<span class="type">Future</span>的get是得到<span class="type">Callable</span>线程执行完毕后的结果，该方法会阻塞，直到该<span class="type">Future</span>对应的线程全部执行完才会继续执行下去。这个例子<span class="type">Callable</span>线程执行完返回done，所以get方法也是返回done
+
+get方法还有个重载的方法，带有<span class="number">2</span>个参数，第一个参数是一个long类型的数字，第二个参数是时间单位。<span class="literal">result</span>.get(<span class="number">1</span>, <span class="type">TimeUnit</span>.<span class="type">MILLISECONDS</span>) 就表示<span class="number">1</span>毫秒，等待这个<span class="type">Future</span>的时间为<span class="number">1</span>毫秒，如果时间<span class="number">1</span>毫秒，那么这个get方法的调用会抛出java.util.concurrent.<span class="type">TimeoutException</span>异常，并且线程内部的执行也会停止。注意，但是如果我们catch这个<span class="type">TimeoutException</span>的话，那么线程里的代码还是会被执行完毕。
+
+<span class="keyword">try</span> {
+    // catch <span class="type">TimeoutException</span>的话线程里的代码还是会执行下去
+    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="literal">result</span>.get(<span class="number">10</span>, <span class="type">TimeUnit</span>.<span class="type">MILLISECONDS</span>));
+} catch (<span class="type">TimeoutException</span> e) {
+    e.printStackTrace();
+}
+</code></pre><p>3.Future的cancel方法的使用</p>
+<pre><code>@<span class="type">Test</span>
+public <span class="type">void</span> test03() throws <span class="type">Exception</span> {
+    <span class="type">ExecutorService</span> es = <span class="type">Executors</span>.newFixedThreadPool(<span class="number">2</span>, new <span class="type">ThreadFactoryBuilder</span>().setNameFormat(<span class="string">"thread-call-runner-%d"</span>).build());
+    final <span class="type">LinkedBlockingDeque</span>&lt;<span class="type">String</span>&gt; deque = new <span class="type">LinkedBlockingDeque</span>&lt;<span class="type">String</span>&gt;();
+    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">5000</span>; i ++) {
+        deque.add(i + <span class="string">""</span>);
+    }
+    <span class="type">Future</span>&lt;<span class="type">String</span>&gt; <span class="literal">result</span> = es.submit(new <span class="type">Callable</span>&lt;<span class="type">String</span>&gt;() {
+        @<span class="type">Override</span>
+        public <span class="type">String</span> call() throws <span class="type">Exception</span> {
+            <span class="keyword">while</span> (!deque.isEmpty() &amp;&amp; !<span class="type">Thread</span>.currentThread().isInterrupted()) {
+                <span class="type">System</span>.<span class="keyword">out</span>.println(deque.poll() + <span class="string">"-"</span> + <span class="type">Thread</span>.currentThread().getName());
+            }
+            <span class="keyword">return</span> <span class="string">"done"</span>;
+        }
+    });
+
+    <span class="keyword">try</span> {
+        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="literal">result</span>.get(<span class="number">10</span>, <span class="type">TimeUnit</span>.<span class="type">MILLISECONDS</span>));
+    } catch (<span class="type">TimeoutException</span> e) {
+        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"cancel result: "</span> + <span class="literal">result</span>.cancel(<span class="literal">true</span>));
+        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"is cancelled: "</span> + <span class="literal">result</span>.isCancelled());
+    }
+    <span class="type">Thread</span>.sleep(<span class="number">2000</span>l);
+}
+</code></pre><p>打印：</p>
+<pre><code>先打印出几百个 数字-thread-call-runner-<span class="number">0</span>
+然后打印出
+cancel <span class="literal">result</span>: <span class="literal">true</span>
+<span class="keyword">is</span> cancelled: <span class="literal">true</span>
+
+cancel方法用来取消线程的继续执行，它有个boolean类型的返回值，表示是否cancel成功。这里我们使用了get方法，<span class="number">10</span>毫秒处理<span class="number">5000</span>条数据，报了<span class="type">TimeoutException</span>异常，catch之后对<span class="type">Future</span>进行了cancel调用。注意，我们在<span class="type">Callable</span>里执行的代码里加上了
+
+!<span class="type">Thread</span>.currentThread().isInterrupted()
+
+如果去掉了这个条件，那么还是会打印出<span class="number">5000</span>条处理数据。cancel方法底层会去interrupted对应的线程，所以才需要加上这个条件的判断。
+</code></pre><h2 id="ScheduledExecutorService">ScheduledExecutorService</h2><p>ScheduledExecutorService接口是ExecutorService接口的子类。</p>
+<p>看名字也知道，ScheduledExecutorService是基于调度的线程池。</p>
+<p>1.ScheduledExecutorService的schedule方法例子：</p>
+<pre><code>@<span class="type">Test</span>
+public <span class="type">void</span> test04() throws <span class="type">Exception</span> {
+    <span class="type">ScheduledExecutorService</span> ses = <span class="type">Executors</span>.newScheduledThreadPool(<span class="number">2</span>, new <span class="type">ThreadFactoryBuilder</span>().setNameFormat(<span class="string">"thread-schedule-runner-%d"</span>).build());
+    <span class="type">Future</span>&lt;<span class="type">String</span>&gt; <span class="literal">result</span> = ses.schedule(new <span class="type">Callable</span>&lt;<span class="type">String</span>&gt;() {
+        @<span class="type">Override</span>
+        public <span class="type">String</span> call() throws <span class="type">Exception</span> {
+            <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"exec task"</span>);
+            <span class="keyword">return</span> <span class="string">"ok"</span>;
+        }
+    }, <span class="number">10</span>, <span class="type">TimeUnit</span>.<span class="type">SECONDS</span>);
+    <span class="type">Thread</span>.sleep(<span class="number">15000</span>);
+}
+</code></pre><p>打印：</p>
+<pre><code>执行<span class="number">10</span>秒后打印出  <span class="built_in">exec</span> task
+</code></pre><p>2.cancel在schedule中的使用：</p>
+<pre><code>@<span class="type">Test</span>
+public <span class="type">void</span> test05() throws <span class="type">Exception</span> {
+    <span class="type">ScheduledExecutorService</span> ses = <span class="type">Executors</span>.newScheduledThreadPool(<span class="number">2</span>, new <span class="type">ThreadFactoryBuilder</span>().setNameFormat(<span class="string">"thread-schedule-runner-%d"</span>).build());
+    <span class="type">Future</span>&lt;<span class="type">String</span>&gt; <span class="literal">result</span> = ses.schedule(new <span class="type">Callable</span>&lt;<span class="type">String</span>&gt;() {
+        @<span class="type">Override</span>
+        public <span class="type">String</span> call() throws <span class="type">Exception</span> {
+            <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"exec task"</span>);
+            <span class="keyword">try</span> {
+                <span class="type">Thread</span>.sleep(<span class="number">5000</span>l);
+            } catch (<span class="type">InterruptedException</span> e) {
+                e.printStackTrace();
+            }
+            <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"exec done, take 5 seconds"</span>);
+            <span class="keyword">return</span> <span class="string">"ok"</span>;
+        }
+    }, <span class="number">10</span>, <span class="type">TimeUnit</span>.<span class="type">SECONDS</span>);
+    <span class="type">Thread</span>.sleep(<span class="number">11000</span>);
+    <span class="literal">result</span>.cancel(<span class="literal">true</span>);
+    <span class="type">Thread</span>.sleep(<span class="number">10000</span>);
+}
+</code></pre><p>打印：</p>
+<pre><code>先打印出exec task，然后抛出InterruptedException异常，异常被<span class="keyword">catch</span>。接着打印出exec done, take <span class="number">5</span> seconds
+因为Callable线程是<span class="number">10</span>秒后执行的，线程会执行<span class="number">5</span>秒，在<span class="number">11</span>秒的时候会调用Future的cancel方法，会取消线程的时候，由于我们<span class="keyword">catch</span>了异常，所以线程会执行完毕。
+
+注意一下，cancel方法有个boolean类型的参数mayInterruptIfRunning。上个例子中我们传入了<span class="literal">true</span>，所以会打断正在执行的线程，因此抛出了异常。如果我们传入<span class="literal">false</span>，线程正在执行，所以不会去打断它，因此会打印出exec task，然后再打印出exec done, take <span class="number">5</span> seconds，并且没有异常抛出。
+</code></pre><p>3.scheduleWithFixedDelay方法，定时器，每隔多少时间执行</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test06</span><span class="params">()</span> throws Exception </span>{
+    ScheduledExecutorService sec = Executors.newScheduledThreadPool(<span class="number">2</span>, <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"thread-schedule-runner-%d"</span>).build());
+    sec.scheduleWithFixedDelay(<span class="keyword">new</span> Runnable() {
+        @<span class="function">Override
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+            System.out.println(<span class="string">"exec"</span>);
+        }
+    }, <span class="number">0</span>, <span class="number">5</span>, TimeUnit.SECONDS);
+    Thread.sleep(<span class="number">16000l</span>);
+}
+</code></pre><p>打印：</p>
+<pre><code>打印出<span class="number">4</span>次exec。
+scheduleWithFixedDelay有<span class="number">4</span>个参数，第一个参数是个Runnable接口的实现类，第二个参数是首次执行线程的延迟时间，第三个参数是每隔多少时间再次执行线程时间，第四个参数是时间的单位。
+如果Runnable中执行的代码发生了异常并且没有被<span class="keyword">catch</span>的话，那么发生异常之后，Runnable里的代码就不会再次执行。
+</code></pre><p>4.scheduleAtFixedRate方法，scheduleAtFixedRate方法跟scheduleWithFixedDelay类似。唯一的区别是scheduleWithFixedDelay是在线程全部执行完毕之后开始计算时间的，而scheduleAtFixedRate是在线程开始执行的时候计算时间的，所以scheduleAtFixedRate有时会产生不是定时执行的感觉。</p>
+<p>先看scheduleWithFixedDelay：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test07</span><span class="params">()</span> throws Exception </span>{
+    ScheduledExecutorService sec = Executors.newScheduledThreadPool(<span class="number">2</span>, <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"thread-schedule-runner-%d"</span>).build());
+    sec.scheduleWithFixedDelay(<span class="keyword">new</span> Runnable() {
+        @<span class="function">Override
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+            System.out.println(<span class="string">"exec"</span>);
+            <span class="keyword">try</span> {
+                Thread.sleep(<span class="number">3000l</span>);
+            } <span class="keyword">catch</span> (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }, <span class="number">0</span>, <span class="number">5</span>, TimeUnit.SECONDS);
+    Thread.sleep(<span class="number">17000l</span>);
+}
+</code></pre><p>打印：</p>
+<pre><code>执行<span class="number">3</span>次exec。Runnable每次执行<span class="number">3</span>秒。第一次是在<span class="number">0</span>秒执行，执行了<span class="number">3</span>秒，第二次是在<span class="number">8</span>秒，执行了<span class="number">3</span>秒。第三次是在<span class="number">16</span>秒执行
+</code></pre><p>然后再看scheduleAtFixedRate：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test09</span><span class="params">()</span> throws Exception </span>{
+    ScheduledExecutorService sec = Executors.newScheduledThreadPool(<span class="number">2</span>, <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"thread-schedule-runner-%d"</span>).build());
+    sec.scheduleAtFixedRate(<span class="keyword">new</span> Runnable() {
+        @<span class="function">Override
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+            System.out.println(<span class="string">"exec"</span>);
+            <span class="keyword">try</span> {
+                Thread.sleep(<span class="number">3000l</span>);
+            } <span class="keyword">catch</span> (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }, <span class="number">0</span>, <span class="number">5</span>, TimeUnit.SECONDS);
+    Thread.sleep(<span class="number">16000l</span>);
+}
+</code></pre><p>打印：</p>
+<pre><code>执行了<span class="number">4</span>次exec，第一次在<span class="number">0</span>秒执行，第二次在<span class="number">5</span>秒，第三次是<span class="number">10</span>秒，第四次在<span class="number">15</span>秒执行
+</code></pre>
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/07/20/flume-hdfs-sink/" itemprop="url">
+                  通过源码分析Flume HDFSSink 写hdfs文件的过程
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-07-20T23:32:33+08:00" content="2015-07-20">
+              2015-07-20
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/07/20/flume-hdfs-sink/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/20/flume-hdfs-sink/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p>Flume有HDFS Sink，可以将Source进来的数据写入到hdfs中。</p>
+<p>HDFS Sink具体的逻辑代码是在HDFSEventSink这个类中。</p>
+<p>HDFS Sink跟写文件相关的配置如下：</p>
+<p>hdfs.path -&gt; hdfs目录路径<br>hdfs.filePrefix -&gt; 文件前缀。默认值FlumeData<br>hdfs.fileSuffix -&gt; 文件后缀<br>hdfs.rollInterval -&gt; 多久时间后close hdfs文件。单位是秒，默认30秒。设置为0的话表示不根据时间close hdfs文件<br>hdfs.rollSize -&gt; 文件大小超过一定值后，close文件。默认值1024，单位是字节。设置为0的话表示不基于文件大小<br>hdfs.rollCount -&gt; 写入了多少个事件后close文件。默认值是10个。设置为0的话表示不基于事件个数<br>hdfs.fileType -&gt; 文件格式， 有3种格式可选择：SequenceFile, DataStream or CompressedStream<br>hdfs.batchSize -&gt; 批次数，HDFS Sink每次从Channel中拿的事件个数。默认值100<br>hdfs.minBlockReplicas -&gt; HDFS每个块最小的replicas数字，不设置的话会取hadoop中的配置<br>hdfs.maxOpenFiles -&gt; 允许最多打开的文件数，默认是5000。如果超过了这个值，越早的文件会被关闭<br>serializer -&gt; HDFS Sink写文件的时候会进行序列化操作。会调用对应的Serializer借口，可以自定义符合需求的Serializer<br>hdfs.retryInterval -&gt; 关闭HDFS文件失败后重新尝试关闭的延迟数，单位是秒<br>hdfs.callTimeout -&gt; HDFS操作允许的时间，比如hdfs文件的open，write，flush，close操作。单位是毫秒，默认值是10000</p>
+<h2 id="HDFSEventSink分析">HDFSEventSink分析</h2><p>以一个hdfs.path，hdfs.filePrefix和hdfs.fileSuffix分别为/data/%Y/%m/%d/%H，flume, .txt 为例子，分析源码：</p>
+<p>直接看HDFSEventSink的process方法：</p>
+<pre><code><span class="keyword">public</span> Status process() <span class="keyword">throws</span> EventDeliveryException {
+    <span class="comment">// 得到Channel</span>
+    Channel channel = getChannel();
+    Transaction transaction = channel.getTransaction();
+    <span class="comment">// 构造一个BucketWriter集合，BucketWriter就是处理hdfs文件的具体逻辑实现类</span>
+    List&lt;BucketWriter&gt; writers = Lists.newArrayList();
+    <span class="comment">// Channel的事务启动</span>
+    transaction.begin();
+    <span class="keyword">try</span> {
+      <span class="built_in">int</span> txnEventCount = <span class="number">0</span>;
+      <span class="comment">// 每次处理batchSize个事件。这里的batchSize就是之前配置的hdfs.batchSize</span>
+      <span class="keyword">for</span> (txnEventCount = <span class="number">0</span>; txnEventCount &lt; batchSize; txnEventCount++) {
+        Event event = channel.take();
+        <span class="keyword">if</span> (event == <span class="keyword">null</span>) {
+          <span class="keyword">break</span>;
+        }
+
+        <span class="comment">// 构造hdfs文件所在的路径</span>
+        <span class="keyword">String</span> realPath = BucketPath.escapeString(filePath, event.getHeaders(),
+            timeZone, needRounding, roundUnit, roundValue, useLocalTime);
+        <span class="comment">// 构造hdfs文件名, fileName就是之前配置的hdfs.filePrefix，即flume</span>
+        <span class="keyword">String</span> realName = BucketPath.escapeString(fileName, event.getHeaders(),
+          timeZone, needRounding, roundUnit, roundValue, useLocalTime);
+
+        <span class="comment">// 构造hdfs文件路径，根据之前的path，filePrefix，fileSuffix</span>
+        <span class="comment">// 得到这里的lookupPath为 /data/2015/07/20/15/flume</span>
+        <span class="keyword">String</span> lookupPath = realPath + DIRECTORY_DELIMITER + realName;
+        BucketWriter bucketWriter;
+        HDFSWriter hdfsWriter = <span class="keyword">null</span>;
+        <span class="comment">// 构造一个回调函数</span>
+        WriterCallback closeCallback = <span class="keyword">new</span> WriterCallback() {
+          @Override
+          <span class="keyword">public</span> <span class="keyword">void</span> run(<span class="keyword">String</span> bucketPath) {
+            LOG.info(<span class="string">"Writer callback called."</span>);
+            <span class="keyword">synchronized</span> (sfWritersLock) {
+              <span class="comment">// sfWriters是一个HashMap，最多支持maxOpenFiles个键值对。超过maxOpenFiles的话会关闭越早进来的文件</span>
+              <span class="comment">// 回调函数的作用就是hdfs文件close的时候移除sfWriters中对应的那个文件。防止打开的文件数超过maxOpenFiles</span>
+              <span class="comment">// sfWriters这个Map中的key是要写的hdfs路径，value是BucketWriter</span>
+              sfWriters.remove(bucketPath);
+            }
+          }
+        };
+        <span class="keyword">synchronized</span> (sfWritersLock) {
+          <span class="comment">// 先查看sfWriters是否已经存在key为/data/2015/07/20/15/flume的BucketWriter</span>
+          bucketWriter = sfWriters.<span class="built_in">get</span>(lookupPath);
+          <span class="keyword">if</span> (bucketWriter == <span class="keyword">null</span>) {
+              <span class="comment">// 没有的话构造一个BucketWriter</span>
+            <span class="comment">// 先根据fileType得到对应的HDFSWriter，fileType默认有3种类型，分别是SequenceFile, DataStream or CompressedStream</span>
+            hdfsWriter = writerFactory.getWriter(fileType);
+            <span class="comment">// 构造一个BucketWriter，会将刚刚构造的hdfsWriter当做参数传入，BucketWriter写hdfs文件的时候会使用HDFSWriter</span>
+            bucketWriter = initializeBucketWriter(realPath, realName,
+              lookupPath, hdfsWriter, closeCallback);
+            <span class="comment">// 新构造的BucketWriter放入到sfWriters中</span>
+            sfWriters.put(lookupPath, bucketWriter);
+          }
+        }
+
+        <span class="comment">// 将BucketWriter放入到writers集合中</span>
+        <span class="keyword">if</span> (!writers.contains(bucketWriter)) {
+          writers.<span class="built_in">add</span>(bucketWriter);
+        }
+
+        <span class="comment">// 写hdfs数据</span>
+        <span class="keyword">try</span> {
+          bucketWriter.<span class="built_in">append</span>(event);
+        } <span class="keyword">catch</span> (BucketClosedException ex) {
+          LOG.info(<span class="string">"Bucket was closed while trying to append, "</span> +
+            <span class="string">"reinitializing bucket and writing event."</span>);
+          hdfsWriter = writerFactory.getWriter(fileType);
+          bucketWriter = initializeBucketWriter(realPath, realName,
+            lookupPath, hdfsWriter, closeCallback);
+          <span class="keyword">synchronized</span> (sfWritersLock) {
+            sfWriters.put(lookupPath, bucketWriter);
+          }
+          bucketWriter.<span class="built_in">append</span>(event);
+        }
+      }
+
+      <span class="keyword">if</span> (txnEventCount == <span class="number">0</span>) {
+        sinkCounter.incrementBatchEmptyCount();
+      } <span class="keyword">else</span> <span class="keyword">if</span> (txnEventCount == batchSize) {
+        sinkCounter.incrementBatchCompleteCount();
+      } <span class="keyword">else</span> {
+        sinkCounter.incrementBatchUnderflowCount();
+      }
+
+      <span class="comment">// 每个批次全部完成后flush所有的hdfs文件</span>
+      <span class="keyword">for</span> (BucketWriter bucketWriter : writers) {
+        bucketWriter.flush();
+      }
+
+      <span class="comment">// 事务提交</span>
+      transaction.commit();
+
+      <span class="keyword">if</span> (txnEventCount &lt; <span class="number">1</span>) {
+        <span class="keyword">return</span> Status.BACKOFF;
+      } <span class="keyword">else</span> {
+        sinkCounter.addToEventDrainSuccessCount(txnEventCount);
+        <span class="keyword">return</span> Status.READY;
+      }
+    } <span class="keyword">catch</span> (IOException eIO) {
+      <span class="comment">// 发生异常事务回滚</span>
+      transaction.rollback();
+      LOG.warn(<span class="string">"HDFS IO error"</span>, eIO);
+      <span class="keyword">return</span> Status.BACKOFF;
+    } <span class="keyword">catch</span> (Throwable th) {
+      <span class="comment">// 发生异常事务回滚</span>
+      transaction.rollback();
+      LOG.error(<span class="string">"process failed"</span>, th);
+      <span class="keyword">if</span> (th <span class="keyword">instanceof</span> Error) {
+        <span class="keyword">throw</span> (Error) th;
+      } <span class="keyword">else</span> {
+        <span class="keyword">throw</span> <span class="keyword">new</span> EventDeliveryException(th);
+      }
+    } <span class="keyword">finally</span> {
+      <span class="comment">// 关闭事务</span>
+      transaction.close();
+    }
+}
+</code></pre><h2 id="BucketWriter分析">BucketWriter分析</h2><p>接下来我们看下BucketWriter的append和flush方法。</p>
+<p>append方法：</p>
+<pre><code>  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="keyword">append</span>(<span class="keyword">final</span> Event event)
+      <span class="keyword">throws</span> IOException, InterruptedException {
+    checkAndThrowInterruptedException();
+    <span class="comment">// If idleFuture is not null, cancel it before we move forward to avoid a</span>
+    <span class="comment">// close call in the middle of the append.</span>
+    <span class="keyword">if</span>(idleFuture != <span class="keyword">null</span>) {
+      idleFuture.cancel(<span class="keyword">false</span>);
+      <span class="comment">// There is still a small race condition - if the idleFuture is already</span>
+      <span class="comment">// running, interrupting it can cause HDFS close operation to throw -</span>
+      <span class="comment">// so we cannot interrupt it while running. If the future could not be</span>
+      <span class="comment">// cancelled, it is already running - wait for it to finish before</span>
+      <span class="comment">// attempting to write.</span>
+      <span class="keyword">if</span>(!idleFuture.isDone()) {
+        <span class="keyword">try</span> {
+          idleFuture.get(callTimeout, TimeUnit.MILLISECONDS);
+        } <span class="keyword">catch</span> (TimeoutException ex) {
+          LOG.warn(<span class="string">"Timeout while trying to cancel closing of idle file. Idle"</span> +
+            <span class="string">" file close may have failed"</span>, ex);
+        } <span class="keyword">catch</span> (Exception ex) {
+          LOG.warn(<span class="string">"Error while trying to cancel closing of idle file. "</span>, ex);
+        }
+      }
+      idleFuture = <span class="keyword">null</span>;
+    }
+
+    <span class="comment">// 如果hdfs文件没有被打开</span>
+    <span class="keyword">if</span> (!isOpen) {
+      <span class="comment">// hdfs已关闭的话抛出异常</span>
+      <span class="keyword">if</span> (closed) {
+        <span class="keyword">throw</span> <span class="keyword">new</span> BucketClosedException(<span class="string">"This bucket writer was closed and "</span> +
+          <span class="string">"this handle is thus no longer valid"</span>);
+      }
+      <span class="comment">// 打开hdfs文件</span>
+      open();
+    }
+
+    <span class="comment">// 查看是否需要创建新文件</span>
+    <span class="keyword">if</span> (shouldRotate()) {
+      <span class="keyword">boolean</span> doRotate = <span class="keyword">true</span>;
+
+      <span class="keyword">if</span> (isUnderReplicated) {
+        <span class="keyword">if</span> (maxConsecUnderReplRotations &gt; <span class="number">0</span> &amp;&amp;
+            consecutiveUnderReplRotateCount &gt;= maxConsecUnderReplRotations) {
+          doRotate = <span class="keyword">false</span>;
+          <span class="keyword">if</span> (consecutiveUnderReplRotateCount == maxConsecUnderReplRotations) {
+            LOG.error(<span class="string">"Hit max consecutive under-replication rotations ({}); "</span> +
+                <span class="string">"will not continue rolling files under this path due to "</span> +
+                <span class="string">"under-replication"</span>, maxConsecUnderReplRotations);
+          }
+        } <span class="keyword">else</span> {
+          LOG.warn(<span class="string">"Block Under-replication detected. Rotating file."</span>);
+        }
+        consecutiveUnderReplRotateCount++;
+      } <span class="keyword">else</span> {
+        consecutiveUnderReplRotateCount = <span class="number">0</span>;
+      }
+
+      <span class="keyword">if</span> (doRotate) {
+          <span class="comment">// 如果需要创建新文件的时候会关闭文件，然后再打开新的文件。这里的close方法没有参数，表示可以再次打开新的文件</span>
+        close();
+        open();
+      }
+    }
+
+    <span class="comment">// 写event数据</span>
+    <span class="keyword">try</span> {
+      sinkCounter.incrementEventDrainAttemptCount();
+      callWithTimeout(<span class="keyword">new</span> CallRunner&lt;<span class="keyword">Void</span>&gt;() {
+        @Override
+        <span class="keyword">public</span> <span class="keyword">Void</span> <span class="keyword">call</span>() <span class="keyword">throws</span> Exception {
+          <span class="comment">// 真正的写数据使用HDFSWriter的append方法</span>
+          writer.<span class="keyword">append</span>(event); <span class="comment">// could block</span>
+          <span class="keyword">return</span> <span class="keyword">null</span>;
+        }
+      });
+    } <span class="keyword">catch</span> (IOException e) {
+      LOG.warn(<span class="string">"Caught IOException writing to HDFSWriter ({}). Closing file ("</span> +
+          bucketPath + <span class="string">") and rethrowing exception."</span>,
+          e.getMessage());
+      <span class="keyword">try</span> {
+        close(<span class="keyword">true</span>);
+      } <span class="keyword">catch</span> (IOException e2) {
+        LOG.warn(<span class="string">"Caught IOException while closing file ("</span> +
+             bucketPath + <span class="string">"). Exception follows."</span>, e2);
+      }
+      <span class="keyword">throw</span> e;
+    }
+
+    <span class="comment">// 文件大小+起来</span>
+    processSize += event.getBody().length;
+    <span class="comment">// 事件个数+1</span>
+    eventCounter++;
+    <span class="comment">// 批次数+1</span>
+    batchCounter++;
+
+    <span class="comment">// 批次数达到配置的hdfs.batchSize的话调用flush方法</span>
+    <span class="keyword">if</span> (batchCounter == batchSize) {
+      flush();
+    }
+}
+</code></pre><p>先看下open方法，打开hdfs文件的方法：</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">void</span> open() <span class="keyword">throws</span> IOException, InterruptedException {
+    <span class="comment">// hdfs文件路径或HDFSWriter没构造的话抛出异常</span>
+    <span class="keyword">if</span> ((filePath == <span class="keyword">null</span>) || (writer == <span class="keyword">null</span>)) {
+      <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"Invalid file settings"</span>);
+    }
+
+    <span class="keyword">final</span> Configuration config = <span class="keyword">new</span> Configuration();
+    <span class="comment">// disable FileSystem JVM shutdown hook</span>
+    config.setBoolean(<span class="string">"fs.automatic.close"</span>, <span class="keyword">false</span>);
+
+    <span class="comment">// Hadoop is not thread safe when doing certain RPC operations,</span>
+    <span class="comment">// including getFileSystem(), when running under Kerberos.</span>
+    <span class="comment">// open() must be called by one thread at a time in the JVM.</span>
+    <span class="comment">// <span class="doctag">NOTE:</span> tried synchronizing on the underlying Kerberos principal previously</span>
+    <span class="comment">// which caused deadlocks. See FLUME-1231.</span>
+    <span class="keyword">synchronized</span> (staticLock) {
+      checkAndThrowInterruptedException();
+
+      <span class="keyword">try</span> {
+          <span class="comment">// fileExtensionCounter是一个AtomicLong类型的实例，初始化为当前时间戳的数值</span>
+        <span class="comment">// 由于之前分析的，可能存在先关闭文件，然后再次open新文件的情况。所以在同一个BucketWriter类中open方法得到的文件名时间戳仅仅相差1</span>
+        <span class="comment">// 得到时间戳counter</span>
+        <span class="keyword">long</span> counter = fileExtensionCounter.incrementAndGet();
+
+        <span class="comment">// 最终的文件名加上时间戳，这就是为什么flume生成的文件名会带有时间戳的原因</span>
+        <span class="comment">// 这里的fullFileName就是 flume.1437375933234</span>
+        String fullFileName = fileName + <span class="string">"."</span> + counter;
+
+        <span class="comment">// 加上后缀名， fullFileName就成了flume.1437375933234.txt</span>
+        <span class="keyword">if</span> (fileSuffix != <span class="keyword">null</span> &amp;&amp; fileSuffix.length() &gt; <span class="number">0</span>) {
+          fullFileName += fileSuffix;
+        } <span class="keyword">else</span> <span class="keyword">if</span> (codeC != <span class="keyword">null</span>) {
+          fullFileName += codeC.getDefaultExtension();
+        }
+
+        <span class="comment">// 由于没配置inUsePrefix和inUseSuffix。 故这两个属性的值分别为""和".tmp"</span>
+        <span class="comment">// buckerPath为 /data/2015/07/20/15/flume.1437375933234.txt.tmp</span>
+        bucketPath = filePath + <span class="string">"/"</span> + inUsePrefix
+          + fullFileName + inUseSuffix;
+        <span class="comment">// targetPath为 /data/2015/07/20/15/flume.1437375933234.txt</span>
+        targetPath = filePath + <span class="string">"/"</span> + fullFileName;
+
+        LOG.info(<span class="string">"Creating "</span> + bucketPath);
+        callWithTimeout(<span class="keyword">new</span> CallRunner&lt;<span class="keyword">Void</span>&gt;() {
+          @Override
+          <span class="keyword">public</span> <span class="keyword">Void</span> <span class="keyword">call</span>() <span class="keyword">throws</span> Exception {
+            <span class="keyword">if</span> (codeC == <span class="keyword">null</span>) {
+              <span class="comment">// Need to get reference to FS using above config before underlying</span>
+              <span class="comment">// writer does in order to avoid shutdown hook &amp;</span>
+              <span class="comment">// IllegalStateExceptions</span>
+              <span class="keyword">if</span>(!mockFsInjected) {
+                fileSystem = <span class="keyword">new</span> Path(bucketPath).getFileSystem(
+                  config);
+              }
+              <span class="comment">// 使用HDFSWriter打开文件</span>
+              writer.open(bucketPath);
+            } <span class="keyword">else</span> {
+              <span class="comment">// need to get reference to FS before writer does to</span>
+              <span class="comment">// avoid shutdown hook</span>
+              <span class="keyword">if</span>(!mockFsInjected) {
+                fileSystem = <span class="keyword">new</span> Path(bucketPath).getFileSystem(
+                  config);
+              }
+              <span class="comment">// 使用HDFSWriter打开文件</span>
+              writer.open(bucketPath, codeC, compType);
+            }
+            <span class="keyword">return</span> <span class="keyword">null</span>;
+          }
+        });
+      } <span class="keyword">catch</span> (Exception ex) {
+        sinkCounter.incrementConnectionFailedCount();
+        <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> IOException) {
+          <span class="keyword">throw</span> (IOException) ex;
+        } <span class="keyword">else</span> {
+          <span class="keyword">throw</span> Throwables.propagate(ex);
+        }
+      }
+    }
+    isClosedMethod = getRefIsClosed();
+    sinkCounter.incrementConnectionCreatedCount();
+    <span class="comment">// 重置各个计数器</span>
+    resetCounters();
+
+    <span class="comment">// 开线程处理hdfs.rollInterval配置的参数，多长时间后调用close方法</span>
+    <span class="keyword">if</span> (rollInterval &gt; <span class="number">0</span>) {
+      Callable&lt;<span class="keyword">Void</span>&gt; action = <span class="keyword">new</span> Callable&lt;<span class="keyword">Void</span>&gt;() {
+        <span class="keyword">public</span> <span class="keyword">Void</span> <span class="keyword">call</span>() <span class="keyword">throws</span> Exception {
+          LOG.debug(<span class="string">"Rolling file ({}): Roll scheduled after {} sec elapsed."</span>,
+              bucketPath, rollInterval);
+          <span class="keyword">try</span> {
+            <span class="comment">// Roll the file and remove reference from sfWriters map.</span>
+            close(<span class="keyword">true</span>);
+          } <span class="keyword">catch</span>(Throwable t) {
+            LOG.error(<span class="string">"Unexpected error"</span>, t);
+          }
+          <span class="keyword">return</span> <span class="keyword">null</span>;
+        }
+      };
+      <span class="comment">// 以秒为单位在这里指定。将这个线程执行的结果赋值给timedRollFuture这个属性</span>
+      timedRollFuture = timedRollerPool.schedule(action, rollInterval,
+          TimeUnit.SECONDS);
+    }
+
+    isOpen = <span class="keyword">true</span>;
+}
+</code></pre><p>flush方法，只会在close和append方法(处理的事件数等于批次数)中被调用：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> flush() <span class="keyword">throws</span> IOException, InterruptedException {
+    checkAndThrowInterruptedException();
+    <span class="keyword">if</span> (!isBatchComplete()) { <span class="comment">//isBatchComplete判断batchCount是否等于0。 所以这里只要batchCount不为0，那么执行下去</span>
+      doFlush(); <span class="comment">// doFlush方法会调用HDFSWriter的sync方法，并且将batchCount设置为0</span>
+
+      <span class="comment">// idleTimeout没有配置，以下代码不会执行</span>
+      <span class="keyword">if</span>(idleTimeout &gt; <span class="number">0</span>) {
+        <span class="comment">// if the future exists and couldn't be cancelled, that would mean it has already run</span>
+        <span class="comment">// or been cancelled</span>
+        <span class="keyword">if</span>(idleFuture == <span class="keyword">null</span> || idleFuture.cancel(<span class="keyword">false</span>)) {
+          Callable&lt;<span class="keyword">Void</span>&gt; idleAction = <span class="keyword">new</span> Callable&lt;<span class="keyword">Void</span>&gt;() {
+            <span class="keyword">public</span> <span class="keyword">Void</span> <span class="keyword">call</span>() <span class="keyword">throws</span> Exception {
+              LOG.info(<span class="string">"Closing idle bucketWriter {} at {}"</span>, bucketPath,
+                System.currentTimeMillis());
+              <span class="keyword">if</span> (isOpen) {
+                close(<span class="keyword">true</span>);
+              }
+              <span class="keyword">return</span> <span class="keyword">null</span>;
+            }
+          };
+          idleFuture = timedRollerPool.schedule(idleAction, idleTimeout,
+              TimeUnit.SECONDS);
+        }
+      }
+    }
+}
+</code></pre><p>close方法：</p>
+<pre><code>  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> close(<span class="keyword">boolean</span> callCloseCallback)
+        <span class="keyword">throws</span> IOException, InterruptedException {
+    checkAndThrowInterruptedException();
+    <span class="keyword">try</span> {
+      <span class="comment">// close的时候先执行flush方法，清空batchCount，并调用HDFSWriter的sync方法</span>
+      flush();
+    } <span class="keyword">catch</span> (IOException e) {
+      LOG.warn(<span class="string">"pre-close flush failed"</span>, e);
+    }
+    <span class="keyword">boolean</span> failedToClose = <span class="keyword">false</span>;
+    LOG.info(<span class="string">"Closing {}"</span>, bucketPath);
+    <span class="comment">// 创建一个关闭线程，这个线程会调用HDFSWriter的close方法</span>
+    CallRunner&lt;<span class="keyword">Void</span>&gt; closeCallRunner = createCloseCallRunner();
+    <span class="keyword">if</span> (isOpen) { <span class="comment">// 如果文件还开着</span>
+      <span class="keyword">try</span> {
+          <span class="comment">// 执行HDFSWriter的close方法</span>
+        callWithTimeout(closeCallRunner);
+        sinkCounter.incrementConnectionClosedCount();
+      } <span class="keyword">catch</span> (IOException e) {
+        LOG.warn(
+          <span class="string">"failed to close() HDFSWriter for file ("</span> + bucketPath +
+            <span class="string">"). Exception follows."</span>, e);
+        sinkCounter.incrementConnectionFailedCount();
+        failedToClose = <span class="keyword">true</span>;
+        <span class="comment">// 关闭文件失败的话起个线程，retryInterval秒后继续执行</span>
+        <span class="keyword">final</span> Callable&lt;<span class="keyword">Void</span>&gt; scheduledClose =
+          createScheduledCloseCallable(closeCallRunner);
+        timedRollerPool.schedule(scheduledClose, retryInterval,
+          TimeUnit.SECONDS);
+      }
+      isOpen = <span class="keyword">false</span>;
+    } <span class="keyword">else</span> {
+      LOG.info(<span class="string">"HDFSWriter is already closed: {}"</span>, bucketPath);
+    }
+
+    <span class="comment">// timedRollFuture就是根据hdfs.rollInterval配置生成的一个属性。如果hdfs.rollInterval配置为0，那么不会执行以下代码</span>
+    <span class="comment">// 因为要close文件，所以如果开启了hdfs.rollInterval等待时间到了flush文件，由于文件已经关闭，再次关闭会有问题</span>
+    <span class="comment">// 所以这里取消timedRollFuture线程的执行</span>
+    <span class="keyword">if</span> (timedRollFuture != <span class="keyword">null</span> &amp;&amp; !timedRollFuture.isDone()) {
+      timedRollFuture.cancel(<span class="keyword">false</span>); <span class="comment">// do not cancel myself if running!</span>
+      timedRollFuture = <span class="keyword">null</span>;
+    }
+
+    <span class="comment">// 没有配置hdfs.idleTimeout， 不会执行</span>
+    <span class="keyword">if</span> (idleFuture != <span class="keyword">null</span> &amp;&amp; !idleFuture.isDone()) {
+      idleFuture.cancel(<span class="keyword">false</span>); <span class="comment">// do not cancel myself if running!</span>
+      idleFuture = <span class="keyword">null</span>;
+    }
+
+    <span class="comment">// 重命名文件，如果报错了，不会重命名文件</span>
+    <span class="keyword">if</span> (bucketPath != <span class="keyword">null</span> &amp;&amp; fileSystem != <span class="keyword">null</span> &amp;&amp; !failedToClose) {
+      <span class="comment">// 将 /data/2015/07/20/15/flume.1437375933234.txt.tmp 重命名为 /data/2015/07/20/15/flume.1437375933234.txt</span>
+      renameBucket(bucketPath, targetPath, fileSystem);
+    }
+    <span class="keyword">if</span> (callCloseCallback) { <span class="comment">// callCloseCallback是close方法的参数</span>
+
+      <span class="comment">// 调用关闭文件的回调函数，也就是BucketWriter的onCloseCallback属性</span>
+      <span class="comment">// 这个onCloseCallback属性就是在HDFSEventSink里的回调函数closeCallback。 用来处理sfWriters.remove(bucketPath);</span>
+      <span class="comment">// 如果onCloseCallback属性为true，那么说明这个BucketWriter已经不会再次open新的文件了。生命周期已经到了。</span>
+      <span class="comment">// onCloseCallback只有在append方法中调用shouldRotate方法的时候需要close文件的时候才会传入false，其他情况都是true</span>
+      runCloseAction(); 
+
+      closed = <span class="keyword">true</span>;
+    }
+}
+</code></pre><p>再回过头来看下append方法里的shouldRotate方法，shouldRotate方法执行下去的话会关闭文件然后再次打开新的文件：</p>
+<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">boolean</span> <span class="title">shouldRotate</span><span class="params">()</span> </span>{
+    <span class="keyword">boolean</span> doRotate = <span class="keyword">false</span>;
+
+    <span class="comment">// 调用HDFSWriter的isUnderReplicated方法，用来判断当前hdfs文件是否正在复制。</span>
+    <span class="keyword">if</span> (writer.isUnderReplicated()) {
+      <span class="keyword">this</span>.isUnderReplicated = <span class="keyword">true</span>;
+      doRotate = <span class="keyword">true</span>;
+    } <span class="keyword">else</span> {
+      <span class="keyword">this</span>.isUnderReplicated = <span class="keyword">false</span>;
+    }
+
+    <span class="comment">// rollCount就是配置的hdfs.rollCount。 eventCounter事件数达到rollCount之后，会close文件，然后创建新的文件</span>
+    <span class="keyword">if</span> ((rollCount &gt; <span class="number">0</span>) &amp;&amp; (rollCount &lt;= eventCounter)) {
+      LOG.debug(<span class="string">"rolling: rollCount: {}, events: {}"</span>, rollCount, eventCounter);
+      doRotate = <span class="keyword">true</span>;
+    }
+
+    <span class="comment">// rollSize就是配置的hdfs.rollSize。processSize是每个事件加起来的文件大小。当processSize超过rollSize的时候，会close文件，然后创建新的文件</span>
+    <span class="keyword">if</span> ((rollSize &gt; <span class="number">0</span>) &amp;&amp; (rollSize &lt;= processSize)) {
+      LOG.debug(<span class="string">"rolling: rollSize: {}, bytes: {}"</span>, rollSize, processSize);
+      doRotate = <span class="keyword">true</span>;
+    }
+
+    <span class="keyword">return</span> doRotate;
+}
+</code></pre><h2 id="HDFSWriter分析">HDFSWriter分析</h2><p>每个BucketWriter中对应只有一个HDFSWriter。</p>
+<p>HDFSWriter是一个接口，有3个具体的实现类，分别是：HDFSDataStream，HDFSSequenceFile和HDFSCompressedDataStream。分别对应fileType为DataStream，SequenceFile和CompressedStream。</p>
+<p>我们以HDFSDataStream为例，分析一下在BucketWriter中用到的HDFSWriter的一些方法：</p>
+<p>append方法，写hdfs文件：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">append</span><span class="params">(Event e)</span> <span class="keyword">throws</span> IOException </span>{
+    <span class="comment">// 非常简单，直接使用serializer的write方法</span>
+    <span class="comment">// serializer是org.apache.flume.serialization.EventSerializer接口的实现类</span>
+    <span class="comment">// 默认的Serializer是BodyTextEventSerializer</span>
+    serializer.write(e);
+}
+</code></pre><p>open方法：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">open</span><span class="params">(String filePath)</span> <span class="keyword">throws</span> IOException </span>{
+    Configuration conf = <span class="keyword">new</span> Configuration();
+    <span class="comment">// 构造hdfs路径</span>
+    Path dstPath = <span class="keyword">new</span> Path(filePath);
+    FileSystem hdfs = getDfs(conf, dstPath);
+    <span class="comment">// 调用doOpen方法</span>
+    doOpen(conf, dstPath, hdfs);
+}
+
+<span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">doOpen</span><span class="params">(Configuration conf,
+    Path dstPath, FileSystem hdfs)</span> <span class="keyword">throws</span>
+        IOException </span>{
+    <span class="keyword">if</span>(useRawLocalFileSystem) {
+      <span class="keyword">if</span>(hdfs <span class="keyword">instanceof</span> LocalFileSystem) {
+        hdfs = ((LocalFileSystem)hdfs).getRaw();
+      } <span class="keyword">else</span> {
+        logger.warn(<span class="string">"useRawLocalFileSystem is set to true but file system "</span> +
+            <span class="string">"is not of type LocalFileSystem: "</span> + hdfs.getClass().getName());
+      }
+    }
+
+    <span class="keyword">boolean</span> appending = <span class="keyword">false</span>;
+    <span class="comment">// 构造FSDataOutputStream，作为属性outStream</span>
+    <span class="keyword">if</span> (conf.getBoolean(<span class="string">"hdfs.append.support"</span>, <span class="keyword">false</span>) == <span class="keyword">true</span> &amp;&amp; hdfs.isFile
+            (dstPath)) {
+      outStream = hdfs.append(dstPath);
+      appending = <span class="keyword">true</span>;
+    } <span class="keyword">else</span> {
+      outStream = hdfs.create(dstPath);
+    }
+
+    <span class="comment">// 初始化Serializer</span>
+    serializer = EventSerializerFactory.getInstance(
+        serializerType, serializerContext, outStream);
+    <span class="keyword">if</span> (appending &amp;&amp; !serializer.supportsReopen()) {
+      outStream.close();
+      serializer = <span class="keyword">null</span>;
+      <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"serializer ("</span> + serializerType +
+          <span class="string">") does not support append"</span>);
+    }
+
+    <span class="comment">// must call superclass to check for replication issues</span>
+    registerCurrentStream(outStream, hdfs, dstPath);
+
+    <span class="keyword">if</span> (appending) {
+      serializer.afterReopen();
+    } <span class="keyword">else</span> {
+      serializer.afterCreate();
+    }
+}
+</code></pre><p>close方法：</p>
+<pre><code><span class="at_rule">@<span class="keyword">Override</span>
+public void <span class="function">close</span>() throws IOException </span>{
+    <span class="tag">serializer</span><span class="class">.flush</span>();
+    <span class="tag">serializer</span><span class="class">.beforeClose</span>();
+    <span class="tag">outStream</span><span class="class">.flush</span>();
+    <span class="tag">outStream</span><span class="class">.sync</span>();
+    <span class="tag">outStream</span><span class="class">.close</span>();
+
+    <span class="tag">unregisterCurrentStream</span>();
+}
+</code></pre><p>sync方法：</p>
+<pre><code><span class="at_rule">@<span class="keyword">Override</span>
+public void <span class="function">sync</span>() throws IOException </span>{
+    <span class="tag">serializer</span><span class="class">.flush</span>();
+    <span class="tag">outStream</span><span class="class">.flush</span>();
+    <span class="tag">outStream</span><span class="class">.sync</span>();
+}
+</code></pre><p>isUnderReplicated方法，在AbstractHDFSWriter中定义：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">isUnderReplicated</span><span class="params">()</span> </span>{
+    <span class="keyword">try</span> {
+      <span class="comment">// 得到目前文件replication后的块数</span>
+      <span class="keyword">int</span> numBlocks = getNumCurrentReplicas();
+      <span class="keyword">if</span> (numBlocks == -<span class="number">1</span>) {
+        <span class="keyword">return</span> <span class="keyword">false</span>;
+      }
+      <span class="keyword">int</span> desiredBlocks;
+      <span class="keyword">if</span> (configuredMinReplicas != <span class="keyword">null</span>) {
+        <span class="comment">// 如果配置了hdfs.minBlockReplicas</span>
+        desiredBlocks = configuredMinReplicas;
+      } <span class="keyword">else</span> {
+        <span class="comment">// 没配置hdfs.minBlockReplicas的话直接从hdfs配置中拿</span>
+        desiredBlocks = getFsDesiredReplication();
+      }
+      <span class="comment">// 如果当前复制的块比期望要复制的块数字要小的话，返回true</span>
+      <span class="keyword">return</span> numBlocks &lt; desiredBlocks;
+    } <span class="keyword">catch</span> (IllegalAccessException e) {
+      logger.<span class="keyword">error</span>(<span class="string">"Unexpected error while checking replication factor"</span>, e);
+    } <span class="keyword">catch</span> (InvocationTargetException e) {
+      logger.<span class="keyword">error</span>(<span class="string">"Unexpected error while checking replication factor"</span>, e);
+    } <span class="keyword">catch</span> (IllegalArgumentException e) {
+      logger.<span class="keyword">error</span>(<span class="string">"Unexpected error while checking replication factor"</span>, e);
+    }
+    <span class="keyword">return</span> <span class="keyword">false</span>;
+}
+</code></pre><h2 id="总结">总结</h2><p>hdfs.rollInterval，hdfs.rollSize，hdfs.rollCount，hdfs.minBlockReplicas，hdfs.batchSize这5个配置影响着hdfs文件的关闭。</p>
+<p><strong>注意，这5个配置影响的是一个hdfs文件，是一个hdfs文件。当hdfs文件关闭的时候，这些配置指标会重新开始计算。因为BucketWriter中的open方法里会调用resetCounters方法，这个方法会重置计数器。而基于hdfs.rollInterval的timedRollFuture线程返回值是在close方法中被销毁的。因此，只要close文件，并且open新文件的时候，这5个属性都会重新开始计算。</strong></p>
+<p>hdfs.rollInterval与时间有关，当时间达到hdfs.rollInterval配置的秒数，那么会close文件。</p>
+<p>hdfs.rollSize与每个event的字节大小有关，当一个一个event的字节相加起来大于等于hdfs.rollSize的时候，那么会close文件。</p>
+<p>hdfs.rollCount与事件的个数有关，当事件个数大于等于hdfs.rollCount的时候，那么会close文件。</p>
+<p>hdfs.batchSize表示当事件添加到hdfs.batchSize个的时候，也就是说HDFS Sink每次会拿hdfs.batchSize个事件，而且这些所有的事件都写进了同一个hdfs文件，这才会触发本次条件，并且其他4个配置都未达成条件。然后会close文件。</p>
+<p>hdfs.minBlockReplicas表示期望hdfs对文件最小的复制块数。所以有时候我们配置了hdfs.rollInterval，hdfs.rollSize，hdfs.rollCount这3个参数，并且这3个参数都没有符合条件，但是还是生成了多个文件，这就是因为这个参数导致的，而且这个参数的优先级比hdfs.rollSize，hdfs.rollCount要高。</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/07/14/flume-notes/" itemprop="url">
+                  Flume几个比较有用的功能(用到新功能后会更新文章)
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-07-14T22:23:23+08:00" content="2015-07-14">
+              2015-07-14
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/07/14/flume-notes/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/14/flume-notes/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p>根据项目的经验，介绍几个flume比较有用的功能。</p>
+<h2 id="ChannelSelector功能">ChannelSelector功能</h2><p>flume内置的ChannelSelector有两种，分别是Replicating和Multiplexing。</p>
+<p>Replicating类型的ChannelSelector会针对每一个Event，拷贝到所有的Channel中，这是默认的ChannelSelector。</p>
+<p>replicating类型的ChannelSelector例子如下：</p>
+<pre><code>a1.sources = r1
+a1.channels = c1 c2 <span class="preprocessor"># 如果有<span class="number">100</span>个Event，那么c1和c2中都会有这<span class="number">100</span>个事件</span>
+
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = <span class="number">1000</span>
+a1.channels.c1.transactionCapacity = <span class="number">100</span>
+
+
+a1.channels.c2.type = memory
+a1.channels.c2.capacity = <span class="number">1000</span>
+a1.channels.c2.transactionCapacity = <span class="number">100</span>
+</code></pre><p>Multiplexing类型的ChannelSelector会根据Event中Header中的某个属性决定分发到哪个Channel。</p>
+<p>multiplexing类型的ChannelSelector例子如下：</p>
+<pre><code><span class="label">a1.sources</span> = <span class="literal">r1</span>
+
+<span class="label">a1.sources.source1.selector.type</span> = <span class="keyword">multiplexing
+</span><span class="label">a1.sources.source1.selector.header</span> = validation # 以header中的validation对应的值作为条件
+<span class="label">a1.sources.source1.selector.mapping.SUCCESS</span> = <span class="literal">c2</span> # 如果header中validation的值为SUCCESS，使用<span class="literal">c2</span>这个channel
+<span class="label">a1.sources.source1.selector.mapping.FAIL</span> = <span class="literal">c1</span> # 如果header中validation的值为FAIL，使用<span class="literal">c1</span>这个channel
+<span class="label">a1.sources.source1.selector.default</span> = <span class="literal">c1</span> # 默认使用<span class="literal">c1</span>这个channel
+</code></pre><h2 id="Sink的Serializer">Sink的Serializer</h2><p>HDFS Sink， HBase Sink，ElasticSearch Sink都支持Serializer功能。</p>
+<p>Serializer的作用是sink写入的时候，做一些处理。</p>
+<h3 id="HDFS_Sink的Serializer">HDFS Sink的Serializer</h3><p>在<a href="http://fangjian0423.github.io/2015/06/23/flume-sink/">Flume Sink组件分析中</a>一文中，分析过了HDFS写文件的时候使用BucketWriter写数据，BucketWriter内部使用HDFSWriter属性写数据。HDFSWriter是一个处理hdfs文件的接口。</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">HDFSWriter</span> <span class="keyword">extends</span> <span class="title">Configurable</span> </span>{
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">open</span><span class="params">(String filePath)</span> <span class="keyword">throws</span> IOException</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">open</span><span class="params">(String filePath, CompressionCodec codec,
+      CompressionType cType)</span> <span class="keyword">throws</span> IOException</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">append</span><span class="params">(Event e)</span> <span class="keyword">throws</span> IOException</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sync</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isUnderReplicated</span><span class="params">()</span></span>;
+
+}
+</code></pre><p>HDFSWriter的结构如下：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/flume-note1.png" alt=""></p>
+<p>hdfs sink的fileType配置如下：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/flume-note2.png" alt=""></p>
+<p>HDFSDataStream对应DataStream类型，HDFSCompressedDataStream对应CompressedStream，HDFSSequenceFile对应SequenceFile。</p>
+<p>以DataStream为例，HDFSDataStream的append方法如下：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">append</span><span class="params">(Event e)</span> <span class="keyword">throws</span> IOException </span>{
+    serializer.write(e);
+}
+</code></pre><p>这个serializer是HDFSDataStream的属性。是EventSerializer接口类型的属性。HDFSDataStream的append很简单，直接调用serializer的writer方法。</p>
+<p>HDFS Sink的Serializer都需要实现EventSerializer接口：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">EventSerializer</span> </span>{
+
+  <span class="keyword">public</span> <span class="keyword">static</span> String CTX_PREFIX = <span class="string">"serializer."</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterCreate</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterReopen</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">write</span><span class="params">(Event event)</span> <span class="keyword">throws</span> IOException</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">flush</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">beforeClose</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">supportsReopen</span><span class="params">()</span></span>;
+
+  <span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Builder</span> </span>{
+    <span class="function"><span class="keyword">public</span> EventSerializer <span class="title">build</span><span class="params">(Context context, OutputStream out)</span></span>;
+  }
+
+}
+</code></pre><p>HDFS Sink默认的serializer是BodyTextEventSerializer类，不配置的话也是使用这个Serializer。</p>
+<p>BodyTextEventSerializer的writer方法：</p>
+<pre><code>@Override
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="keyword">write</span>(Event e) <span class="keyword">throws</span> IOException {
+  out.<span class="keyword">write</span>(e.getBody());
+  <span class="keyword">if</span> (appendNewline) {
+    out.<span class="keyword">write</span>(<span class="string">'\n'</span>);
+  }
+}
+</code></pre><p>这就是为什么hdfs sink写数据的时候写完会自动换行的原因。</p>
+<p>当然，我们可以定义自定义的Serializer来满足自身的要求。</p>
+<h3 id="HBase_Sink的Serializer">HBase Sink的Serializer</h3><p>HBase Sink的Serializer都需要实现HbaseEventSerializer接口。</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">HbaseEventSerializer</span> <span class="keyword">extends</span> <span class="title">Configurable</span>,
+            <span class="title">ConfigurableComponent</span> </span>{
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initialize</span><span class="params">(Event event, <span class="keyword">byte</span>[] columnFamily)</span></span>;
+
+  <span class="function"><span class="keyword">public</span> List&lt;Row&gt; <span class="title">getActions</span><span class="params">()</span></span>;
+
+  <span class="function"><span class="keyword">public</span> List&lt;Increment&gt; <span class="title">getIncrements</span><span class="params">()</span></span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">()</span></span>;
+
+}
+</code></pre><p>HBaseSink的process方法关键代码：</p>
+<pre><code>for <span class="list">(<span class="comment">; i &lt; batchSize; i++) {</span>
+    Event event = channel.take<span class="list">()</span><span class="comment">;</span>
+    if <span class="list">(<span class="keyword">event</span> == null)</span> {
+      if <span class="list">(<span class="keyword">i</span> == <span class="number">0</span>)</span> {
+        status = Status.BACKOFF<span class="comment">;</span>
+        sinkCounter.incrementBatchEmptyCount<span class="list">()</span><span class="comment">;</span>
+      } else {
+        sinkCounter.incrementBatchUnderflowCount<span class="list">()</span><span class="comment">;</span>
+      }
+      break<span class="comment">;</span>
+    } else {
+      serializer.initialize<span class="list">(<span class="keyword">event</span>, columnFamily)</span><span class="comment">;</span>
+      actions.addAll<span class="list">(<span class="keyword">serializer</span>.getActions<span class="list">()</span>)</span><span class="comment">;</span>
+      incs.addAll<span class="list">(<span class="keyword">serializer</span>.getIncrements<span class="list">()</span>)</span><span class="comment">;</span>
+    }
+  }</span>
+</code></pre><p>actions和incs都加入了serializer里的actions和increments。之后会commit这里的actions和increments数据。</p>
+<p>HBase默认的Serializer是org.apache.flume.sink.hbase.SimpleHbaseEventSerializer。</p>
+<p>我们也可以根据需求定义自定义的HbaseEventSerializer，需要注意的是getActions和getIncrements方法。</p>
+<p>HBase Sink会加入这2个方法的返回值，并写入到HBase。</p>
+<h3 id="Elasticsearch_Sink的Serializer">Elasticsearch Sink的Serializer</h3><p>Elasticsearch Sink的Serializer都需要实现ElasticSearchEventSerializer接口。</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ElasticSearchEventSerializer</span> <span class="keyword">extends</span> <span class="title">Configurable</span>,
+                <span class="title">ConfigurableComponent</span> </span>{
+
+  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Charset charset = Charset.defaultCharset();
+
+  <span class="function"><span class="keyword">abstract</span> BytesStream <span class="title">getContentBuilder</span><span class="params">(Event event)</span> <span class="keyword">throws</span> IOException</span>;
+}
+</code></pre><p>默认的Serializer是org.apache.flume.sink.elasticsearch.ElasticSearchLogStashEventSerializer。</p>
+<p>同样，我们也可以根据需求定义自定义的ElasticSearchEventSerialize，就不分析了。</p>
+<h2 id="SinkGroup">SinkGroup</h2><p>这个功能暂时还没用到，不过以后可能会用到。</p>
+<p>Sink Group的作用是把多个Sink合并成一个。这样的话Sink处理器会根据配置的类型来决定如何使用Sink。比如可以使用load balance，failover策略，或者可以使用自定义的策略来处理。</p>
+<p><a href="https://flume.apache.org/FlumeUserGuide.html#default-sink-processor" target="_blank" rel="external">官方文档Sink Group</a>已经写的很清楚了。</p>
+<h2 id="其它">其它</h2><p>目前还正在用Flume开发一些功能，后续可能会使用一些新的功能，到时候回头更新这篇文章。</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/07/12/elasticsearch-tutorials/" itemprop="url">
+                  Elasticsearch入门
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-07-12T03:06:59+08:00" content="2015-07-12">
+              2015-07-12
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/07/12/elasticsearch-tutorials/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/12/elasticsearch-tutorials/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p>之前搭建logstash的时候使用过elasticsearch。 刚好最近在公司也用到了es，写篇水文记录一下也当做笔记吧。</p>
+<p><a href="https://www.elastic.co/products/elasticsearch" target="_blank" rel="external">Elasticsearch</a>是一个基于Lucene的搜索服务器。它提供了一个分布式多用户能力的全文搜索引擎，使用RESTful web暴露接口。</p>
+<p>它有许多特性，比如以下几个属性：</p>
+<p>1.实时数据<br>2.实时分析<br>3.分布式设计<br>4.高可用性<br>5.全文搜索<br>6.面向文档</p>
+<h2 id="索引">索引</h2><p>索引Index是es中的一个存储数据的地方。相当于关系型数据库中的数据库。</p>
+<p>创建一个员工索引的例子如下，创建索引还有很多选项，就不一一说明了：</p>
+<pre><code>POST <span class="variable">$HOST</span>/employee
+
+{
+  <span class="string">"mappings"</span>: {
+    <span class="string">"employee"</span>: {
+      <span class="string">"_ttl"</span>: {
+        <span class="string">"enabled"</span>: true,
+        <span class="string">"default"</span>: <span class="string">"5d"</span>
+      },
+      <span class="string">"_timestamp"</span>: {
+        <span class="string">"enabled"</span>: true,
+        <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span>
+      },
+      <span class="string">"properties"</span>: {
+        <span class="string">"name"</span>: {
+          <span class="string">"type"</span>: <span class="string">"string"</span>,
+          <span class="string">"store"</span>: <span class="string">"no"</span>,
+          <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
+          <span class="string">"index_options"</span>: <span class="string">"docs"</span>
+        },
+        <span class="string">"birth_date"</span>: {
+          <span class="string">"type"</span>: <span class="string">"date"</span>,
+          <span class="string">"store"</span>: <span class="string">"no"</span>,
+          <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
+          <span class="string">"index_options"</span>: <span class="string">"docs"</span>,
+          <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span>
+        },
+        <span class="string">"age"</span>: {
+          <span class="string">"type"</span>: <span class="string">"date"</span>,
+          <span class="string">"store"</span>: <span class="string">"no"</span>,
+          <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
+          <span class="string">"index_options"</span>: <span class="string">"docs"</span>,
+          <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span>
+        }
+      }
+    }
+  }
+}
+</code></pre><p>索引创建完之后还可以修改(添加一个hobby属性)，需要注意的是，修改mapping不允许修改属性的类型：</p>
+<pre><code>PUT <span class="variable">$HOST</span>/employee/employee/_mapping
+
+{
+<span class="string">"employee"</span>: {
+    <span class="string">"properties"</span>: {
+        <span class="string">"name"</span>: {
+            <span class="string">"type"</span>: <span class="string">"string"</span>,
+            <span class="string">"store"</span>: <span class="string">"no"</span>,
+            <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
+            <span class="string">"index_options"</span>: <span class="string">"docs"</span>
+        },
+        <span class="string">"birth_date"</span>: {
+            <span class="string">"type"</span>: <span class="string">"date"</span>,
+            <span class="string">"store"</span>: <span class="string">"no"</span>,
+            <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
+            <span class="string">"index_options"</span>: <span class="string">"docs"</span>,
+            <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span>
+        },
+        <span class="string">"age"</span>: {
+            <span class="string">"type"</span>: <span class="string">"date"</span>,
+            <span class="string">"store"</span>: <span class="string">"no"</span>,
+            <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
+            <span class="string">"index_options"</span>: <span class="string">"docs"</span>,
+            <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span>
+        },
+        <span class="string">"hobby"</span> : {
+            <span class="string">"type"</span> : <span class="string">"string"</span>,
+            <span class="string">"index_options"</span>: <span class="string">"docs"</span>
+        }
+    }
+}
+}
+</code></pre><h2 id="文档">文档</h2><p>es存储的数据叫做文档，文档存储在索引中。 每个文档都有4个元数据，分别是_id, _type，_index和_version。</p>
+<p>_id代表文档的唯一标识符。</p>
+<p>_type表示文档代表的对象种类。</p>
+<p>_index表示文档存储在哪个索引。</p>
+<p>_version表示文档的版本，文档被修改过一次，_version就会+1。</p>
+<p>在员工索引中创建文档：</p>
+<pre><code>POST <span class="variable">$HOST</span>/employee/employee
+
+{
+    <span class="string">"name"</span>: <span class="string">"format"</span>,
+    <span class="string">"age"</span>: <span class="number">100</span>,
+    <span class="string">"birth_date"</span>: <span class="string">"1900-01-01 00:00:00"</span>
+}
+</code></pre><p>返回：</p>
+<pre><code>{
+    "<span class="attribute">_index</span>": <span class="value"><span class="string">"employee"</span></span>,
+    "<span class="attribute">_type</span>": <span class="value"><span class="string">"employee"</span></span>,
+    "<span class="attribute">_id</span>": <span class="value"><span class="string">"AU5-epuwslU6QVfs_UoX"</span></span>,
+    "<span class="attribute">_version</span>": <span class="value"><span class="number">1</span></span>,
+    "<span class="attribute">created</span>": <span class="value"><span class="literal">true</span>
+</span>}
+</code></pre><p>修改文档：</p>
+<pre><code>POST <span class="variable">$HOST</span>/employee/employee/AU5-epuwslU6QVfs_UoX
+
+{
+    <span class="string">"name"</span>: <span class="string">"format"</span>,
+    <span class="string">"age"</span>: <span class="number">200</span>,
+    <span class="string">"birth_date"</span>: <span class="string">"1900-01-01 00:00:00"</span>
+}
+</code></pre><p>返回：</p>
+<pre><code>{
+    "<span class="attribute">_index</span>": <span class="value"><span class="string">"employee"</span></span>,
+    "<span class="attribute">_type</span>": <span class="value"><span class="string">"employee"</span></span>,
+    "<span class="attribute">_id</span>": <span class="value"><span class="string">"AU5-epuwslU6QVfs_UoX"</span></span>,
+    "<span class="attribute">_version</span>": <span class="value"><span class="number">2</span></span>,
+    "<span class="attribute">created</span>": <span class="value"><span class="literal">false</span>
+</span>}
+</code></pre><p>删除文档：</p>
+<pre><code>DELETE <span class="variable">$HOST</span>/employee/employee/AU5-epuwslU6QVfs_UoX
+</code></pre><p>返回：</p>
+<pre><code>{
+    "<span class="attribute">found</span>": <span class="value"><span class="literal">true</span></span>,
+    "<span class="attribute">_index</span>": <span class="value"><span class="string">"employee"</span></span>,
+    "<span class="attribute">_type</span>": <span class="value"><span class="string">"employee"</span></span>,
+    "<span class="attribute">_id</span>": <span class="value"><span class="string">"AU5-epuwslU6QVfs_UoX"</span></span>,
+    "<span class="attribute">_version</span>": <span class="value"><span class="number">3</span>
+</span>}
+</code></pre><h2 id="总结">总结</h2><p>写了篇水文记录一下es，es还有很多很强大的功能，比如一些query，filter，aggregations等。官方文档上已经写的非常清楚了。这里就不讲了。  - -||</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/07/07/flume-run/" itemprop="url">
+                  Flume运行过程源码分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-07-07T23:23:23+08:00" content="2015-07-07">
+              2015-07-07
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/07/07/flume-run/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/07/flume-run/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <h2 id="Flume运行过程分析">Flume运行过程分析</h2><h3 id="入口Application">入口Application</h3><p>Flume运行的主类是org.apache.flume.node.Application的main方法。</p>
+<p>命令行args参数如下：</p>
+<pre><code><span class="literal">-</span><span class="literal">-</span><span class="comment">conf</span><span class="literal">-</span><span class="comment">file</span> <span class="comment">YourConfigFile</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">AgentName</span>
+</code></pre><p>main方法里会先判断参数中是否有z或者zkConnString，如果配置了这两个参数中其中一个的话，那么会使用PollingZooKeeperConfigurationProvider或StaticZooKeeperConfigurationProvider配置。否则使用PollingPropertiesFileConfigurationProvider或PropertiesFileConfigurationProvider配置。</p>
+<p>一般我们只传–conf-file和–name，那么就会使用PollingPropertiesFileConfigurationProvider进行配置。</p>
+<pre><code><span class="comment">// EventBus，监听者设计模式</span>
+EventBus eventBus = <span class="keyword">new</span> EventBus(agentName + <span class="string">"-event-bus"</span>);
+<span class="comment">// 构造PollingPropertiesFileConfigurationProvider，会处理配置文件相关的信息</span>
+PollingPropertiesFileConfigurationProvider configurationProvider =
+        <span class="keyword">new</span> PollingPropertiesFileConfigurationProvider(
+          agentName, configurationFile, eventBus, <span class="number">30</span>);
+components.add(configurationProvider);
+application = <span class="keyword">new</span> Application(components);
+<span class="comment">// EventBus注册application</span>
+eventBus.<span class="keyword">register</span>(application);
+
+...
+
+application.start();
+</code></pre><p>Application内部有个handleConfigurationEvent方法，使用Subscribe注解，EventBus中被使用到：</p>
+<pre><code><span class="annotation">@Subscribe</span>
+<span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">handleConfigurationEvent</span><span class="params">(MaterializedConfiguration conf)</span> </span>{
+  stopAllComponents();
+  startAllComponents(conf);
+}
+</code></pre><p>接下来看Application的start方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>{
+    <span class="comment">// 使用生命周期组件管理器进行管理，这里其实只有1个组件，那就是PollingPropertiesFileConfigurationProvider</span>
+    <span class="keyword">for</span>(LifecycleAware component : components) {
+      <span class="comment">// 管理器管理各个组件的时候会传入2个参数，分别是管理策略(自动重启策略)和所需状态(START状态)</span>
+      supervisor.supervise(component,
+          <span class="keyword">new</span> SupervisorPolicy.AlwaysRestartPolicy(), LifecycleState.START);
+    }
+}
+</code></pre><p>LifecycleSupervisor生命周期管理者的supervise方法的主要代码：</p>
+<pre><code>// Supervisoree是一个带有status和policy这2个属性的封装类。这2个属性分别表示状态和管理策略。其中管理策略只有2种策略，分别是AlwaysRestartPolicy(自动重启策略)和OnceOnlyPolicy(只启动一次策略)；状态表示这个组件状态，状态Status中包括首次发生，最后发生，失败次数，目标状态等属性。
+Supervisoree process = new Supervisoree()<span class="comment">;</span>
+process.status = new Status()<span class="comment">;</span>
+
+process.policy = policy<span class="comment">;</span>
+// 所需状态初始化成START
+process.status.desiredState = desiredState<span class="comment">;</span>
+process.status.error = false<span class="comment">;</span>
+
+ // 起一个监控线程。 将Supervisoree和组件参数传入
+MonitorRunnable monitorRunnable = new MonitorRunnable()<span class="comment">;</span>
+monitorRunnable.lifecycleAware = lifecycleAware<span class="comment">;</span>
+monitorRunnable.supervisoree = process<span class="comment">;</span>
+monitorRunnable.monitorService = monitorService<span class="comment">;</span>
+
+supervisedProcesses.put(lifecycleAware, process)<span class="comment">;</span>
+
+ScheduledFuture&lt;?&gt; future = monitorService.scheduleWithFixedDelay(
+    monitorRunnable, 0, 3, TimeUnit.SECONDS)<span class="comment">;</span>
+monitorFutures.put(lifecycleAware, future)<span class="comment">;</span>
+</code></pre><p>监控线程MonitorRunnable的run方法主要代码：</p>
+<pre><code><span class="keyword">switch</span> (supervisoree.status.desiredState) {
+      <span class="comment">// 所需状态之前已经初始化成START状态，那么会执行组件的start方法。这里的组件是之前分析的PollingPropertiesFileConfigurationProvider</span>
+      <span class="keyword">case</span> START:
+        <span class="keyword">try</span> {
+          lifecycleAware.start();
+        } <span class="keyword">catch</span> (Throwable e) {
+          logger.<span class="keyword">error</span>(<span class="string">"Unable to start "</span> + lifecycleAware
+              + <span class="string">" - Exception follows."</span>, e);
+          <span class="keyword">if</span> (e <span class="keyword">instanceof</span> Error) {
+            <span class="comment">// This component can never recover, shut it down.</span>
+            supervisoree.status.desiredState = LifecycleState.STOP;
+            <span class="keyword">try</span> {
+              lifecycleAware.stop();
+              logger.warn(<span class="string">"Component {} stopped, since it could not be"</span>
+                  + <span class="string">"successfully started due to missing dependencies"</span>,
+                  lifecycleAware);
+            } <span class="keyword">catch</span> (Throwable e1) {
+              logger.<span class="keyword">error</span>(<span class="string">"Unsuccessful attempt to "</span>
+                  + <span class="string">"shutdown component: {} due to missing dependencies."</span>
+                  + <span class="string">" Please shutdown the agent"</span>
+                  + <span class="string">"or disable this component, or the agent will be"</span>
+                  + <span class="string">"in an undefined state."</span>, e1);
+              supervisoree.status.<span class="keyword">error</span> = <span class="keyword">true</span>;
+              <span class="keyword">if</span> (e1 <span class="keyword">instanceof</span> Error) {
+                <span class="keyword">throw</span> (Error) e1;
+              }
+              <span class="comment">// Set the state to stop, so that the conf poller can</span>
+              <span class="comment">// proceed.</span>
+            }
+          }
+          supervisoree.status.failures++;
+        }
+        <span class="keyword">break</span>;
+      <span class="keyword">case</span> STOP:
+        <span class="keyword">try</span> {
+          lifecycleAware.stop();
+        } <span class="keyword">catch</span> (Throwable e) {
+          logger.<span class="keyword">error</span>(<span class="string">"Unable to stop "</span> + lifecycleAware
+              + <span class="string">" - Exception follows."</span>, e);
+          <span class="keyword">if</span> (e <span class="keyword">instanceof</span> Error) {
+            <span class="keyword">throw</span> (Error) e;
+          }
+          supervisoree.status.failures++;
+        }
+        <span class="keyword">break</span>;
+      <span class="keyword">default</span>:
+        logger.warn(<span class="string">"I refuse to acknowledge {} as a desired state"</span>,
+            supervisoree.status.desiredState);
+    }
+</code></pre><p>PollingPropertiesFileConfigurationProvider的start方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">void</span> start() {
+    LOGGER.info(<span class="string">"Configuration provider starting"</span>);
+
+    Preconditions.checkState(<span class="keyword">file</span> != <span class="keyword">null</span>,
+        <span class="string">"The parameter file must not be null"</span>);
+
+    <span class="comment">// 初始化线程池</span>
+    executorService = Executors.newSingleThreadScheduledExecutor(
+            <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"conf-file-poller-%d"</span>)
+                .build());
+
+    <span class="comment">// 起一个文件观察线程</span>
+    FileWatcherRunnable fileWatcherRunnable =
+        <span class="keyword">new</span> FileWatcherRunnable(<span class="keyword">file</span>, counterGroup);
+
+    executorService.scheduleWithFixedDelay(fileWatcherRunnable, <span class="number">0</span>, interval,
+        TimeUnit.SECONDS);
+    <span class="comment">// 初始化组件的状态为START</span>
+    lifecycleState = LifecycleState.START;
+
+    LOGGER.debug(<span class="string">"Configuration provider started"</span>);
+}
+</code></pre><p>文件观察线程FileWatcherRunnable的run方法：</p>
+<pre><code>public void <span class="keyword">run</span>() {
+  LOGGER.debug(<span class="string">"Checking file:{} for changes"</span>, <span class="keyword">file</span>);
+
+  counterGroup.incrementAndGet(<span class="string">"file.checks"</span>);
+  <span class="comment">// 得到文件的上次修改时间</span>
+  long lastModified = <span class="keyword">file</span>.lastModified();
+  <span class="comment">// 如果修改了文件，那么会执行以下代码。首次发生的时候lastChange为0，所以肯定会执行一次。以后只要配置改了才会再次执行</span>
+  <span class="keyword">if</span> (lastModified &gt; lastChange) {
+    LOGGER.info(<span class="string">"Reloading configuration file:{}"</span>, <span class="keyword">file</span>);
+
+    counterGroup.incrementAndGet(<span class="string">"file.loads"</span>);
+
+    lastChange = lastModified;
+
+    try {
+      <span class="comment">// eventBus属性之前在Application中分析过，而且它注册了application实例</span>
+      <span class="comment">// Application中有个handleConfigurationEvent方法，eventBus是个观察者设计模式，所以会钓鱼handleConfigurationEvent这个方法</span>
+      <span class="comment">// getConfiguration方法会parse配置文件中的配置信息</span>
+      eventBus.<span class="keyword">post</span>(getConfiguration());
+    } catch (Exception <span class="keyword">e</span>) {
+      LOGGER.<span class="keyword">error</span>(<span class="string">"Failed to load configuration data. Exception follows."</span>,
+          <span class="keyword">e</span>);
+    } catch (NoClassDefFoundError <span class="keyword">e</span>) {
+      LOGGER.<span class="keyword">error</span>(<span class="string">"Failed to start agent because dependencies were not "</span> +
+          <span class="string">"found in classpath. Error follows."</span>, <span class="keyword">e</span>);
+    } catch (Throwable t) {
+      <span class="comment">// caught because the caller does not handle or log Throwables</span>
+      LOGGER.<span class="keyword">error</span>(<span class="string">"Unhandled error"</span>, t);
+    }
+  }
+}
+</code></pre><p>getConfiguration方法是在PollingPropertiesFileConfigurationProvider的父类AbstractConfigurationProvider中定义的：</p>
+<pre><code>public MaterializedConfiguration getConfiguration() {
+    MaterializedConfiguration conf = <span class="keyword">new</span> SimpleMaterializedConfiguration();
+    FlumeConfiguration fconfig = getFlumeConfiguration();
+    AgentConfiguration agentConf = fconfig.getConfigurationFor(getAgentName());
+    <span class="keyword">if</span> (agentConf != <span class="keyword">null</span>) {
+      <span class="comment">// 构造Channel</span>
+      <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, ChannelComponent&gt; channelComponentMap = Maps.newHashMap();
+      <span class="comment">// 构造Source</span>
+      <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, SourceRunner&gt; sourceRunnerMap = Maps.newHashMap();
+      <span class="comment">// 构造Sink</span>
+      <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, SinkRunner&gt; sinkRunnerMap = Maps.newHashMap();
+      <span class="keyword">try</span> {
+        loadChannels(agentConf, channelComponentMap);
+        loadSources(agentConf, channelComponentMap, sourceRunnerMap);
+        loadSinks(agentConf, channelComponentMap, sinkRunnerMap);
+        <span class="built_in">Set</span>&lt;<span class="built_in">String</span>&gt; channelNames =
+            <span class="keyword">new</span> HashSet&lt;<span class="built_in">String</span>&gt;(channelComponentMap.keySet());
+        <span class="keyword">for</span>(<span class="built_in">String</span> channelName : channelNames) {
+          ChannelComponent channelComponent = channelComponentMap.
+              <span class="literal">get</span>(channelName);
+          <span class="keyword">if</span>(channelComponent.components.isEmpty()) {
+            LOGGER.warn(<span class="built_in">String</span>.format(<span class="string">"Channel %s has no components connected"</span> +
+                <span class="string">" and has been removed."</span>, channelName));
+            channelComponentMap.remove(channelName);
+            <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, Channel&gt; nameChannelMap = channelCache.
+                <span class="literal">get</span>(channelComponent.channel.getClass());
+            <span class="keyword">if</span>(nameChannelMap != <span class="keyword">null</span>) {
+              nameChannelMap.remove(channelName);
+            }
+          } <span class="keyword">else</span> {
+            LOGGER.info(<span class="built_in">String</span>.format(<span class="string">"Channel %s connected to %s"</span>,
+                channelName, channelComponent.components.toString()));
+            conf.addChannel(channelName, channelComponent.channel);
+          }
+        }
+        <span class="keyword">for</span>(<span class="built_in">Map</span>.Entry&lt;<span class="built_in">String</span>, SourceRunner&gt; entry : sourceRunnerMap.entrySet()) {
+          conf.addSourceRunner(entry.getKey(), entry.getValue());
+        }
+        <span class="keyword">for</span>(<span class="built_in">Map</span>.Entry&lt;<span class="built_in">String</span>, SinkRunner&gt; entry : sinkRunnerMap.entrySet()) {
+          conf.addSinkRunner(entry.getKey(), entry.getValue());
+        }
+      } <span class="keyword">catch</span> (InstantiationException ex) {
+        LOGGER.error(<span class="string">"Failed to instantiate component"</span>, ex);
+      } <span class="keyword">finally</span> {
+        channelComponentMap.clear();
+        sourceRunnerMap.clear();
+        sinkRunnerMap.clear();
+      }
+    } <span class="keyword">else</span> {
+      LOGGER.warn(<span class="string">"No configuration found for this host:{}"</span>, getAgentName());
+    }
+    <span class="keyword">return</span> conf;
+}
+</code></pre><p>当所有的组件，Source，Channel，Sink加载完之后。会调用handleConfigurationEvent方法：</p>
+<pre><code><span class="annotation">@Subscribe</span>
+<span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">handleConfigurationEvent</span><span class="params">(MaterializedConfiguration conf)</span> </span>{
+  <span class="comment">// 先关闭之前启动的所有Source，Channel，Sink组件(首次运行的时候并没有任何开启的组件)</span>
+  stopAllComponents();
+  <span class="comment">// 再重新开启这些组件</span>
+  startAllComponents(conf);
+}
+</code></pre><p>看下startAllComponents方法：</p>
+<pre><code><span class="comment">// 启动各个组件的时候同样适用supervisor的supervise方法。然后启动MonitorRunnable线程调用各个组件的start方法。</span>
+<span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">startAllComponents</span><span class="params">(MaterializedConfiguration materializedConfiguration)</span> </span>{
+    logger.info(<span class="string">"Starting new configuration:{}"</span>, materializedConfiguration);
+
+    <span class="keyword">this</span>.materializedConfiguration = materializedConfiguration;
+
+    <span class="keyword">for</span> (Entry&lt;String, Channel&gt; entry :
+      materializedConfiguration.getChannels().entrySet()) {
+      <span class="keyword">try</span>{
+        logger.info(<span class="string">"Starting Channel "</span> + entry.getKey());
+        supervisor.supervise(entry.getValue(),
+            <span class="keyword">new</span> SupervisorPolicy.AlwaysRestartPolicy(), LifecycleState.START);
+      } <span class="keyword">catch</span> (Exception e){
+        logger.<span class="keyword">error</span>(<span class="string">"Error while starting {}"</span>, entry.getValue(), e);
+      }
+    }
+
+    <span class="comment">/*
+     * Wait for all channels to start.
+     */</span>
+    <span class="keyword">for</span>(Channel ch: materializedConfiguration.getChannels().values()){
+      <span class="keyword">while</span>(ch.getLifecycleState() != LifecycleState.START
+          &amp;&amp; !supervisor.isComponentInErrorState(ch)){
+        <span class="keyword">try</span> {
+          logger.info(<span class="string">"Waiting for channel: "</span> + ch.getName() +
+              <span class="string">" to start. Sleeping for 500 ms"</span>);
+          Thread.sleep(<span class="number">500</span>);
+        } <span class="keyword">catch</span> (InterruptedException e) {
+          logger.<span class="keyword">error</span>(<span class="string">"Interrupted while waiting for channel to start."</span>, e);
+          Throwables.propagate(e);
+        }
+      }
+    }
+
+    <span class="keyword">for</span> (Entry&lt;String, SinkRunner&gt; entry : materializedConfiguration.getSinkRunners()
+        .entrySet()) {
+      <span class="keyword">try</span>{
+        logger.info(<span class="string">"Starting Sink "</span> + entry.getKey());
+        supervisor.supervise(entry.getValue(),
+          <span class="keyword">new</span> SupervisorPolicy.AlwaysRestartPolicy(), LifecycleState.START);
+      } <span class="keyword">catch</span> (Exception e) {
+        logger.<span class="keyword">error</span>(<span class="string">"Error while starting {}"</span>, entry.getValue(), e);
+      }
+    }
+
+    <span class="keyword">for</span> (Entry&lt;String, SourceRunner&gt; entry : materializedConfiguration
+        .getSourceRunners().entrySet()) {
+      <span class="keyword">try</span>{
+        logger.info(<span class="string">"Starting Source "</span> + entry.getKey());
+        supervisor.supervise(entry.getValue(),
+          <span class="keyword">new</span> SupervisorPolicy.AlwaysRestartPolicy(), LifecycleState.START);
+      } <span class="keyword">catch</span> (Exception e) {
+        logger.<span class="keyword">error</span>(<span class="string">"Error while starting {}"</span>, entry.getValue(), e);
+      }
+    }
+
+    <span class="keyword">this</span>.loadMonitoring();
+}
+</code></pre><h3 id="Flume启动过程总结">Flume启动过程总结</h3><p>首先通过Application类加载配置文件，加载后调用Application的start方法。</p>
+<p>Application的start方法内部会针对PollingPropertiesFileConfigurationProvider组件适用组件管理者管理这个组件。也就是使用LifecycleSupervisor的supervise方法。</p>
+<p>supervise方法内部使用MonitorRunnable监控线程。  监控线程内部会调用组件的start方法。 即PollingPropertiesFileConfigurationProvider的start方法。</p>
+<p>PollingPropertiesFileConfigurationProvider的start方法会使用FileWatcherRunnable文件查看进程判断配置文件是否已经修改，修改的话重新加载配置文件信息，然后通过EventBus调用Application的handleConfigurationEvent方法关闭目前正在启动的组件，关闭之后重新开启组件。</p>
+<p>各个新开启的组件会做类似的工作，使用LifecycleSupervisor的supervise方法，也就是起各个MonitorRunnable监控线程启动各个组件的start方法。</p>
+<h2 id="Source组件的构造过程">Source组件的构造过程</h2><p>直接看AbstractConfigurationProvider的loadSources方法：</p>
+<pre><code>private <span class="keyword">void</span> loadSources(AgentConfiguration agentConf,
+  <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, ChannelComponent&gt; channelComponentMap,
+  <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, SourceRunner&gt; sourceRunnerMap)
+  throws InstantiationException {
+
+<span class="built_in">Map</span>&lt;<span class="built_in">String</span>, Context&gt; sourceContexts = agentConf.getSourceContext();
+    <span class="keyword">for</span> (<span class="built_in">String</span> sourceName : sourceNames) {
+      Context context = sourceContexts.<span class="literal">get</span>(sourceName);
+      <span class="keyword">if</span>(context != <span class="keyword">null</span>){
+        <span class="comment">// 使用sourceFactory构造Source</span>
+        Source source =
+            sourceFactory.create(sourceName,
+                context.getString(BasicConfigurationConstants.CONFIG_TYPE));
+        <span class="keyword">try</span> {
+          Configurables.configure(source, context);
+          <span class="built_in">List</span>&lt;Channel&gt; sourceChannels = <span class="keyword">new</span> ArrayList&lt;Channel&gt;();
+          <span class="built_in">String</span>[] channelNames = context.getString(
+              BasicConfigurationConstants.CONFIG_CHANNELS).split(<span class="string">"\\s+"</span>);
+          <span class="keyword">for</span> (<span class="built_in">String</span> chName : channelNames) {
+            ChannelComponent channelComponent = channelComponentMap.<span class="literal">get</span>(chName);
+            <span class="keyword">if</span>(channelComponent != <span class="keyword">null</span>) {
+              sourceChannels.add(channelComponent.channel);
+            }
+          }
+          <span class="keyword">if</span>(sourceChannels.isEmpty()) {
+            <span class="built_in">String</span> msg = <span class="built_in">String</span>.format(<span class="string">"Source %s is not connected to a "</span> +
+                <span class="string">"channel"</span>,  sourceName);
+            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(msg);
+          }
+          <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, <span class="built_in">String</span>&gt; selectorConfig = context.getSubProperties(
+              BasicConfigurationConstants.CONFIG_SOURCE_CHANNELSELECTOR_PREFIX);
+
+          ChannelSelector selector = ChannelSelectorFactory.create(
+              sourceChannels, selectorConfig);
+
+          ChannelProcessor channelProcessor = <span class="keyword">new</span> ChannelProcessor(selector);
+          Configurables.configure(channelProcessor, context);
+          source.setChannelProcessor(channelProcessor);
+          sourceRunnerMap.put(sourceName,
+              SourceRunner.forSource(source));
+          <span class="comment">// source关联Channel    </span>
+          <span class="keyword">for</span>(Channel channel : sourceChannels) {
+            ChannelComponent channelComponent = Preconditions.
+                checkNotNull(channelComponentMap.<span class="literal">get</span>(channel.getName()),
+                    <span class="built_in">String</span>.format(<span class="string">"Channel %s"</span>, channel.getName()));
+            channelComponent.components.add(sourceName);
+          }
+        } <span class="keyword">catch</span> (Exception e) {
+          <span class="built_in">String</span> msg = <span class="built_in">String</span>.format(<span class="string">"Source %s has been removed due to an "</span> +
+              <span class="string">"error during configuration"</span>, sourceName);
+          LOGGER.error(msg, e);
+        }
+      }
+    }
+  }
+</code></pre>
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+  </section>
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/12/">12</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
+  </nav>
+
+
+
+        </div>
+
+        
+
+
+        
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = 'page/3/index.html';
+      var disqus_title = '';
+      var disqus_url = '';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

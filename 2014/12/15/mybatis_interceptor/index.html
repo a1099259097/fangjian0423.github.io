@@ -1,0 +1,957 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="mybatis," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="MyBatis拦截器介绍MyBatis提供了一种插件(plugin)的功能，虽然叫做插件，但其实这是拦截器功能。那么拦截器拦截MyBatis中的哪些内容呢？
+我们进入官网看一看：
+MyBatis 允许你在已映射语句执行过程中的某一点进行拦截调用。默认情况下，MyBatis 允许使用插件来拦截的方法调用包括：
+
+Executor (update, query, flushStatements, co">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MyBatis拦截器原理探究">
+<meta property="og:url" content="http://fangjian0423.github.io/2014/12/15/mybatis_interceptor/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="MyBatis拦截器介绍MyBatis提供了一种插件(plugin)的功能，虽然叫做插件，但其实这是拦截器功能。那么拦截器拦截MyBatis中的哪些内容呢？
+我们进入官网看一看：
+MyBatis 允许你在已映射语句执行过程中的某一点进行拦截调用。默认情况下，MyBatis 允许使用插件来拦截的方法调用包括：
+
+Executor (update, query, flushStatements, co">
+<meta property="og:updated_time" content="2015-11-07T08:44:29.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MyBatis拦截器原理探究">
+<meta name="twitter:description" content="MyBatis拦截器介绍MyBatis提供了一种插件(plugin)的功能，虽然叫做插件，但其实这是拦截器功能。那么拦截器拦截MyBatis中的哪些内容呢？
+我们进入官网看一看：
+MyBatis 允许你在已映射语句执行过程中的某一点进行拦截调用。默认情况下，MyBatis 允许使用插件来拦截的方法调用包括：
+
+Executor (update, query, flushStatements, co">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> MyBatis拦截器原理探究 | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                MyBatis拦截器原理探究
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2014-12-15T22:43:05+08:00" content="2014-12-15">
+              2014-12-15
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/mybatis/" itemprop="url" rel="index">
+                    <span itemprop="name">mybatis</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2014/12/15/mybatis_interceptor/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/12/15/mybatis_interceptor/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><h2 id="MyBatis拦截器介绍">MyBatis拦截器介绍</h2><p>MyBatis提供了一种插件(plugin)的功能，虽然叫做插件，但其实这是拦截器功能。那么拦截器拦截MyBatis中的哪些内容呢？</p>
+<p>我们进入<a href="http://mybatis.github.io/mybatis-3/zh/configuration.html#plugins" target="_blank" rel="external">官网</a>看一看：</p>
+<p>MyBatis 允许你在已映射语句执行过程中的某一点进行拦截调用。默认情况下，MyBatis 允许使用插件来拦截的方法调用包括：</p>
+<ol>
+<li>Executor (update, query, flushStatements, commit, rollback, getTransaction, close, isClosed)</li>
+<li>ParameterHandler (getParameterObject, setParameters)</li>
+<li>ResultSetHandler (handleResultSets, handleOutputParameters)</li>
+<li>StatementHandler (prepare, parameterize, batch, update, query)</li>
+</ol>
+<p>我们看到了可以拦截Executor接口的部分方法，比如update，query，commit，rollback等方法，还有其他接口的一些方法等。</p>
+<p>总体概括为：</p>
+<ol>
+<li>拦截执行器的方法</li>
+<li>拦截参数的处理</li>
+<li>拦截结果集的处理</li>
+<li>拦截Sql语法构建的处理</li>
+</ol>
+<h2 id="拦截器的使用">拦截器的使用</h2><h3 id="拦截器介绍及配置">拦截器介绍及配置</h3><p>首先我们看下MyBatis拦截器的接口定义：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Interceptor</span> </span>{
+
+  <span class="function">Object <span class="title">intercept</span><span class="params">(Invocation invocation)</span> <span class="keyword">throws</span> Throwable</span>;
+
+  <span class="function">Object <span class="title">plugin</span><span class="params">(Object <span class="keyword">target</span>)</span></span>;
+
+  <span class="function"><span class="keyword">void</span> <span class="title">setProperties</span><span class="params">(Properties properties)</span></span>;
+
+}
+</code></pre><p>比较简单，只有3个方法。 MyBatis默认没有一个拦截器接口的实现类，开发者们可以实现符合自己需求的拦截器。</p>
+<p>下面的MyBatis官网的一个拦截器实例：</p>
+<pre><code><span class="annotation">@Intercepts</span>({<span class="annotation">@Signature</span>(
+  type= Executor.class,
+  method = <span class="string">"update"</span>,
+  args = {MappedStatement.class,Object.class})})
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ExamplePlugin</span> <span class="keyword">implements</span> <span class="title">Interceptor</span> </span>{
+  <span class="keyword">public</span> <span class="function">Object <span class="title">intercept</span><span class="params">(Invocation invocation)</span> <span class="keyword">throws</span> Throwable </span>{
+    <span class="function"><span class="keyword">return</span> invocation.<span class="title">proceed</span><span class="params">()</span></span>;
+  }
+  <span class="keyword">public</span> <span class="function">Object <span class="title">plugin</span><span class="params">(Object <span class="keyword">target</span>)</span> </span>{
+    <span class="function"><span class="keyword">return</span> Plugin.<span class="title">wrap</span><span class="params">(<span class="keyword">target</span>, <span class="keyword">this</span>)</span></span>;
+  }
+  <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">setProperties</span><span class="params">(Properties properties)</span> </span>{
+  }
+}
+</code></pre><p>全局xml配置：</p>
+<pre><code><span class="tag">&lt;<span class="title">plugins</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">plugin</span> <span class="attribute">interceptor</span>=<span class="value">"org.format.mybatis.cache.interceptor.ExamplePlugin"</span>&gt;</span><span class="tag">&lt;/<span class="title">plugin</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">plugins</span>&gt;</span>
+</code></pre><p>这个拦截器拦截Executor接口的update方法（其实也就是SqlSession的新增，删除，修改操作），所有执行executor的update方法都会被该拦截器拦截到。</p>
+<h3 id="源码分析">源码分析</h3><p>下面我们分析一下这段代码背后的源码。</p>
+<p>首先从源头-&gt;配置文件开始分析：</p>
+<p>XMLConfigBuilder解析MyBatis全局配置文件的pluginElement私有方法：</p>
+<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">pluginElement</span><span class="params">(XNode parent)</span> <span class="keyword">throws</span> Exception </span>{
+    <span class="keyword">if</span> (parent != <span class="keyword">null</span>) {
+      <span class="keyword">for</span> (XNode child : parent.getChildren()) {
+        String interceptor = child.getStringAttribute(<span class="string">"interceptor"</span>);
+        Properties properties = child.getChildrenAsProperties();
+        Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).newInstance();
+        interceptorInstance.setProperties(properties);
+        configuration.addInterceptor(interceptorInstance);
+      }
+    }
+}
+</code></pre><p>具体的解析代码其实比较简单，就不贴了，主要就是通过反射实例化plugin节点中的interceptor属性表示的类。然后调用全局配置类Configuration的addInterceptor方法。</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">addInterceptor</span><span class="params">(Interceptor interceptor)</span> </span>{
+    interceptorChain.addInterceptor(interceptor);
+  }
+</code></pre><p>这个interceptorChain是Configuration的内部属性，类型为InterceptorChain，也就是一个拦截器链，我们来看下它的定义：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InterceptorChain</span> </span>{
+
+  <span class="keyword">private</span> <span class="keyword">final</span> List&lt;Interceptor&gt; interceptors = <span class="keyword">new</span> ArrayList&lt;Interceptor&gt;();
+
+  <span class="keyword">public</span> <span class="function">Object <span class="title">pluginAll</span><span class="params">(Object <span class="keyword">target</span>)</span> </span>{
+    <span class="keyword">for</span> (Interceptor interceptor : interceptors) {
+      <span class="keyword">target</span> = interceptor.plugin(<span class="keyword">target</span>);
+    }
+    <span class="keyword">return</span> <span class="keyword">target</span>;
+  }
+
+  <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">addInterceptor</span><span class="params">(Interceptor interceptor)</span> </span>{
+    interceptors.add(interceptor);
+  }
+
+  <span class="keyword">public</span> List&lt;Interceptor&gt; getInterceptors() {
+    <span class="function"><span class="keyword">return</span> Collections.<span class="title">unmodifiableList</span><span class="params">(interceptors)</span></span>;
+  }
+
+}
+</code></pre><p>现在我们理解了拦截器配置的解析以及拦截器的归属，现在我们回过头看下为何拦截器会拦截这些方法（Executor，ParameterHandler，ResultSetHandler，StatementHandler的部分方法）：</p>
+<pre><code><span class="keyword">public</span> <span class="function">ParameterHandler <span class="title">newParameterHandler</span><span class="params">(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql)</span> </span>{
+    ParameterHandler parameterHandler = mappedStatement.getLang().createParameterHandler(mappedStatement, parameterObject, boundSql);
+    parameterHandler = (ParameterHandler) interceptorChain.pluginAll(parameterHandler);
+    <span class="keyword">return</span> parameterHandler;
+}
+
+<span class="keyword">public</span> <span class="function">ResultSetHandler <span class="title">newResultSetHandler</span><span class="params">(Executor executor, MappedStatement mappedStatement, RowBounds rowBounds, ParameterHandler parameterHandler,
+  ResultHandler resultHandler, BoundSql boundSql)</span> </span>{
+    ResultSetHandler resultSetHandler = <span class="keyword">new</span> DefaultResultSetHandler(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);
+    resultSetHandler = (ResultSetHandler) interceptorChain.pluginAll(resultSetHandler);
+    <span class="keyword">return</span> resultSetHandler;
+}
+
+<span class="keyword">public</span> <span class="function">StatementHandler <span class="title">newStatementHandler</span><span class="params">(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)</span> </span>{
+    StatementHandler statementHandler = <span class="keyword">new</span> RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
+    statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
+    <span class="keyword">return</span> statementHandler;
+}
+
+<span class="keyword">public</span> <span class="function">Executor <span class="title">newExecutor</span><span class="params">(Transaction transaction, ExecutorType executorType, <span class="keyword">boolean</span> autoCommit)</span> </span>{
+    executorType = executorType == <span class="keyword">null</span> ? defaultExecutorType : executorType;
+    executorType = executorType == <span class="keyword">null</span> ? ExecutorType.SIMPLE : executorType;
+    Executor executor;
+    <span class="keyword">if</span> (ExecutorType.BATCH == executorType) {
+      executor = <span class="keyword">new</span> BatchExecutor(<span class="keyword">this</span>, transaction);
+    } <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(ExecutorType.REUSE == executorType)</span> </span>{
+      executor = <span class="keyword">new</span> ReuseExecutor(<span class="keyword">this</span>, transaction);
+    } <span class="keyword">else</span> {
+      executor = <span class="keyword">new</span> SimpleExecutor(<span class="keyword">this</span>, transaction);
+    }
+    <span class="keyword">if</span> (cacheEnabled) {
+      executor = <span class="keyword">new</span> CachingExecutor(executor, autoCommit);
+    }
+    executor = (Executor) interceptorChain.pluginAll(executor);
+    <span class="keyword">return</span> executor;
+}
+</code></pre><p>以上4个方法都是Configuration的方法。这些方法在MyBatis的一个操作(新增，删除，修改，查询)中都会被执行到，执行的先后顺序是Executor，ParameterHandler，ResultSetHandler，StatementHandler(其中ParameterHandler和ResultSetHandler的创建是在创建StatementHandler[3个可用的实现类CallableStatementHandler,PreparedStatementHandler,SimpleStatementHandler]的时候，其构造函数调用的[这3个实现类的构造函数其实都调用了父类BaseStatementHandler的构造函数])。</p>
+<p>这4个方法实例化了对应的对象之后，都会调用interceptorChain的pluginAll方法，InterceptorChain的pluginAll刚才已经介绍过了，就是遍历所有的拦截器，然后调用各个拦截器的plugin方法。<strong>注意：拦截器的plugin方法的返回值会直接被赋值给原先的对象</strong></p>
+<p>由于可以拦截StatementHandler，这个接口主要处理sql语法的构建，因此比如分页的功能，可以用拦截器实现，只需要在拦截器的plugin方法中处理StatementHandler接口实现类中的sql即可，可使用反射实现。</p>
+<p>MyBatis还提供了@Intercepts和@Signature关于拦截器的注解。官网的例子就是使用了这2个注解，还包括了Plugin类的使用：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="function">Object <span class="title">plugin</span><span class="params">(Object <span class="keyword">target</span>)</span> </span>{
+    <span class="function"><span class="keyword">return</span> Plugin.<span class="title">wrap</span><span class="params">(<span class="keyword">target</span>, <span class="keyword">this</span>)</span></span>;
+}
+</code></pre><p>下面我们就分析这3个 “新组合” 的源码，首先先看Plugin类的wrap方法：</p>
+<pre><code><span class="keyword">public</span> static Object wrap(Object <span class="type">target</span>, Interceptor interceptor) {
+    Map&lt;<span class="keyword">Class</span>&lt;?&gt;, Set&lt;Method&gt;&gt; signatureMap = getSignatureMap(interceptor);
+    <span class="keyword">Class</span>&lt;?&gt; <span class="keyword">type</span> = <span class="type">target</span>.getClass();
+    <span class="keyword">Class</span>&lt;?&gt;[] interfaces = getAllInterfaces(<span class="keyword">type</span>, signatureMap);
+    <span class="keyword">if</span> (interfaces.length &gt; <span class="number">0</span>) {
+      <span class="keyword">return</span> Proxy.newProxyInstance(
+          <span class="keyword">type</span>.getClassLoader(),
+          interfaces,
+          new Plugin(<span class="type">target</span>, interceptor, signatureMap));
+    }
+    <span class="keyword">return</span> <span class="type">target</span>;
+}
+</code></pre><p>Plugin类实现了InvocationHandler接口，很明显，我们看到这里返回了一个JDK自身提供的动态代理类。我们解剖一下这个方法调用的其他方法：</p>
+<p>getSignatureMap方法：</p>
+<pre><code>private <span class="keyword">static</span> <span class="type">Map</span>&lt;<span class="type">Class</span>&lt;?&gt;, <span class="type">Set</span>&lt;<span class="type">Method</span>&gt;&gt; getSignatureMap(<span class="type">Interceptor</span> interceptor) {
+    <span class="type">Intercepts</span> interceptsAnnotation = interceptor.getClass().getAnnotation(<span class="type">Intercepts</span>.class);
+    <span class="keyword">if</span> (interceptsAnnotation == null) { // issue <span class="comment">#251</span>
+      throw new <span class="type">PluginException</span>(<span class="string">"No @Intercepts annotation was found in interceptor "</span> + interceptor.getClass().getName());      
+    }
+    <span class="type">Signature</span>[] sigs = interceptsAnnotation.value();
+    <span class="type">Map</span>&lt;<span class="type">Class</span>&lt;?&gt;, <span class="type">Set</span>&lt;<span class="type">Method</span>&gt;&gt; signatureMap = new <span class="type">HashMap</span>&lt;<span class="type">Class</span>&lt;?&gt;, <span class="type">Set</span>&lt;<span class="type">Method</span>&gt;&gt;();
+    <span class="keyword">for</span> (<span class="type">Signature</span> sig : sigs) {
+      <span class="type">Set</span>&lt;<span class="type">Method</span>&gt; methods = signatureMap.get(sig.<span class="keyword">type</span>());
+      <span class="keyword">if</span> (methods == null) {
+        methods = new <span class="type">HashSet</span>&lt;<span class="type">Method</span>&gt;();
+        signatureMap.put(sig.<span class="keyword">type</span>(), methods);
+      }
+      <span class="keyword">try</span> {
+        <span class="type">Method</span> <span class="keyword">method</span> = sig.<span class="keyword">type</span>().getMethod(sig.<span class="keyword">method</span>(), sig.args());
+        methods.add(<span class="keyword">method</span>);
+      } catch (<span class="type">NoSuchMethodException</span> e) {
+        throw new <span class="type">PluginException</span>(<span class="string">"Could not find method on "</span> + sig.<span class="keyword">type</span>() + <span class="string">" named "</span> + sig.<span class="keyword">method</span>() + <span class="string">". Cause: "</span> + e, e);
+      }
+    }
+    <span class="keyword">return</span> signatureMap;
+}
+</code></pre><p>getSignatureMap方法解释：首先会拿到拦截器这个类的@Interceptors注解，然后拿到这个注解的属性@Signature注解集合，然后遍历这个集合，遍历的时候拿出@Signature注解的type属性(Class类型)，然后根据这个type得到带有method属性和args属性的Method。由于@Interceptors注解的@Signature属性是一个属性，所以最终会返回一个以type为key，value为Set&lt;Method&gt;的Map。</p>
+<pre><code><span class="variable">@Intercepts</span>({<span class="variable">@Signature</span>(
+  type= Executor.class,
+  method = <span class="string">"update"</span>,
+  args = {MappedStatement.class,Object.class})})
+</code></pre><p>比如这个@Interceptors注解会返回一个key为Executor，value为集合(这个集合只有一个元素，也就是Method实例，这个Method实例就是Executor接口的update方法，且这个方法带有MappedStatement和Object类型的参数)。这个Method实例是根据@Signature的method和args属性得到的。如果args参数跟type类型的method方法对应不上，那么将会抛出异常。</p>
+<p>getAllInterfaces方法：</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> Class&lt;?&gt;[] getAllInterfaces(Class&lt;?&gt; <span class="class"><span class="keyword">type</span>, <span class="title">Map</span>&lt;Class&lt;?&gt;, <span class="title">Set</span>&lt;Method&gt;&gt; <span class="title">signatureMap</span>) {</span>
+    Set&lt;Class&lt;?&gt;&gt; interfaces = <span class="keyword">new</span> HashSet&lt;Class&lt;?&gt;&gt;();
+    <span class="keyword">while</span> (<span class="class"><span class="keyword">type</span> !</span>= <span class="keyword">null</span>) {
+      <span class="keyword">for</span> (Class&lt;?&gt; c : <span class="class"><span class="keyword">type</span>.<span class="title">getInterfaces</span></span>()) {
+        <span class="keyword">if</span> (signatureMap.containsKey(c)) {
+          interfaces.add(c);
+        }
+      }
+      <span class="class"><span class="keyword">type</span> </span>= <span class="class"><span class="keyword">type</span>.<span class="title">getSuperclass</span></span>();
+    }
+    <span class="keyword">return</span> interfaces.toArray(<span class="keyword">new</span> Class&lt;?&gt;[interfaces.size()]);
+}
+</code></pre><p>getAllInterfaces方法解释：根据目标实例target(这个target就是之前所说的MyBatis拦截器可以拦截的类，Executor,ParameterHandler,ResultSetHandler,StatementHandler)和它的父类们，返回signatureMap中含有target实现的接口数组。</p>
+<p>所以Plugin这个类的作用就是根据@Interceptors注解，得到这个注解的属性@Signature数组，然后根据每个@Signature注解的type，method，args属性使用反射找到对应的Method。最终根据调用的target对象实现的接口决定是否返回一个代理对象替代原先的target对象。</p>
+<p>比如MyBatis官网的例子，当Configuration调用newExecutor方法的时候，由于Executor接口的update(MappedStatement ms, Object parameter)方法被拦截器被截获。因此最终返回的是一个代理类Plugin，而不是Executor。这样调用方法的时候，如果是个代理类，那么会执行：</p>
+<pre><code>public <span class="type">Object</span> invoke(<span class="type">Object</span> proxy, <span class="type">Method</span> <span class="keyword">method</span>, <span class="type">Object</span>[] args) throws <span class="type">Throwable</span> {
+    <span class="keyword">try</span> {
+      <span class="type">Set</span>&lt;<span class="type">Method</span>&gt; methods = signatureMap.get(<span class="keyword">method</span>.getDeclaringClass());
+      <span class="keyword">if</span> (methods != null &amp;&amp; methods.contains(<span class="keyword">method</span>)) {
+        <span class="keyword">return</span> interceptor.intercept(new <span class="type">Invocation</span>(target, <span class="keyword">method</span>, args));
+      }
+      <span class="keyword">return</span> <span class="keyword">method</span>.invoke(target, args);
+    } catch (<span class="type">Exception</span> e) {
+      throw <span class="type">ExceptionUtil</span>.unwrapThrowable(e);
+    }
+}
+</code></pre><p>没错，如果找到对应的方法被代理之后，那么会执行Interceptor接口的interceptor方法。</p>
+<p>这个Invocation类如下：</p>
+<pre><code>public class <span class="type">Invocation</span> {
+
+  private <span class="type">Object</span> target;
+  private <span class="type">Method</span> <span class="keyword">method</span>;
+  private <span class="type">Object</span>[] args;
+
+  public <span class="type">Invocation</span>(<span class="type">Object</span> target, <span class="type">Method</span> <span class="keyword">method</span>, <span class="type">Object</span>[] args) {
+    this.target = target;
+    this.<span class="keyword">method</span> = <span class="keyword">method</span>;
+    this.args = args;
+  }
+
+  public <span class="type">Object</span> getTarget() {
+    <span class="keyword">return</span> target;
+  }
+
+  public <span class="type">Method</span> getMethod() {
+    <span class="keyword">return</span> <span class="keyword">method</span>;
+  }
+
+  public <span class="type">Object</span>[] getArgs() {
+    <span class="keyword">return</span> args;
+  }
+
+  public <span class="type">Object</span> proceed() throws <span class="type">InvocationTargetException</span>, <span class="type">IllegalAccessException</span> {
+    <span class="keyword">return</span> <span class="keyword">method</span>.invoke(target, args);
+  }
+
+}
+</code></pre><p>它的proceed方法也就是调用原先方法(不走代理)。</p>
+<h2 id="总结">总结</h2><p>MyBatis拦截器接口提供的3个方法中，plugin方法用于某些处理器(Handler)的构建过程。interceptor方法用于处理代理类的执行。setProperties方法用于拦截器属性的设置。</p>
+<p>其实MyBatis官网提供的使用@Interceptors和@Signature注解以及Plugin类这样处理拦截器的方法，我们不一定要直接这样使用。我们也可以抛弃这3个类，直接在plugin方法内部根据target实例的类型做相应的操作。</p>
+<p>总体来说MyBatis拦截器还是很简单的，拦截器本身不需要太多的知识点，但是学习拦截器需要对MyBatis中的各个接口很熟悉，因为拦截器涉及到了各个接口的知识点。</p>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/mybatis/" rel="tag">#mybatis</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2014/12/10/mybatis_cache/" rel="next" title="通过源码分析MyBatis的缓存">
+                <i class="fa fa-chevron-left"></i> 通过源码分析MyBatis的缓存
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2014/12/21/2014-12-21/" rel="prev" title="2014-12-21 小记">
+                2014-12-21 小记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#MyBatis拦截器介绍"><span class="nav-number">1.</span> <span class="nav-text">MyBatis拦截器介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#拦截器的使用"><span class="nav-number">2.</span> <span class="nav-text">拦截器的使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#拦截器介绍及配置"><span class="nav-number">2.1.</span> <span class="nav-text">拦截器介绍及配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#源码分析"><span class="nav-number">2.2.</span> <span class="nav-text">源码分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2014/12/15/mybatis_interceptor/';
+      var disqus_title = 'MyBatis拦截器原理探究';
+      var disqus_url = 'http://fangjian0423.github.io/2014/12/15/mybatis_interceptor/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

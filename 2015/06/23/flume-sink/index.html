@@ -1,0 +1,1002 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="big data,flume," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="Source和Channel组件已经分析过，接下来看Sink组件。
+Flume内置了很多Sink，比如HDFS Sink, Hive Sink, File Roll Sink, HBase Sink, ElasticSearch Sink等。
+Sink接口public interface Sink extends LifecycleAware, NamedComponent {
+
+  public">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Flume Sink组件分析">
+<meta property="og:url" content="http://fangjian0423.github.io/2015/06/23/flume-sink/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="Source和Channel组件已经分析过，接下来看Sink组件。
+Flume内置了很多Sink，比如HDFS Sink, Hive Sink, File Roll Sink, HBase Sink, ElasticSearch Sink等。
+Sink接口public interface Sink extends LifecycleAware, NamedComponent {
+
+  public">
+<meta property="og:updated_time" content="2015-11-07T08:31:02.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Flume Sink组件分析">
+<meta name="twitter:description" content="Source和Channel组件已经分析过，接下来看Sink组件。
+Flume内置了很多Sink，比如HDFS Sink, Hive Sink, File Roll Sink, HBase Sink, ElasticSearch Sink等。
+Sink接口public interface Sink extends LifecycleAware, NamedComponent {
+
+  public">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> Flume Sink组件分析 | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Flume Sink组件分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-06-23T01:23:23+08:00" content="2015-06-23">
+              2015-06-23
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/06/23/flume-sink/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/23/flume-sink/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><p>Source和Channel组件已经分析过，接下来看Sink组件。</p>
+<p>Flume内置了很多Sink，比如HDFS Sink, Hive Sink, File Roll Sink, HBase Sink, ElasticSearch Sink等。</p>
+<h2 id="Sink接口">Sink接口</h2><pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Sink</span> <span class="keyword">extends</span> <span class="title">LifecycleAware</span>, <span class="title">NamedComponent</span> </span>{
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setChannel</span><span class="params">(Channel channel)</span></span>;
+
+  <span class="function"><span class="keyword">public</span> Channel <span class="title">getChannel</span><span class="params">()</span></span>;
+
+  <span class="function"><span class="keyword">public</span> Status <span class="title">process</span><span class="params">()</span> <span class="keyword">throws</span> EventDeliveryException</span>;
+
+  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">enum</span> Status {
+    READY, BACKOFF
+  }
+}
+</code></pre><p>沒啥好讲的，跟之前的都类似。</p>
+<p>Sink实现类AbstractSink：</p>
+<pre><code><span class="keyword">abstract</span> <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractSink</span> <span class="keyword">implements</span> <span class="title">Sink</span>, <span class="title">LifecycleAware</span></span>
+</code></pre><p>跟AbstractSource类似。</p>
+<h2 id="Flume内置的Sink例子">Flume内置的Sink例子</h2><h3 id="HDFSEventSink">HDFSEventSink</h3><p>1个简单的hdfs sink配置：</p>
+<pre><code>a1.channels = c1
+a1.sinks = k1
+a1.sinks.k1.type = hdfs
+a1.sinks.k1.channel = c1
+a1.sinks.k1.hdfs.path = /flume/events/<span class="decorator">%y</span>-<span class="decorator">%m</span>-<span class="decorator">%d</span>/<span class="decorator">%H</span><span class="decorator">%M</span>/<span class="decorator">%S</span>
+a1.sinks.k1.hdfs.filePrefix = events-
+a1.sinks.k1.hdfs.round = <span class="literal">true</span>
+a1.sinks.k1.hdfs.roundValue = <span class="number">10</span>
+a1.sinks.k1.hdfs.roundUnit = minute
+</code></pre><p>HDFSEventSink中的process(Sink接口提供的)方法记录着如何写入hdfs文件：</p>
+<pre><code><span class="keyword">public</span> Status process() <span class="keyword">throws</span> EventDeliveryException {
+    <span class="comment">// 得到Channel</span>
+    Channel channel = getChannel();
+    <span class="comment">// 得到Channel里的Transaction，接下来事件的提交，回滚都基于这个Transaction</span>
+    Transaction transaction = channel.getTransaction();
+    List&lt;BucketWriter&gt; writers = Lists.newArrayList();
+    <span class="comment">// 事务开始，一般的Transaction实现类不会覆盖这个方法，除非有特殊要求，begin方法默认的实现不做任何事</span>
+    transaction.begin();
+    <span class="keyword">try</span> {
+      <span class="built_in">int</span> txnEventCount = <span class="number">0</span>;
+      <span class="comment">// 每次操作都处理batchSize个事件，batchSize可配置</span>
+      <span class="keyword">for</span> (txnEventCount = <span class="number">0</span>; txnEventCount &lt; batchSize; txnEventCount++) {
+          <span class="comment">// channel的take方法内部会使用Transaction的take方法，Transaction回滚后这些take出来的事件全部都会回滚到Channel里</span>
+        Event event = channel.take();
+        <span class="keyword">if</span> (event == <span class="keyword">null</span>) {
+          <span class="keyword">break</span>;
+        }
+
+        <span class="comment">// reconstruct the path name by substituting place holders</span>
+        <span class="keyword">String</span> realPath = BucketPath.escapeString(filePath, event.getHeaders(),
+            timeZone, needRounding, roundUnit, roundValue, useLocalTime);
+        <span class="keyword">String</span> realName = BucketPath.escapeString(fileName, event.getHeaders(),
+          timeZone, needRounding, roundUnit, roundValue, useLocalTime);
+
+        <span class="keyword">String</span> lookupPath = realPath + DIRECTORY_DELIMITER + realName;
+        BucketWriter bucketWriter;
+        HDFSWriter hdfsWriter = <span class="keyword">null</span>;
+        <span class="comment">// Callback to remove the reference to the bucket writer from the</span>
+        <span class="comment">// sfWriters map so that all buffers used by the HDFS file</span>
+        <span class="comment">// handles are garbage collected.</span>
+        WriterCallback closeCallback = <span class="keyword">new</span> WriterCallback() {
+          @Override
+          <span class="keyword">public</span> <span class="keyword">void</span> run(<span class="keyword">String</span> bucketPath) {
+            LOG.info(<span class="string">"Writer callback called."</span>);
+            <span class="keyword">synchronized</span> (sfWritersLock) {
+              sfWriters.remove(bucketPath);
+            }
+          }
+        };
+        <span class="keyword">synchronized</span> (sfWritersLock) {
+          bucketWriter = sfWriters.<span class="built_in">get</span>(lookupPath);
+          <span class="comment">// we haven't seen this file yet, so open it and cache the handle</span>
+          <span class="keyword">if</span> (bucketWriter == <span class="keyword">null</span>) {
+            hdfsWriter = writerFactory.getWriter(fileType);
+            bucketWriter = initializeBucketWriter(realPath, realName,
+              lookupPath, hdfsWriter, closeCallback);
+            sfWriters.put(lookupPath, bucketWriter);
+          }
+        }
+
+        <span class="comment">// track the buckets getting written in this transaction</span>
+        <span class="keyword">if</span> (!writers.contains(bucketWriter)) {
+          writers.<span class="built_in">add</span>(bucketWriter);
+        }
+
+        <span class="comment">// Write the data to HDFS</span>
+        <span class="keyword">try</span> {
+          bucketWriter.<span class="built_in">append</span>(event);
+        } <span class="keyword">catch</span> (BucketClosedException ex) {
+          LOG.info(<span class="string">"Bucket was closed while trying to append, "</span> +
+            <span class="string">"reinitializing bucket and writing event."</span>);
+          hdfsWriter = writerFactory.getWriter(fileType);
+          bucketWriter = initializeBucketWriter(realPath, realName,
+            lookupPath, hdfsWriter, closeCallback);
+          <span class="keyword">synchronized</span> (sfWritersLock) {
+            sfWriters.put(lookupPath, bucketWriter);
+          }
+          bucketWriter.<span class="built_in">append</span>(event);
+        }
+      }
+
+      <span class="keyword">if</span> (txnEventCount == <span class="number">0</span>) {
+        sinkCounter.incrementBatchEmptyCount();
+      } <span class="keyword">else</span> <span class="keyword">if</span> (txnEventCount == batchSize) {
+        sinkCounter.incrementBatchCompleteCount();
+      } <span class="keyword">else</span> {
+        sinkCounter.incrementBatchUnderflowCount();
+      }
+
+      <span class="comment">// flush all pending buckets before committing the transaction</span>
+      <span class="keyword">for</span> (BucketWriter bucketWriter : writers) {
+        bucketWriter.flush();
+      }
+
+      <span class="comment">// 写完数据无误后，commit，清空Transaction里的数据</span>
+      transaction.commit();
+
+      <span class="keyword">if</span> (txnEventCount &lt; <span class="number">1</span>) {
+        <span class="keyword">return</span> Status.BACKOFF;
+      } <span class="keyword">else</span> {
+        sinkCounter.addToEventDrainSuccessCount(txnEventCount);
+        <span class="keyword">return</span> Status.READY;
+      }
+    } <span class="keyword">catch</span> (IOException eIO) {
+      <span class="comment">// 发送异常回滚</span>
+      transaction.rollback();
+      LOG.warn(<span class="string">"HDFS IO error"</span>, eIO);
+      <span class="keyword">return</span> Status.BACKOFF;
+    } <span class="keyword">catch</span> (Throwable th) {
+      <span class="comment">// 发送异常回滚</span>
+      transaction.rollback();
+      LOG.error(<span class="string">"process failed"</span>, th);
+      <span class="keyword">if</span> (th <span class="keyword">instanceof</span> Error) {
+        <span class="keyword">throw</span> (Error) th;
+      } <span class="keyword">else</span> {
+        <span class="keyword">throw</span> <span class="keyword">new</span> EventDeliveryException(th);
+      }
+    } <span class="keyword">finally</span> {
+      <span class="comment">// 事务结束，一般的Transaction实现类不会覆盖这个方法，除非有特殊要求，close方法默认的实现不做任何事</span>
+      transaction.close();
+    }
+  }    
+</code></pre><p>下面我们重点分析一下HDFS Sink如何写入数据到hdfs文件。</p>
+<p>分析之前，有几个配置跟是否创建hdfs新文件有关，当达到这些配置的条件后，sink会关闭文件，然后重新创建1个新文件重复执行</p>
+<pre><code>hdfs<span class="class">.rollInterval</span> -&gt; 每隔多少秒会关闭文件。默认<span class="number">30</span>秒
+hdfs<span class="class">.rollSize</span> -&gt; 文件大小到达一定量后，会关闭文件。单位bytes。默认<span class="number">1024</span>，如果是<span class="number">0</span>的话表示跟文件大小无关
+hdfs<span class="class">.batchSize</span> -&gt; 批次数，Sink每次处理都会处理batchSize个事件, 不会创建新文件。默认<span class="number">100</span>个
+hdfs<span class="class">.rollCount</span> -&gt; 事件处理了rollCount个后，会关闭文件。默认<span class="number">10</span>个，如果是<span class="number">0</span>的话表示跟事件个数无关
+hdfs<span class="class">.minBlockReplicas</span> -&gt; hadoop中的dfs.replication配置属性，表示复制块的个数，默认会根据hadoop的配置
+</code></pre><p>HDFS Sink每个根据batchSize，遍历channel中的事件，针对每个Event的生成地址构造BucketWriter。然后在sfWriters这个Map中以文件的路径为key，BucketWriter为value进行存储。</p>
+<p>接下来使用BucketWriter的append方法，当batchSize个事件遍历完成，调用BucketWriter的flush方法。</p>
+<pre><code><span class="keyword">bucketWriter.append(event);
+</span>
+<span class="label">for</span> (<span class="keyword">BucketWriter </span><span class="keyword">bucketWriter </span>: writers) {
+    <span class="keyword">bucketWriter.flush();
+</span>}
+</code></pre><p>BucketWriter的append方法部分代码如下：</p>
+<pre><code><span class="comment">// 打开文件</span>
+<span class="keyword">if</span> (!isOpen) {
+  <span class="keyword">if</span> (closed) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> BucketClosedException(<span class="string">"This bucket writer was closed and "</span> +
+      <span class="string">"this handle is thus no longer valid"</span>);
+  }
+  open();
+}
+
+<span class="comment">// 是否需要创建新文件</span>
+<span class="keyword">if</span> (shouldRotate()) {
+  <span class="keyword">boolean</span> doRotate = <span class="keyword">true</span>;
+
+  <span class="keyword">if</span> (isUnderReplicated) {
+    <span class="keyword">if</span> (maxConsecUnderReplRotations &gt; <span class="number">0</span> &amp;&amp;
+        consecutiveUnderReplRotateCount &gt;= maxConsecUnderReplRotations) {
+      doRotate = <span class="keyword">false</span>;
+      <span class="keyword">if</span> (consecutiveUnderReplRotateCount == maxConsecUnderReplRotations) {
+        LOG.error(<span class="string">"Hit max consecutive under-replication rotations ({}); "</span> +
+            <span class="string">"will not continue rolling files under this path due to "</span> +
+            <span class="string">"under-replication"</span>, maxConsecUnderReplRotations);
+      }
+    } <span class="keyword">else</span> {
+      LOG.warn(<span class="string">"Block Under-replication detected. Rotating file."</span>);
+    }
+    consecutiveUnderReplRotateCount++;
+  } <span class="keyword">else</span> {
+    consecutiveUnderReplRotateCount = <span class="number">0</span>;
+  }
+
+  <span class="keyword">if</span> (doRotate) {
+    close();
+    open();
+  }
+}
+
+<span class="keyword">try</span> {
+  sinkCounter.incrementEventDrainAttemptCount();
+  <span class="comment">// 写hdfs文件</span>
+  callWithTimeout(<span class="keyword">new</span> CallRunner&lt;<span class="keyword">Void</span>&gt;() {
+    @Override
+    <span class="keyword">public</span> <span class="keyword">Void</span> <span class="keyword">call</span>() <span class="keyword">throws</span> Exception {
+      writer.<span class="keyword">append</span>(event); <span class="comment">// could block</span>
+      <span class="keyword">return</span> <span class="keyword">null</span>;
+    }
+  });
+} <span class="keyword">catch</span> (IOException e) {
+  LOG.warn(<span class="string">"Caught IOException writing to HDFSWriter ({}). Closing file ("</span> +
+      bucketPath + <span class="string">") and rethrowing exception."</span>,
+      e.getMessage());
+  <span class="keyword">try</span> {
+    close(<span class="keyword">true</span>);
+  } <span class="keyword">catch</span> (IOException e2) {
+    LOG.warn(<span class="string">"Caught IOException while closing file ("</span> +
+         bucketPath + <span class="string">"). Exception follows."</span>, e2);
+  }
+  <span class="keyword">throw</span> e;
+}
+
+<span class="comment">// 更新一些属性</span>
+processSize += event.getBody().length;
+eventCounter++;
+batchCounter++;
+
+<span class="comment">// 写入的事件达到批次数，flush</span>
+<span class="keyword">if</span> (batchCounter == batchSize) {
+  flush();
+}
+</code></pre><p>shouldRotate方法表示是否需要创建新文件：</p>
+<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">boolean</span> <span class="title">shouldRotate</span><span class="params">()</span> </span>{
+    <span class="keyword">boolean</span> doRotate = <span class="keyword">false</span>;
+
+    <span class="comment">// 先判断HDFS是否正在复制块，优先级最高，也就是配置文件的minBlockReplicas</span>
+    <span class="keyword">if</span> (writer.isUnderReplicated()) {
+      <span class="keyword">this</span>.isUnderReplicated = <span class="keyword">true</span>;
+      doRotate = <span class="keyword">true</span>;
+    } <span class="keyword">else</span> {
+      <span class="keyword">this</span>.isUnderReplicated = <span class="keyword">false</span>;
+    }
+
+    <span class="comment">// 配置文件中的rollCount，也就是事件个数</span>
+    <span class="keyword">if</span> ((rollCount &gt; <span class="number">0</span>) &amp;&amp; (rollCount &lt;= eventCounter)) {
+      LOG.debug(<span class="string">"rolling: rollCount: {}, events: {}"</span>, rollCount, eventCounter);
+      doRotate = <span class="keyword">true</span>;
+    }
+    <span class="comment">// 配置文件中的rollSize，也就文件大小</span>
+    <span class="keyword">if</span> ((rollSize &gt; <span class="number">0</span>) &amp;&amp; (rollSize &lt;= processSize)) {
+      LOG.debug(<span class="string">"rolling: rollSize: {}, bytes: {}"</span>, rollSize, processSize);
+      doRotate = <span class="keyword">true</span>;
+    }
+
+    <span class="keyword">return</span> doRotate;
+}
+</code></pre><p>有的同学可能因为没有配置minBlockReplicas，而配置了其他属性，所以hdfs还是会生成很多文件，这是因为minBlockReplicas的优先级最高，如果当前正在复制块，其他所有的条件都会被无视。</p>
+<p>flush方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> flush() <span class="keyword">throws</span> IOException, InterruptedException {
+    checkAndThrowInterruptedException();
+    <span class="keyword">if</span> (!isBatchComplete()) {
+      doFlush();
+
+      <span class="keyword">if</span>(idleTimeout &gt; <span class="number">0</span>) {
+        <span class="comment">// if the future exists and couldn't be cancelled, that would mean it has already run</span>
+        <span class="comment">// or been cancelled</span>
+        <span class="keyword">if</span>(idleFuture == <span class="keyword">null</span> || idleFuture.cancel(<span class="keyword">false</span>)) {
+          Callable&lt;<span class="keyword">Void</span>&gt; idleAction = <span class="keyword">new</span> Callable&lt;<span class="keyword">Void</span>&gt;() {
+            <span class="keyword">public</span> <span class="keyword">Void</span> <span class="keyword">call</span>() <span class="keyword">throws</span> Exception {
+              LOG.info(<span class="string">"Closing idle bucketWriter {} at {}"</span>, bucketPath,
+                System.currentTimeMillis());
+              <span class="keyword">if</span> (isOpen) {
+                close(<span class="keyword">true</span>);
+              }
+              <span class="keyword">return</span> <span class="keyword">null</span>;
+            }
+          };
+          idleFuture = timedRollerPool.schedule(idleAction, idleTimeout,
+              TimeUnit.SECONDS);
+        }
+      }
+    }
+}
+</code></pre><p>总结:</p>
+<p>HDFSSink里的hdfs.rollSize，hdfs.rollCount，hdfs.minBlockReplicas，hdfs.rollInterval,hdfs.batchSize这些配置都是在BucketWriter中才会使用。</p>
+<p>hdfs.rollSize, hdfs.rollCount和hdfs.minBlockReplicas, hdfs.rollInterval这4个属性决定是否创建新文件。</p>
+<p>hdfs.batchSize决定是否flush文件数据。 由于HDFS Sink中每次最多只有batchSize个事件，因此BucketWriter会事件个数达到了batchSize后直接flush数据即可。</p>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/big-data/" rel="tag">#big data</a>
+          
+            <a href="/tags/flume/" rel="tag">#flume</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/06/22/flume-channel/" rel="next" title="Flume Channel组件分析">
+                <i class="fa fa-chevron-left"></i> Flume Channel组件分析
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/07/07/flume-run/" rel="prev" title="Flume运行过程源码分析">
+                Flume运行过程源码分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Sink接口"><span class="nav-number">1.</span> <span class="nav-text">Sink接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Flume内置的Sink例子"><span class="nav-number">2.</span> <span class="nav-text">Flume内置的Sink例子</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#HDFSEventSink"><span class="nav-number">2.1.</span> <span class="nav-text">HDFSEventSink</span></a></li></ol></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2015/06/23/flume-sink/';
+      var disqus_title = 'Flume Sink组件分析';
+      var disqus_url = 'http://fangjian0423.github.io/2015/06/23/flume-sink/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

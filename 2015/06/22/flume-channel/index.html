@@ -1,0 +1,919 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="big data,flume," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="Source组件已经分析过，接下来看Channel组件。
+Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等。
+Channel接口Channel接口定义：
+public interface Channel extends LifecycleAware, NamedComponent {">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Flume Channel组件分析">
+<meta property="og:url" content="http://fangjian0423.github.io/2015/06/22/flume-channel/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="Source组件已经分析过，接下来看Channel组件。
+Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等。
+Channel接口Channel接口定义：
+public interface Channel extends LifecycleAware, NamedComponent {">
+<meta property="og:updated_time" content="2015-11-07T08:44:16.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Flume Channel组件分析">
+<meta name="twitter:description" content="Source组件已经分析过，接下来看Channel组件。
+Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等。
+Channel接口Channel接口定义：
+public interface Channel extends LifecycleAware, NamedComponent {">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> Flume Channel组件分析 | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Flume Channel组件分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-06-22T23:23:23+08:00" content="2015-06-22">
+              2015-06-22
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/06/22/flume-channel/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/22/flume-channel/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><p>Source组件已经分析过，接下来看Channel组件。</p>
+<p>Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等。</p>
+<h2 id="Channel接口">Channel接口</h2><p>Channel接口定义：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Channel</span> <span class="keyword">extends</span> <span class="title">LifecycleAware</span>, <span class="title">NamedComponent</span> </span>{
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(Event event)</span> <span class="keyword">throws</span> ChannelException</span>;
+
+  <span class="function"><span class="keyword">public</span> Event <span class="title">take</span><span class="params">()</span> <span class="keyword">throws</span> ChannelException</span>;
+
+  <span class="function"><span class="keyword">public</span> Transaction <span class="title">getTransaction</span><span class="params">()</span></span>;
+}
+</code></pre><p>LifecycleAware接口和NamedComponent接口之前在分析Source的时候已经说明过。</p>
+<p>Channel接口有3个方法，分别是put，take和getTransaction。</p>
+<p>Channel是存储Source收集过来的数据的，所以提供put(存储Source的Event)和take(交付给Sink)方法，它也支持事务。</p>
+<p>AbstractChannel抽象类是Channel接口的实现类，作用跟AbstractSource是Source的实现类类似。</p>
+<p>BasicChannelSemantics是AbstractChannel的子类，是Channel的基础实现类，内部使用ThreadLocal完成事件的处理和事务功能，实现了getTransaction方法，在这个方法内部调用createTransaction得到事务对象，createTransaction也被抽象成了一个抽象方法。</p>
+<p>BasicChannelSemantics实现了Channel接口的put和take方法，使用Transaction接口的put和take方法。</p>
+<pre><code><span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">put</span><span class="params">(Event event)</span> <span class="keyword">throws</span> ChannelException </span>{
+    BasicTransactionSemantics transaction = currentTransaction.get();
+    Preconditions.checkState(transaction != <span class="keyword">null</span>,
+        <span class="string">"No transaction exists for this thread"</span>);
+    transaction.put(event);
+  }
+
+<span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="function">Event <span class="title">take</span><span class="params">()</span> <span class="keyword">throws</span> ChannelException </span>{
+    BasicTransactionSemantics transaction = currentTransaction.get();
+    Preconditions.checkState(transaction != <span class="keyword">null</span>,
+        <span class="string">"No transaction exists for this thread"</span>);
+    <span class="function"><span class="keyword">return</span> transaction.<span class="title">take</span><span class="params">()</span></span>;
+}
+</code></pre><p>currentTransaction是个ThreadLocal：</p>
+<pre><code><span class="keyword">private</span> ThreadLocal&lt;BasicTransactionSemantics&gt; currentTransaction
+      = <span class="keyword">new</span> ThreadLocal&lt;BasicTransactionSemantics&gt;();
+</code></pre><p>currentTransaction的初始化：</p>
+<pre><code><span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="function">Transaction <span class="title">getTransaction</span><span class="params">()</span> </span>{
+
+    <span class="keyword">if</span> (!initialized) {
+      <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
+        <span class="keyword">if</span> (!initialized) {
+          initialize();
+          initialized = <span class="keyword">true</span>;
+        }
+      }
+    }
+
+    BasicTransactionSemantics transaction = currentTransaction.get();
+    <span class="keyword">if</span> (transaction == <span class="keyword">null</span> || transaction.getState().equals(
+            BasicTransactionSemantics.State.CLOSED)) {
+      transaction = createTransaction(); <span class="comment">// 抽象方法，子类实现</span>
+      currentTransaction.set(transaction);
+    }
+    <span class="keyword">return</span> transaction;
+  }
+</code></pre><p>这样，Channel的put和take操作就由抽象类createTransaction中得到的Transaction实现。<strong>因此，Channel对事件的各个操作由具体的Transaction实现。</strong></p>
+<p>一般普通的Channel继承这个BasicChannelSemantics类即可。</p>
+<h2 id="Transaction接口">Transaction接口</h2><p>由于Channel内部使用了事务特性，因此有必要介绍一个Flume事务相关的结构。</p>
+<p>Transaction接口定义：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">Transaction</span> {
+
+<span class="keyword">public</span> <span class="keyword">enum</span> TransactionState {Started, Committed, RolledBack, Closed };
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">begin</span>(<span class="params"></span>)</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">commit</span>(<span class="params"></span>)</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">rollback</span>(<span class="params"></span>)</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span>(<span class="params"></span>)</span>;
+}
+</code></pre><p>基本的事务封装类BasicTransactionSemantics，BasicTransactionSemantics实现了Transaction接口的4个方法，并引入了状态的概念，内部也有个state变量表示状态，Transaction接口的4个方法的实现会基于状态：</p>
+<p>BasicTransactionSemantics构造函数会初始化状态state为State.NEW, 实现Transaction接口的begin方法如下：</p>
+<pre><code>public void begin() {
+    Preconditions.checkState(Thread.currentThread().getId() == initialThreadId,
+        <span class="string">"begin() called from different thread than getTransaction()!"</span>);
+    Preconditions.checkState(<span class="keyword">state</span>.equals(State.NEW),
+        <span class="string">"begin() called when transaction is "</span> + <span class="keyword">state</span> + <span class="string">"!"</span>);
+
+    try {
+      doBegin();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ChannelException(e.<span class="keyword">to</span>String(), e);
+    }
+    <span class="keyword">state</span> = State.OPEN;
+  }
+</code></pre><p>begin方法需要状态为NEW才可执行。同理commit方法需要状态为OPEN，rollback需要状态为OPEN，close方法需要状态为NEW或COMPLETED。BasicTransactionSemantics又提供了put和take方法用来放事件和取事件，所以又抽象出了4个抽象方法和2个默认实现方法：</p>
+<pre><code><span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">doBegin</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>{}
+<span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="function"><span class="keyword">void</span> <span class="title">doPut</span><span class="params">(Event event)</span> <span class="keyword">throws</span> InterruptedException</span>;
+<span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="function">Event <span class="title">doTake</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException</span>;
+<span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="function"><span class="keyword">void</span> <span class="title">doCommit</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException</span>;
+<span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="function"><span class="keyword">void</span> <span class="title">doRollback</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException</span>;
+<span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">doClose</span><span class="params">()</span> </span>{}
+</code></pre><h2 id="Flume内置的Channel">Flume内置的Channel</h2><h3 id="MemoryChannel">MemoryChannel</h3><p>Memory Channel的配置如下：</p>
+<pre><code>a1<span class="class">.channels</span> = c1
+a1<span class="class">.channels</span><span class="class">.c1</span><span class="class">.type</span> = memory
+a1<span class="class">.channels</span><span class="class">.c1</span><span class="class">.capacity</span> = <span class="number">10000</span>
+a1<span class="class">.channels</span><span class="class">.c1</span><span class="class">.transactionCapacity</span> = <span class="number">10000</span>
+</code></pre><p>MemoryChannel继承BasicChannelSemantics。</p>
+<p>MemoryChannel的configure读取配置信息，它的内部有个重要的属性如下：</p>
+<pre><code><span class="keyword">private</span> LinkedBlockingDeque&lt;Event&gt; <span class="built_in">queue</span>; <span class="comment">// 阻塞事件队列</span>
+</code></pre><p>MemoryChannel内部有个MemoryTransaction类继承自BasicTransactionSemantics，这个事务对象就是MemoryChannel使用的事务对象。</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">protected</span> <span class="function">BasicTransactionSemantics <span class="title">createTransaction</span><span class="params">()</span> </span>{
+  <span class="keyword">return</span> <span class="keyword">new</span> MemoryTransaction(transCapacity, channelCounter);
+}
+</code></pre><p>MemoryTransaction的属性如下：</p>
+<pre><code><span class="comment">// 取走事件列表</span>
+<span class="keyword">private</span> LinkedBlockingDeque&lt;Event&gt; takeList;
+<span class="comment">// 放入事件列表</span>
+<span class="keyword">private</span> LinkedBlockingDeque&lt;Event&gt; putList;
+<span class="keyword">private</span> final ChannelCounter channelCounter;
+<span class="keyword">private</span> <span class="keyword">int</span> putByteCounter = <span class="number">0</span>;
+<span class="keyword">private</span> <span class="keyword">int</span> takeByteCounter = <span class="number">0</span>;
+</code></pre><p>之前分析过，Channel对事件的各个操作由具体的Transaction实现，也就是由MemoryTransaction实现。</p>
+<p>doPut方法，加入事件，doPut方法只针对Source提供过来的Event，跟Sink无关：</p>
+<pre><code>@<span class="function">Override
+<span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPut</span>(<span class="params">Event <span class="keyword">event</span></span>) throws InterruptedException </span>{
+  channelCounter.incrementEventPutAttemptCount();
+  <span class="keyword">int</span> eventByteSize = (<span class="keyword">int</span>)Math.ceil(estimateEventSize(<span class="keyword">event</span>)/byteCapacitySlotSize);
+
+  <span class="keyword">if</span> (!putList.offer(<span class="keyword">event</span>)) { <span class="comment">// 事件存储到MemoryTransaction的加入事件列表中</span>
+    <span class="keyword">throw</span> <span class="keyword">new</span> ChannelException(
+      <span class="string">"Put queue for MemoryTransaction of capacity "</span> +
+        putList.size() + <span class="string">" full, consider committing more frequently, "</span> +
+        <span class="string">"increasing capacity or increasing thread count"</span>);
+  }
+  putByteCounter += eventByteSize;
+}
+</code></pre><p>doTake方法，取走事件，doTake方法只针对Sink，负责给Sink传递Event数据：</p>
+<pre><code>@<span class="function">Override
+<span class="keyword">protected</span> Event <span class="title">doTake</span>(<span class="params"></span>) throws InterruptedException </span>{
+  channelCounter.incrementEventTakeAttemptCount();
+  <span class="keyword">if</span>(takeList.remainingCapacity() == <span class="number">0</span>) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> ChannelException(<span class="string">"Take list for MemoryTransaction, capacity "</span> +
+        takeList.size() + <span class="string">" full, consider committing more frequently, "</span> +
+        <span class="string">"increasing capacity, or increasing thread count"</span>);
+  }
+  <span class="keyword">if</span>(!queueStored.tryAcquire(keepAlive, TimeUnit.SECONDS)) {
+    <span class="keyword">return</span> <span class="keyword">null</span>;
+  }
+  Event <span class="keyword">event</span>;
+  synchronized(queueLock) {
+    <span class="keyword">event</span> = queue.poll(); <span class="comment">// 取出MemoryChannel中阻塞事件队列中的事件</span>
+  }
+  Preconditions.checkNotNull(<span class="keyword">event</span>, <span class="string">"Queue.poll returned NULL despite semaphore "</span> +
+      <span class="string">"signalling existence of entry"</span>);
+  takeList.put(<span class="keyword">event</span>); <span class="comment">// 放到MemoryTransaction的取出事件列表中</span>
+
+  <span class="keyword">int</span> eventByteSize = (<span class="keyword">int</span>)Math.ceil(estimateEventSize(<span class="keyword">event</span>)/byteCapacitySlotSize);
+  takeByteCounter += eventByteSize;
+
+  <span class="keyword">return</span> <span class="keyword">event</span>;
+}
+</code></pre><p>doCommit的部分代码，提交处理的事件，doCommit只处理putList，所以提交的是Source过来的数据，并交给MemoryChannel内部的阻塞队列：</p>
+<pre><code>@Override
+<span class="keyword">protected</span> <span class="keyword">void</span> doCommit() <span class="keyword">throws</span> InterruptedException {
+  <span class="built_in">int</span> puts = putList.<span class="built_in">size</span>();
+  <span class="built_in">int</span> takes = takeList.<span class="built_in">size</span>();
+  <span class="keyword">synchronized</span>(queueLock) {
+    <span class="keyword">if</span>(puts &gt; <span class="number">0</span> ) {
+      <span class="keyword">while</span>(!putList.isEmpty()) { <span class="comment">// 加入事件列表中不空的话</span>
+        <span class="keyword">if</span>(!queue.offer(putList.removeFirst())) { <span class="comment">// 在MemoryChannel里的阻塞事件队列中加入MemoryTransaction的加入事件队列，也就是说在MemoryTransaction中新加入的所有事件全部移植到MemoryChannel中的阻塞队列中</span>
+          <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Queue add failed, this shouldn't be able to happen"</span>);
+        }
+      }
+    }
+    putList.<span class="built_in">clear</span>();
+    takeList.<span class="built_in">clear</span>();
+  }
+}
+</code></pre><p>doRollback方法，回滚处理的事件, 回滚操作只针对Sink，回滚要交给Sink的事件到MemoryChannel的阻塞队列里：</p>
+<pre><code>@<span class="function">Override
+<span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doRollback</span><span class="params">()</span> </span>{
+  <span class="keyword">int</span> takes = takeList.size();
+  synchronized(queueLock) {
+    Preconditions.checkState(<span class="built_in">queue</span>.remainingCapacity() &gt;= takeList.size(), <span class="string">"Not enough space in memory channel "</span> +
+        <span class="string">"queue to rollback takes. This should never happen, please report"</span>);
+    <span class="keyword">while</span>(!takeList.isEmpty()) {
+      <span class="comment">// MemoryTransaction处理的事件全部回滚，回到MemoryChannel的阻塞队列里。因为MemoryTransaction处理的事件数据是从MemoryChannel的阻塞队列里取走的</span>
+      <span class="built_in">queue</span>.addFirst(takeList.removeLast());
+    }
+    putList.clear();
+  }
+  bytesRemaining.release(putByteCounter);
+  putByteCounter = <span class="number">0</span>;
+  takeByteCounter = <span class="number">0</span>;
+
+  queueStored.release(takes);
+  channelCounter.setChannelSize(<span class="built_in">queue</span>.size());
+}
+</code></pre><p>MemoryChannel总结：</p>
+<p>MemoryChannel是个Channel，Channel的作用是收集Source发来的事件数据(put操作)和发送给Sink由Source发来的事件数据(take操作)。Channel内部对事件的处理使用Transaction完成。</p>
+<p>put操作：先放到MemoryTransaction的putList列表中，MemoryTransaction做commit操作的时候写入到MemoryChannel的阻塞队列里。</p>
+<p>take操作：先取出MemoryChannel中阻塞队列里的事件数据，然后放入MemoryTransaction里的takeList列表中，当需要回滚的时候会将takeList列表中的事件数据回滚到MemoryChannel中的阻塞队列里。commit操作不需要任何处理，因为事件已经从MemoryChannel中的阻塞队列里取出。</p>
+<p>MemoryChannel有2个队列容量配置，分别是capacity和transactionCapacity。capacity是MemoryChannel里的阻塞队列的容量，transactionCapacity是MemoryTransaction里的putList和takeList列表容量。</p>
+<h2 id="Channel总结">Channel总结</h2><p>Channel是Flume中的桥梁，连接着Source和Sink,重要性不言而喻。Flume内置也有很多的Channel。同样地，并不是所有的Channel都能符合需求。</p>
+<p>比如MemoryChannel在内存中处理，速度很快，但是却不能持久化，当服务器挂了，Channel中的数据会丢失，这时就需要用FileChannel或JDBCChannel，但这2种Channel速度慢。因此可以实现一个自定义的Channel，美团的<a href="http://tech.meituan.com/mt-log-system-optimization.html地址上就说明了一些Flume可以改进和优化的地方。" target="_blank" rel="external">http://tech.meituan.com/mt-log-system-optimization.html地址上就说明了一些Flume可以改进和优化的地方。</a></p>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/big-data/" rel="tag">#big data</a>
+          
+            <a href="/tags/flume/" rel="tag">#flume</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/06/21/flume-source/" rel="next" title="Flume Source组件分析">
+                <i class="fa fa-chevron-left"></i> Flume Source组件分析
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/06/23/flume-sink/" rel="prev" title="Flume Sink组件分析">
+                Flume Sink组件分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Channel接口"><span class="nav-number">1.</span> <span class="nav-text">Channel接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Transaction接口"><span class="nav-number">2.</span> <span class="nav-text">Transaction接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Flume内置的Channel"><span class="nav-number">3.</span> <span class="nav-text">Flume内置的Channel</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MemoryChannel"><span class="nav-number">3.1.</span> <span class="nav-text">MemoryChannel</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Channel总结"><span class="nav-number">4.</span> <span class="nav-text">Channel总结</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2015/06/22/flume-channel/';
+      var disqus_title = 'Flume Channel组件分析';
+      var disqus_url = 'http://fangjian0423.github.io/2015/06/22/flume-channel/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

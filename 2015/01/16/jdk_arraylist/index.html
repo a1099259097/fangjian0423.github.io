@@ -1,0 +1,1002 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="jdk,list," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="前言list是一种有序的集合(an ordered collection), 通常也会被称为序列(sequence)，使用list可以精确地控制每个元素的插入，可以通过索引值找到对应list中的各个项，也可以在list中查询元素。
+list跟set不同，list允许出现重复的数据，list还允许内部出现null的项。
+以前的几段话摘自jdk文档的说明。
+其实list就相当于一个动态的数组，也就是链">
+<meta property="og:type" content="article">
+<meta property="og:title" content="jdk源码分析之ArrayList">
+<meta property="og:url" content="http://fangjian0423.github.io/2015/01/16/jdk_arraylist/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="前言list是一种有序的集合(an ordered collection), 通常也会被称为序列(sequence)，使用list可以精确地控制每个元素的插入，可以通过索引值找到对应list中的各个项，也可以在list中查询元素。
+list跟set不同，list允许出现重复的数据，list还允许内部出现null的项。
+以前的几段话摘自jdk文档的说明。
+其实list就相当于一个动态的数组，也就是链">
+<meta property="og:updated_time" content="2015-11-07T08:30:33.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="jdk源码分析之ArrayList">
+<meta name="twitter:description" content="前言list是一种有序的集合(an ordered collection), 通常也会被称为序列(sequence)，使用list可以精确地控制每个元素的插入，可以通过索引值找到对应list中的各个项，也可以在list中查询元素。
+list跟set不同，list允许出现重复的数据，list还允许内部出现null的项。
+以前的几段话摘自jdk文档的说明。
+其实list就相当于一个动态的数组，也就是链">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> jdk源码分析之ArrayList | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                jdk源码分析之ArrayList
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-01-16T21:07:44+08:00" content="2015-01-16">
+              2015-01-16
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jdk/" itemprop="url" rel="index">
+                    <span itemprop="name">jdk</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/01/16/jdk_arraylist/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/01/16/jdk_arraylist/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><h2 id="前言">前言</h2><p>list是一种有序的集合(an ordered collection), 通常也会被称为序列(sequence)，使用list可以精确地控制每个元素的插入，可以通过索引值找到对应list中的各个项，也可以在list中查询元素。</p>
+<p>list跟set不同，list允许出现重复的数据，list还允许内部出现null的项。</p>
+<p>以前的几段话摘自jdk文档的说明。</p>
+<p>其实list就相当于一个动态的数组，也就是链表，普通的数组长度大小都是固定的，而list是一个动态的数组，当list的长度满了，再次插入数据到list当中的时候，list会自动地扩展它的长度。</p>
+<p>C，C++中有链表的概念，它们可以使用结构体和指针来定义一个链表。 这样链表插入数据的时候可以加入新的结构体。 但是Java中没有指针这个概念，只能通过其他方式来实现。 比如数组。</p>
+<h2 id="ArrayList源码分析">ArrayList源码分析</h2><p>首先我们先分析一个List接口的实现类之一，也是最常用的ArrayList的源码。</p>
+<p>ArrayList其实就是一个单向链表。</p>
+<p>这里分析的代码是基于jdk1.8的。</p>
+<p>ArrayList类的属性如下：</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Object</span>[] EMPTY_ELEMENTDATA = {};
+  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Object</span>[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
+<span class="keyword">transient</span> <span class="keyword">Object</span>[] elementData;
+<span class="keyword">private</span> <span class="built_in">int</span> <span class="built_in">size</span>;
+</code></pre><p>属性size表示这个集合的有效长度；Object[] elementData这个数组是这个集合的全部元素；EMPTY_ELEMENTDATA表示一个共享的空数组，主要是为了让所有的空集合共享使用的；DEFAULTCAPACITY_EMPTY_ELEMENTDATA表示共享的空数组，是为了给有默认大小的空集合使用的。<br>(transient关键字表示这个属性不会被序列化)</p>
+<p>接下来是ArrayList的构造函数分析：</p>
+<p>ArrayList有3个构造函数，分别是</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">(<span class="keyword">int</span> initialCapacity)</span> </span>{
+  <span class="keyword">if</span> (initialCapacity &gt; <span class="number">0</span>) {
+    <span class="keyword">this</span>.elementData = <span class="keyword">new</span> Object[initialCapacity];
+  } <span class="keyword">else</span> <span class="keyword">if</span> (initialCapacity == <span class="number">0</span>) {
+    <span class="keyword">this</span>.elementData = EMPTY_ELEMENTDATA;
+  } <span class="keyword">else</span> {
+      <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Illegal Capacity: "</span>+
+                                          initialCapacity);
+  }
+}
+</code></pre><p>简单分析一下，这个构造函数的参数是一个initialCapacity整型类型的参数。这个initialCapacity看名字也知道，就是个初始化容量的意思。 如果这个值比0大，那么内部的elementData数组属性会被初始化；如果这个值等于0，那么内部的elementData会被赋值成EMPTY_ELEMENTDATA，也就是之前分析属性的时候说的让空集合共享使用的一个空数组；如果这个值小于0，抛异常。</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">()</span> </span>{
+    <span class="keyword">this</span>.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+}
+</code></pre><p>如果构造ArrayList没有传递任何参数，那么内部的elementData属性会被赋值成DEFAULTCAPACITY_EMPTY_ELEMENTDATA。</p>
+<pre><code><span class="keyword">public</span> ArrayList(Collection&lt;? <span class="keyword">extends</span> E&gt; c) {
+    elementData ArrayList= c.toArray();
+    <span class="keyword">if</span> ((<span class="keyword">size</span> = elementData.length) != <span class="number">0</span>) {
+        <span class="comment">// c.toArray might (incorrectly) not return Object[] (see 6260652)</span>
+        <span class="keyword">if</span> (elementData.getClass() != Object[].<span class="keyword">class</span>)
+            elementData = Arrays.copyOf(elementData, <span class="keyword">size</span>, Object[].<span class="keyword">class</span>);
+    } <span class="keyword">else</span> {
+        <span class="comment">// replace with empty array.</span>
+        <span class="keyword">this</span>.elementData = EMPTY_ELEMENTDATA;
+    }
+}
+</code></pre><p>这个构造函数的参数是一个集合接口类型。如果这个集合内部的元素大于0，那么这些元素会被拷贝到ArrayList内部的elementData属性中，否则elementData属性使用共享的空数组。</p>
+<p>接下来我们比较一下jdk1.6的ArrayList。</p>
+<p>jdk1.6的ArrayList只有两个属性：</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">Object</span>[] elementData;
+<span class="keyword">private</span> <span class="built_in">int</span> <span class="built_in">size</span>;
+</code></pre><p>它的构造函数：</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">(<span class="keyword">int</span> initialCapacity)</span> </span>{
+  <span class="keyword">super</span>();
+  <span class="keyword">if</span> (initialCapacity &lt; <span class="number">0</span>)
+  <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Illegal Capacity: "</span>
+  + initialCapacity);
+  <span class="keyword">this</span>.elementData = <span class="keyword">new</span> Object[initialCapacity];
+}
+</code></pre><p>这个构造函数跟1.8版本的区别不大，就是空list的时候，1.8版本的把共享的空数组赋值给elementData。</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">()</span> </span>{
+  <span class="keyword">this</span>(<span class="number">10</span>);
+}
+</code></pre><p>这个构造函数跟1.8版本的相差就大了。他会在内部默认初始化一个10个长度的数组，而1.8版本的是使用一个空的数组赋值给elementData。</p>
+<pre><code><span class="component">public ArrayList(Collection&lt;? <span class="keyword">extends</span> E&gt; c) {
+  elementData = c<span class="string">.toArray()</span>;
+  size = elementData<span class="string">.length</span>;
+  // c<span class="string">.toArray</span> might (incorrectly) not return Object[] (see 6260652)
+  if (elementData<span class="string">.getClass()</span> != Object[]<span class="string">.class)</span>
+  elementData = Arrays<span class="string">.copyOf(elementData</span>, size, Object[]<span class="string">.class)</span>;
+}</span>
+</code></pre><p>这个构造函数跟1.8版本的差别是1.8版本下如果这个Collection参数中元素个数为0,那么elementData会被赋值成共享的空数组。</p>
+<p>接下来挑几个重要的方法讲解一下：</p>
+<h3 id="add(E_e)_方法">add(E e) 方法</h3><p>这个方法的作用就是把 <strong>元素添加到列表的最后面</strong> ，我先把add方法的结论讲一下(由于ArrayList是一个动态的数组，当添加元素当数组的时候，肯定需要判断一下数组的长度是否够长，不够长的话会做一些处理)：</p>
+<p>我觉得可以使用下面这个公式来表示ArrayList内部数组长度的增加算法：</p>
+<p><strong>新的长度 = max(数组长度 + 数组长度 / 2, 新的长度)</strong></p>
+<p>这个算法有个前提条件：<strong>新的长度 &gt; 数组长度</strong></p>
+<p><strong>这里新的长度不固定，比如add方法: 这个新的长度的就是当前数组有效长度+1; 比如addAll方法: 这个新的长度就是当前数组有效长度+Collection集合长度</strong></p>
+<p><strong>这里的有效数组长度指的是ArrayList内部的size属性。</strong></p>
+<p>源码：</p>
+<p>add方法jdk1.8版本：</p>
+<pre><code><span class="keyword">public</span> <span class="built_in">boolean</span> <span class="built_in">add</span>(E e) {
+  ensureCapacityInternal(<span class="built_in">size</span> + <span class="number">1</span>);  <span class="comment">// Increments modCount!!</span>
+  elementData[<span class="built_in">size</span>++] = e;
+  <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+</code></pre><p>添加元素到列表的最后，这里的ensureCapacityInternal方法会处理数组长度不够长的问题，它的参数是当前数组的长度+1。</p>
+<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">ensureCapacityInternal</span><span class="params">(<span class="keyword">int</span> minCapacity)</span> </span>{
+  <span class="keyword">if</span> (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+    minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
+  }
+
+  ensureExplicitCapacity(minCapacity);
+}
+</code></pre><p>如果当前对象是使用无參的构造函数实现的，那么取10(DEFAULT_CAPACITY)和参数的较大值，然后用这个值调用ensureExplicitCapacity方法。否则，直接调用ensureExplicitCapacity方法。</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">ensureExplicitCapacity</span><span class="params">(<span class="keyword">int</span> minCapacity)</span> </span>{
+  modCount++;
+
+  <span class="comment">// overflow-conscious code</span>
+  <span class="keyword">if</span> (minCapacity - elementData.length &gt; <span class="number">0</span>)
+    grow(minCapacity);
+}
+</code></pre><p>如果要加的元素的下标值比当前数组长度要大的话(minCapacity参数代表当前数组的最后一个元素的下标值， 只有一个情况特殊，那就是使用无參的构造函数构造之后第一次调用，这个时候minCapacity为10)</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">grow</span><span class="params">(<span class="keyword">int</span> minCapacity)</span> </span>{
+  <span class="comment">// overflow-conscious code</span>
+  <span class="keyword">int</span> oldCapacity = elementData.length;
+  <span class="keyword">int</span> newCapacity = oldCapacity + (oldCapacity &gt;&gt; <span class="number">1</span>);
+  <span class="keyword">if</span> (newCapacity - minCapacity &lt; <span class="number">0</span>)
+  newCapacity = minCapacity;
+  <span class="keyword">if</span> (newCapacity - MAX_ARRAY_SIZE &gt; <span class="number">0</span>)
+  newCapacity = hugeCapacity(minCapacity);
+  <span class="comment">// minCapacity is usually close to size, so this is a win:</span>
+  elementData = Arrays.copyOf(elementData, newCapacity);
+}
+</code></pre><p>这个就是数组长度动态计算的算法。</p>
+<p>下面是我写的一些测试代码和注释，有兴趣的可以验证一下：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testNoParamConstructor</span><span class="params">()</span> </span>{
+  <span class="comment">// 不带参数的构造函数第一次add之后，会分配10个长度给内部elementData数组属性</span>
+  <span class="comment">// 接下来每次add，会都判断数组长度是否不够，不够的话 新的长度 = max(当前数组长度 + 当前数组长度 / 2, 当前数组长度 + 1)</span>
+  <span class="comment">// 比如，实例化之后。第一次add，数组长度分配了10个空间，当添加第11个的时候，数组长度不够，这也时候会分配15个(11 + 11 / 2)和11个的较大值，然后分配了11个。</span>
+  <span class="comment">// 然后elementData有15个空间，当添加第16个的时候，分配22(15 + 15 / 2)个。 以此类推， 22个不够的时候分配33个，33个不够的时候分配49个。</span>
+  ArrayList <span class="built_in">list</span> = <span class="keyword">new</span> ArrayList();
+
+  <span class="keyword">int</span> count = <span class="number">164</span>;
+  <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= count; i++) {
+    <span class="built_in">list</span>.add(i);
+  }
+  System.out.println(<span class="string">"done"</span>);
+}
+
+@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testKnowSize</span><span class="params">()</span> </span>{
+  <span class="comment">// 带长度的原理。 只不过一开始不会分配10个空间，而是参数穿进来的空间大小。</span>
+  <span class="comment">// 比如传入0, 0个空间，第一次add, 选择0(0 + 0 / 2)和1(0+1)的较大值，取1,分配1个空间</span>
+  <span class="comment">// 再次添加的时候，选择1(1+1/2)和2(1+1)的较大值，取2,分配2个空间</span>
+  <span class="comment">// 再次添加的时候，选择3(2+2/2)和3(2+1)的较大值，取3,分配3个空间</span>
+  <span class="comment">// 再次添加的时候，选择4(3+3/2)和4(3+1)的较大值，取4,分配4个空间</span>
+  <span class="comment">// 再次添加的时候，选择6(4+4/2)和5(4+1)的较大值，取6,分配6个空间  以此类推...</span>
+  ArrayList <span class="built_in">list</span> = <span class="keyword">new</span> ArrayList(<span class="number">0</span>);
+  <span class="built_in">list</span>.add(<span class="number">1</span>);
+  <span class="built_in">list</span>.add(<span class="number">2</span>);
+  <span class="built_in">list</span>.add(<span class="number">3</span>);
+  <span class="built_in">list</span>.add(<span class="number">4</span>);
+  <span class="built_in">list</span>.add(<span class="number">5</span>);
+  System.out.println(<span class="string">"done"</span>);
+}
+
+@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testValidAdd</span><span class="params">()</span> </span>{
+  <span class="comment">// 虽然list内部的elementData长度为5,但是有效长度为0。 所以add的时候不会增加长度。</span>
+  ArrayList <span class="built_in">list</span> = <span class="keyword">new</span> ArrayList(<span class="number">5</span>);
+  <span class="built_in">list</span>.add(<span class="string">"1"</span>);
+}
+</code></pre><h3 id="add(int_index,_E_element)_方法">add(int index, E element) 方法</h3><p>这个方法的作用是 <strong>在指定位置插入数据</strong></p>
+<pre><code><span class="keyword">public</span> void add(<span class="built_in">int</span> <span class="built_in">index</span>, E element) {
+  rangeCheckForAdd(<span class="built_in">index</span>);
+
+  ensureCapacityInternal(<span class="built_in">size</span> + <span class="number">1</span>);  // Increments modCount<span class="comment">!!</span>
+  System.arraycopy(elementData, <span class="built_in">index</span>, elementData, <span class="built_in">index</span> + <span class="number">1</span>,
+                   <span class="built_in">size</span> - <span class="built_in">index</span>);
+    elementData[<span class="built_in">index</span>] = element;
+    <span class="built_in">size</span>++;
+}
+</code></pre><p>rangeCheckForAdd方法是验证参数index是否ok，index &lt; 0 或 index &gt; 数组最后一个下标值的话，直接抛出IndexOutOfBoundsException异常。ensureCapacityInternal方法之前分析add(E e)的时候已经分析过了。接下来的一句代码就是将index下标值的数据全部往后移一位，然后index下标值的数据使用新的素质，元素长度+1(size++)。</p>
+<h3 id="remove(int_index)">remove(int index)</h3><p>remove方法就是 <strong>移除对应坐标值上的数据</strong></p>
+<pre><code><span class="keyword">public</span> E remove(<span class="built_in">int</span> <span class="built_in">index</span>) {
+  rangeCheck(<span class="built_in">index</span>);
+
+  modCount++;
+  E oldValue = elementData(<span class="built_in">index</span>);
+
+  <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - <span class="built_in">index</span> - <span class="number">1</span>;
+  <span class="keyword">if</span> (numMoved &gt; <span class="number">0</span>)
+      System.arraycopy(elementData, <span class="built_in">index</span>+<span class="number">1</span>, elementData, <span class="built_in">index</span>,
+                       numMoved);
+  elementData[--<span class="built_in">size</span>] = null; // clear to let GC <span class="keyword">do</span> its work
+
+  <span class="keyword">return</span> oldValue;
+}
+</code></pre><p>首先先检查坐标值是否合法，然后得到对应坐标上的元素，之后index下标值之后的数据全部往前移。</p>
+<p>测试代码：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testRemove</span><span class="params">()</span> </span>{
+  ArrayList <span class="built_in">list</span> = <span class="keyword">new</span> ArrayList();
+  <span class="built_in">list</span>.add(<span class="string">"1"</span>);
+  <span class="built_in">list</span>.add(<span class="string">"2"</span>);
+  <span class="built_in">list</span>.add(<span class="string">"1"</span>);
+  <span class="built_in">list</span>.add(<span class="string">"3"</span>);
+  <span class="built_in">list</span>.remove(<span class="number">0</span>);
+  <span class="comment">// remove方法只会删除第一个匹配的元素，之后的元素下标都向前移。 所以"1"的下标值从2变成了1，且只有1个"1"元素</span>
+  System.out.println(<span class="built_in">list</span>.indexOf(<span class="string">"1"</span>)); <span class="comment">// 输出 1</span>
+}
+</code></pre><h3 id="remove(Object_o)">remove(Object o)</h3><p> <strong>找出数组中的元素，然后移除</strong></p>
+<pre><code><span class="keyword">public</span> <span class="keyword">boolean</span> remove(Object o) {
+    <span class="keyword">if</span> (o == <span class="keyword">null</span>) {
+        <span class="keyword">for</span> (<span class="keyword">int</span> <span class="keyword">index</span> = <span class="number">0</span>; <span class="keyword">index</span> &lt; size; <span class="keyword">index</span>++)
+            <span class="keyword">if</span> (elementData[<span class="keyword">index</span>] == <span class="keyword">null</span>) {
+                fastRemove(<span class="keyword">index</span>) {
+    modCount++;
+    <span class="keyword">int</span> numMoved = size - <span class="keyword">index</span> - <span class="number">1</span>;
+    <span class="keyword">if</span> (numMoved &gt; <span class="number">0</span>)
+        System.arraycopy(elementData, <span class="keyword">index</span>+<span class="number">1</span>, elementData, <span class="keyword">index</span>,
+                         numMoved);
+    elementData[--size] = <span class="keyword">null</span>; <span class="comment">// clear to let GC do its work</span>
+}
+</code></pre><h3 id="clear">clear</h3><p><strong>清除list中的所有数据</strong>。 没啥好说的，遍历数组，每一项设置为null，然后让GC去回收。 之后将size设置为0。</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">clear</span>() {
+  modCount++;
+
+  <span class="comment">// clear to let GC do its work</span>
+  <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">size</span>; i++)
+      elementData[i] = <span class="keyword">null</span>;
+
+  <span class="built_in">size</span> = <span class="number">0</span>;
+}
+</code></pre><h3 id="set(int_index,_E_element)">set(int index, E element)</h3><p><strong>用element值替换下标值为index的值</strong></p>
+<pre><code><span class="keyword">public</span> E set(<span class="keyword">int</span> <span class="keyword">index</span>, E element) {
+  rangeCheck(<span class="keyword">index</span>);
+
+  E oldValue = elementData(<span class="keyword">index</span>);
+  elementData[<span class="keyword">index</span>] = element;
+  <span class="keyword">return</span> oldValue;
+}
+</code></pre><h3 id="get(int_index)">get(int index)</h3><p><strong>得到下标值为index的元素</strong></p>
+<pre><code><span class="keyword">public</span> E get(<span class="keyword">int</span> <span class="keyword">index</span>) {
+    rangeCheck(<span class="keyword">index</span>);
+
+    <span class="keyword">return</span> elementData(<span class="keyword">index</span>);
+}
+</code></pre><h3 id="indexOf(Object)">indexOf(Object)</h3><p><strong>根据参数对象，如果是null对象，找出数组上第一个为null对着的元素，然后返回下标值。如果不是null对象，参数对象equals数组元素为true的话，返回对应的下标</strong></p>
+<pre><code>public <span class="built_in">int</span> indexOf(Object o) {
+    <span class="keyword">if</span> (o == <span class="literal">null</span>) {
+        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span><span class="comment">; i &lt; size; i++)</span>
+            <span class="keyword">if</span> (elementData[i]==<span class="literal">null</span>)
+              <span class="keyword">return</span> i<span class="comment">;</span>
+    } <span class="keyword">else</span> {
+        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span><span class="comment">; i &lt; size; i++)</span>
+            <span class="keyword">if</span> (o.equals(elementData[i]))
+                <span class="keyword">return</span> i<span class="comment">;</span>
+    }
+    <span class="keyword">return</span> -<span class="number">1</span><span class="comment">;</span>
+}
+</code></pre><h3 id="contains(Object_o)">contains(Object o)</h3><p><strong>查看数组中是否存在对象</strong> 内部使用indexOf方法</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">contains</span><span class="params">(Object o)</span> </span>{
+    <span class="keyword">return</span> indexOf(o) &gt;= <span class="number">0</span>;
+}
+</code></pre><h3 id="addAll">addAll</h3><p><strong>在列表的结尾添加一个Collection集合</strong></p>
+<pre><code><span class="keyword">public</span> <span class="keyword">boolean</span> addAll(Collection&lt;? <span class="keyword">extends</span> E&gt; c) {
+    Object[] a = c.toArray();
+    <span class="keyword">int</span> numNew = a.length;
+    ensureCapacityInternal(<span class="keyword">size</span> + numNew);  <span class="comment">// Increments modCount</span>
+    System.arraycopy(a, <span class="number">0</span>, elementData, <span class="keyword">size</span>, numNew);
+    <span class="keyword">size</span> += numNew;
+    <span class="keyword">return</span> numNew != <span class="number">0</span>;
+}
+</code></pre><p>首先先得到Collection参数内部数组的长度，然后调用ensureCapacityInternal方法确保内部数据的长度，然后在内部数组的最后添加新的数组。</p>
+<p>在列表的指定位置添加一个Collection集合。</p>
+<pre><code><span class="keyword">public</span> boolean addAll(<span class="built_in">int</span> <span class="built_in">index</span>, Collection&lt;? <span class="keyword">extends</span> E&gt; c) {
+  rangeCheckForAdd(<span class="built_in">index</span>);
+
+  Object[] a = c.toArray();
+  <span class="built_in">int</span> numNew = a.length;
+  ensureCapacityInternal(<span class="built_in">size</span> + numNew);  // Increments modCount
+
+  <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - <span class="built_in">index</span>;
+  <span class="keyword">if</span> (numMoved &gt; <span class="number">0</span>)
+  System.arraycopy(elementData, <span class="built_in">index</span>, elementData, <span class="built_in">index</span> + numNew,
+    numMoved);
+
+    System.arraycopy(a, <span class="number">0</span>, elementData, <span class="built_in">index</span>, numNew);
+    <span class="built_in">size</span> += numNew;
+    <span class="keyword">return</span> numNew <span class="comment">!= 0;</span>
+}
+</code></pre><p>首先先判断下标值是否合法。然后调用ensureCapacityInternal方法确保内部数据的长度，然后在index坐标位置的元素都往后移参数Collection集合内部数组的长度，然后空闲的位置加入新集合的数据。</p>
+<h3 id="toArray">toArray</h3><p><strong>根据elementData数组拷贝一份新的数组</strong></p>
+<pre><code><span class="keyword">public</span> <span class="keyword">Object</span>[] toArray() {
+    <span class="keyword">return</span> Arrays.copyOf(elementData, <span class="built_in">size</span>);
+}
+</code></pre><p>以前分析的一些方法都会处理一个叫做modCount的int类型的属性，这个属性的ArrayList的父类AbstractList中定义的。</p>
+<p>据说这个modCount跟ArrayList的迭代器有关，现在还不清楚。。 以后看迭代器相关的源码的时候我再继续这个话题。</p>
+<h2 id="ArrayList的注意点">ArrayList的注意点</h2><ol>
+<li>当数据量很大的时候，ArrayList内部操作元素的时候会移动位置，很耗性能</li>
+<li>ArrayList虽然可以自动扩展长度，但是数据量一大，扩展的也多，会造成很多空间的浪费</li>
+<li>ArrayList有一个内部私有类，SubList。ArrayList提供一个subList方法用于构造这个SubList。这里需要注意的是SubList和ArrayList使用的数据引用是同一个对象，在SubList中操作数据和在ArrayList中操作数据都会影响对方。</li>
+<li>ArrayList允许加入null元素</li>
+</ol>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/jdk/" rel="tag">#jdk</a>
+          
+            <a href="/tags/list/" rel="tag">#list</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/01/11/bootstrap-grid/" rel="next" title="bootstrap学习系列之表格布局">
+                <i class="fa fa-chevron-left"></i> bootstrap学习系列之表格布局
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/01/17/jdk_linkedlist/" rel="prev" title="jdk源码分析之LinkedList">
+                jdk源码分析之LinkedList <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ArrayList源码分析"><span class="nav-number">2.</span> <span class="nav-text">ArrayList源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#add(E_e)_方法"><span class="nav-number">2.1.</span> <span class="nav-text">add(E e) 方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#add(int_index,_E_element)_方法"><span class="nav-number">2.2.</span> <span class="nav-text">add(int index, E element) 方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#remove(int_index)"><span class="nav-number">2.3.</span> <span class="nav-text">remove(int index)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#remove(Object_o)"><span class="nav-number">2.4.</span> <span class="nav-text">remove(Object o)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#clear"><span class="nav-number">2.5.</span> <span class="nav-text">clear</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#set(int_index,_E_element)"><span class="nav-number">2.6.</span> <span class="nav-text">set(int index, E element)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#get(int_index)"><span class="nav-number">2.7.</span> <span class="nav-text">get(int index)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#indexOf(Object)"><span class="nav-number">2.8.</span> <span class="nav-text">indexOf(Object)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#contains(Object_o)"><span class="nav-number">2.9.</span> <span class="nav-text">contains(Object o)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#addAll"><span class="nav-number">2.10.</span> <span class="nav-text">addAll</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#toArray"><span class="nav-number">2.11.</span> <span class="nav-text">toArray</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ArrayList的注意点"><span class="nav-number">3.</span> <span class="nav-text">ArrayList的注意点</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2015/01/16/jdk_arraylist/';
+      var disqus_title = 'jdk源码分析之ArrayList';
+      var disqus_url = 'http://fangjian0423.github.io/2015/01/16/jdk_arraylist/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

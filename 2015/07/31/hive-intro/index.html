@@ -1,0 +1,892 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="big data,hive," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集。
+Hive提供了一种叫做HiveQL的类似SQL查询语言用来查询数据，HiveQL也允许熟悉MapReduce开发者开发自定义的mapper和reducer来处理内建的mapper和reducer无法完成的复杂的分析工作。
+Hive的工作模式是提交一个任务，等到任务结束时被通知，而不是实时查询。
+Hive">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hive介绍">
+<meta property="og:url" content="http://fangjian0423.github.io/2015/07/31/hive-intro/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集。
+Hive提供了一种叫做HiveQL的类似SQL查询语言用来查询数据，HiveQL也允许熟悉MapReduce开发者开发自定义的mapper和reducer来处理内建的mapper和reducer无法完成的复杂的分析工作。
+Hive的工作模式是提交一个任务，等到任务结束时被通知，而不是实时查询。
+Hive">
+<meta property="og:updated_time" content="2015-11-07T08:42:30.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hive介绍">
+<meta name="twitter:description" content="Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集。
+Hive提供了一种叫做HiveQL的类似SQL查询语言用来查询数据，HiveQL也允许熟悉MapReduce开发者开发自定义的mapper和reducer来处理内建的mapper和reducer无法完成的复杂的分析工作。
+Hive的工作模式是提交一个任务，等到任务结束时被通知，而不是实时查询。
+Hive">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> Hive介绍 | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Hive介绍
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-07-31T13:32:33+08:00" content="2015-07-31">
+              2015-07-31
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/hive/" itemprop="url" rel="index">
+                    <span itemprop="name">hive</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/07/31/hive-intro/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/31/hive-intro/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><p>Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集。</p>
+<p>Hive提供了一种叫做HiveQL的类似SQL查询语言用来查询数据，HiveQL也允许熟悉MapReduce开发者开发自定义的mapper和reducer来处理内建的mapper和reducer无法完成的复杂的分析工作。</p>
+<p>Hive的工作模式是提交一个任务，等到任务结束时被通知，而不是实时查询。</p>
+<h2 id="Hive安装">Hive安装</h2><p>直接去<a href="https://hive.apache.org/" target="_blank" rel="external">Hive官网</a>下载最新的文件，解压。</p>
+<p>运行bin目录里的hive文件，运行之前先启动hadoop，运行的时候可能会出现：</p>
+<pre><code>Missing Hive <span class="keyword">CLI</span> Jar ....
+</code></pre><p>将hive解压出来的lib目录里的jline<em>.jar拷贝到$HADOOP/share/hadoop/yarn/lib里，同时将$HADOOP/share/hadoop/yarn/lib里的jline</em>.jar删除，重启hadoop。</p>
+<p>再次运行，可能还会出现</p>
+<pre><code>The reported blocks <span class="number">2662</span> has reached <span class="operator">the</span> threshold <span class="number">0.9990</span> <span class="operator">of</span> total blocks <span class="number">2662.</span> The <span class="built_in">number</span> <span class="operator">of</span> live datanodes <span class="number">1</span> has reached <span class="operator">the</span> minimum <span class="built_in">number</span> <span class="number">0.</span> In safe mode extension. Safe mode will be turned off automatically <span class="operator">in</span> <span class="number">0</span> <span class="built_in">seconds</span>. ...
+</code></pre><p>类似的问题，关闭hdfs的安全模式即可：</p>
+<pre><code><span class="title">hadoop</span> dfsadmin -safemode leave
+</code></pre><h2 id="基本命令">基本命令</h2><p>HiveQL就是模仿sql而创建的，以SQL的角度来介绍HiveQL。</p>
+<h3 id="DDL操作">DDL操作</h3><p>创建表：</p>
+<pre><code>hive&gt; create table users(age <span class="built_in">INT</span>, name <span class="built_in">STRING</span>)<span class="comment">;</span>
+</code></pre><p>查看所有的表：</p>
+<pre><code>hive&gt; <span class="built_in">show</span> <span class="built_in">tables</span>;
+</code></pre><p>查看以CLIENT开头的表：</p>
+<pre><code>hive&gt; <span class="built_in">show</span> <span class="built_in">tables</span> 'CLIENT.*';
+</code></pre><p>表加列：</p>
+<pre><code>hive&gt; alter table users add columns<span class="list">(<span class="keyword">gender</span> BOOLEAN)</span><span class="comment">;</span>
+</code></pre><p>改表名字：</p>
+<pre><code>hive&gt; alter <span class="built_in">table</span> users rename <span class="keyword">to</span> <span class="keyword">user</span>;
+</code></pre><p>删除表：</p>
+<pre><code>hive&gt; drop <span class="built_in">table</span> <span class="keyword">user</span>;
+</code></pre><p>查看表的具体信息：</p>
+<pre><code>hive&gt; descibe user<span class="comment">;</span>
+hive&gt; desc user<span class="comment">;</span>
+</code></pre><h3 id="DML操作">DML操作</h3><p>hive创建表的时候可以指定分隔符，由于hive操作的是hdfs，数据最终会存储在hdfs上，所以hdfs上的内容肯定是以某种分隔符分开各个列的。 hive默认的列分隔符是 <strong>^A</strong> 。 我们可以自定义自己的分隔符，在创建表的时候指定分隔符即可。</p>
+<p>本地导入数据到hive：</p>
+<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table users;
+</code></pre><p>users表的结构只有2列，name和age，而且使用默认的分隔符。</p>
+<p>比如本地文件的内容是这样的：</p>
+<pre><code><span class="xml">format1</span><span class="keyword">^A11</span><span class="xml">
+format2</span><span class="keyword">^A22</span><span class="xml"></span>
+</code></pre><p>导入之后进行查询：</p>
+<pre><code>hive&gt; <span class="keyword">select</span> * <span class="keyword">from</span> users;
+</code></pre><p>显示结果：</p>
+<pre><code>OK
+format1    <span class="number">11</span>
+format2    <span class="number">22</span>
+Time taken: <span class="number">0.362</span> seconds, Fetched: <span class="number">2</span> row(s)
+</code></pre><p>在创建表的时候可以指定列分隔符和数组分隔符：</p>
+<pre><code>hive&gt; create table users(name <span class="built_in">string</span>, age int)
+ &gt; ROW FORMAT DELIMITED
+ &gt; FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">'\t'</span>
+ &gt; COLLECTION ITEMS TERMINATED <span class="keyword">BY</span> <span class="string">','</span>;
+</code></pre><p>导入数据还有几个参数：</p>
+<p>local参数意味着从本地加载文件，如果没有local参数，那表示从hdfs加载文件。</p>
+<p>关键字overwrite意味着当前表中已经存在的数据将会被删除掉，没有overwrite关键字，表示数据是追加，追加到原先数据集里面。</p>
+<p>插入数据，插入数据后会起一个map reduce job去跑插入的数据：</p>
+<pre><code>hive&gt; <span class="function">insert <span class="keyword">into</span> table users <span class="title">values</span>(<span class="params"><span class="string">'formatgogo'</span>, <span class="number">222</span></span>)</span>;
+</code></pre><p>带条件的查询数据：</p>
+<pre><code>hive&gt; <span class="keyword">select</span> * <span class="keyword">from</span> users <span class="keyword">where</span> age = <span class="number">11</span>;
+</code></pre><p>group by查询：</p>
+<pre><code>hive&gt; <span class="keyword">select</span> age, <span class="built_in">count</span>(<span class="number">1</span>) <span class="keyword">from</span> users <span class="built_in">group</span> <span class="keyword">by</span> age;
+</code></pre><p>partition的使用，以部门表为例，用type进行partition：</p>
+<pre><code>hive&gt; create table dept<span class="list">(<span class="keyword">name</span> STRING)</span> partitioned by <span class="list">(<span class="keyword">type</span> INT)</span><span class="comment">;</span>
+</code></pre><p>以2个文件为例，dept1.txt：</p>
+<pre><code><span class="label">dept1</span>^<span class="literal">A1</span>
+<span class="label">dept11</span>^<span class="literal">A1</span>
+<span class="label">dept111</span>^<span class="literal">A1</span>
+<span class="label">dept1111</span>^<span class="literal">A1</span>
+<span class="label">dept11111</span>^<span class="literal">A1</span>
+<span class="label">dept111111</span>^<span class="literal">A1</span>
+</code></pre><p>dept2.txt</p>
+<pre><code><span class="label">dept2</span>^<span class="literal">A2</span>
+<span class="label">dept22</span>^<span class="literal">A2</span>
+<span class="label">dept222</span>^<span class="literal">A2</span>
+<span class="label">dept2222</span>^<span class="literal">A2</span>
+<span class="label">dept22222</span>^<span class="literal">A2</span>
+<span class="label">dept222222</span>^<span class="literal">A2</span>
+</code></pre><p>使用partition之后，导入数据的时候需要指定对应的partition：</p>
+<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'$PATH/dept1.txt'</span> overwrite <span class="keyword">into</span> table dept partition(<span class="keyword">type</span>=<span class="number">1</span>);
+hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'$PATH/dept2.txt'</span> overwrite <span class="keyword">into</span> table dept partition(<span class="keyword">type</span>=<span class="number">2</span>);
+
+hive&gt; <span class="keyword">select</span> * from dept;
+</code></pre><p>结果：</p>
+<pre><code>OK
+dept1    <span class="number">1</span>
+dept11    <span class="number">1</span>
+dept111    <span class="number">1</span>
+dept1111    <span class="number">1</span>
+dept11111    <span class="number">1</span>
+dept111111    <span class="number">1</span>
+dept2    <span class="number">2</span>
+dept22    <span class="number">2</span>
+dept222    <span class="number">2</span>
+dept2222    <span class="number">2</span>
+dept22222    <span class="number">2</span>
+dept222222    <span class="number">2</span>
+Time taken: <span class="number">0.114</span> seconds, Fetched: <span class="number">12</span> row(s)
+</code></pre><p>insert可以将数据导出到指定目录，将users表导入到本地文件。 去掉local关键字表示导出到hdfs目录：</p>
+<pre><code>hive&gt; insert overwrite <span class="keyword">local</span> directory <span class="string">'localFileName'</span> <span class="keyword">select</span> * from users<span class="comment">;</span>
+</code></pre><h3 id="hive存储在hdfs的位置">hive存储在hdfs的位置</h3><p>进入hive控制台之后，可以使用：</p>
+<pre><code><span class="tag">hive</span>&gt; <span class="tag">set</span> <span class="tag">hive</span><span class="class">.metastore</span><span class="class">.warehouse</span><span class="class">.dir</span>;
+</code></pre><p>查看hive存储在hdfs的位置，默认是存在 /user/hive/warehouse 目录。</p>
+<p>之前的users表，会存储在/user/hive/warehouse/user目录里。</p>
+<p>有partition的表会存在的不同位置，比如之前的dept表的type为1和2的分别存储在 /user/hive/warehouse/dept/type=1 和 /user/hive/warehouse/dept/type=2。</p>
+<h2 id="数据类型">数据类型</h2><p>hive中的数据类型分2种，简单类型和复杂类型。</p>
+<p>简单类型有以下几种：TINYINT, SMALLINT, INT, BIGINT, BOOLEAN, FLOAT, DOUBLE, STRING。</p>
+<p>复杂类型有以下几种：Structs(结构体，学过C都知道)，MAPS(key-value键值对)，Arrays(数组类型，数组内的元素类型都必须一致)</p>
+<p>简单类型就不分析了，来看一下复杂类型的使用：</p>
+<h3 id="Structs">Structs</h3><pre><code><span class="label">hive</span>&gt; create table employee(id INT, <span class="preprocessor">info</span> <span class="keyword">struct&lt;name:STRING, </span>age:INT&gt;)
+      &gt; ROW FORMAT DELIMITED FIELDS TERMINATED <span class="keyword">BY </span><span class="string">','</span> 
+      &gt; COLLECTION <span class="keyword">ITEMS </span>TERMINATED <span class="keyword">BY </span><span class="string">':'</span><span class="comment">; </span>
+</code></pre><p>要导入的数据：</p>
+<pre><code><span class="number">1</span>,format:<span class="number">11</span>
+<span class="number">2</span>,fj:<span class="number">22</span>
+<span class="number">3</span>,formatfj:<span class="number">33</span>
+</code></pre><p>导入数据：</p>
+<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table employee;
+</code></pre><p>查询：</p>
+<pre><code>select * from employee;
+
+OK
+<span class="number">1</span>    {<span class="string">"name"</span>:<span class="string">"format"</span>,<span class="string">"age"</span>:<span class="number">11</span>}
+<span class="number">2</span>    {<span class="string">"name"</span>:<span class="string">"fj"</span>,<span class="string">"age"</span>:<span class="number">22</span>}
+<span class="number">3</span>    {<span class="string">"name"</span>:<span class="string">"formatfj"</span>,<span class="string">"age"</span>:<span class="number">33</span>}
+Time taken: <span class="number">0.042</span> seconds, Fetched: <span class="number">3</span> row(s)
+
+hive&gt; select info.name from employee;
+
+OK
+format
+fj
+formatfj
+Time taken: <span class="number">0.061</span> seconds, Fetched: <span class="number">3</span> row(s)
+</code></pre><h3 id="Maps">Maps</h3><pre><code>hive&gt; create table lessons(id <span class="built_in">string</span>, score <span class="built_in">map</span>&lt;<span class="built_in">string</span>, int&gt;)
+    &gt; ROW FORMAT DELIMITED
+    &gt; FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">'\t'</span>
+    &gt; COLLECTION ITEMS TERMINATED <span class="keyword">BY</span> <span class="string">','</span>
+    &gt; <span class="built_in">MAP</span> KEYS TERMINATED <span class="keyword">BY</span> <span class="string">':'</span>;
+</code></pre><p>要导入的数据：</p>
+<pre><code><span class="number">1</span>       chinese:<span class="number">80</span>,english:<span class="number">60</span>,math:<span class="number">70</span>  
+<span class="number">2</span>       computer:<span class="number">60</span>,chemistry:<span class="number">80</span>   
+</code></pre><p>导入数据：</p>
+<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table lessons;
+</code></pre><p>查询：</p>
+<pre><code>hive&gt; <span class="keyword">select</span> score[<span class="string">'chinese'</span>] <span class="keyword">from</span> lessions;
+
+OK
+<span class="number">80</span>
+NULL
+Time taken: <span class="number">0.05</span> seconds, Fetched: <span class="number">2</span> row(s)
+
+hive&gt; <span class="keyword">select</span> * <span class="keyword">from</span> lessons;
+OK
+<span class="number">1</span>    {<span class="string">"chinese"</span>:<span class="number">80</span>,<span class="string">"english"</span>:<span class="number">60</span>,<span class="string">"math"</span>:<span class="number">70</span>}
+<span class="number">2</span>    {<span class="string">"computer"</span>:<span class="number">60</span>,<span class="string">"chemistry"</span>:<span class="number">80</span>}
+Time taken: <span class="number">0.032</span> seconds, Fetched: <span class="number">2</span> row(s)
+</code></pre><h3 id="Arrays">Arrays</h3><pre><code>hive&gt; create table student(name <span class="built_in">string</span>, hobby_list <span class="built_in">array</span>&lt;<span class="built_in">STRING</span>&gt;)
+    &gt; ROW FORMAT DELIMITED
+    &gt; FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">','</span>
+    &gt; COLLECTION ITEMS TERMINATED <span class="keyword">BY</span> <span class="string">':'</span>;
+</code></pre><p>要导入的数据：</p>
+<pre><code><span class="tag">format</span>,<span class="tag">basketball</span><span class="pseudo">:football</span><span class="pseudo">:swimming</span>
+<span class="tag">fj</span>,<span class="tag">coding</span><span class="pseudo">:running</span>
+</code></pre><p>导入数据：</p>
+<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table student;
+</code></pre><p>查询(数组下标没对应的值的话返回NULL)：</p>
+<pre><code>hive&gt; select * from student;
+
+OK
+format    [<span class="string">"basketball"</span>,<span class="string">"football"</span>,<span class="string">"swimming"</span>]
+fj    [<span class="string">"coding"</span>,<span class="string">"running"</span>]
+Time taken: <span class="number">0.041</span> seconds, Fetched: <span class="number">2</span> row(s)
+
+hive&gt; select hobby_list[<span class="number">2</span>] from student;
+
+OK
+swimming
+<span class="literal">NULL</span>
+Time taken: <span class="number">0.07</span> seconds, Fetched: <span class="number">2</span> row(s)
+</code></pre></span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/big-data/" rel="tag">#big data</a>
+          
+            <a href="/tags/hive/" rel="tag">#hive</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/07/26/google-guava-intro/" rel="next" title="google guava类库介绍">
+                <i class="fa fa-chevron-left"></i> google guava类库介绍
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/08/07/hbase-intro/" rel="prev" title="HBase介绍">
+                HBase介绍 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Hive安装"><span class="nav-number">1.</span> <span class="nav-text">Hive安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本命令"><span class="nav-number">2.</span> <span class="nav-text">基本命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DDL操作"><span class="nav-number">2.1.</span> <span class="nav-text">DDL操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DML操作"><span class="nav-number">2.2.</span> <span class="nav-text">DML操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#hive存储在hdfs的位置"><span class="nav-number">2.3.</span> <span class="nav-text">hive存储在hdfs的位置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据类型"><span class="nav-number">3.</span> <span class="nav-text">数据类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Structs"><span class="nav-number">3.1.</span> <span class="nav-text">Structs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Maps"><span class="nav-number">3.2.</span> <span class="nav-text">Maps</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Arrays"><span class="nav-number">3.3.</span> <span class="nav-text">Arrays</span></a></li></ol></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2015/07/31/hive-intro/';
+      var disqus_title = 'Hive介绍';
+      var disqus_url = 'http://fangjian0423.github.io/2015/07/31/hive-intro/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

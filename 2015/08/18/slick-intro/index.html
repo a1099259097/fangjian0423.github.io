@@ -1,0 +1,959 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="frm,orm,scala," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="FRM介绍最近看到了一个FRM的框架Slick。 FRM的意思是Functional Relational Mapping， 一种基于函数式的ORM。
+举一个最简单的例子：
+val queryResult = db.query(queryStr)
+
+queryResult.onSuccess { result =&amp;gt;
+    result.doSomething ...
+}
+数据库db查询一条">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Scala持久层框架Slick介绍">
+<meta property="og:url" content="http://fangjian0423.github.io/2015/08/18/slick-intro/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="FRM介绍最近看到了一个FRM的框架Slick。 FRM的意思是Functional Relational Mapping， 一种基于函数式的ORM。
+举一个最简单的例子：
+val queryResult = db.query(queryStr)
+
+queryResult.onSuccess { result =&amp;gt;
+    result.doSomething ...
+}
+数据库db查询一条">
+<meta property="og:updated_time" content="2015-11-07T08:44:01.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Scala持久层框架Slick介绍">
+<meta name="twitter:description" content="FRM介绍最近看到了一个FRM的框架Slick。 FRM的意思是Functional Relational Mapping， 一种基于函数式的ORM。
+举一个最简单的例子：
+val queryResult = db.query(queryStr)
+
+queryResult.onSuccess { result =&amp;gt;
+    result.doSomething ...
+}
+数据库db查询一条">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> Scala持久层框架Slick介绍 | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Scala持久层框架Slick介绍
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-08-18T23:22:33+08:00" content="2015-08-18">
+              2015-08-18
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jvm/" itemprop="url" rel="index">
+                    <span itemprop="name">jvm</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/08/18/slick-intro/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/08/18/slick-intro/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><h2 id="FRM介绍">FRM介绍</h2><p>最近看到了一个FRM的框架Slick。 FRM的意思是Functional Relational Mapping， 一种基于函数式的ORM。</p>
+<p>举一个最简单的例子：</p>
+<pre><code>val queryResult = db.query(queryStr)
+
+queryResult.onSuccess { <span class="literal">result</span> =&gt;
+    <span class="literal">result</span>.doSomething ...
+}
+</code></pre><p>数据库db查询一条sql语句。查询成功的时候使用闭包完成处理。 看到这段代码的第一反应就是js的ajax处理，代码几乎是一样的，也发现之前在学校里写nodejs的时候查询db也是这样的语法。</p>
+<pre><code><span class="keyword">var</span> jqxhr = $.ajax( {
+    url: 'url',
+    <span class="keyword">method</span>: '<span class="type">GET</span>',
+    data: [user: 'format']
+});
+
+jqxhr.success(function() {
+    ...
+});
+</code></pre><p>FRM相比ORM最明显的优势就是FRM基于多线程的Future的数据查询，而ORM是单线程的线性执行。</p>
+<p>FRM构造sql查询也是相当简单的：</p>
+<pre><code><span class="comment">// 构造查询</span>
+val newQuery = students.<span class="function"><span class="title">filter</span><span class="params">(_.age &gt; <span class="number">24</span>)</span></span>.<span class="function"><span class="title">sortBy</span><span class="params">(_.name)</span></span>
+<span class="comment">// 执行查询</span>
+db.<span class="function"><span class="title">run</span><span class="params">(newQuery)</span></span>
+</code></pre><p>FRM其他的优势可以参考<a href="http://slick.typesafe.com/doc/3.0.1/introduction.html#functional-relational-mapping" target="_blank" rel="external">官方文档</a>。</p>
+<h2 id="Slick实例">Slick实例</h2><p>下面以一个Students和Classrooms的实例来说明一下Slick的使用。</p>
+<p>首先是创建对应的domain，学生与教室的关系是1对多。</p>
+<p>Students domain(使用Option类型说明该列是可为空的)：</p>
+<pre><code>class Student(tag: Tag) extends Table[<span class="link_label">(Int, String, Int, Int, Option[Date</span>])](tag, "Students") {
+
+  def id: Rep[<span class="link_label">Int</span>] = column[<span class="link_label">Int</span>](<span class="link_url">"id", O.PrimaryKey, O.AutoInc</span>)
+  def name: Rep[<span class="link_label">String</span>] = column[<span class="link_label">String</span>](<span class="link_url">"name"</span>)
+  def age: Rep[<span class="link_label">Int</span>] = column[<span class="link_label">Int</span>](<span class="link_url">"age"</span>)
+  def birthDate: Rep[<span class="link_label">Option[Date</span>]] = column[<span class="link_label">Option[Date</span>]]("birth_date")
+  def classroomId = column[<span class="link_label">Int</span>](<span class="link_url">"classroom_id"</span>)
+
+   def * : ProvenShape[(Int, String, Int, Int, Option[Date])] = (id, name, age, classroomId, birthDate)
+
+  def classroom: ForeignKeyQuery[Classroom, (Int, String)] = foreignKey("FK<span class="emphasis">_CLASSROOM", classroomId, TableQuery[Classroom])(_</span>.id)
+}
+</code></pre><p>Classrooms domain：</p>
+<pre><code>class Classroom(tag: Tag) extends Table[<span class="link_label">(Int, String)</span>](<span class="link_url">tag, "Classrooms"</span>) {
+  def id = column[<span class="link_label">Int</span>](<span class="link_url">"id", O.PrimaryKey, O.AutoInc</span>)
+  def name = column[<span class="link_label">String</span>](<span class="link_url">"name"</span>)
+
+  def * = (id, name)
+}
+</code></pre><p>各个db操作，schema创建，sql插入，sql查询等操作如下，加了几句备注，具体的代码就不分析了：</p>
+<pre><code><span class="keyword">object</span> <span class="type">SampleSlickDemo</span> extends <span class="type">App</span> {
+
+  val db = <span class="type">Database</span>.forConfig(<span class="string">"h2mem1"</span>)
+
+  <span class="keyword">try</span> {
+
+    val classrooms = <span class="type">TableQuery</span>[<span class="type">Classroom</span>]
+    val students = <span class="type">TableQuery</span>[<span class="type">Student</span>]
+
+
+    val setupAction: <span class="type">DBIO</span>[<span class="type">Unit</span>] = <span class="type">DBIO</span>.<span class="type">seq</span>(
+      // create student <span class="keyword">and</span> classroom table <span class="keyword">in</span> database
+      (classrooms.schema ++ students.schema).create,
+      // insert some rows <span class="keyword">in</span> classroom
+      classrooms += (<span class="number">1</span>, <span class="string">"classroom1"</span>),
+      classrooms += (<span class="number">2</span>, <span class="string">"classroom2"</span>),
+      classrooms += (<span class="number">3</span>, <span class="string">"classroom2"</span>)
+    )
+
+    val setupFuture = db.run(setupAction)
+
+    val f = setupFuture.flatMap { _ =&gt;
+
+      val insertAction: <span class="type">DBIO</span>[<span class="type">Option</span>[<span class="type">Int</span>]] = students ++= <span class="type">Seq</span> (
+        (<span class="number">1</span>, <span class="string">"format1"</span>, <span class="number">11</span>, <span class="number">1</span>, new <span class="type">Date</span>(<span class="type">System</span>.currentTimeMillis())),
+        (<span class="number">2</span>, <span class="string">"format2"</span>, <span class="number">22</span>, <span class="number">2</span>, new <span class="type">Date</span>((<span class="type">System</span>.currentTimeMillis()))),
+        (<span class="number">3</span>, <span class="string">"format3"</span>, <span class="number">33</span>, <span class="number">3</span>, new <span class="type">Date</span>((<span class="type">System</span>.currentTimeMillis())))
+      )
+
+      val insertAndPrintAction = insertAction.map { studentResult =&gt;
+        studentResult.foreach { numRows =&gt;
+          println(<span class="string">s"inserted $numRows students"</span>)
+        }
+      }
+
+      db.run(insertAndPrintAction)
+    }.flatMap { _ =&gt;
+
+      // print <span class="type">All</span> <span class="type">Classrooms</span>
+      db.run(classrooms.<span class="literal">result</span>).map { classroom =&gt;
+        classroom.foreach(println);
+      }
+
+      // print <span class="type">All</span> <span class="type">Students</span>
+      db.run(students.<span class="literal">result</span>).map { studnet =&gt;
+        studnet.foreach(println);
+      }
+
+      // condition search
+      val studentQuery = students.filter(_.age &gt; <span class="number">20</span>).sortBy(_.name)
+      db.run(studentQuery.<span class="literal">result</span>).map { student =&gt;
+        student.foreach(println)
+      }
+    }
+    <span class="type">Await</span>.<span class="literal">result</span>(f, <span class="type">Duration</span>.<span class="type">Inf</span>)
+  } <span class="keyword">finally</span> db.close()
+}
+</code></pre><h2 id="数据库配置">数据库配置</h2><p>在配置文件application.conf里配置数据库配置信息：</p>
+<pre><code><span class="title">h2mem1</span> = {
+  <span class="title">url</span> = <span class="string">"jdbc:h2:mem:test1"</span>
+  driver = org.h2.Driver
+  connectionPool = disabled
+  keepAliveConnection = <span class="built_in">true</span>
+}
+</code></pre><p>然后就可使用Database初始化数据库，参数就是配置文件里对应的数据库name：</p>
+<pre><code>val db = Database.<span class="function"><span class="title">forConfig</span><span class="params">(<span class="string">"h2mem1"</span>)</span></span>
+</code></pre><h2 id="DBIOAction介绍">DBIOAction介绍</h2><p>DBIOAction就是数据库的一个操作，比如Insert，Update，Delete，Query等操作。</p>
+<p>可以使用上面分析的数据库配置变量db进行操作。</p>
+<p>db有个run方法使用DBIOAction作为参数，返回Future类型的返回值。</p>
+<p>DBIO是一个单例对象，它的seq方法可以传入多个DBIOAction，然后返回一个新的DBIOAction。 += 方法返回的也是DBIOAction。</p>
+<pre><code>val setupAction: DBIO[Unit] = DBIO.se<span class="string">q(
+  (classrooms.schema ++ students.schema)</span>.create,
+  classrooms += (<span class="number">1</span>, <span class="string">"classroom1"</span>),
+  classrooms += (<span class="number">2</span>, <span class="string">"classroom2"</span>),
+  classrooms += (<span class="number">3</span>, <span class="string">"classroom2"</span>)
+)
+</code></pre><p>++=方法跟+=方法一样会返回DBIOAction，只不过它的参数是个Iterable：</p>
+<pre><code>val insertAction: DBIO[Option[Int]] = students ++= Seq (
+    (<span class="number">1</span>, <span class="string">"format1"</span>, <span class="number">11</span>, <span class="number">1</span>, <span class="keyword">new</span> Date(System.currentTimeMillis())),
+    (<span class="number">2</span>, <span class="string">"format2"</span>, <span class="number">22</span>, <span class="number">2</span>, <span class="keyword">new</span> Date((System.currentTimeMillis()))),
+    (<span class="number">3</span>, <span class="string">"format3"</span>, <span class="number">33</span>, <span class="number">3</span>, <span class="keyword">new</span> Date((System.currentTimeMillis())))
+  )
+</code></pre><p>DBIOAction提供许多好用的方法：</p>
+<p>map方法：参数是个函数，这个函数可以返回任意类型的值，返回是个DBIOAction。 所以可以使用map关联起来多个DBIOAction。</p>
+<p>flatMap方法：参数是个函数，这个函数的返回值必须是个DBIOAction，返回值是个DBIOAction。作用跟map类似，只不过函数参数的返回值不一样。</p>
+<p>filter方法：参数是个函数，这个函数的返回值必须是个Boolean，返回值是个DBIOAction。过滤作用。</p>
+<p>andThen方法：参数是个DBIOAction，返回值是个DBIOAction。在Action完成后执行另外一个Action。</p>
+<h2 id="增删改查操作">增删改查操作</h2><h3 id="查询">查询</h3><p>Slick的查询可以直接通过TableQuery操作，使用TableQuery提供的filter可以实现过滤操作，使用drop和take完成分页操作，使用sortBy完成排序操作。</p>
+<pre><code>students.<span class="function"><span class="title">filter</span><span class="params">(_.classroomId === <span class="number">1</span>)</span></span>
+students.<span class="function"><span class="title">drop</span><span class="params">(<span class="number">1</span>)</span></span>.<span class="function"><span class="title">take</span><span class="params">(<span class="number">2</span>)</span></span>
+students.<span class="function"><span class="title">sortBy</span><span class="params">(_.age.desc)</span></span>
+</code></pre><p>可以使用map方法找出需要的列。 </p>
+<p>多列：</p>
+<pre><code><span class="component">students.map { student =&gt;
+  (student<span class="string">.name</span>, student<span class="string">.age)</span>
+}</span>
+</code></pre><p>一列：</p>
+<pre><code>students.<span class="function"><span class="title">map</span><span class="params">(_.name)</span></span>
+</code></pre><p>Join方法：</p>
+<p>cross join操作：</p>
+<pre><code>val crossJoin = <span class="keyword">for</span> {
+  (s, c) &lt;- students <span class="built_in">join</span> classrooms
+} yield (s.<span class="built_in">name</span>, c.<span class="built_in">name</span>)
+</code></pre><p>inner Join操作：</p>
+<pre><code>val innerJoin = <span class="keyword">for</span> {
+  (s, c) &lt;- students join classrooms <span class="function_start"><span class="keyword">on</span></span> (_.classroomId === _.<span class="property">id</span>)
+} yield (s.<span class="property">name</span>, c.<span class="property">name</span>)
+</code></pre><p>另外一个inner join：</p>
+<pre><code>val innerJoin = <span class="keyword">for</span> {
+  s &lt;- students
+  c &lt;- classrooms <span class="keyword">if</span> c.<span class="property">id</span> === s.classroomId
+} yield (s.<span class="property">name</span>, c.<span class="property">name</span>)
+</code></pre><p>left join操作：</p>
+<pre><code>val leftJoin = <span class="keyword">for</span> {
+  (s, c) &lt;- students joinLeft classrooms <span class="function_start"><span class="keyword">on</span></span> (_.classroomId === _.<span class="property">id</span>)
+} yield (s.<span class="property">name</span>, c.map(_.<span class="property">name</span>))
+</code></pre><p>right join操作：</p>
+<pre><code>val rightJoin = <span class="keyword">for</span> {
+  (s, c) &lt;- students joinRight classrooms <span class="function_start"><span class="keyword">on</span></span> (_.classroomId === _.<span class="property">id</span>)
+} yield (s.map(_.<span class="property">name</span>), c.<span class="property">name</span>)
+</code></pre><h3 id="新增">新增</h3><p>所有列都有值：</p>
+<pre><code>val insertAction = DBIO.seq(
+  students += (<span class="number">4</span>, <span class="string">"format4"</span>, <span class="number">44</span>, <span class="number">3</span>, <span class="keyword">new</span> Date(System.currentTimeMillis())),
+  students += (<span class="number">5</span>, <span class="string">"format5"</span>, <span class="number">55</span>, <span class="number">3</span>, <span class="keyword">new</span> Date(System.currentTimeMillis())),
+
+  students ++= Seq (
+    (<span class="number">6</span>, <span class="string">"format6"</span>, <span class="number">66</span>, <span class="number">3</span>, <span class="keyword">new</span> Date(System.currentTimeMillis())),
+    (<span class="number">7</span>, <span class="string">"format7"</span>, <span class="number">77</span>, <span class="number">3</span>, <span class="keyword">new</span> Date(System.currentTimeMillis()))
+  )
+)
+</code></pre><p>部分列有值：</p>
+<pre><code>students.<span class="built_in">map</span>(s =&gt; (s.name, s.age, s.classroomId)) += (<span class="string">"format8"</span>, <span class="number">88</span>, <span class="number">3</span>)
+</code></pre><h3 id="删除">删除</h3><p>删除classroomId为3的所有数据：</p>
+<pre><code><span class="variable"><span class="keyword">val</span> q</span> = students.filter(_.classroomId === <span class="number">3</span>)
+<span class="variable"><span class="keyword">val</span> affectedRowsCountFuture</span> = db.run(q.delete)
+affectedRowsCountFuture.map { rows =&gt;
+  println(rows)
+}
+</code></pre><h3 id="修改">修改</h3><p>修改单列：</p>
+<pre><code>val <span class="tag">q</span> = students.<span class="function"><span class="title">filter</span><span class="params">(_.id === <span class="number">2</span>)</span></span>.<span class="function"><span class="title">map</span><span class="params">(_.name)</span></span>
+val updateSql = <span class="tag">q</span>.<span class="function"><span class="title">update</span><span class="params">(<span class="string">"format2222"</span>)</span></span>
+db.<span class="function"><span class="title">run</span><span class="params">(updateSql)</span></span>
+</code></pre><p>修改多列：</p>
+<pre><code>val <span class="tag">q</span> = students.<span class="function"><span class="title">filter</span><span class="params">(_.id === <span class="number">2</span>)</span></span>.<span class="function"><span class="title">map</span><span class="params">(s =&gt; (s.name, s.age)</span></span>)
+val updateSql = <span class="tag">q</span>.<span class="function"><span class="title">update</span><span class="params">((<span class="string">"format2222"</span>, <span class="number">222</span>)</span></span>)
+db.<span class="function"><span class="title">run</span><span class="params">(updateSql)</span></span>
+</code></pre><h2 id="CaseClass的使用">CaseClass的使用</h2><p>之前的例子都是使用Tuple构造domain。 还有一种更方便的方式，那就是使用CaseClass。</p>
+<pre><code><span class="keyword">case</span> <span class="keyword">class</span> People(id: Long, <span class="keyword">name</span>: String, age: <span class="built_in">Int</span>)
+</code></pre><p>例子：</p>
+<pre><code>private class PeopleTable(tag: Tag) extends Table[<span class="link_label">People</span>](<span class="link_url">tag, "people"</span>) {
+  val id = column[<span class="link_label">Long</span>](<span class="link_url">"id", O.PrimaryKey, O.AutoInc</span>)
+  val name = column[<span class="link_label">String</span>](<span class="link_url">"name"</span>)
+  val age = column[<span class="link_label">Int</span>](<span class="link_url">"age"</span>)
+
+  def * = (id, name, age) <span class="xml"><span class="tag">&lt;&gt;</span></span> ((People.apply _).tupled, People.unapply)
+}
+
+val db = Database.forConfig("h2mem1")
+
+try {
+
+  val people = TableQuery[PeopleTable]
+
+  val setupAction = DBIO.seq(
+<span class="code">      people.schema.create,</span>
+<span class="code">      people += People(1, "format1", 11)</span>
+  )
+
+  val setupFuture = db.run(setupAction);
+
+  val f = setupFuture.flatMap { _ =&gt;
+<span class="code">    db.run(people.result).map { p =&gt;</span>
+<span class="code">      p.foreach(println)</span>
+<span class="code">    }</span>
+  }
+
+  Await.result(f, Duration.Inf)
+
+} finally db.close()
+</code></pre></span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/frm/" rel="tag">#frm</a>
+          
+            <a href="/tags/orm/" rel="tag">#orm</a>
+          
+            <a href="/tags/scala/" rel="tag">#scala</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/08/14/scala-future/" rel="next" title="Scala并发的Future">
+                <i class="fa fa-chevron-left"></i> Scala并发的Future
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/09/21/springboot-intro/" rel="prev" title="Spring Boot 部分特性记录">
+                Spring Boot 部分特性记录 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#FRM介绍"><span class="nav-number">1.</span> <span class="nav-text">FRM介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Slick实例"><span class="nav-number">2.</span> <span class="nav-text">Slick实例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据库配置"><span class="nav-number">3.</span> <span class="nav-text">数据库配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DBIOAction介绍"><span class="nav-number">4.</span> <span class="nav-text">DBIOAction介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#增删改查操作"><span class="nav-number">5.</span> <span class="nav-text">增删改查操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#查询"><span class="nav-number">5.1.</span> <span class="nav-text">查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#新增"><span class="nav-number">5.2.</span> <span class="nav-text">新增</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除"><span class="nav-number">5.3.</span> <span class="nav-text">删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修改"><span class="nav-number">5.4.</span> <span class="nav-text">修改</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CaseClass的使用"><span class="nav-number">6.</span> <span class="nav-text">CaseClass的使用</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2015/08/18/slick-intro/';
+      var disqus_title = 'Scala持久层框架Slick介绍';
+      var disqus_url = 'http://fangjian0423.github.io/2015/08/18/slick-intro/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

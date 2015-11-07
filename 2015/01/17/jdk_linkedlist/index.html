@@ -1,0 +1,852 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="jdk,list," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="前言ArrayList是一个单向链表，LinkedList则是一个双向链表。
+双向链表的设计跟单项链表不一样，单项链表只是在内部维护一个数组属性即可。
+双向链表不使用数组这个概念，而是在内部定义了一个叫做Node类型的内部类，这个Node就是一个节点，这个节点有3个属性，分别是元素(当前节点要表示的值), 前节点(当前节点之前位置上的一个节点)，后节点(当前节点后面位置的一个节点)。 
+Linke">
+<meta property="og:type" content="article">
+<meta property="og:title" content="jdk源码分析之LinkedList">
+<meta property="og:url" content="http://fangjian0423.github.io/2015/01/17/jdk_linkedlist/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="前言ArrayList是一个单向链表，LinkedList则是一个双向链表。
+双向链表的设计跟单项链表不一样，单项链表只是在内部维护一个数组属性即可。
+双向链表不使用数组这个概念，而是在内部定义了一个叫做Node类型的内部类，这个Node就是一个节点，这个节点有3个属性，分别是元素(当前节点要表示的值), 前节点(当前节点之前位置上的一个节点)，后节点(当前节点后面位置的一个节点)。 
+Linke">
+<meta property="og:updated_time" content="2015-11-07T08:38:09.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="jdk源码分析之LinkedList">
+<meta name="twitter:description" content="前言ArrayList是一个单向链表，LinkedList则是一个双向链表。
+双向链表的设计跟单项链表不一样，单项链表只是在内部维护一个数组属性即可。
+双向链表不使用数组这个概念，而是在内部定义了一个叫做Node类型的内部类，这个Node就是一个节点，这个节点有3个属性，分别是元素(当前节点要表示的值), 前节点(当前节点之前位置上的一个节点)，后节点(当前节点后面位置的一个节点)。 
+Linke">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> jdk源码分析之LinkedList | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                jdk源码分析之LinkedList
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-01-17T16:43:37+08:00" content="2015-01-17">
+              2015-01-17
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jdk/" itemprop="url" rel="index">
+                    <span itemprop="name">jdk</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/01/17/jdk_linkedlist/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/01/17/jdk_linkedlist/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><h2 id="前言">前言</h2><p>ArrayList是一个单向链表，LinkedList则是一个双向链表。</p>
+<p>双向链表的设计跟单项链表不一样，单项链表只是在内部维护一个数组属性即可。</p>
+<p>双向链表不使用数组这个概念，而是在内部定义了一个叫做Node类型的内部类，这个Node就是一个节点，这个节点有3个属性，分别是元素(当前节点要表示的值), 前节点(当前节点之前位置上的一个节点)，后节点(当前节点后面位置的一个节点)。 </p>
+<p>LinkedList关于数据的插入，删除操作都会处理这些节点的前后关系。</p>
+<p>这是两者最大的区别。</p>
+<h2 id="源码分析">源码分析</h2><p>在分析LinkedList之前，我们先看下它里面的内部类Node，也就是节点类：</p>
+<pre><code>private static class <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; {
+    E item;
+    <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; next;
+    <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; prev;
+
+    <span class="keyword">Node</span><span class="identifier"></span><span class="title">(Node</span><span class="tag">&lt;E&gt;</span> prev, E element, <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; next) {
+        this.item = element;
+        this.next = next;
+        this.prev = prev;
+    }
+}
+</code></pre><p>构造函数有3个参数，分别是前一个节点，元素值，后一个节点。</p>
+<p>3个属性，元素代表的值，前一个节点，后一个节点。</p>
+<p>LinkedList的3个属性：</p>
+<pre><code>transient int size = <span class="number">0</span>;
+
+transient <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; first;
+
+transient <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; last;
+</code></pre><p>size表示这个列表当前的长度, first属性和last属性都是一个Node类型的实例，也就是一个节点。 看名字也知道，一个是第一个节点，另外一个是最后一个节点。</p>
+<h3 id="add(E_e)">add(E e)</h3><p><strong> 添加元素到列表的最后一个位置 </strong></p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span> </span>{
+    linkLast(e);
+    <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+</code></pre><p>add方法内部调用linkLast方法。</p>
+<pre><code>void linkLast(E e) {
+    final <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; l = last;
+    final <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; newNode = new <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;&gt;(l</span>, e, null);
+    last = newNode;
+    if (l == null)
+        first = newNode;
+    else
+        l.next = newNode;
+    size++;
+    modCount++;
+}
+</code></pre><p>首先先拿到列表中的最后一个节点，然后构造一个新的节点，这个新的节点的前一个元素就是刚才拿到的列表中的最后一个节点，然后属性last也就是最后一个节点赋值成新构造的这个节点，接下来做了一个判断，如果当前列表的最后一个节点为null，那么说明这个列表当前没有元素，于是这个新构造的节点赋值给了第一个节点。否则的话，最后一个节点的下一个节点就是这个新构造的节点。之后列表长度+1(size++)。</p>
+<p>总体来说，这个add方法的速度很快，几乎不消耗时间。</p>
+<h3 id="add(int_index,_E_element)">add(int index, E element)</h3><p><strong> 添加元素到列表中的指定位置 </strong></p>
+<pre><code><span class="keyword">public</span> <span class="keyword">void</span> add(<span class="keyword">int</span> <span class="keyword">index</span>, E element) {
+    checkPositionIndex(<span class="keyword">index</span>);
+
+    <span class="keyword">if</span> (<span class="keyword">index</span> == size)
+        linkLast(element);
+    <span class="keyword">else</span>
+        linkBefore(element, node(<span class="keyword">index</span>));
+}
+</code></pre><p>首先会判断当前的索引位置是否合法。接下来判断参数索引是否跟列表长度相等， 相等的话说明这个位置就是最后一个位置，那么执行linkLast方法，这个方法之前刚分析过。 如果不是最后一个位置，那么执行linkBefore方法。先看下执行linkBefore方法传入参数的时候调用的一个node方法。</p>
+<pre><code>Node&lt;E&gt; node(<span class="keyword">int</span> <span class="keyword">index</span>) {
+    <span class="regexp">//</span> assert isElementIndex(<span class="keyword">index</span>);
+
+    <span class="keyword">if</span> (<span class="keyword">index</span> &lt; (size &gt;&gt; <span class="number">1</span>)) {
+        Node&lt;E&gt; <span class="keyword">x</span> = first;
+        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="keyword">index</span>; i++)
+            <span class="keyword">x</span> = <span class="keyword">x</span>.<span class="keyword">next</span>;
+        <span class="keyword">return</span> <span class="keyword">x</span>;
+    } <span class="keyword">else</span> {
+        Node&lt;E&gt; <span class="keyword">x</span> = <span class="keyword">last</span>;
+        <span class="keyword">for</span> (<span class="keyword">int</span> i = size - <span class="number">1</span>; i &gt; <span class="keyword">index</span>; i--)
+            <span class="keyword">x</span> = <span class="keyword">x</span>.prev;
+        <span class="keyword">return</span> <span class="keyword">x</span>;
+    }
+}
+</code></pre><p>node(index)方法的作用是根据索引值，得到该索引下的那个节点。</p>
+<p>这个使用了一个小算法：<strong>如果索引值比当前列表长度的一半还要小，那么从第一个元素开始遍历，找到index位置上的元素；否则从最后一个元素开始遍历，找到index位置上的元素</strong></p>
+<pre><code>void linkBefore(E e, <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; succ) {
+    // assert succ != null;
+    final <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; pred = succ.prev;
+    final <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; newNode = new <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;&gt;(pred</span>, e, succ);
+    succ.prev = newNode;
+    if (pred == null)
+        first = newNode;
+    else
+        pred.next = newNode;
+    size++;
+    modCount++;
+}    
+</code></pre><p>这个方法的参数e就是新节点的元素值，succ参数是要新插入的节点的那个位置上的现有节点。</p>
+<p>处理过程：没啥好说的，处理的就是节点位置的一系列变化。</p>
+<p>addAll方法也就是处理一些位置的变化，有兴趣的读者可自行查看源码。</p>
+<p>LinkedList还提供了2个不一样的add方法，分别是addFirst和addLast方法，作用分别是插入第一个节点和插入最后一个节点。</p>
+<h3 id="remove(int_index)">remove(int index)</h3><p><strong> 移除指定位置上的节点 </strong></p>
+<pre><code><span class="keyword">public</span> E remove(<span class="keyword">int</span> <span class="keyword">index</span>) {
+    checkElementIndex(<span class="keyword">index</span>);
+    <span class="keyword">return</span> unlink(node(<span class="keyword">index</span>));
+}
+</code></pre><p>首先会检查下标值的合法性，然后调用unlink方法:</p>
+<pre><code>E unlink(Node&lt;E&gt; x) {
+    <span class="comment">// assert x != null;</span>
+    <span class="keyword">final</span> E element = x.item;
+    <span class="keyword">final</span> Node&lt;E&gt; <span class="keyword">next</span> = x.<span class="keyword">next</span>;
+    <span class="keyword">final</span> Node&lt;E&gt; prev = x.prev;
+
+    <span class="keyword">if</span> (prev == <span class="keyword">null</span>) {
+        first = <span class="keyword">next</span>;
+    } <span class="keyword">else</span> {
+        prev.<span class="keyword">next</span> = <span class="keyword">next</span>;
+        x.prev = <span class="keyword">null</span>;
+    }
+
+    <span class="keyword">if</span> (<span class="keyword">next</span> == <span class="keyword">null</span>) {
+        last = prev;
+    } <span class="keyword">else</span> {
+        <span class="keyword">next</span>.prev = prev;
+        x.<span class="keyword">next</span> = <span class="keyword">null</span>;
+    }
+
+    x.item = <span class="keyword">null</span>;
+    <span class="keyword">size</span>--;
+    modCount++;
+    <span class="keyword">return</span> element;
+}
+</code></pre><p>把要移除的节点的前后节点处理一下。移除节点的前一个节点的后一个节点是移除节点的后一个节点。移除节点的后一个节点的前一个节点是移除节点的前一个节点。然后判断一下是否是第一个节点的问题，之后将移除节点上的前后节点的属性值和它的元素值都设置为null。列表长度-1(size–)。</p>
+<h3 id="get(int_index)">get(int index)</h3><p><strong> 得到索引位置上的元素 </strong></p>
+<pre><code><span class="keyword">public</span> E get(<span class="keyword">int</span> <span class="keyword">index</span>) {
+    checkElementIndex(<span class="keyword">index</span>);
+    <span class="keyword">return</span> node(<span class="keyword">index</span>).item;
+}
+</code></pre><p>找到对应的节点，拿出元素值即可。</p>
+<p>先讲这么多吧，其他方法就不一一看了。数据结构了解就行了。</p>
+<h2 id="LinkedList和ArrayList的比较">LinkedList和ArrayList的比较</h2><ol>
+<li>LinkedList和ArrayList的设计理念完全不一样，ArrayList基于数组，而LinkedList基于节点。</li>
+<li>两者的使用场景不同，ArrayList适用于频繁遍历，但是不怎么操作数据的场合。LinkedList适用于频繁操作数据，不频繁遍历的场合。 刚好相反。 为什么说LinkedList不适合频繁遍历，那是因为LinkedList要遍历节点的话只能从第一个或最后一个节点开始遍历，一个一个找。而ArrayList完全不需要，因为ArrayList内部维护着一个数组，遍历的话仅仅从数组上的索引开始找即可。</li>
+<li>两者的数据结构不同，ArrayList是一个单项的链表，而LinkedList是一个双向的链表。</li>
+</ol>
+<h2 id="使用LinkedList要注意的点">使用LinkedList要注意的点</h2><p>LinkedList在频繁遍历数据的场合下不适合使用。</p>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/jdk/" rel="tag">#jdk</a>
+          
+            <a href="/tags/list/" rel="tag">#list</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/01/16/jdk_arraylist/" rel="next" title="jdk源码分析之ArrayList">
+                <i class="fa fa-chevron-left"></i> jdk源码分析之ArrayList
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/02/06/groovy_note/" rel="prev" title="groovy基本概念学习笔记">
+                groovy基本概念学习笔记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源码分析"><span class="nav-number">2.</span> <span class="nav-text">源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#add(E_e)"><span class="nav-number">2.1.</span> <span class="nav-text">add(E e)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#add(int_index,_E_element)"><span class="nav-number">2.2.</span> <span class="nav-text">add(int index, E element)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#remove(int_index)"><span class="nav-number">2.3.</span> <span class="nav-text">remove(int index)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#get(int_index)"><span class="nav-number">2.4.</span> <span class="nav-text">get(int index)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LinkedList和ArrayList的比较"><span class="nav-number">3.</span> <span class="nav-text">LinkedList和ArrayList的比较</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用LinkedList要注意的点"><span class="nav-number">4.</span> <span class="nav-text">使用LinkedList要注意的点</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2015/01/17/jdk_linkedlist/';
+      var disqus_title = 'jdk源码分析之LinkedList';
+      var disqus_url = 'http://fangjian0423.github.io/2015/01/17/jdk_linkedlist/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

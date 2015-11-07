@@ -1,0 +1,1495 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="java,scala,big data,javascript" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="吃饭睡觉撸代码">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Format's Notes">
+<meta property="og:url" content="http://fangjian0423.github.io/page/10/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="吃饭睡觉撸代码">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Format's Notes">
+<meta name="twitter:description" content="吃饭睡觉撸代码">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column 
+   page-home 
+">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+  <section id="posts" class="posts-expand">
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2014/11/22/java_threadlocal/" itemprop="url">
+                  ThreadLocal原理及其实际应用
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2014-11-22T20:35:21+08:00" content="2014-11-22">
+              2014-11-22
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jvm/" itemprop="url" rel="index">
+                    <span itemprop="name">jvm</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2014/11/22/java_threadlocal/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/11/22/java_threadlocal/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <h2 id="前言">前言</h2><p>java猿在面试中，经常会被问到1个问题：<br><strong>java实现同步有哪几种方式？</strong></p>
+<p>大家一般都会回答使用synchronized， 那么还有其他方式吗？  答案是肯定的， 另外一种方式也就是本文要说的ThreadLocal。</p>
+<h2 id="ThreadLocal介绍">ThreadLocal介绍</h2><p>ThreadLocal, 看名字也能猜到， “线程本地”, “线程本地变量”。 我们看下官方的一段话：</p>
+<pre><code>This class provides thread-local variables. These variables differ from their normal counterparts in that each thread that accesses one (via its get or <span class="operator"><span class="keyword">set</span> method) has its own, independently <span class="keyword">initialized</span> copy <span class="keyword">of</span> the <span class="keyword">variable</span>. ThreadLocal instances <span class="keyword">are</span> typically <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">fields</span> <span class="keyword">in</span> classes that wish <span class="keyword">to</span> <span class="keyword">associate</span> state <span class="keyword">with</span> a <span class="keyword">thread</span> (<span class="keyword">e</span>.<span class="keyword">g</span>., a <span class="keyword">user</span> <span class="keyword">ID</span> <span class="keyword">or</span> <span class="keyword">Transaction</span> <span class="keyword">ID</span>).</span>
+</code></pre><p>粗略地翻译一下：<br>ThreadLocal这个类提供线程本地的变量。这些变量与一般正常的变量不同，它们在每个线程中都是独立的。ThreadLocal实例最典型的运用就是在类的私有静态变量中定义，并与线程关联。</p>
+<p>什么意思呢？  下面我们通过1个实例来说明一下：</p>
+<p>jdk中的SimpleDateFormat类不是一个线程安全的类，在多线程中使用会出现问题，我们会通过线程同步来处理：</p>
+<ol>
+<li><p>使用synchronized</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> SimpleDateFormat sdf = <span class="keyword">new</span> SimpleDateFormat(<span class="string">"yyyy-MM-dd HH:mm:ss"</span>);
+
+<span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">static</span> <span class="function">String <span class="title">formatDate</span><span class="params">(Date date)</span> </span>{
+    <span class="function"><span class="keyword">return</span> sdf.<span class="title">format</span><span class="params">(date)</span></span>;
+}
+</code></pre></li>
+<li><p>使用ThreadLocal</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ThreadLocal&lt;SimpleDateFormat&gt; formatter = <span class="keyword">new</span> ThreadLocal&lt;SimpleDateFormat&gt;(){
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> <span class="function">SimpleDateFormat <span class="title">initialValue</span><span class="params">()</span>
+    </span>{
+        <span class="keyword">return</span> <span class="keyword">new</span> SimpleDateFormat(<span class="string">"yyyy-MM-dd HH:mm:ss"</span>);
+    }
+};
+
+<span class="keyword">public</span> <span class="function">String <span class="title">formatIt</span><span class="params">(Date date)</span>
+</span>{
+    <span class="keyword">return</span> formatter.get().format(date);
+}
+</code></pre></li>
+</ol>
+<p>这两种方式是一样的，只不过一种用了synchronized，另外一种用了ThreadLocal。</p>
+<h3 id="synchronized和ThreadLocal的区别">synchronized和ThreadLocal的区别</h3><p>使用synchronized的话，表示当前只有1个线程才能访问方法，其他线程都会被阻塞。当访问的线程也阻塞的时候，其他所有访问该方法的线程全部都会阻塞，这个方法相当地 “耗时”。<br>使用ThreadLocal的话，表示每个线程的本地变量中都有SimpleDateFormat这个实例的引用，也就是各个线程之间完全没有关系，也就不存在同步问题了。</p>
+<p>综合来说：使用synchronized是一种 “以时间换空间”的概念， 而使用ThreadLocal则是 “以空间换时间”的概念。</p>
+<h2 id="ThreadLocal原理分析">ThreadLocal原理分析</h2><p>我们先看下ThreadLocal的类结构：</p>
+<p><img src="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_threadlocal_1.jpg" alt=""></p>
+<p>我们看到ThreadLocal内部有个ThreadLocalMap内部类，ThreadLocalMap内部有个Entry内部类。</p>
+<p>先介绍一下ThreadLocalMap和ThreadLocalMap.Entry内部类：<br>ThreadLocalMap其实也就是一个为ThreadLocal服务的自定义的hashmap类。<br>Entry是一个继承WeakReference类的类，也就是ThreadLocalMap这个hash map中的每一项，并且Entry中的key基本上都是ThreadLocal。</p>
+<p>再下来我们看下Thread线程类：<br>Thread线程类内部有个ThreadLocal.ThreadLocalMap类型的属性：</p>
+<pre><code>/* ThreadLocal values pertaining <span class="keyword">to</span> this thread. This map <span class="keyword">is</span> maintained
+ * <span class="keyword">by</span> <span class="keyword">the</span> ThreadLocal <span class="type">class</span>. */
+ThreadLocal.ThreadLocalMap threadLocals = null;
+</code></pre><p>下面重点来看ThreadLocal类的源码：</p>
+<pre><code><span class="function"><span class="keyword">public</span> T <span class="title">get</span>(<span class="params"></span>) </span>{
+    <span class="comment">// 得到当前线程</span>
+    Thread t = Thread.currentThread();
+    <span class="comment">// 拿到当前线程的ThreadLocalMap对象</span>
+    ThreadLocalMap map = getMap(t);
+    <span class="keyword">if</span> (map != <span class="keyword">null</span>) {
+        <span class="comment">// 找到该ThreadLocal对应的Entry</span>
+        ThreadLocalMap.Entry e = map.getEntry(<span class="keyword">this</span>);
+        <span class="keyword">if</span> (e != <span class="keyword">null</span>) {
+            @SuppressWarnings(<span class="string">"unchecked"</span>)
+            T result = (T)e.<span class="keyword">value</span>;
+            <span class="keyword">return</span> result;
+        }
+    }
+    <span class="comment">// 当前线程没有ThreadLocalMap对象的话，那么就初始化ThreadLocalMap</span>
+    <span class="keyword">return</span> setInitialValue();
+}
+
+<span class="function"><span class="keyword">private</span> T <span class="title">setInitialValue</span>(<span class="params"></span>) </span>{
+    <span class="comment">// 初始化ThreadLocalMap，默认返回null，可由子类扩展</span>
+    T <span class="keyword">value</span> = initialValue();
+    Thread t = Thread.currentThread();
+    ThreadLocalMap map = getMap(t);
+    <span class="keyword">if</span> (map != <span class="keyword">null</span>)
+        <span class="comment">// 实例化ThreadLocalMap之后，将初始值丢入到Map中</span>
+        map.<span class="keyword">set</span>(<span class="keyword">this</span>, <span class="keyword">value</span>);
+    <span class="function"><span class="keyword">else</span>
+        <span class="title">createMap</span>(<span class="params">t, <span class="keyword">value</span></span>)</span>;
+    <span class="keyword">return</span> <span class="keyword">value</span>;
+}
+
+<span class="function"><span class="keyword">void</span> <span class="title">createMap</span>(<span class="params">Thread t, T firstValue</span>) </span>{
+    t.threadLocals = <span class="keyword">new</span> ThreadLocalMap(<span class="keyword">this</span>, firstValue);
+}
+
+<span class="function">ThreadLocalMap <span class="title">getMap</span>(<span class="params">Thread t</span>) </span>{
+    <span class="keyword">return</span> t.threadLocals;
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">set</span>(<span class="params">T <span class="keyword">value</span></span>) </span>{
+    <span class="comment">// set逻辑：找到当前线程的ThreadLocalMap，找到的话，设置对应的值，否则创建ThreadLocalMap</span>
+    Thread t = Thread.currentThread();
+    ThreadLocalMap map = getMap(t);
+    <span class="keyword">if</span> (map != <span class="keyword">null</span>)
+        map.<span class="keyword">set</span>(<span class="keyword">this</span>, <span class="keyword">value</span>);
+    <span class="function"><span class="keyword">else</span>
+        <span class="title">createMap</span>(<span class="params">t, <span class="keyword">value</span></span>)</span>;
+}
+</code></pre><p>注释已经写了，读者有不明白的可以自己看看源码。</p>
+<h2 id="ThreadLocal的应用">ThreadLocal的应用</h2><p>ThreadLocal应用广泛，下面介绍下在SpringMVC中的应用。</p>
+<h3 id="RequestContextHolder内部结构">RequestContextHolder内部结构</h3><p>RequestContextHolder：该类会暴露与线程绑定的RequestAttributes对象，什么意思呢？ 就是说web请求过来的数据可以跟线程绑定， 用户A，用户B分别请求过来，可以使用RequestContextHolder得到各个请求的数据。</p>
+<p>RequestContextHolder数据结构：<br><img src="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_threadlocal_2.png" alt=""></p>
+<p>具体这两个holder：</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ThreadLocal&lt;RequestAttributes&gt; requestAttributesHolder =
+        <span class="keyword">new</span> NamedThreadLocal&lt;RequestAttributes&gt;(<span class="string">"Request attributes"</span>);
+
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ThreadLocal&lt;RequestAttributes&gt; inheritableRequestAttributesHolder =
+        <span class="keyword">new</span> NamedInheritableThreadLocal&lt;RequestAttributes&gt;(<span class="string">"Request context"</span>);
+</code></pre><p>这里的NamedThreadLocal只是1个带name属性的ThreadLocal：</p>
+<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">NamedThreadLocal&lt;T&gt;</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">ThreadLocal&lt;T&gt;</span> {</span>
+
+    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">String</span> name;
+
+    public <span class="type">NamedThreadLocal</span>(<span class="type">String</span> name) {
+        <span class="type">Assert</span>.hasText(name, <span class="string">"Name must not be empty"</span>);
+        <span class="keyword">this</span>.name = name;
+    }
+
+    <span class="annotation">@Override</span>
+    public <span class="type">String</span> toString() {
+        <span class="keyword">return</span> <span class="keyword">this</span>.name;
+    }
+
+}
+</code></pre><p>继续看下RequestContextHolder的getRequestAttributes方法，其中接口RequestAttributes是对请求request的封装：</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> RequestAttributes <span class="title">getRequestAttributes</span>(<span class="params"></span>) </span>{
+    <span class="comment">// 直接从ThreadLocalContext拿当前线程的RequestAttributes</span>
+    RequestAttributes attributes = requestAttributesHolder.<span class="keyword">get</span>();
+    <span class="keyword">if</span> (attributes == <span class="keyword">null</span>) {
+        attributes = inheritableRequestAttributesHolder.<span class="keyword">get</span>();
+    }
+    <span class="keyword">return</span> attributes;
+}
+</code></pre><p>我们看到，这里直接使用了ThreadLocal的get方法得到了RequestAttributes。<br>当需要得到Request的时候执行：</p>
+<pre><code>ServletRequestAttributes requestAttributes = (ServletRequestAttributes)RequestContextHolder.getRequestAttributes()<span class="comment">;</span>
+HttpServletRequest request = requestAttributes.getRequest()<span class="comment">;</span>
+</code></pre><h3 id="RequestContextHolder的初始化">RequestContextHolder的初始化</h3><p>以下代码在FrameworkServlet代码中：</p>
+<p><img src="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_threadlocal_3.png" alt=""><br><img src="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_threadlocal_4.png" alt=""></p>
+<h2 id="总结">总结</h2><p>本文介绍了ThreadLocal的原理以及ThreadLocal在SpringMVC中的应用。个人感觉ThreadLocal应用场景更多是共享一个变量，但是该变量又不是线程安全的，而不是线程同步。比如RequestContextHolder、LocaleContextHolder、SimpleDateFormat等的共享应用。</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2014/11/01/logstash_build/" itemprop="url">
+                  logstash搭建日志追踪系统
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2014-11-01T22:40:05+08:00" content="2014-11-01">
+              2014-11-01
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2014/11/01/logstash_build/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/11/01/logstash_build/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <h2 id="前言">前言</h2><p>开始博客之前，首先看个问题：<br>作为一只程序猿，写的代码的过程需要加入一些日志信息，这些日志信息包括debug调试信息，异常记录日志等。  Java猿一般都是使用log4j，logback等第三方库记录日志。 那么问题来了，挖掘机到底哪家强？……  扯个淡，那么问题来了，如果我们想看日志信息，怎么办， ssh到服务器上，vim然后查询。每次都这样，是不是很蛋疼 = =； 还有另外一个问题，如果我们想分析、追踪日志，或者找关键字(分词后的关键字)，这样简简单单看日志文件是不可能的。 因此，我们就需要开源力量了！</p>
+<h2 id="logstash介绍">logstash介绍</h2><p>摘自官网上的一句话：<a href="http://logstash.net/" target="_blank" rel="external">logstash</a> is a tool for managing events and logs. You can use it to collect logs, parse them, and store them for later use (like, for searching)。logstash是一个用来管理事件和日志的工具，它的作用是收集日志，解析日志，存储日志为以后使用。</p>
+<p>官网上有<a href="http://logstash.net/docs/1.4.2/tutorials/getting-started-with-logstash" target="_blank" rel="external">tutorials</a>。 本文也就是对tutorials做一个总结。</p>
+<h2 id="logstash日志追踪系统搭建过程">logstash日志追踪系统搭建过程</h2><p>要搭建logstash日志追踪系统需要以下几个环境：</p>
+<ol>
+<li>JDK</li>
+<li>logstash</li>
+<li><a href="http://www.elasticsearch.org" target="_blank" rel="external">elasticsearch</a></li>
+</ol>
+<p>没有JDK的小伙伴首先先去<a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html?ssSourceSiteId=ocomen" target="_blank" rel="external">下载</a>吧。 logstash和elasticsearch都先下载过来吧~。</p>
+<h3 id="logstash环境搭建">logstash环境搭建</h3><p>首先先进入logstash的bin目录建立一个logstash.conf配置文件：</p>
+<pre><code>input { stdin { } }
+output {
+  stdout { codec =&gt; rubydebug }
+}
+</code></pre><p>然后执行：</p>
+<pre><code>./logstash -f logstash<span class="class">.conf</span>     
+</code></pre><p>这时控制台等待输入内容，我们输入hello world，这个时候控制台会打印出：</p>
+<pre><code>{
+   <span class="string">"message"</span> =&gt; <span class="string">"hello world"</span>,
+   <span class="string">"@version"</span> =&gt; <span class="string">"1"</span>,
+   <span class="string">"@timestamp"</span> =&gt; <span class="string">"2014-11-01T12:38:17.217Z"</span>,
+      <span class="string">"host"</span> =&gt; <span class="string">"format-2.local"</span>
+}
+</code></pre><p>这个说明我们的logstash本地配置成功了。</p>
+<p><strong>配置文件有2个内容组成，input和output，其实还有2个配置：filter和codec。</strong><br>这就是logstash内部的一个叫做<strong>事件处理管道(pipeline)</strong>的核心概念的3大组成部分：<br>input：<br>生成事件(logstash中的事件是由队列实现的，这个队列由ruby的SizedQueue实现)的数据来源，常见的有file(文件)、syslog(系统日志)、redis(缓存系统)、<a href="https://github.com/elasticsearch/logstash-forwarder" target="_blank" rel="external">lumberjack(lumberjack协议)</a>。</p>
+<p>filter：<br>修改事件内容，常见的filter有grok(常用，解析文本并结构化地存储下来，用来处理没有结构的文本)、mutate、drop、clone、geoip</p>
+<p>output：<br>展现结果，常见的有elasticsearch(搜索引擎)、file、graphite、statsd</p>
+<p>codec：<br>可以作为input或output的一部分，主要用来处理日志过程中产生的消息，常见的codec有json、rubydebug</p>
+<p>现在我们回过头看来我们的logstash.conf配置文件，只配置了input和output，其中input由一个stdin组成，这个stdin没有任何参数，output由stdout组成，这个stdout由codec参数，且使用了rebydebug，因此控制台打印出的信息是reby的对象格式。  我们把codec改成json的话，将会打印出以下内容：</p>
+<pre><code>{"<span class="attribute">message</span>":<span class="value"><span class="string">"hello world"</span></span>,"<span class="attribute">@version</span>":<span class="value"><span class="string">"1"</span></span>,"<span class="attribute">@timestamp</span>":<span class="value"><span class="string">"2014-11-01T13:16:38.221Z"</span></span>,"<span class="attribute">host</span>":<span class="value"><span class="string">"format-2.local"</span></span>}
+</code></pre><h3 id="elasticsearch环境搭建">elasticsearch环境搭建</h3><p>elasticsearch的环境搭建比较简单，download elasticsearch之后进入bin目录，执行：</p>
+<pre><code>./elasticsearch
+</code></pre><p>之后打开浏览器进入<a href="http://localhost:9200/，发现有一串json文本就表示elasticsearch服务器已启。" target="_blank" rel="external">http://localhost:9200/，发现有一串json文本就表示elasticsearch服务器已启。</a> 但是貌似没有发现什么界面，是不是很不友好= =。</p>
+<p>elasticsearch支持插件功能，我们使用<a href="http://www.elasticsearch.org/overview/kibana/" target="_blank" rel="external">kibana插件</a>，下载之后修改config.js文件，把elasticsearch对应的地址改成elasticsearch服务器地址，然后把kibana解压出来的所有文件放到$elasticsearch<em>home/plugins</em>/kibana/_site/目录中。<br>之后打开<a href="http://localhost:9200/_plugin/kibana" target="_blank" rel="external">http://localhost:9200/_plugin/kibana</a></p>
+<p><img src="http://format-blog-image.qiniudn.com/logstash1.png" alt=""><br><img src="http://format-blog-image.qiniudn.com/logstash2.png" alt=""></p>
+<h3 id="logstash整合elasticsearch">logstash整合elasticsearch</h3><p>配置完logstash和elasticsearch之后，整合一下这两个框架。<br>logstash配置文件(input、output可以配置多个)：</p>
+<pre><code><span class="name">input</span> { stdin { } }
+<span class="name">output</span> {
+  stdout { codec =&gt; json }
+  <span class="name">elasticsearch</span> { host =&gt; localhost }
+}
+</code></pre><p>然后重新启动logstash，控制台输入hello elasticsearch，刷新kibana页面：<br><img src="http://format-blog-image.qiniudn.com/logstash3.png" alt=""></p>
+<p>logstash日志追踪系统搭建完毕。</p>
+<h2 id="logstash的实际应用">logstash的实际应用</h2><p>以log4j为例。</p>
+<p>logstash配置：</p>
+<pre><code><span class="name">input</span> {
+  stdin { }
+  <span class="name">log4j</span> {
+     mode =&gt; <span class="string">"server"</span>
+     host  =&gt; <span class="string">"127.0.0.1"</span>
+     port =&gt; <span class="number">56789</span>
+     type =&gt; <span class="string">"log4j"</span>
+  }
+}
+<span class="name">output</span> {
+  stdout { codec =&gt; rubydebug }
+  <span class="name">elasticsearch</span> { host =&gt; localhost }
+}
+</code></pre><p>测试类：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LogTest</span> </span>{
+
+    <span class="keyword">private</span> Logger logger = Logger.getLogger(DebugLogger.class);
+
+    <span class="annotation">@Before</span>
+    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">setUp</span><span class="params">()</span> </span>{
+        PropertyConfigurator.configure(LogTest.class.getClassLoader().getResourceAsStream(<span class="string">"log4j.properties"</span>));
+    }
+
+    <span class="annotation">@Test</span>
+    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">testLog</span><span class="params">()</span> </span>{
+        logger.debug(<span class="string">"hello logstash, this is a message from log4j"</span>);
+    }
+
+    <span class="annotation">@Test</span>
+    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">testException</span><span class="params">()</span> </span>{
+        logger.<span class="keyword">error</span>(<span class="string">"error"</span>, <span class="keyword">new</span> TestException(<span class="string">"sorry, error"</span>));
+    }
+</code></pre><p>}</p>
+<p>log4j配置：</p>
+<pre><code>log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.<span class="keyword">layout</span>=org.apache.log4j.PatternLayout
+log4j.appender.stdout.<span class="keyword">layout</span>.ConversionPattern=<span class="variable">%d</span> <span class="variable">%p</span> <span class="variable">%t</span> <span class="variable">%c</span> : <span class="variable">%m</span><span class="variable">%n</span>
+
+log4j.appender.<span class="keyword">file</span>=org.apache.log4j.RollingFileAppender
+log4j.appender.<span class="keyword">file</span>.<span class="keyword">file</span>=/Users/fangjian/Develop/log_file/test_log.<span class="keyword">log</span>
+log4j.appender.<span class="keyword">file</span>.maxFileSize=<span class="number">1024</span>
+log4j.appender.<span class="keyword">file</span>.<span class="keyword">layout</span>=org.apache.log4j.PatternLayout
+log4j.appender.<span class="keyword">file</span>.<span class="keyword">layout</span>.ConversionPattern=<span class="variable">%d</span> <span class="variable">%p</span> <span class="variable">%t</span> <span class="variable">%c</span> : <span class="variable">%m</span><span class="variable">%n</span>
+
+# logstash配置
+log4j.appender.logstash=org.apache.log4j.net.SocketAppender
+log4j.appender.logstash.port=<span class="number">56789</span>
+log4j.appender.logstash.remoteHost=<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>
+
+log4j.rootLogger=debug,stdout,<span class="keyword">file</span>,logstash
+</code></pre><p>2个test方法跑完之后，刷新kibana界面：<br><img src="http://format-blog-image.qiniudn.com/logstash4.png" alt=""></p>
+<h2 id="总结">总结</h2><p>本文仅仅只是对logstash的搭建做一个总结，包括logstash内部的结构，还有一些配置语言的介绍都没有非常详细的解释，如果读者有兴趣，可以自行查阅相关资料。</p>
+<p>参考资料：<br><a href="http://logstash.net/" target="_blank" rel="external">http://logstash.net/</a><br><a href="http://blog.yeradis.com/2013/10/logstash-and-apache-log4j-or-how-to.html" target="_blank" rel="external">http://blog.yeradis.com/2013/10/logstash-and-apache-log4j-or-how-to.html</a><br><a href="http://www.cnblogs.com/buzzlight/p/logstash_elasticsearch_kibana_log.html" target="_blank" rel="external">http://www.cnblogs.com/buzzlight/p/logstash_elasticsearch_kibana_log.html</a></p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2014/10/31/intellij_idea_uml/" itemprop="url">
+                  Intellij Idea中一个非常牛逼的UML图功能
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2014-10-31T10:40:05+08:00" content="2014-10-31">
+              2014-10-31
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2014/10/31/intellij_idea_uml/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/10/31/intellij_idea_uml/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="description">Intellij Idea中一个非常牛逼的UML图功能，看开源框架架构的时候非常有用~</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2014/10/31/intellij_idea_uml/">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2014/09/26/mybatis-dynamic-sql /" itemprop="url">
+                  MyBatis动态SQL底层原理分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2014-09-26T15:49:50+08:00" content="2014-09-26">
+              2014-09-26
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/mybatis/" itemprop="url" rel="index">
+                    <span itemprop="name">mybatis</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2014/09/26/mybatis-dynamic-sql /#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/26/mybatis-dynamic-sql /" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <h2 id="前言">前言</h2><p>废话不多说，直接进入文章。<br>我们在使用mybatis的时候，会在xml中编写sql语句。<br>比如这段动态sql代码：</p>
+<pre><code>&lt;<span class="keyword">update</span> id=<span class="string">"update"</span> parameterType=<span class="string">"org.format.dynamicproxy.mybatis.bean.User"</span>&gt;
+    <span class="keyword">UPDATE</span> users
+    &lt;<span class="keyword">trim</span> prefix=<span class="string">"SET"</span> prefixOverrides=<span class="string">","</span>&gt;
+        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"name != null and name != ''"</span>&gt;
+            name = #{name}
+        &lt;/<span class="keyword">if</span>&gt;
+        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"age != null and age != ''"</span>&gt;
+            , age = #{age}
+        &lt;/<span class="keyword">if</span>&gt;
+        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"birthday != null and birthday != ''"</span>&gt;
+            , birthday = #{birthday}
+        &lt;/<span class="keyword">if</span>&gt;
+    &lt;/<span class="keyword">trim</span>&gt;
+    where id = <span class="label">${id}</span>
+&lt;/<span class="keyword">update</span>&gt;
+</code></pre><p>mybatis底层是如何构造这段sql的？<br>这方面的知识网上资料不多，于是就写了这么一篇文章。<br>下面带着这个疑问，我们一步一步分析。</p>
+<h2 id="介绍MyBatis中一些关于动态SQL的接口和类">介绍MyBatis中一些关于动态SQL的接口和类</h2><p><strong>SqlNode接口</strong>，简单理解就是xml中的每个标签，比如上述sql的update,trim,if标签：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">SqlNode</span> </span>{
+  <span class="function"><span class="keyword">boolean</span> <span class="title">apply</span><span class="params">(DynamicContext context)</span></span>;
+}
+</code></pre><p><img src="http://format-blog-image.qiniudn.com/dynamicsql2.png" alt=""></p>
+<p><strong>SqlSource Sql源接口</strong>，代表从xml文件或注解映射的sql内容，主要就是用于创建BoundSql，有实现类DynamicSqlSource(动态Sql源)，StaticSqlSource(静态Sql源)等：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">SqlSource</span> {
+  <span class="function">BoundSql <span class="title">getBoundSql</span>(<span class="params">Object parameterObject</span>)</span>;
+}
+</code></pre><p><img src="http://format-blog-image.qiniudn.com/dynamicsql3.png" alt=""></p>
+<p><strong>BoundSql类</strong>，封装mybatis最终产生sql的类，包括sql语句，参数，参数源数据等参数：</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql1.png" alt=""></p>
+<p><strong>XNode</strong>，一个Dom API中的Node接口的扩展类。</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql6.png" alt=""></p>
+<p><strong>BaseBuilder接口及其实现类</strong>(属性，方法省略了，大家有兴趣的自己看),这些Builder的作用就是用于构造sql:</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql4.png" alt=""></p>
+<p>下面我们简单分析下其中4个Builder：</p>
+<p>1 XMLConfigBuilder</p>
+<p>解析mybatis中configLocation属性中的全局xml文件，内部会使用XMLMapperBuilder解析各个xml文件。</p>
+<p>2 XMLMapperBuilder</p>
+<p>遍历mybatis中mapperLocations属性中的xml文件中每个节点的Builder，比如user.xml，内部会使用XMLStatementBuilder处理xml中的每个节点。</p>
+<p>3 XMLStatementBuilder</p>
+<p>解析xml文件中各个节点，比如select,insert,update,delete节点，内部会使用XMLScriptBuilder处理节点的sql部分，遍历产生的数据会丢到Configuration的mappedStatements中。</p>
+<p>4 XMLScriptBuilder</p>
+<p>解析xml中各个节点sql部分的Builder。</p>
+<p><strong>LanguageDriver接口及其实现类</strong>(属性，方法省略了，大家有兴趣的自己看)，该接口主要的作用就是构造sql:</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql5.png" alt=""></p>
+<p>简单分析下XMLLanguageDriver(处理xml中的sql，RawLanguageDriver处理静态sql)：</p>
+<p>XMLLanguageDriver内部会使用XMLScriptBuilder解析xml中的sql部分。</p>
+<p>ok， 大部分比较重要的类我们都已经介绍了，下面源码分析走起。</p>
+<h2 id="源码分析走起">源码分析走起</h2><p>Spring与Mybatis整合的时候需要配置SqlSessionFactoryBean，该配置会加入数据源和mybatis xml配置文件路径等信息：</p>
+<pre><code>&lt;bean id=<span class="string">"sqlSessionFactory"</span> class=<span class="string">"org.mybatis.spring.SqlSessionFactoryBean"</span>&gt;
+    &lt;property name=<span class="string">"dataSource"</span> <span class="keyword">ref</span>=<span class="string">"dataSource"</span>/&gt;
+    &lt;property name=<span class="string">"configLocation"</span> value=<span class="string">"classpath:mybatisConfig.xml"</span>/&gt;
+    &lt;property name=<span class="string">"mapperLocations"</span> value=<span class="string">"classpath*:org/format/dao/*.xml"</span>/&gt;
+&lt;/bean&gt;
+</code></pre><p>我们就分析这一段配置背后的细节：</p>
+<p>SqlSessionFactoryBean实现了Spring的InitializingBean接口，InitializingBean接口的afterPropertiesSet方法中会调用buildSqlSessionFactory方法</p>
+<p>buildSqlSessionFactory方法内部会使用XMLConfigBuilder解析属性configLocation中配置的路径，还会使用XMLMapperBuilder属性解析mapperLocations属性中的各个xml文件。</p>
+<p>部分源码如下：</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql7.png" alt=""></p>
+<p>由于XMLConfigBuilder内部也是使用XMLMapperBuilder，我们就看看XMLMapperBuilder的解析细节。</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql8.png" alt=""></p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql9.png" alt=""></p>
+<p>我们关注一下，增删改查节点的解析。</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql10.png" alt=""></p>
+<p>XMLStatementBuilder的解析：</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql11.png" alt=""></p>
+<p>默认会使用XMLLanguageDriver创建SqlSource（Configuration构造函数中设置）。</p>
+<p>XMLLanguageDriver创建SqlSource：</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql12.png" alt=""></p>
+<p>XMLScriptBuilder解析sql：</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql13.png" alt=""></p>
+<p>得到SqlSource之后，会放到Configuration中，有了SqlSource，就能拿BoundSql了，BoundSql可以得到最终的sql。</p>
+<h2 id="实例分析">实例分析</h2><p>我以以下xml的解析大概说下parseDynamicTags的解析过程：</p>
+<pre><code>&lt;<span class="keyword">update</span> id=<span class="string">"update"</span> parameterType=<span class="string">"org.format.dynamicproxy.mybatis.bean.User"</span>&gt;
+    <span class="keyword">UPDATE</span> users
+    &lt;<span class="keyword">trim</span> prefix=<span class="string">"SET"</span> prefixOverrides=<span class="string">","</span>&gt;
+        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"name != null and name != ''"</span>&gt;
+            name = #{name}
+        &lt;/<span class="keyword">if</span>&gt;
+        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"age != null and age != ''"</span>&gt;
+            , age = #{age}
+        &lt;/<span class="keyword">if</span>&gt;
+        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"birthday != null and birthday != ''"</span>&gt;
+            , birthday = #{birthday}
+        &lt;/<span class="keyword">if</span>&gt;
+    &lt;/<span class="keyword">trim</span>&gt;
+    where id = <span class="label">${id}</span>
+&lt;/<span class="keyword">update</span>&gt;
+</code></pre><p>在看这段解析之前，请先了解dom相关的知识，<a href="http://www.w3school.com.cn/xmldom/index.asp" target="_blank" rel="external">xml dom知识</a>, <a href="http://www.cnblogs.com/fangjian0423/p/dom-parse-xml-html.html" target="_blank" rel="external">dom博文</a></p>
+<p>parseDynamicTags方法的返回值是一个List<sqlnode>，也就是一个Sql节点集合。SqlNode本文一开始已经介绍，分析完解析过程之后会说一下各个SqlNode类型的作用。</sqlnode></p>
+<p>1 首先根据update节点(Node)得到所有的子节点，分别是3个子节点</p>
+<p> (1)文本节点   \n   UPDATE users</p>
+<p> (2)trim子节点 <trim>…</trim></p>
+<p> (3)文本节点  \n    where id = #{id}</p>
+<p>2 遍历各个子节点</p>
+<p> (1) 如果节点类型是文本或者CDATA，构造一个TextSqlNode或StaticTextSqlNode</p>
+<p> (2) 如果节点类型是元素，说明该update节点是个动态sql，然后会使用NodeHandler处理各个类型的子节点。这里的NodeHandler是XMLScriptBuilder的一个内部接口，其实现类包括TrimHandler、WhereHandler、SetHandler、IfHandler、ChooseHandler等。看类名也就明白了这个Handler的作用，比如我们分析的trim节点，对应的是TrimHandler；if节点，对应的是IfHandler… </p>
+<p> 这里子节点trim被TrimHandler处理，TrimHandler内部也使用parseDynamicTags方法解析节点</p>
+<p>3 遇到子节点是元素的话，重复以上步骤</p>
+<p>  trim子节点内部有7个子节点，分别是文本节点、if节点、是文本节点、if节点、是文本节点、if节点、文本节点。文本节点跟之前一样处理，if节点使用IfHandler处理</p>
+<p>遍历步骤如上所示，下面我们看下几个Handler的实现细节。</p>
+<p>IfHandler处理方法也是使用parseDynamicTags方法，然后加上if标签必要的属性。 </p>
+<pre><code>private <span class="class"><span class="keyword">class</span> <span class="title">IfHandler</span> <span class="keyword">implements</span> <span class="title">NodeHandler</span> </span>{
+    public <span class="keyword">void</span> handleNode(XNode nodeToHandle, <span class="built_in">List</span>&lt;SqlNode&gt; targetContents) {
+      <span class="built_in">List</span>&lt;SqlNode&gt; contents = parseDynamicTags(nodeToHandle);
+      MixedSqlNode mixedSqlNode = <span class="keyword">new</span> MixedSqlNode(contents);
+      <span class="built_in">String</span> test = nodeToHandle.getStringAttribute(<span class="string">"test"</span>);
+      IfSqlNode ifSqlNode = <span class="keyword">new</span> IfSqlNode(mixedSqlNode, test);
+      targetContents.add(ifSqlNode);
+    }
+}
+</code></pre><p>TrimHandler处理方法也是使用parseDynamicTags方法，然后加上trim标签必要的属性。</p>
+<pre><code>private <span class="class"><span class="keyword">class</span> <span class="title">TrimHandler</span> <span class="keyword">implements</span> <span class="title">NodeHandler</span> </span>{
+    public <span class="keyword">void</span> handleNode(XNode nodeToHandle, <span class="built_in">List</span>&lt;SqlNode&gt; targetContents) {
+      <span class="built_in">List</span>&lt;SqlNode&gt; contents = parseDynamicTags(nodeToHandle);
+      MixedSqlNode mixedSqlNode = <span class="keyword">new</span> MixedSqlNode(contents);
+      <span class="built_in">String</span> prefix = nodeToHandle.getStringAttribute(<span class="string">"prefix"</span>);
+      <span class="built_in">String</span> prefixOverrides = nodeToHandle.getStringAttribute(<span class="string">"prefixOverrides"</span>);
+      <span class="built_in">String</span> suffix = nodeToHandle.getStringAttribute(<span class="string">"suffix"</span>);
+      <span class="built_in">String</span> suffixOverrides = nodeToHandle.getStringAttribute(<span class="string">"suffixOverrides"</span>);
+      TrimSqlNode trim = <span class="keyword">new</span> TrimSqlNode(configuration, mixedSqlNode, prefix, prefixOverrides, suffix, suffixOverrides);
+      targetContents.add(trim);
+    }
+}
+</code></pre><p>以上update方法最终通过parseDynamicTags方法得到的SqlNode集合如下：</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql14.png" alt=""></p>
+<p>trim节点：</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql15.png" alt=""></p>
+<p>由于这个update方法是个动态节点，因此构造出了DynamicSqlSource。</p>
+<p>DynamicSqlSource内部就可以构造sql了:</p>
+<p><img src="http://format-blog-image.qiniudn.com/dynamicsql16.png" alt=""></p>
+<p>DynamicSqlSource内部的SqlNode属性是一个MixedSqlNode。</p>
+<p>然后我们看看各个SqlNode实现类的apply方法</p>
+<p>下面分析一下两个SqlNode实现类的apply方法实现：</p>
+<p>MixedSqlNode：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">apply</span><span class="params">(DynamicContext context)</span> </span>{
+    <span class="keyword">for</span> (SqlNode sqlNode : contents) {
+      sqlNode.apply(context);
+    }
+    <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+</code></pre><p>MixedSqlNode会遍历调用内部各个sqlNode的apply方法。</p>
+<p>StaticTextSqlNode:</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">apply</span><span class="params">(DynamicContext context)</span> </span>{
+    context.appendSql(text);
+    <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+</code></pre><p>直接append sql文本。</p>
+<p>IfSqlNode:</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">apply</span><span class="params">(DynamicContext context)</span> </span>{
+    <span class="keyword">if</span> (evaluator.evaluateBoolean(test, context.getBindings())) {
+      contents.apply(context);
+      <span class="keyword">return</span> <span class="keyword">true</span>;
+    }
+    <span class="keyword">return</span> <span class="keyword">false</span>;
+}
+</code></pre><p>这里的evaluator是一个ExpressionEvaluator类型的实例，内部使用了OGNL处理表达式逻辑。</p>
+<p>TrimSqlNode:</p>
+<pre><code>public boolean apply(<span class="type">DynamicContext</span> context) {
+    <span class="type">FilteredDynamicContext</span> filteredDynamicContext = new <span class="type">FilteredDynamicContext</span>(context);
+    boolean <span class="literal">result</span> = contents.apply(filteredDynamicContext);
+    filteredDynamicContext.applyAll();
+    <span class="keyword">return</span> <span class="literal">result</span>;
+}
+
+public <span class="type">void</span> applyAll() {
+  sqlBuffer = new <span class="type">StringBuilder</span>(sqlBuffer.toString().trim());
+  <span class="type">String</span> trimmedUppercaseSql = sqlBuffer.toString().toUpperCase(<span class="type">Locale</span>.<span class="type">ENGLISH</span>);
+  <span class="keyword">if</span> (trimmedUppercaseSql.length() &gt; <span class="number">0</span>) {
+    applyPrefix(sqlBuffer, trimmedUppercaseSql);
+    applySuffix(sqlBuffer, trimmedUppercaseSql);
+  }
+  delegate.appendSql(sqlBuffer.toString());
+}
+
+private <span class="type">void</span> applyPrefix(<span class="type">StringBuilder</span> sql, <span class="type">String</span> trimmedUppercaseSql) {
+  <span class="keyword">if</span> (!prefixApplied) {
+    prefixApplied = <span class="literal">true</span>;
+    <span class="keyword">if</span> (prefixesToOverride != null) {
+      <span class="keyword">for</span> (<span class="type">String</span> toRemove : prefixesToOverride) {
+        <span class="keyword">if</span> (trimmedUppercaseSql.startsWith(toRemove)) {
+          sql.delete(<span class="number">0</span>, toRemove.trim().length());
+          <span class="keyword">break</span>;
+        }
+      }
+    }
+    <span class="keyword">if</span> (prefix != null) {
+      sql.insert(<span class="number">0</span>, <span class="string">" "</span>);
+      sql.insert(<span class="number">0</span>, prefix);
+    }
+  }
+}
+</code></pre><p>TrimSqlNode的apply方法也是调用属性contents(一般都是MixedSqlNode)的apply方法，按照实例也就是7个SqlNode，都是StaticTextSqlNode和IfSqlNode。 最后会使用FilteredDynamicContext过滤掉prefix和suffix。  </p>
+<h2 id="总结">总结</h2><p>大致讲解了一下mybatis对动态sql语句的解析过程，其实回过头来看看不算复杂，还算蛮简单的。 之前接触mybaits的时候遇到刚才分析的那一段动态sql的时候总是很费解。</p>
+<pre><code>&lt;<span class="keyword">update</span> id=<span class="string">"update"</span> parameterType=<span class="string">"org.format.dynamicproxy.mybatis.bean.User"</span>&gt;
+    <span class="keyword">UPDATE</span> users
+    &lt;<span class="keyword">trim</span> prefix=<span class="string">"SET"</span> prefixOverrides=<span class="string">","</span>&gt;
+        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"name != null and name != ''"</span>&gt;
+            name = #{name}
+        &lt;/<span class="keyword">if</span>&gt;
+        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"age != null and age != ''"</span>&gt;
+            , age = #{age}
+        &lt;/<span class="keyword">if</span>&gt;
+        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"birthday != null and birthday != ''"</span>&gt;
+            , birthday = #{birthday}
+        &lt;/<span class="keyword">if</span>&gt;
+    &lt;/<span class="keyword">trim</span>&gt;
+    where id = <span class="label">${id}</span>
+&lt;/<span class="keyword">update</span>&gt;
+</code></pre><p>想搞明白这个trim节点的prefixOverrides到底是什么意思(从字面上理解就是前缀覆盖)，而且官方文档上也没这方面知识的说明。我将这段xml改成如下：</p>
+<pre><code>&lt;<span class="keyword">update</span> id=<span class="string">"update"</span> parameterType=<span class="string">"org.format.dynamicproxy.mybatis.bean.User"</span>&gt;
+    <span class="keyword">UPDATE</span> users
+    &lt;<span class="keyword">trim</span> prefix=<span class="string">"SET"</span> prefixOverrides=<span class="string">","</span>&gt;
+        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"name != null and name != ''"</span>&gt;
+            , name = #{name}
+        &lt;/<span class="keyword">if</span>&gt;
+        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"age != null and age != ''"</span>&gt;
+            , age = #{age}
+        &lt;/<span class="keyword">if</span>&gt;
+        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"birthday != null and birthday != ''"</span>&gt;
+            , birthday = #{birthday}
+        &lt;/<span class="keyword">if</span>&gt;
+    &lt;/<span class="keyword">trim</span>&gt;
+    where id = <span class="label">${id}</span>
+&lt;/<span class="keyword">update</span>&gt;
+</code></pre><p>(第二段第一个if节点多了个逗号)  结果我发现这2段xml解析的结果是一样的，非常迫切地想知道这到底是为什么，然后这也促使了我去看源码的决心。最终还是看下来了。</p>
+<p>文章有点长，而且讲的也不是非常直观，希望对有些人有帮助。</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2014/09/21/dom-parse-xml-html/" itemprop="url">
+                  简单谈谈dom解析xml和html
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2014-09-21T09:49:50+08:00" content="2014-09-21">
+              2014-09-21
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jvm/" itemprop="url" rel="index">
+                    <span itemprop="name">jvm</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2014/09/21/dom-parse-xml-html/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/21/dom-parse-xml-html/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <h2 id="前言">前言</h2><p><a href="http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/" target="_blank" rel="external">文件对象模型（Document Object Model，简称DOM）</a>，是W3C组织推荐的处理可扩展标志语言的标准编程接口。html，xml都是基于这个模型构造的。这也是一个W3C推出的标准。java，python，javascript等语言都提供了一套基于dom的编程接口。</p>
+<h2 id="java使用dom解析xml">java使用dom解析xml</h2><p>一段xml文档, note.xml：</p>
+<pre><code><span class="pi">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="tag">&lt;<span class="title">note</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">to</span> <span class="attribute">id</span>=<span class="value">"1"</span>&gt;</span>George<span class="tag">&lt;/<span class="title">to</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">from</span>&gt;</span>John<span class="tag">&lt;/<span class="title">from</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">heading</span>&gt;</span>Reminder<span class="tag">&lt;/<span class="title">heading</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">body</span>&gt;</span>Don't forget the meeting!<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">note</span>&gt;</span>
+</code></pre><p>我们先使用w3c dom解析该xml：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span>(<span class="params"></span>) </span>{
+    NodeList nodeList = doc.getChildNodes().item(<span class="number">0</span>).getChildNodes();
+    System.<span class="keyword">out</span>.println(<span class="string">"xml size: "</span> + nodeList.getLength());
+    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nodeList.getLength(); i ++) {
+        Node node = nodeList.item(i);
+        System.<span class="keyword">out</span>.println(node.getNodeType());
+        System.<span class="keyword">out</span>.println(node.getNodeName());
+    }
+}
+</code></pre><p>输出：</p>
+<pre><code>xml size: <span class="number">9</span>
+<span class="number">3</span>
+<span class="preprocessor">#text</span>
+<span class="number">1</span>
+to
+<span class="number">3</span>
+<span class="preprocessor">#text</span>
+<span class="number">1</span>
+from
+<span class="number">3</span>
+<span class="preprocessor">#text</span>
+<span class="number">1</span>
+heading
+<span class="number">3</span>
+<span class="preprocessor">#text</span>
+<span class="number">1</span>
+body
+<span class="number">3</span>
+<span class="preprocessor">#text</span>
+</code></pre><p>我们看到代码输出note节点的字节点的时候，有9个节点，但是xml文档中note节点实际上只有to、from、heading、body4个节点。 那为什么是9个呢，原因是这样的。<br>选取几个w3c规范中关于节点类型的描述：</p>
+<table>
+<thead>
+<tr>
+<th>节点类型</th>
+<th style="text-align:center">描述</th>
+<th style="text-align:right">nodeName返回值</th>
+<th style="text-align:right">nodeValue返回值</th>
+<th style="text-align:right">子元素</th>
+<th style="text-align:right">类型常量值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Document</td>
+<td style="text-align:center">表示整个文档（DOM 树的根节点）</td>
+<td style="text-align:right">#document</td>
+<td style="text-align:right">null</td>
+<td style="text-align:right">Element(max. one)，Comment，DocumentType</td>
+<td style="text-align:right">9</td>
+</tr>
+<tr>
+<td>Element</td>
+<td style="text-align:center">表示 element（元素）元素</td>
+<td style="text-align:right">element name</td>
+<td style="text-align:right">null</td>
+<td style="text-align:right">Text，Comment，CDATASection</td>
+<td style="text-align:right">1</td>
+</tr>
+<tr>
+<td>Attr</td>
+<td style="text-align:center">表示属性</td>
+<td style="text-align:right">属性名称</td>
+<td style="text-align:right">属性值</td>
+<td style="text-align:right">Text</td>
+<td style="text-align:right">2</td>
+</tr>
+<tr>
+<td>Text</td>
+<td style="text-align:center">表示元素或属性中的文本内容。</td>
+<td style="text-align:right">#text</td>
+<td style="text-align:right">节点内容</td>
+<td style="text-align:right">None</td>
+<td style="text-align:right">3</td>
+</tr>
+<tr>
+<td>CDATASection</td>
+<td style="text-align:center">表示文档中的 CDATA 区段（文本不会被解析器解析）</td>
+<td style="text-align:right">#cdata-section</td>
+<td style="text-align:right">节点内容</td>
+<td style="text-align:right">None</td>
+<td style="text-align:right">4</td>
+</tr>
+<tr>
+<td>Comment</td>
+<td style="text-align:center">表示注释</td>
+<td style="text-align:right">#comment</td>
+<td style="text-align:right">注释文本</td>
+<td style="text-align:right">None</td>
+<td style="text-align:right">8</td>
+</tr>
+</tbody>
+</table>
+<p>更多细节请查看<a href="http://www.w3school.com.cn/xmldom/dom_nodetype.asp" target="_blank" rel="external">w3c DOM节点类型</a></p>
+<p>下面解释一下文档节点的字节点的处理过程：<br><img src="http://format-blog-image.qiniudn.com/dom_parse_xml1.png" alt=""></p>
+<p>其中红色部分为Text节点，紫色部分是Element节点(只画了部分)。&lt;/body&gt;后面的也是一个Element节点，所有4个Element节点，5个Text节点。</p>
+<p>所以输出的内容中3 #text表示该节点是个Text节点，1 节点name是个Element节点，这与表格中表述的是一样的。</p>
+<p>测试代码：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test1</span><span class="params">()</span> </span>{
+    NodeList nodeList = doc.getChildNodes().item(<span class="number">0</span>).getChildNodes();
+    System.out.println(<span class="string">"xml size: "</span> + nodeList.getLength());
+    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nodeList.getLength(); i ++) {
+        Node node = nodeList.item(i);
+        <span class="keyword">if</span>(node.getNodeType() == Node.TEXT_NODE) {
+            System.out.println(node.getNodeValue().replace(<span class="string">"\n"</span>,<span class="string">"hr"</span>).replace(<span class="string">' '</span>, <span class="string">'-'</span>));
+        }
+    }
+}
+</code></pre><p><img src="http://format-blog-image.qiniudn.com/dom_parse_xml2.png" alt=""><br>很明显，我们把空格和回车键替换打印后发现我们的结论是正确的。</p>
+<p>测试代码：</p>
+<pre><code>@Test
+<span class="component">public void test2() {
+    System<span class="string">.out.println("doc</span> type: " + doc<span class="string">.getNodeType())</span>;
+    NodeList nodeList = doc<span class="string">.getChildNodes().item(0).getChildNodes()</span>;
+    Node secondNode = nodeList<span class="string">.item(1)</span>;
+    System<span class="string">.out.println("element</span> [to] node type: " + secondNode<span class="string">.getNodeType())</span>;
+    System<span class="string">.out.println("element</span> [to] node name: " + secondNode<span class="string">.getNodeName())</span>;
+    System<span class="string">.out.println("element</span> [to] node value: " + secondNode<span class="string">.getNodeValue())</span>;
+    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> len: " + secondNode<span class="string">.getChildNodes().getLength())</span>;
+    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node type: " + secondNode<span class="string">.getChildNodes().item(0).getNodeType())</span>;
+    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node value: " + secondNode<span class="string">.getChildNodes().item(0).getNodeValue())</span>;
+    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node name: " + secondNode<span class="string">.getChildNodes().item(0).getNodeName())</span>;
+    Node attNode = secondNode<span class="string">.getAttributes().item(0)</span>;
+    System<span class="string">.out.println("attr</span> type: " + attNode<span class="string">.getNodeType())</span>;
+}</span>
+</code></pre><p><img src="http://format-blog-image.qiniudn.com/dom_parse_xml3.png" alt=""><br>输出结果跟表格中是一样的。</p>
+<p>大家有兴趣的话其他类型的节点比如CDATA节点大家可以自行测试～</p>
+<h2 id="javascript使用dom解析html">javascript使用dom解析html</h2><p>html代码：</p>
+<pre><code><span class="doctype">&lt;!DOCTYPE html&gt;</span>
+<span class="tag">&lt;<span class="title">html</span>&gt;</span>
+<span class="tag">&lt;<span class="title">head</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">title</span>&gt;</span>JS Bin<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">head</span>&gt;</span>
+<span class="tag">&lt;<span class="title">body</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">div</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">p</span>&gt;</span>gogogo<span class="tag">&lt;/<span class="title">p</span>&gt;</span>
+  <span class="tag">&lt;/<span class="title">div</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">html</span>&gt;</span>
+</code></pre><p>js代码：</p>
+<pre><code><span class="built_in">console</span>.log(<span class="built_in">document</span>.nodeType);
+<span class="keyword">var</span> div = <span class="built_in">document</span>.getElementsByTagName(<span class="string">"div"</span>)[<span class="number">0</span>]; <span class="comment">//9</span>
+<span class="built_in">console</span>.log(div.nodeType); <span class="comment">//1</span>
+<span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>;i &lt; div.childNodes.length; i ++) {
+  <span class="built_in">console</span>.log(div.childNodes[i].nodeType);
+}
+</code></pre><p>分别输出9，1，3，1，3<br>跟我们在表格中对应～</p>
+<h2 id="总结">总结</h2><p>本次博客主要讲解了dom解析xml和html。 以前使用java解析xml的时候总是使用一些第三方库，比如jdom。 但是dom却是w3c的规范，不止java，包括javascript，python这些主流语言也都主持，有了规范，语言只是实现了这些规范而已。</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+  </section>
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/9/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/9/">9</a><span class="page-number current">10</span><a class="page-number" href="/page/11/">11</a><a class="page-number" href="/page/12/">12</a><a class="extend next" rel="next" href="/page/11/"><i class="fa fa-angle-right"></i></a>
+  </nav>
+
+
+
+        </div>
+
+        
+
+
+        
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = 'page/10/index.html';
+      var disqus_title = '';
+      var disqus_url = '';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

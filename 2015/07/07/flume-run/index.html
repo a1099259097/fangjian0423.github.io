@@ -1,0 +1,1061 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="big data,flume," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="Flume运行过程分析入口ApplicationFlume运行的主类是org.apache.flume.node.Application的main方法。
+命令行args参数如下：
+--conf-file YourConfigFile --name AgentName
+main方法里会先判断参数中是否有z或者zkConnString，如果配置了这两个参数中其中一个的话，那么会使用PollingZoo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Flume运行过程源码分析">
+<meta property="og:url" content="http://fangjian0423.github.io/2015/07/07/flume-run/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="Flume运行过程分析入口ApplicationFlume运行的主类是org.apache.flume.node.Application的main方法。
+命令行args参数如下：
+--conf-file YourConfigFile --name AgentName
+main方法里会先判断参数中是否有z或者zkConnString，如果配置了这两个参数中其中一个的话，那么会使用PollingZoo">
+<meta property="og:updated_time" content="2015-11-07T08:30:09.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Flume运行过程源码分析">
+<meta name="twitter:description" content="Flume运行过程分析入口ApplicationFlume运行的主类是org.apache.flume.node.Application的main方法。
+命令行args参数如下：
+--conf-file YourConfigFile --name AgentName
+main方法里会先判断参数中是否有z或者zkConnString，如果配置了这两个参数中其中一个的话，那么会使用PollingZoo">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> Flume运行过程源码分析 | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Flume运行过程源码分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-07-07T23:23:23+08:00" content="2015-07-07">
+              2015-07-07
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/07/07/flume-run/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/07/flume-run/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><h2 id="Flume运行过程分析">Flume运行过程分析</h2><h3 id="入口Application">入口Application</h3><p>Flume运行的主类是org.apache.flume.node.Application的main方法。</p>
+<p>命令行args参数如下：</p>
+<pre><code><span class="literal">-</span><span class="literal">-</span><span class="comment">conf</span><span class="literal">-</span><span class="comment">file</span> <span class="comment">YourConfigFile</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">AgentName</span>
+</code></pre><p>main方法里会先判断参数中是否有z或者zkConnString，如果配置了这两个参数中其中一个的话，那么会使用PollingZooKeeperConfigurationProvider或StaticZooKeeperConfigurationProvider配置。否则使用PollingPropertiesFileConfigurationProvider或PropertiesFileConfigurationProvider配置。</p>
+<p>一般我们只传–conf-file和–name，那么就会使用PollingPropertiesFileConfigurationProvider进行配置。</p>
+<pre><code><span class="comment">// EventBus，监听者设计模式</span>
+EventBus eventBus = <span class="keyword">new</span> EventBus(agentName + <span class="string">"-event-bus"</span>);
+<span class="comment">// 构造PollingPropertiesFileConfigurationProvider，会处理配置文件相关的信息</span>
+PollingPropertiesFileConfigurationProvider configurationProvider =
+        <span class="keyword">new</span> PollingPropertiesFileConfigurationProvider(
+          agentName, configurationFile, eventBus, <span class="number">30</span>);
+components.add(configurationProvider);
+application = <span class="keyword">new</span> Application(components);
+<span class="comment">// EventBus注册application</span>
+eventBus.<span class="keyword">register</span>(application);
+
+...
+
+application.start();
+</code></pre><p>Application内部有个handleConfigurationEvent方法，使用Subscribe注解，EventBus中被使用到：</p>
+<pre><code><span class="annotation">@Subscribe</span>
+<span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">handleConfigurationEvent</span><span class="params">(MaterializedConfiguration conf)</span> </span>{
+  stopAllComponents();
+  startAllComponents(conf);
+}
+</code></pre><p>接下来看Application的start方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>{
+    <span class="comment">// 使用生命周期组件管理器进行管理，这里其实只有1个组件，那就是PollingPropertiesFileConfigurationProvider</span>
+    <span class="keyword">for</span>(LifecycleAware component : components) {
+      <span class="comment">// 管理器管理各个组件的时候会传入2个参数，分别是管理策略(自动重启策略)和所需状态(START状态)</span>
+      supervisor.supervise(component,
+          <span class="keyword">new</span> SupervisorPolicy.AlwaysRestartPolicy(), LifecycleState.START);
+    }
+}
+</code></pre><p>LifecycleSupervisor生命周期管理者的supervise方法的主要代码：</p>
+<pre><code>// Supervisoree是一个带有status和policy这2个属性的封装类。这2个属性分别表示状态和管理策略。其中管理策略只有2种策略，分别是AlwaysRestartPolicy(自动重启策略)和OnceOnlyPolicy(只启动一次策略)；状态表示这个组件状态，状态Status中包括首次发生，最后发生，失败次数，目标状态等属性。
+Supervisoree process = new Supervisoree()<span class="comment">;</span>
+process.status = new Status()<span class="comment">;</span>
+
+process.policy = policy<span class="comment">;</span>
+// 所需状态初始化成START
+process.status.desiredState = desiredState<span class="comment">;</span>
+process.status.error = false<span class="comment">;</span>
+
+ // 起一个监控线程。 将Supervisoree和组件参数传入
+MonitorRunnable monitorRunnable = new MonitorRunnable()<span class="comment">;</span>
+monitorRunnable.lifecycleAware = lifecycleAware<span class="comment">;</span>
+monitorRunnable.supervisoree = process<span class="comment">;</span>
+monitorRunnable.monitorService = monitorService<span class="comment">;</span>
+
+supervisedProcesses.put(lifecycleAware, process)<span class="comment">;</span>
+
+ScheduledFuture&lt;?&gt; future = monitorService.scheduleWithFixedDelay(
+    monitorRunnable, 0, 3, TimeUnit.SECONDS)<span class="comment">;</span>
+monitorFutures.put(lifecycleAware, future)<span class="comment">;</span>
+</code></pre><p>监控线程MonitorRunnable的run方法主要代码：</p>
+<pre><code><span class="keyword">switch</span> (supervisoree.status.desiredState) {
+      <span class="comment">// 所需状态之前已经初始化成START状态，那么会执行组件的start方法。这里的组件是之前分析的PollingPropertiesFileConfigurationProvider</span>
+      <span class="keyword">case</span> START:
+        <span class="keyword">try</span> {
+          lifecycleAware.start();
+        } <span class="keyword">catch</span> (Throwable e) {
+          logger.<span class="keyword">error</span>(<span class="string">"Unable to start "</span> + lifecycleAware
+              + <span class="string">" - Exception follows."</span>, e);
+          <span class="keyword">if</span> (e <span class="keyword">instanceof</span> Error) {
+            <span class="comment">// This component can never recover, shut it down.</span>
+            supervisoree.status.desiredState = LifecycleState.STOP;
+            <span class="keyword">try</span> {
+              lifecycleAware.stop();
+              logger.warn(<span class="string">"Component {} stopped, since it could not be"</span>
+                  + <span class="string">"successfully started due to missing dependencies"</span>,
+                  lifecycleAware);
+            } <span class="keyword">catch</span> (Throwable e1) {
+              logger.<span class="keyword">error</span>(<span class="string">"Unsuccessful attempt to "</span>
+                  + <span class="string">"shutdown component: {} due to missing dependencies."</span>
+                  + <span class="string">" Please shutdown the agent"</span>
+                  + <span class="string">"or disable this component, or the agent will be"</span>
+                  + <span class="string">"in an undefined state."</span>, e1);
+              supervisoree.status.<span class="keyword">error</span> = <span class="keyword">true</span>;
+              <span class="keyword">if</span> (e1 <span class="keyword">instanceof</span> Error) {
+                <span class="keyword">throw</span> (Error) e1;
+              }
+              <span class="comment">// Set the state to stop, so that the conf poller can</span>
+              <span class="comment">// proceed.</span>
+            }
+          }
+          supervisoree.status.failures++;
+        }
+        <span class="keyword">break</span>;
+      <span class="keyword">case</span> STOP:
+        <span class="keyword">try</span> {
+          lifecycleAware.stop();
+        } <span class="keyword">catch</span> (Throwable e) {
+          logger.<span class="keyword">error</span>(<span class="string">"Unable to stop "</span> + lifecycleAware
+              + <span class="string">" - Exception follows."</span>, e);
+          <span class="keyword">if</span> (e <span class="keyword">instanceof</span> Error) {
+            <span class="keyword">throw</span> (Error) e;
+          }
+          supervisoree.status.failures++;
+        }
+        <span class="keyword">break</span>;
+      <span class="keyword">default</span>:
+        logger.warn(<span class="string">"I refuse to acknowledge {} as a desired state"</span>,
+            supervisoree.status.desiredState);
+    }
+</code></pre><p>PollingPropertiesFileConfigurationProvider的start方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">void</span> start() {
+    LOGGER.info(<span class="string">"Configuration provider starting"</span>);
+
+    Preconditions.checkState(<span class="keyword">file</span> != <span class="keyword">null</span>,
+        <span class="string">"The parameter file must not be null"</span>);
+
+    <span class="comment">// 初始化线程池</span>
+    executorService = Executors.newSingleThreadScheduledExecutor(
+            <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"conf-file-poller-%d"</span>)
+                .build());
+
+    <span class="comment">// 起一个文件观察线程</span>
+    FileWatcherRunnable fileWatcherRunnable =
+        <span class="keyword">new</span> FileWatcherRunnable(<span class="keyword">file</span>, counterGroup);
+
+    executorService.scheduleWithFixedDelay(fileWatcherRunnable, <span class="number">0</span>, interval,
+        TimeUnit.SECONDS);
+    <span class="comment">// 初始化组件的状态为START</span>
+    lifecycleState = LifecycleState.START;
+
+    LOGGER.debug(<span class="string">"Configuration provider started"</span>);
+}
+</code></pre><p>文件观察线程FileWatcherRunnable的run方法：</p>
+<pre><code>public void <span class="keyword">run</span>() {
+  LOGGER.debug(<span class="string">"Checking file:{} for changes"</span>, <span class="keyword">file</span>);
+
+  counterGroup.incrementAndGet(<span class="string">"file.checks"</span>);
+  <span class="comment">// 得到文件的上次修改时间</span>
+  long lastModified = <span class="keyword">file</span>.lastModified();
+  <span class="comment">// 如果修改了文件，那么会执行以下代码。首次发生的时候lastChange为0，所以肯定会执行一次。以后只要配置改了才会再次执行</span>
+  <span class="keyword">if</span> (lastModified &gt; lastChange) {
+    LOGGER.info(<span class="string">"Reloading configuration file:{}"</span>, <span class="keyword">file</span>);
+
+    counterGroup.incrementAndGet(<span class="string">"file.loads"</span>);
+
+    lastChange = lastModified;
+
+    try {
+      <span class="comment">// eventBus属性之前在Application中分析过，而且它注册了application实例</span>
+      <span class="comment">// Application中有个handleConfigurationEvent方法，eventBus是个观察者设计模式，所以会钓鱼handleConfigurationEvent这个方法</span>
+      <span class="comment">// getConfiguration方法会parse配置文件中的配置信息</span>
+      eventBus.<span class="keyword">post</span>(getConfiguration());
+    } catch (Exception <span class="keyword">e</span>) {
+      LOGGER.<span class="keyword">error</span>(<span class="string">"Failed to load configuration data. Exception follows."</span>,
+          <span class="keyword">e</span>);
+    } catch (NoClassDefFoundError <span class="keyword">e</span>) {
+      LOGGER.<span class="keyword">error</span>(<span class="string">"Failed to start agent because dependencies were not "</span> +
+          <span class="string">"found in classpath. Error follows."</span>, <span class="keyword">e</span>);
+    } catch (Throwable t) {
+      <span class="comment">// caught because the caller does not handle or log Throwables</span>
+      LOGGER.<span class="keyword">error</span>(<span class="string">"Unhandled error"</span>, t);
+    }
+  }
+}
+</code></pre><p>getConfiguration方法是在PollingPropertiesFileConfigurationProvider的父类AbstractConfigurationProvider中定义的：</p>
+<pre><code>public MaterializedConfiguration getConfiguration() {
+    MaterializedConfiguration conf = <span class="keyword">new</span> SimpleMaterializedConfiguration();
+    FlumeConfiguration fconfig = getFlumeConfiguration();
+    AgentConfiguration agentConf = fconfig.getConfigurationFor(getAgentName());
+    <span class="keyword">if</span> (agentConf != <span class="keyword">null</span>) {
+      <span class="comment">// 构造Channel</span>
+      <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, ChannelComponent&gt; channelComponentMap = Maps.newHashMap();
+      <span class="comment">// 构造Source</span>
+      <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, SourceRunner&gt; sourceRunnerMap = Maps.newHashMap();
+      <span class="comment">// 构造Sink</span>
+      <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, SinkRunner&gt; sinkRunnerMap = Maps.newHashMap();
+      <span class="keyword">try</span> {
+        loadChannels(agentConf, channelComponentMap);
+        loadSources(agentConf, channelComponentMap, sourceRunnerMap);
+        loadSinks(agentConf, channelComponentMap, sinkRunnerMap);
+        <span class="built_in">Set</span>&lt;<span class="built_in">String</span>&gt; channelNames =
+            <span class="keyword">new</span> HashSet&lt;<span class="built_in">String</span>&gt;(channelComponentMap.keySet());
+        <span class="keyword">for</span>(<span class="built_in">String</span> channelName : channelNames) {
+          ChannelComponent channelComponent = channelComponentMap.
+              <span class="literal">get</span>(channelName);
+          <span class="keyword">if</span>(channelComponent.components.isEmpty()) {
+            LOGGER.warn(<span class="built_in">String</span>.format(<span class="string">"Channel %s has no components connected"</span> +
+                <span class="string">" and has been removed."</span>, channelName));
+            channelComponentMap.remove(channelName);
+            <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, Channel&gt; nameChannelMap = channelCache.
+                <span class="literal">get</span>(channelComponent.channel.getClass());
+            <span class="keyword">if</span>(nameChannelMap != <span class="keyword">null</span>) {
+              nameChannelMap.remove(channelName);
+            }
+          } <span class="keyword">else</span> {
+            LOGGER.info(<span class="built_in">String</span>.format(<span class="string">"Channel %s connected to %s"</span>,
+                channelName, channelComponent.components.toString()));
+            conf.addChannel(channelName, channelComponent.channel);
+          }
+        }
+        <span class="keyword">for</span>(<span class="built_in">Map</span>.Entry&lt;<span class="built_in">String</span>, SourceRunner&gt; entry : sourceRunnerMap.entrySet()) {
+          conf.addSourceRunner(entry.getKey(), entry.getValue());
+        }
+        <span class="keyword">for</span>(<span class="built_in">Map</span>.Entry&lt;<span class="built_in">String</span>, SinkRunner&gt; entry : sinkRunnerMap.entrySet()) {
+          conf.addSinkRunner(entry.getKey(), entry.getValue());
+        }
+      } <span class="keyword">catch</span> (InstantiationException ex) {
+        LOGGER.error(<span class="string">"Failed to instantiate component"</span>, ex);
+      } <span class="keyword">finally</span> {
+        channelComponentMap.clear();
+        sourceRunnerMap.clear();
+        sinkRunnerMap.clear();
+      }
+    } <span class="keyword">else</span> {
+      LOGGER.warn(<span class="string">"No configuration found for this host:{}"</span>, getAgentName());
+    }
+    <span class="keyword">return</span> conf;
+}
+</code></pre><p>当所有的组件，Source，Channel，Sink加载完之后。会调用handleConfigurationEvent方法：</p>
+<pre><code><span class="annotation">@Subscribe</span>
+<span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">handleConfigurationEvent</span><span class="params">(MaterializedConfiguration conf)</span> </span>{
+  <span class="comment">// 先关闭之前启动的所有Source，Channel，Sink组件(首次运行的时候并没有任何开启的组件)</span>
+  stopAllComponents();
+  <span class="comment">// 再重新开启这些组件</span>
+  startAllComponents(conf);
+}
+</code></pre><p>看下startAllComponents方法：</p>
+<pre><code><span class="comment">// 启动各个组件的时候同样适用supervisor的supervise方法。然后启动MonitorRunnable线程调用各个组件的start方法。</span>
+<span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">startAllComponents</span><span class="params">(MaterializedConfiguration materializedConfiguration)</span> </span>{
+    logger.info(<span class="string">"Starting new configuration:{}"</span>, materializedConfiguration);
+
+    <span class="keyword">this</span>.materializedConfiguration = materializedConfiguration;
+
+    <span class="keyword">for</span> (Entry&lt;String, Channel&gt; entry :
+      materializedConfiguration.getChannels().entrySet()) {
+      <span class="keyword">try</span>{
+        logger.info(<span class="string">"Starting Channel "</span> + entry.getKey());
+        supervisor.supervise(entry.getValue(),
+            <span class="keyword">new</span> SupervisorPolicy.AlwaysRestartPolicy(), LifecycleState.START);
+      } <span class="keyword">catch</span> (Exception e){
+        logger.<span class="keyword">error</span>(<span class="string">"Error while starting {}"</span>, entry.getValue(), e);
+      }
+    }
+
+    <span class="comment">/*
+     * Wait for all channels to start.
+     */</span>
+    <span class="keyword">for</span>(Channel ch: materializedConfiguration.getChannels().values()){
+      <span class="keyword">while</span>(ch.getLifecycleState() != LifecycleState.START
+          &amp;&amp; !supervisor.isComponentInErrorState(ch)){
+        <span class="keyword">try</span> {
+          logger.info(<span class="string">"Waiting for channel: "</span> + ch.getName() +
+              <span class="string">" to start. Sleeping for 500 ms"</span>);
+          Thread.sleep(<span class="number">500</span>);
+        } <span class="keyword">catch</span> (InterruptedException e) {
+          logger.<span class="keyword">error</span>(<span class="string">"Interrupted while waiting for channel to start."</span>, e);
+          Throwables.propagate(e);
+        }
+      }
+    }
+
+    <span class="keyword">for</span> (Entry&lt;String, SinkRunner&gt; entry : materializedConfiguration.getSinkRunners()
+        .entrySet()) {
+      <span class="keyword">try</span>{
+        logger.info(<span class="string">"Starting Sink "</span> + entry.getKey());
+        supervisor.supervise(entry.getValue(),
+          <span class="keyword">new</span> SupervisorPolicy.AlwaysRestartPolicy(), LifecycleState.START);
+      } <span class="keyword">catch</span> (Exception e) {
+        logger.<span class="keyword">error</span>(<span class="string">"Error while starting {}"</span>, entry.getValue(), e);
+      }
+    }
+
+    <span class="keyword">for</span> (Entry&lt;String, SourceRunner&gt; entry : materializedConfiguration
+        .getSourceRunners().entrySet()) {
+      <span class="keyword">try</span>{
+        logger.info(<span class="string">"Starting Source "</span> + entry.getKey());
+        supervisor.supervise(entry.getValue(),
+          <span class="keyword">new</span> SupervisorPolicy.AlwaysRestartPolicy(), LifecycleState.START);
+      } <span class="keyword">catch</span> (Exception e) {
+        logger.<span class="keyword">error</span>(<span class="string">"Error while starting {}"</span>, entry.getValue(), e);
+      }
+    }
+
+    <span class="keyword">this</span>.loadMonitoring();
+}
+</code></pre><h3 id="Flume启动过程总结">Flume启动过程总结</h3><p>首先通过Application类加载配置文件，加载后调用Application的start方法。</p>
+<p>Application的start方法内部会针对PollingPropertiesFileConfigurationProvider组件适用组件管理者管理这个组件。也就是使用LifecycleSupervisor的supervise方法。</p>
+<p>supervise方法内部使用MonitorRunnable监控线程。  监控线程内部会调用组件的start方法。 即PollingPropertiesFileConfigurationProvider的start方法。</p>
+<p>PollingPropertiesFileConfigurationProvider的start方法会使用FileWatcherRunnable文件查看进程判断配置文件是否已经修改，修改的话重新加载配置文件信息，然后通过EventBus调用Application的handleConfigurationEvent方法关闭目前正在启动的组件，关闭之后重新开启组件。</p>
+<p>各个新开启的组件会做类似的工作，使用LifecycleSupervisor的supervise方法，也就是起各个MonitorRunnable监控线程启动各个组件的start方法。</p>
+<h2 id="Source组件的构造过程">Source组件的构造过程</h2><p>直接看AbstractConfigurationProvider的loadSources方法：</p>
+<pre><code>private <span class="keyword">void</span> loadSources(AgentConfiguration agentConf,
+  <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, ChannelComponent&gt; channelComponentMap,
+  <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, SourceRunner&gt; sourceRunnerMap)
+  throws InstantiationException {
+
+<span class="built_in">Map</span>&lt;<span class="built_in">String</span>, Context&gt; sourceContexts = agentConf.getSourceContext();
+    <span class="keyword">for</span> (<span class="built_in">String</span> sourceName : sourceNames) {
+      Context context = sourceContexts.<span class="literal">get</span>(sourceName);
+      <span class="keyword">if</span>(context != <span class="keyword">null</span>){
+        <span class="comment">// 使用sourceFactory构造Source</span>
+        Source source =
+            sourceFactory.create(sourceName,
+                context.getString(BasicConfigurationConstants.CONFIG_TYPE));
+        <span class="keyword">try</span> {
+          Configurables.configure(source, context);
+          <span class="built_in">List</span>&lt;Channel&gt; sourceChannels = <span class="keyword">new</span> ArrayList&lt;Channel&gt;();
+          <span class="built_in">String</span>[] channelNames = context.getString(
+              BasicConfigurationConstants.CONFIG_CHANNELS).split(<span class="string">"\\s+"</span>);
+          <span class="keyword">for</span> (<span class="built_in">String</span> chName : channelNames) {
+            ChannelComponent channelComponent = channelComponentMap.<span class="literal">get</span>(chName);
+            <span class="keyword">if</span>(channelComponent != <span class="keyword">null</span>) {
+              sourceChannels.add(channelComponent.channel);
+            }
+          }
+          <span class="keyword">if</span>(sourceChannels.isEmpty()) {
+            <span class="built_in">String</span> msg = <span class="built_in">String</span>.format(<span class="string">"Source %s is not connected to a "</span> +
+                <span class="string">"channel"</span>,  sourceName);
+            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(msg);
+          }
+          <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, <span class="built_in">String</span>&gt; selectorConfig = context.getSubProperties(
+              BasicConfigurationConstants.CONFIG_SOURCE_CHANNELSELECTOR_PREFIX);
+
+          ChannelSelector selector = ChannelSelectorFactory.create(
+              sourceChannels, selectorConfig);
+
+          ChannelProcessor channelProcessor = <span class="keyword">new</span> ChannelProcessor(selector);
+          Configurables.configure(channelProcessor, context);
+          source.setChannelProcessor(channelProcessor);
+          sourceRunnerMap.put(sourceName,
+              SourceRunner.forSource(source));
+          <span class="comment">// source关联Channel    </span>
+          <span class="keyword">for</span>(Channel channel : sourceChannels) {
+            ChannelComponent channelComponent = Preconditions.
+                checkNotNull(channelComponentMap.<span class="literal">get</span>(channel.getName()),
+                    <span class="built_in">String</span>.format(<span class="string">"Channel %s"</span>, channel.getName()));
+            channelComponent.components.add(sourceName);
+          }
+        } <span class="keyword">catch</span> (Exception e) {
+          <span class="built_in">String</span> msg = <span class="built_in">String</span>.format(<span class="string">"Source %s has been removed due to an "</span> +
+              <span class="string">"error during configuration"</span>, sourceName);
+          LOGGER.error(msg, e);
+        }
+      }
+    }
+  }
+</code></pre></span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/big-data/" rel="tag">#big data</a>
+          
+            <a href="/tags/flume/" rel="tag">#flume</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/06/23/flume-sink/" rel="next" title="Flume Sink组件分析">
+                <i class="fa fa-chevron-left"></i> Flume Sink组件分析
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/07/12/elasticsearch-tutorials/" rel="prev" title="Elasticsearch入门">
+                Elasticsearch入门 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Flume运行过程分析"><span class="nav-number">1.</span> <span class="nav-text">Flume运行过程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#入口Application"><span class="nav-number">1.1.</span> <span class="nav-text">入口Application</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Flume启动过程总结"><span class="nav-number">1.2.</span> <span class="nav-text">Flume启动过程总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Source组件的构造过程"><span class="nav-number">2.</span> <span class="nav-text">Source组件的构造过程</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2015/07/07/flume-run/';
+      var disqus_title = 'Flume运行过程源码分析';
+      var disqus_url = 'http://fangjian0423.github.io/2015/07/07/flume-run/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

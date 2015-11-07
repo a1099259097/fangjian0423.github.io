@@ -1,0 +1,811 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="mybatis,spring," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="前言本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理，之前已经分析过java中实现动态，可以使用jdk自带api和cglib第三方库生成动态代理。本文分析的mybatis版本3.2.7，mybatis-spring版本1.2.2。
+MapperScannerConfigurer介绍MapperScannerConfigurer是spring和my">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析">
+<meta property="og:url" content="http://fangjian0423.github.io/2014/09/06/MapperScannerConfigurer-analysis/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="前言本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理，之前已经分析过java中实现动态，可以使用jdk自带api和cglib第三方库生成动态代理。本文分析的mybatis版本3.2.7，mybatis-spring版本1.2.2。
+MapperScannerConfigurer介绍MapperScannerConfigurer是spring和my">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis1.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis2.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis3.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis4.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis5.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis6.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis7.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis8.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis9.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis10.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis11.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis12.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis13.png">
+<meta property="og:updated_time" content="2015-11-07T08:32:35.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析">
+<meta name="twitter:description" content="前言本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理，之前已经分析过java中实现动态，可以使用jdk自带api和cglib第三方库生成动态代理。本文分析的mybatis版本3.2.7，mybatis-spring版本1.2.2。
+MapperScannerConfigurer介绍MapperScannerConfigurer是spring和my">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析 | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2014-09-06T21:55:12+08:00" content="2014-09-06">
+              2014-09-06
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/mybatis/" itemprop="url" rel="index">
+                    <span itemprop="name">mybatis</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2014/09/06/MapperScannerConfigurer-analysis/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/06/MapperScannerConfigurer-analysis/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><h2 id="前言">前言</h2><p>本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理，之前已经分析过java中实现动态，可以使用jdk自带api和cglib第三方库生成动态代理。本文分析的mybatis版本3.2.7，mybatis-spring版本1.2.2。</p>
+<h2 id="MapperScannerConfigurer介绍">MapperScannerConfigurer介绍</h2><p><a href="https://mybatis.github.io/spring/zh/mappers.html#MapperScannerConfigurer" target="_blank" rel="external">MapperScannerConfigurer</a>是spring和mybatis整合的mybatis-spring jar包中提供的一个类。 </p>
+<p>想要了解该类的作用，就得先了解<a href="https://mybatis.github.io/spring/zh/mappers.html#MapperFactoryBean" target="_blank" rel="external">MapperFactoryBean</a>。</p>
+<p>MapperFactoryBean的出现为了代替手工使用SqlSessionDaoSupport或SqlSessionTemplate编写数据访问对象(DAO)的代码,使用动态代理实现。</p>
+<p>比如下面这个官方文档中的配置：</p>
+<pre><code>&lt;bean id=<span class="string">"userMapper"</span> class=<span class="string">"org.mybatis.spring.mapper.MapperFactoryBean"</span>&gt;
+  &lt;property name=<span class="string">"mapperInterface"</span> value=<span class="string">"org.mybatis.spring.sample.mapper.UserMapper"</span> /&gt;
+  &lt;property name=<span class="string">"sqlSessionFactory"</span> <span class="keyword">ref</span>=<span class="string">"sqlSessionFactory"</span> /&gt;
+&lt;/bean&gt;
+</code></pre><p>org.mybatis.spring.sample.mapper.UserMapper是一个接口，我们创建一个MapperFactoryBean实例，然后注入这个接口和sqlSessionFactory（mybatis中提供的SqlSessionFactory接口，MapperFactoryBean会使用SqlSessionFactory创建SqlSession）这两个属性。</p>
+<p>之后想使用这个UserMapper接口的话，直接通过spring注入这个bean，然后就可以直接使用了，spring内部会创建一个这个接口的动态代理。</p>
+<p>当发现要使用多个MapperFactoryBean的时候，一个一个定义肯定非常麻烦，于是mybatis-spring提供了MapperScannerConfigurer这个类，它将会查找类路径下的映射器并自动将它们创建成MapperFactoryBean。</p>
+<pre><code>&lt;bean <span class="type">class</span>=<span class="string">"org.mybatis.spring.mapper.MapperScannerConfigurer"</span>&gt;
+  &lt;<span class="keyword">property</span> <span class="property">name</span>=<span class="string">"basePackage"</span> value=<span class="string">"org.mybatis.spring.sample.mapper"</span> /&gt;
+&lt;/bean&gt;
+</code></pre><p>这段配置会扫描org.mybatis.spring.sample.mapper下的所有接口，然后创建各自接口的动态代理类。</p>
+<h2 id="MapperScannerConfigurer底层代码分析">MapperScannerConfigurer底层代码分析</h2><p>以以下代码为示例进行讲解(部分代码，其他代码及配置省略)：</p>
+<pre><code>package org.format.dynamicproxy.mybatis.dao;
+<span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">UserDao</span> {
+    <span class="function"><span class="keyword">public</span> User <span class="title">getById</span>(<span class="params"><span class="keyword">int</span> id</span>)</span>;
+    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">add</span>(<span class="params">User user</span>)</span>;    
+    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">update</span>(<span class="params">User user</span>)</span>;    
+    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">delete</span>(<span class="params">User user</span>)</span>;    
+    <span class="function"><span class="keyword">public</span> List&lt;User&gt; <span class="title">getAll</span>(<span class="params"></span>)</span>;    
+}
+
+&lt;bean <span class="keyword">class</span>=<span class="string">"org.mybatis.spring.mapper.MapperScannerConfigurer"</span>&gt;
+    &lt;property name=<span class="string">"basePackage"</span> <span class="keyword">value</span>=<span class="string">"org.format.dynamicproxy.mybatis.dao"</span>/&gt;
+    &lt;property name=<span class="string">"sqlSessionFactoryBeanName"</span> <span class="keyword">value</span>=<span class="string">"sqlSessionFactory"</span>/&gt;
+&lt;/bean&gt;
+</code></pre><p>我们先通过测试用例debug查看userDao的实现类到底是什么。<br><img src="http://format-blog-image.qiniudn.com/mybatis1.png" alt=""><br>我们可以看到，userDao是1个MapperProxy类的实例。<br>看下MapperProxy的源码，没错，实现了InvocationHandler，说明使用了jdk自带的动态代理。</p>
+<pre><code>public class <span class="type">MapperProxy</span>&lt;T&gt; implements <span class="type">InvocationHandler</span>, <span class="type">Serializable</span> {
+
+  private <span class="keyword">static</span> final long serialVersionUID = -<span class="number">6424540398559729838</span>L;
+  private final <span class="type">SqlSession</span> sqlSession;
+  private final <span class="type">Class</span>&lt;T&gt; mapperInterface;
+  private final <span class="type">Map</span>&lt;<span class="type">Method</span>, <span class="type">MapperMethod</span>&gt; methodCache;
+
+  public <span class="type">MapperProxy</span>(<span class="type">SqlSession</span> sqlSession, <span class="type">Class</span>&lt;T&gt; mapperInterface, <span class="type">Map</span>&lt;<span class="type">Method</span>, <span class="type">MapperMethod</span>&gt; methodCache) {
+    this.sqlSession = sqlSession;
+    this.mapperInterface = mapperInterface;
+    this.methodCache = methodCache;
+  }
+
+  public <span class="type">Object</span> invoke(<span class="type">Object</span> proxy, <span class="type">Method</span> <span class="keyword">method</span>, <span class="type">Object</span>[] args) throws <span class="type">Throwable</span> {
+    <span class="keyword">if</span> (<span class="type">Object</span>.class.equals(<span class="keyword">method</span>.getDeclaringClass())) {
+      <span class="keyword">try</span> {
+        <span class="keyword">return</span> <span class="keyword">method</span>.invoke(this, args);
+      } catch (<span class="type">Throwable</span> t) {
+        throw <span class="type">ExceptionUtil</span>.unwrapThrowable(t);
+      }
+    }
+    final <span class="type">MapperMethod</span> mapperMethod = cachedMapperMethod(<span class="keyword">method</span>);
+    <span class="keyword">return</span> mapperMethod.execute(sqlSession, args);
+  }
+
+  private <span class="type">MapperMethod</span> cachedMapperMethod(<span class="type">Method</span> <span class="keyword">method</span>) {
+    <span class="type">MapperMethod</span> mapperMethod = methodCache.get(<span class="keyword">method</span>);
+    <span class="keyword">if</span> (mapperMethod == null) {
+      mapperMethod = new <span class="type">MapperMethod</span>(mapperInterface, <span class="keyword">method</span>, sqlSession.getConfiguration());
+      methodCache.put(<span class="keyword">method</span>, mapperMethod);
+    }
+    <span class="keyword">return</span> mapperMethod;
+  }
+
+}
+</code></pre><h3 id="下面开始分析MapperScannerConfigurer的源码">下面开始分析MapperScannerConfigurer的源码</h3><p>MapperScannerConfigurer实现了BeanDefinitionRegistryPostProcessor接口，BeanDefinitionRegistryPostProcessor接口是一个可以修改spring工长中已定义的bean的接口，该接口有个postProcessBeanDefinitionRegistry方法。<br><img src="http://format-blog-image.qiniudn.com/mybatis2.png" alt=""></p>
+<p>然后我们看下ClassPathMapperScanner中的关键是如何扫描对应package下的接口的。<br><img src="http://format-blog-image.qiniudn.com/mybatis3.png" alt=""></p>
+<p>其实MapperScannerConfigurer的作用也就是将对应的接口的类型改造为MapperFactoryBean，而这个MapperFactoryBean的属性mapperInterface是原类型。MapperFactoryBean本文开头已分析过。</p>
+<p>所以最终我们还是要分析MapperFactoryBean的实现原理！</p>
+<p>MapperFactoryBean继承了SqlSessionDaoSupport类，SqlSessionDaoSupport类继承DaoSupport抽象类，DaoSupport抽象类实现了InitializingBean接口，因此实例个MapperFactoryBean的时候，都会调用InitializingBean接口的afterPropertiesSet方法。</p>
+<p>DaoSupport的afterPropertiesSet方法：<br><img src="http://format-blog-image.qiniudn.com/mybatis4.png" alt=""><br>MapperFactoryBean重写了checkDaoConfig方法：<br><img src="http://format-blog-image.qiniudn.com/mybatis5.png" alt=""><br>然后通过spring工厂拿对应的bean的时候：<br><img src="http://format-blog-image.qiniudn.com/mybatis6.png" alt=""><br>这里的SqlSession是SqlSessionTemplate，SqlSessionTemplate的getMapper方法：<br><img src="http://format-blog-image.qiniudn.com/mybatis7.png" alt=""><br>Configuration的getMapper方法，会使用MapperRegistry的getMapper方法：<br><img src="http://format-blog-image.qiniudn.com/mybatis8.png" alt=""><br>MapperRegistry的getMapper方法：<br><img src="http://format-blog-image.qiniudn.com/mybatis9.png" alt=""><br>MapperProxyFactory构造MapperProxy：<br><img src="http://format-blog-image.qiniudn.com/mybatis10.png" alt=""><br><strong>没错！ MapperProxyFactory就是使用了jdk组带的Proxy完成动态代理。</strong><br>MapperProxy本来一开始已经提到。MapperProxy内部使用了MapperMethod类完成方法的调用：<br><img src="http://format-blog-image.qiniudn.com/mybatis11.png" alt=""></p>
+<p>下面，我们以UserDao的getById方法来debug看看MapperMethod的execute方法是如何走的。</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testGet</span>(<span class="params"></span>) </span>{
+    <span class="keyword">int</span> id = <span class="number">1</span>;
+    System.<span class="keyword">out</span>.println(userDao.getById(id));
+}
+&lt;<span class="keyword">select</span> id=<span class="string">"getById"</span> parameterType=<span class="string">"int"</span> resultType=<span class="string">"org.format.dynamicproxy.mybatis.bean.User"</span>&gt;
+    SELECT * FROM users WHERE id = <span class="preprocessor">#{id}</span>
+&lt;/<span class="keyword">select</span>&gt;
+</code></pre><p><img src="http://format-blog-image.qiniudn.com/mybatis12.png" alt=""><br><img src="http://format-blog-image.qiniudn.com/mybatis13.png" alt=""></p>
+<p>示例代码：<a href="https://github.com/fangjian0423/dynamic-proxy-mybatis-study" target="_blank" rel="external">https://github.com/fangjian0423/dynamic-proxy-mybatis-study</a></p>
+<h2 id="总结">总结</h2><p>来到了新公司，接触了Mybatis，以前接触过～ 但是接触的不深入，突然发现spring与mybatis整合之后可以只写个接口而不实现，spring默认会帮我们实现，然后觉得非常神奇，于是写了篇<a href="http://www.cnblogs.com/fangjian0423/p/java-dynamic-proxy.html" target="_blank" rel="external">java动态代码浅析</a>和本文。</p>
+<h2 id="参考资料">参考资料</h2><p><a href="https://mybatis.github.io/spring/zh/mappers.html" target="_blank" rel="external">https://mybatis.github.io/spring/zh/mappers.html</a></p>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/mybatis/" rel="tag">#mybatis</a>
+          
+            <a href="/tags/spring/" rel="tag">#spring</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2014/08/16/java-dynamic-proxy/" rel="next" title="java动态代理浅析">
+                <i class="fa fa-chevron-left"></i> java动态代理浅析
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2014/09/21/dom-parse-xml-html/" rel="prev" title="简单谈谈dom解析xml和html">
+                简单谈谈dom解析xml和html <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MapperScannerConfigurer介绍"><span class="nav-number">2.</span> <span class="nav-text">MapperScannerConfigurer介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MapperScannerConfigurer底层代码分析"><span class="nav-number">3.</span> <span class="nav-text">MapperScannerConfigurer底层代码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#下面开始分析MapperScannerConfigurer的源码"><span class="nav-number">3.1.</span> <span class="nav-text">下面开始分析MapperScannerConfigurer的源码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2014/09/06/MapperScannerConfigurer-analysis/';
+      var disqus_title = 'Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析';
+      var disqus_url = 'http://fangjian0423.github.io/2014/09/06/MapperScannerConfigurer-analysis/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

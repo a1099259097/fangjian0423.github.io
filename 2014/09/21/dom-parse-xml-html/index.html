@@ -1,0 +1,881 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="dom,java,javascript," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="前言文件对象模型（Document Object Model，简称DOM），是W3C组织推荐的处理可扩展标志语言的标准编程接口。html，xml都是基于这个模型构造的。这也是一个W3C推出的标准。java，python，javascript等语言都提供了一套基于dom的编程接口。
+java使用dom解析xml一段xml文档, note.xml：
+&amp;lt;?xml version=&quot;1.0&quot; enc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="简单谈谈dom解析xml和html">
+<meta property="og:url" content="http://fangjian0423.github.io/2014/09/21/dom-parse-xml-html/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="前言文件对象模型（Document Object Model，简称DOM），是W3C组织推荐的处理可扩展标志语言的标准编程接口。html，xml都是基于这个模型构造的。这也是一个W3C推出的标准。java，python，javascript等语言都提供了一套基于dom的编程接口。
+java使用dom解析xml一段xml文档, note.xml：
+&amp;lt;?xml version=&quot;1.0&quot; enc">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/dom_parse_xml1.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/dom_parse_xml2.png">
+<meta property="og:image" content="http://format-blog-image.qiniudn.com/dom_parse_xml3.png">
+<meta property="og:updated_time" content="2015-11-07T08:41:31.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="简单谈谈dom解析xml和html">
+<meta name="twitter:description" content="前言文件对象模型（Document Object Model，简称DOM），是W3C组织推荐的处理可扩展标志语言的标准编程接口。html，xml都是基于这个模型构造的。这也是一个W3C推出的标准。java，python，javascript等语言都提供了一套基于dom的编程接口。
+java使用dom解析xml一段xml文档, note.xml：
+&amp;lt;?xml version=&quot;1.0&quot; enc">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> 简单谈谈dom解析xml和html | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                简单谈谈dom解析xml和html
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2014-09-21T09:49:50+08:00" content="2014-09-21">
+              2014-09-21
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jvm/" itemprop="url" rel="index">
+                    <span itemprop="name">jvm</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2014/09/21/dom-parse-xml-html/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/21/dom-parse-xml-html/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><h2 id="前言">前言</h2><p><a href="http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/" target="_blank" rel="external">文件对象模型（Document Object Model，简称DOM）</a>，是W3C组织推荐的处理可扩展标志语言的标准编程接口。html，xml都是基于这个模型构造的。这也是一个W3C推出的标准。java，python，javascript等语言都提供了一套基于dom的编程接口。</p>
+<h2 id="java使用dom解析xml">java使用dom解析xml</h2><p>一段xml文档, note.xml：</p>
+<pre><code><span class="pi">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="tag">&lt;<span class="title">note</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">to</span> <span class="attribute">id</span>=<span class="value">"1"</span>&gt;</span>George<span class="tag">&lt;/<span class="title">to</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">from</span>&gt;</span>John<span class="tag">&lt;/<span class="title">from</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">heading</span>&gt;</span>Reminder<span class="tag">&lt;/<span class="title">heading</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">body</span>&gt;</span>Don't forget the meeting!<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">note</span>&gt;</span>
+</code></pre><p>我们先使用w3c dom解析该xml：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span>(<span class="params"></span>) </span>{
+    NodeList nodeList = doc.getChildNodes().item(<span class="number">0</span>).getChildNodes();
+    System.<span class="keyword">out</span>.println(<span class="string">"xml size: "</span> + nodeList.getLength());
+    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nodeList.getLength(); i ++) {
+        Node node = nodeList.item(i);
+        System.<span class="keyword">out</span>.println(node.getNodeType());
+        System.<span class="keyword">out</span>.println(node.getNodeName());
+    }
+}
+</code></pre><p>输出：</p>
+<pre><code>xml size: <span class="number">9</span>
+<span class="number">3</span>
+<span class="preprocessor">#text</span>
+<span class="number">1</span>
+to
+<span class="number">3</span>
+<span class="preprocessor">#text</span>
+<span class="number">1</span>
+from
+<span class="number">3</span>
+<span class="preprocessor">#text</span>
+<span class="number">1</span>
+heading
+<span class="number">3</span>
+<span class="preprocessor">#text</span>
+<span class="number">1</span>
+body
+<span class="number">3</span>
+<span class="preprocessor">#text</span>
+</code></pre><p>我们看到代码输出note节点的字节点的时候，有9个节点，但是xml文档中note节点实际上只有to、from、heading、body4个节点。 那为什么是9个呢，原因是这样的。<br>选取几个w3c规范中关于节点类型的描述：</p>
+<table>
+<thead>
+<tr>
+<th>节点类型</th>
+<th style="text-align:center">描述</th>
+<th style="text-align:right">nodeName返回值</th>
+<th style="text-align:right">nodeValue返回值</th>
+<th style="text-align:right">子元素</th>
+<th style="text-align:right">类型常量值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Document</td>
+<td style="text-align:center">表示整个文档（DOM 树的根节点）</td>
+<td style="text-align:right">#document</td>
+<td style="text-align:right">null</td>
+<td style="text-align:right">Element(max. one)，Comment，DocumentType</td>
+<td style="text-align:right">9</td>
+</tr>
+<tr>
+<td>Element</td>
+<td style="text-align:center">表示 element（元素）元素</td>
+<td style="text-align:right">element name</td>
+<td style="text-align:right">null</td>
+<td style="text-align:right">Text，Comment，CDATASection</td>
+<td style="text-align:right">1</td>
+</tr>
+<tr>
+<td>Attr</td>
+<td style="text-align:center">表示属性</td>
+<td style="text-align:right">属性名称</td>
+<td style="text-align:right">属性值</td>
+<td style="text-align:right">Text</td>
+<td style="text-align:right">2</td>
+</tr>
+<tr>
+<td>Text</td>
+<td style="text-align:center">表示元素或属性中的文本内容。</td>
+<td style="text-align:right">#text</td>
+<td style="text-align:right">节点内容</td>
+<td style="text-align:right">None</td>
+<td style="text-align:right">3</td>
+</tr>
+<tr>
+<td>CDATASection</td>
+<td style="text-align:center">表示文档中的 CDATA 区段（文本不会被解析器解析）</td>
+<td style="text-align:right">#cdata-section</td>
+<td style="text-align:right">节点内容</td>
+<td style="text-align:right">None</td>
+<td style="text-align:right">4</td>
+</tr>
+<tr>
+<td>Comment</td>
+<td style="text-align:center">表示注释</td>
+<td style="text-align:right">#comment</td>
+<td style="text-align:right">注释文本</td>
+<td style="text-align:right">None</td>
+<td style="text-align:right">8</td>
+</tr>
+</tbody>
+</table>
+<p>更多细节请查看<a href="http://www.w3school.com.cn/xmldom/dom_nodetype.asp" target="_blank" rel="external">w3c DOM节点类型</a></p>
+<p>下面解释一下文档节点的字节点的处理过程：<br><img src="http://format-blog-image.qiniudn.com/dom_parse_xml1.png" alt=""></p>
+<p>其中红色部分为Text节点，紫色部分是Element节点(只画了部分)。&lt;/body&gt;后面的也是一个Element节点，所有4个Element节点，5个Text节点。</p>
+<p>所以输出的内容中3 #text表示该节点是个Text节点，1 节点name是个Element节点，这与表格中表述的是一样的。</p>
+<p>测试代码：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test1</span><span class="params">()</span> </span>{
+    NodeList nodeList = doc.getChildNodes().item(<span class="number">0</span>).getChildNodes();
+    System.out.println(<span class="string">"xml size: "</span> + nodeList.getLength());
+    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nodeList.getLength(); i ++) {
+        Node node = nodeList.item(i);
+        <span class="keyword">if</span>(node.getNodeType() == Node.TEXT_NODE) {
+            System.out.println(node.getNodeValue().replace(<span class="string">"\n"</span>,<span class="string">"hr"</span>).replace(<span class="string">' '</span>, <span class="string">'-'</span>));
+        }
+    }
+}
+</code></pre><p><img src="http://format-blog-image.qiniudn.com/dom_parse_xml2.png" alt=""><br>很明显，我们把空格和回车键替换打印后发现我们的结论是正确的。</p>
+<p>测试代码：</p>
+<pre><code>@Test
+<span class="component">public void test2() {
+    System<span class="string">.out.println("doc</span> type: " + doc<span class="string">.getNodeType())</span>;
+    NodeList nodeList = doc<span class="string">.getChildNodes().item(0).getChildNodes()</span>;
+    Node secondNode = nodeList<span class="string">.item(1)</span>;
+    System<span class="string">.out.println("element</span> [to] node type: " + secondNode<span class="string">.getNodeType())</span>;
+    System<span class="string">.out.println("element</span> [to] node name: " + secondNode<span class="string">.getNodeName())</span>;
+    System<span class="string">.out.println("element</span> [to] node value: " + secondNode<span class="string">.getNodeValue())</span>;
+    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> len: " + secondNode<span class="string">.getChildNodes().getLength())</span>;
+    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node type: " + secondNode<span class="string">.getChildNodes().item(0).getNodeType())</span>;
+    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node value: " + secondNode<span class="string">.getChildNodes().item(0).getNodeValue())</span>;
+    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node name: " + secondNode<span class="string">.getChildNodes().item(0).getNodeName())</span>;
+    Node attNode = secondNode<span class="string">.getAttributes().item(0)</span>;
+    System<span class="string">.out.println("attr</span> type: " + attNode<span class="string">.getNodeType())</span>;
+}</span>
+</code></pre><p><img src="http://format-blog-image.qiniudn.com/dom_parse_xml3.png" alt=""><br>输出结果跟表格中是一样的。</p>
+<p>大家有兴趣的话其他类型的节点比如CDATA节点大家可以自行测试～</p>
+<h2 id="javascript使用dom解析html">javascript使用dom解析html</h2><p>html代码：</p>
+<pre><code><span class="doctype">&lt;!DOCTYPE html&gt;</span>
+<span class="tag">&lt;<span class="title">html</span>&gt;</span>
+<span class="tag">&lt;<span class="title">head</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">title</span>&gt;</span>JS Bin<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">head</span>&gt;</span>
+<span class="tag">&lt;<span class="title">body</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">div</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">p</span>&gt;</span>gogogo<span class="tag">&lt;/<span class="title">p</span>&gt;</span>
+  <span class="tag">&lt;/<span class="title">div</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">html</span>&gt;</span>
+</code></pre><p>js代码：</p>
+<pre><code><span class="built_in">console</span>.log(<span class="built_in">document</span>.nodeType);
+<span class="keyword">var</span> div = <span class="built_in">document</span>.getElementsByTagName(<span class="string">"div"</span>)[<span class="number">0</span>]; <span class="comment">//9</span>
+<span class="built_in">console</span>.log(div.nodeType); <span class="comment">//1</span>
+<span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>;i &lt; div.childNodes.length; i ++) {
+  <span class="built_in">console</span>.log(div.childNodes[i].nodeType);
+}
+</code></pre><p>分别输出9，1，3，1，3<br>跟我们在表格中对应～</p>
+<h2 id="总结">总结</h2><p>本次博客主要讲解了dom解析xml和html。 以前使用java解析xml的时候总是使用一些第三方库，比如jdom。 但是dom却是w3c的规范，不止java，包括javascript，python这些主流语言也都主持，有了规范，语言只是实现了这些规范而已。</p>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/dom/" rel="tag">#dom</a>
+          
+            <a href="/tags/java/" rel="tag">#java</a>
+          
+            <a href="/tags/javascript/" rel="tag">#javascript</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2014/09/06/MapperScannerConfigurer-analysis/" rel="next" title="Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析">
+                <i class="fa fa-chevron-left"></i> Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2014/09/26/mybatis-dynamic-sql /" rel="prev" title="MyBatis动态SQL底层原理分析">
+                MyBatis动态SQL底层原理分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#java使用dom解析xml"><span class="nav-number">2.</span> <span class="nav-text">java使用dom解析xml</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#javascript使用dom解析html"><span class="nav-number">3.</span> <span class="nav-text">javascript使用dom解析html</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2014/09/21/dom-parse-xml-html/';
+      var disqus_title = '简单谈谈dom解析xml和html';
+      var disqus_url = 'http://fangjian0423.github.io/2014/09/21/dom-parse-xml-html/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

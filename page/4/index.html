@@ -1,0 +1,1596 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="java,scala,big data,javascript" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="吃饭睡觉撸代码">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Format's Notes">
+<meta property="og:url" content="http://fangjian0423.github.io/page/4/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="吃饭睡觉撸代码">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Format's Notes">
+<meta name="twitter:description" content="吃饭睡觉撸代码">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column 
+   page-home 
+">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+  <section id="posts" class="posts-expand">
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/06/23/flume-sink/" itemprop="url">
+                  Flume Sink组件分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-06-23T01:23:23+08:00" content="2015-06-23">
+              2015-06-23
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/06/23/flume-sink/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/23/flume-sink/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p>Source和Channel组件已经分析过，接下来看Sink组件。</p>
+<p>Flume内置了很多Sink，比如HDFS Sink, Hive Sink, File Roll Sink, HBase Sink, ElasticSearch Sink等。</p>
+<h2 id="Sink接口">Sink接口</h2><pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Sink</span> <span class="keyword">extends</span> <span class="title">LifecycleAware</span>, <span class="title">NamedComponent</span> </span>{
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setChannel</span><span class="params">(Channel channel)</span></span>;
+
+  <span class="function"><span class="keyword">public</span> Channel <span class="title">getChannel</span><span class="params">()</span></span>;
+
+  <span class="function"><span class="keyword">public</span> Status <span class="title">process</span><span class="params">()</span> <span class="keyword">throws</span> EventDeliveryException</span>;
+
+  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">enum</span> Status {
+    READY, BACKOFF
+  }
+}
+</code></pre><p>沒啥好讲的，跟之前的都类似。</p>
+<p>Sink实现类AbstractSink：</p>
+<pre><code><span class="keyword">abstract</span> <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractSink</span> <span class="keyword">implements</span> <span class="title">Sink</span>, <span class="title">LifecycleAware</span></span>
+</code></pre><p>跟AbstractSource类似。</p>
+<h2 id="Flume内置的Sink例子">Flume内置的Sink例子</h2><h3 id="HDFSEventSink">HDFSEventSink</h3><p>1个简单的hdfs sink配置：</p>
+<pre><code>a1.channels = c1
+a1.sinks = k1
+a1.sinks.k1.type = hdfs
+a1.sinks.k1.channel = c1
+a1.sinks.k1.hdfs.path = /flume/events/<span class="decorator">%y</span>-<span class="decorator">%m</span>-<span class="decorator">%d</span>/<span class="decorator">%H</span><span class="decorator">%M</span>/<span class="decorator">%S</span>
+a1.sinks.k1.hdfs.filePrefix = events-
+a1.sinks.k1.hdfs.round = <span class="literal">true</span>
+a1.sinks.k1.hdfs.roundValue = <span class="number">10</span>
+a1.sinks.k1.hdfs.roundUnit = minute
+</code></pre><p>HDFSEventSink中的process(Sink接口提供的)方法记录着如何写入hdfs文件：</p>
+<pre><code><span class="keyword">public</span> Status process() <span class="keyword">throws</span> EventDeliveryException {
+    <span class="comment">// 得到Channel</span>
+    Channel channel = getChannel();
+    <span class="comment">// 得到Channel里的Transaction，接下来事件的提交，回滚都基于这个Transaction</span>
+    Transaction transaction = channel.getTransaction();
+    List&lt;BucketWriter&gt; writers = Lists.newArrayList();
+    <span class="comment">// 事务开始，一般的Transaction实现类不会覆盖这个方法，除非有特殊要求，begin方法默认的实现不做任何事</span>
+    transaction.begin();
+    <span class="keyword">try</span> {
+      <span class="built_in">int</span> txnEventCount = <span class="number">0</span>;
+      <span class="comment">// 每次操作都处理batchSize个事件，batchSize可配置</span>
+      <span class="keyword">for</span> (txnEventCount = <span class="number">0</span>; txnEventCount &lt; batchSize; txnEventCount++) {
+          <span class="comment">// channel的take方法内部会使用Transaction的take方法，Transaction回滚后这些take出来的事件全部都会回滚到Channel里</span>
+        Event event = channel.take();
+        <span class="keyword">if</span> (event == <span class="keyword">null</span>) {
+          <span class="keyword">break</span>;
+        }
+
+        <span class="comment">// reconstruct the path name by substituting place holders</span>
+        <span class="keyword">String</span> realPath = BucketPath.escapeString(filePath, event.getHeaders(),
+            timeZone, needRounding, roundUnit, roundValue, useLocalTime);
+        <span class="keyword">String</span> realName = BucketPath.escapeString(fileName, event.getHeaders(),
+          timeZone, needRounding, roundUnit, roundValue, useLocalTime);
+
+        <span class="keyword">String</span> lookupPath = realPath + DIRECTORY_DELIMITER + realName;
+        BucketWriter bucketWriter;
+        HDFSWriter hdfsWriter = <span class="keyword">null</span>;
+        <span class="comment">// Callback to remove the reference to the bucket writer from the</span>
+        <span class="comment">// sfWriters map so that all buffers used by the HDFS file</span>
+        <span class="comment">// handles are garbage collected.</span>
+        WriterCallback closeCallback = <span class="keyword">new</span> WriterCallback() {
+          @Override
+          <span class="keyword">public</span> <span class="keyword">void</span> run(<span class="keyword">String</span> bucketPath) {
+            LOG.info(<span class="string">"Writer callback called."</span>);
+            <span class="keyword">synchronized</span> (sfWritersLock) {
+              sfWriters.remove(bucketPath);
+            }
+          }
+        };
+        <span class="keyword">synchronized</span> (sfWritersLock) {
+          bucketWriter = sfWriters.<span class="built_in">get</span>(lookupPath);
+          <span class="comment">// we haven't seen this file yet, so open it and cache the handle</span>
+          <span class="keyword">if</span> (bucketWriter == <span class="keyword">null</span>) {
+            hdfsWriter = writerFactory.getWriter(fileType);
+            bucketWriter = initializeBucketWriter(realPath, realName,
+              lookupPath, hdfsWriter, closeCallback);
+            sfWriters.put(lookupPath, bucketWriter);
+          }
+        }
+
+        <span class="comment">// track the buckets getting written in this transaction</span>
+        <span class="keyword">if</span> (!writers.contains(bucketWriter)) {
+          writers.<span class="built_in">add</span>(bucketWriter);
+        }
+
+        <span class="comment">// Write the data to HDFS</span>
+        <span class="keyword">try</span> {
+          bucketWriter.<span class="built_in">append</span>(event);
+        } <span class="keyword">catch</span> (BucketClosedException ex) {
+          LOG.info(<span class="string">"Bucket was closed while trying to append, "</span> +
+            <span class="string">"reinitializing bucket and writing event."</span>);
+          hdfsWriter = writerFactory.getWriter(fileType);
+          bucketWriter = initializeBucketWriter(realPath, realName,
+            lookupPath, hdfsWriter, closeCallback);
+          <span class="keyword">synchronized</span> (sfWritersLock) {
+            sfWriters.put(lookupPath, bucketWriter);
+          }
+          bucketWriter.<span class="built_in">append</span>(event);
+        }
+      }
+
+      <span class="keyword">if</span> (txnEventCount == <span class="number">0</span>) {
+        sinkCounter.incrementBatchEmptyCount();
+      } <span class="keyword">else</span> <span class="keyword">if</span> (txnEventCount == batchSize) {
+        sinkCounter.incrementBatchCompleteCount();
+      } <span class="keyword">else</span> {
+        sinkCounter.incrementBatchUnderflowCount();
+      }
+
+      <span class="comment">// flush all pending buckets before committing the transaction</span>
+      <span class="keyword">for</span> (BucketWriter bucketWriter : writers) {
+        bucketWriter.flush();
+      }
+
+      <span class="comment">// 写完数据无误后，commit，清空Transaction里的数据</span>
+      transaction.commit();
+
+      <span class="keyword">if</span> (txnEventCount &lt; <span class="number">1</span>) {
+        <span class="keyword">return</span> Status.BACKOFF;
+      } <span class="keyword">else</span> {
+        sinkCounter.addToEventDrainSuccessCount(txnEventCount);
+        <span class="keyword">return</span> Status.READY;
+      }
+    } <span class="keyword">catch</span> (IOException eIO) {
+      <span class="comment">// 发送异常回滚</span>
+      transaction.rollback();
+      LOG.warn(<span class="string">"HDFS IO error"</span>, eIO);
+      <span class="keyword">return</span> Status.BACKOFF;
+    } <span class="keyword">catch</span> (Throwable th) {
+      <span class="comment">// 发送异常回滚</span>
+      transaction.rollback();
+      LOG.error(<span class="string">"process failed"</span>, th);
+      <span class="keyword">if</span> (th <span class="keyword">instanceof</span> Error) {
+        <span class="keyword">throw</span> (Error) th;
+      } <span class="keyword">else</span> {
+        <span class="keyword">throw</span> <span class="keyword">new</span> EventDeliveryException(th);
+      }
+    } <span class="keyword">finally</span> {
+      <span class="comment">// 事务结束，一般的Transaction实现类不会覆盖这个方法，除非有特殊要求，close方法默认的实现不做任何事</span>
+      transaction.close();
+    }
+  }    
+</code></pre><p>下面我们重点分析一下HDFS Sink如何写入数据到hdfs文件。</p>
+<p>分析之前，有几个配置跟是否创建hdfs新文件有关，当达到这些配置的条件后，sink会关闭文件，然后重新创建1个新文件重复执行</p>
+<pre><code>hdfs<span class="class">.rollInterval</span> -&gt; 每隔多少秒会关闭文件。默认<span class="number">30</span>秒
+hdfs<span class="class">.rollSize</span> -&gt; 文件大小到达一定量后，会关闭文件。单位bytes。默认<span class="number">1024</span>，如果是<span class="number">0</span>的话表示跟文件大小无关
+hdfs<span class="class">.batchSize</span> -&gt; 批次数，Sink每次处理都会处理batchSize个事件, 不会创建新文件。默认<span class="number">100</span>个
+hdfs<span class="class">.rollCount</span> -&gt; 事件处理了rollCount个后，会关闭文件。默认<span class="number">10</span>个，如果是<span class="number">0</span>的话表示跟事件个数无关
+hdfs<span class="class">.minBlockReplicas</span> -&gt; hadoop中的dfs.replication配置属性，表示复制块的个数，默认会根据hadoop的配置
+</code></pre><p>HDFS Sink每个根据batchSize，遍历channel中的事件，针对每个Event的生成地址构造BucketWriter。然后在sfWriters这个Map中以文件的路径为key，BucketWriter为value进行存储。</p>
+<p>接下来使用BucketWriter的append方法，当batchSize个事件遍历完成，调用BucketWriter的flush方法。</p>
+<pre><code><span class="keyword">bucketWriter.append(event);
+</span>
+<span class="label">for</span> (<span class="keyword">BucketWriter </span><span class="keyword">bucketWriter </span>: writers) {
+    <span class="keyword">bucketWriter.flush();
+</span>}
+</code></pre><p>BucketWriter的append方法部分代码如下：</p>
+<pre><code><span class="comment">// 打开文件</span>
+<span class="keyword">if</span> (!isOpen) {
+  <span class="keyword">if</span> (closed) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> BucketClosedException(<span class="string">"This bucket writer was closed and "</span> +
+      <span class="string">"this handle is thus no longer valid"</span>);
+  }
+  open();
+}
+
+<span class="comment">// 是否需要创建新文件</span>
+<span class="keyword">if</span> (shouldRotate()) {
+  <span class="keyword">boolean</span> doRotate = <span class="keyword">true</span>;
+
+  <span class="keyword">if</span> (isUnderReplicated) {
+    <span class="keyword">if</span> (maxConsecUnderReplRotations &gt; <span class="number">0</span> &amp;&amp;
+        consecutiveUnderReplRotateCount &gt;= maxConsecUnderReplRotations) {
+      doRotate = <span class="keyword">false</span>;
+      <span class="keyword">if</span> (consecutiveUnderReplRotateCount == maxConsecUnderReplRotations) {
+        LOG.error(<span class="string">"Hit max consecutive under-replication rotations ({}); "</span> +
+            <span class="string">"will not continue rolling files under this path due to "</span> +
+            <span class="string">"under-replication"</span>, maxConsecUnderReplRotations);
+      }
+    } <span class="keyword">else</span> {
+      LOG.warn(<span class="string">"Block Under-replication detected. Rotating file."</span>);
+    }
+    consecutiveUnderReplRotateCount++;
+  } <span class="keyword">else</span> {
+    consecutiveUnderReplRotateCount = <span class="number">0</span>;
+  }
+
+  <span class="keyword">if</span> (doRotate) {
+    close();
+    open();
+  }
+}
+
+<span class="keyword">try</span> {
+  sinkCounter.incrementEventDrainAttemptCount();
+  <span class="comment">// 写hdfs文件</span>
+  callWithTimeout(<span class="keyword">new</span> CallRunner&lt;<span class="keyword">Void</span>&gt;() {
+    @Override
+    <span class="keyword">public</span> <span class="keyword">Void</span> <span class="keyword">call</span>() <span class="keyword">throws</span> Exception {
+      writer.<span class="keyword">append</span>(event); <span class="comment">// could block</span>
+      <span class="keyword">return</span> <span class="keyword">null</span>;
+    }
+  });
+} <span class="keyword">catch</span> (IOException e) {
+  LOG.warn(<span class="string">"Caught IOException writing to HDFSWriter ({}). Closing file ("</span> +
+      bucketPath + <span class="string">") and rethrowing exception."</span>,
+      e.getMessage());
+  <span class="keyword">try</span> {
+    close(<span class="keyword">true</span>);
+  } <span class="keyword">catch</span> (IOException e2) {
+    LOG.warn(<span class="string">"Caught IOException while closing file ("</span> +
+         bucketPath + <span class="string">"). Exception follows."</span>, e2);
+  }
+  <span class="keyword">throw</span> e;
+}
+
+<span class="comment">// 更新一些属性</span>
+processSize += event.getBody().length;
+eventCounter++;
+batchCounter++;
+
+<span class="comment">// 写入的事件达到批次数，flush</span>
+<span class="keyword">if</span> (batchCounter == batchSize) {
+  flush();
+}
+</code></pre><p>shouldRotate方法表示是否需要创建新文件：</p>
+<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">boolean</span> <span class="title">shouldRotate</span><span class="params">()</span> </span>{
+    <span class="keyword">boolean</span> doRotate = <span class="keyword">false</span>;
+
+    <span class="comment">// 先判断HDFS是否正在复制块，优先级最高，也就是配置文件的minBlockReplicas</span>
+    <span class="keyword">if</span> (writer.isUnderReplicated()) {
+      <span class="keyword">this</span>.isUnderReplicated = <span class="keyword">true</span>;
+      doRotate = <span class="keyword">true</span>;
+    } <span class="keyword">else</span> {
+      <span class="keyword">this</span>.isUnderReplicated = <span class="keyword">false</span>;
+    }
+
+    <span class="comment">// 配置文件中的rollCount，也就是事件个数</span>
+    <span class="keyword">if</span> ((rollCount &gt; <span class="number">0</span>) &amp;&amp; (rollCount &lt;= eventCounter)) {
+      LOG.debug(<span class="string">"rolling: rollCount: {}, events: {}"</span>, rollCount, eventCounter);
+      doRotate = <span class="keyword">true</span>;
+    }
+    <span class="comment">// 配置文件中的rollSize，也就文件大小</span>
+    <span class="keyword">if</span> ((rollSize &gt; <span class="number">0</span>) &amp;&amp; (rollSize &lt;= processSize)) {
+      LOG.debug(<span class="string">"rolling: rollSize: {}, bytes: {}"</span>, rollSize, processSize);
+      doRotate = <span class="keyword">true</span>;
+    }
+
+    <span class="keyword">return</span> doRotate;
+}
+</code></pre><p>有的同学可能因为没有配置minBlockReplicas，而配置了其他属性，所以hdfs还是会生成很多文件，这是因为minBlockReplicas的优先级最高，如果当前正在复制块，其他所有的条件都会被无视。</p>
+<p>flush方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> flush() <span class="keyword">throws</span> IOException, InterruptedException {
+    checkAndThrowInterruptedException();
+    <span class="keyword">if</span> (!isBatchComplete()) {
+      doFlush();
+
+      <span class="keyword">if</span>(idleTimeout &gt; <span class="number">0</span>) {
+        <span class="comment">// if the future exists and couldn't be cancelled, that would mean it has already run</span>
+        <span class="comment">// or been cancelled</span>
+        <span class="keyword">if</span>(idleFuture == <span class="keyword">null</span> || idleFuture.cancel(<span class="keyword">false</span>)) {
+          Callable&lt;<span class="keyword">Void</span>&gt; idleAction = <span class="keyword">new</span> Callable&lt;<span class="keyword">Void</span>&gt;() {
+            <span class="keyword">public</span> <span class="keyword">Void</span> <span class="keyword">call</span>() <span class="keyword">throws</span> Exception {
+              LOG.info(<span class="string">"Closing idle bucketWriter {} at {}"</span>, bucketPath,
+                System.currentTimeMillis());
+              <span class="keyword">if</span> (isOpen) {
+                close(<span class="keyword">true</span>);
+              }
+              <span class="keyword">return</span> <span class="keyword">null</span>;
+            }
+          };
+          idleFuture = timedRollerPool.schedule(idleAction, idleTimeout,
+              TimeUnit.SECONDS);
+        }
+      }
+    }
+}
+</code></pre><p>总结:</p>
+<p>HDFSSink里的hdfs.rollSize，hdfs.rollCount，hdfs.minBlockReplicas，hdfs.rollInterval,hdfs.batchSize这些配置都是在BucketWriter中才会使用。</p>
+<p>hdfs.rollSize, hdfs.rollCount和hdfs.minBlockReplicas, hdfs.rollInterval这4个属性决定是否创建新文件。</p>
+<p>hdfs.batchSize决定是否flush文件数据。 由于HDFS Sink中每次最多只有batchSize个事件，因此BucketWriter会事件个数达到了batchSize后直接flush数据即可。</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/06/22/flume-channel/" itemprop="url">
+                  Flume Channel组件分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-06-22T23:23:23+08:00" content="2015-06-22">
+              2015-06-22
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/06/22/flume-channel/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/22/flume-channel/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p>Source组件已经分析过，接下来看Channel组件。</p>
+<p>Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等。</p>
+<h2 id="Channel接口">Channel接口</h2><p>Channel接口定义：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Channel</span> <span class="keyword">extends</span> <span class="title">LifecycleAware</span>, <span class="title">NamedComponent</span> </span>{
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(Event event)</span> <span class="keyword">throws</span> ChannelException</span>;
+
+  <span class="function"><span class="keyword">public</span> Event <span class="title">take</span><span class="params">()</span> <span class="keyword">throws</span> ChannelException</span>;
+
+  <span class="function"><span class="keyword">public</span> Transaction <span class="title">getTransaction</span><span class="params">()</span></span>;
+}
+</code></pre><p>LifecycleAware接口和NamedComponent接口之前在分析Source的时候已经说明过。</p>
+<p>Channel接口有3个方法，分别是put，take和getTransaction。</p>
+<p>Channel是存储Source收集过来的数据的，所以提供put(存储Source的Event)和take(交付给Sink)方法，它也支持事务。</p>
+<p>AbstractChannel抽象类是Channel接口的实现类，作用跟AbstractSource是Source的实现类类似。</p>
+<p>BasicChannelSemantics是AbstractChannel的子类，是Channel的基础实现类，内部使用ThreadLocal完成事件的处理和事务功能，实现了getTransaction方法，在这个方法内部调用createTransaction得到事务对象，createTransaction也被抽象成了一个抽象方法。</p>
+<p>BasicChannelSemantics实现了Channel接口的put和take方法，使用Transaction接口的put和take方法。</p>
+<pre><code><span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">put</span><span class="params">(Event event)</span> <span class="keyword">throws</span> ChannelException </span>{
+    BasicTransactionSemantics transaction = currentTransaction.get();
+    Preconditions.checkState(transaction != <span class="keyword">null</span>,
+        <span class="string">"No transaction exists for this thread"</span>);
+    transaction.put(event);
+  }
+
+<span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="function">Event <span class="title">take</span><span class="params">()</span> <span class="keyword">throws</span> ChannelException </span>{
+    BasicTransactionSemantics transaction = currentTransaction.get();
+    Preconditions.checkState(transaction != <span class="keyword">null</span>,
+        <span class="string">"No transaction exists for this thread"</span>);
+    <span class="function"><span class="keyword">return</span> transaction.<span class="title">take</span><span class="params">()</span></span>;
+}
+</code></pre><p>currentTransaction是个ThreadLocal：</p>
+<pre><code><span class="keyword">private</span> ThreadLocal&lt;BasicTransactionSemantics&gt; currentTransaction
+      = <span class="keyword">new</span> ThreadLocal&lt;BasicTransactionSemantics&gt;();
+</code></pre><p>currentTransaction的初始化：</p>
+<pre><code><span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="function">Transaction <span class="title">getTransaction</span><span class="params">()</span> </span>{
+
+    <span class="keyword">if</span> (!initialized) {
+      <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
+        <span class="keyword">if</span> (!initialized) {
+          initialize();
+          initialized = <span class="keyword">true</span>;
+        }
+      }
+    }
+
+    BasicTransactionSemantics transaction = currentTransaction.get();
+    <span class="keyword">if</span> (transaction == <span class="keyword">null</span> || transaction.getState().equals(
+            BasicTransactionSemantics.State.CLOSED)) {
+      transaction = createTransaction(); <span class="comment">// 抽象方法，子类实现</span>
+      currentTransaction.set(transaction);
+    }
+    <span class="keyword">return</span> transaction;
+  }
+</code></pre><p>这样，Channel的put和take操作就由抽象类createTransaction中得到的Transaction实现。<strong>因此，Channel对事件的各个操作由具体的Transaction实现。</strong></p>
+<p>一般普通的Channel继承这个BasicChannelSemantics类即可。</p>
+<h2 id="Transaction接口">Transaction接口</h2><p>由于Channel内部使用了事务特性，因此有必要介绍一个Flume事务相关的结构。</p>
+<p>Transaction接口定义：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">Transaction</span> {
+
+<span class="keyword">public</span> <span class="keyword">enum</span> TransactionState {Started, Committed, RolledBack, Closed };
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">begin</span>(<span class="params"></span>)</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">commit</span>(<span class="params"></span>)</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">rollback</span>(<span class="params"></span>)</span>;
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span>(<span class="params"></span>)</span>;
+}
+</code></pre><p>基本的事务封装类BasicTransactionSemantics，BasicTransactionSemantics实现了Transaction接口的4个方法，并引入了状态的概念，内部也有个state变量表示状态，Transaction接口的4个方法的实现会基于状态：</p>
+<p>BasicTransactionSemantics构造函数会初始化状态state为State.NEW, 实现Transaction接口的begin方法如下：</p>
+<pre><code>public void begin() {
+    Preconditions.checkState(Thread.currentThread().getId() == initialThreadId,
+        <span class="string">"begin() called from different thread than getTransaction()!"</span>);
+    Preconditions.checkState(<span class="keyword">state</span>.equals(State.NEW),
+        <span class="string">"begin() called when transaction is "</span> + <span class="keyword">state</span> + <span class="string">"!"</span>);
+
+    try {
+      doBegin();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ChannelException(e.<span class="keyword">to</span>String(), e);
+    }
+    <span class="keyword">state</span> = State.OPEN;
+  }
+</code></pre><p>begin方法需要状态为NEW才可执行。同理commit方法需要状态为OPEN，rollback需要状态为OPEN，close方法需要状态为NEW或COMPLETED。BasicTransactionSemantics又提供了put和take方法用来放事件和取事件，所以又抽象出了4个抽象方法和2个默认实现方法：</p>
+<pre><code><span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">doBegin</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>{}
+<span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="function"><span class="keyword">void</span> <span class="title">doPut</span><span class="params">(Event event)</span> <span class="keyword">throws</span> InterruptedException</span>;
+<span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="function">Event <span class="title">doTake</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException</span>;
+<span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="function"><span class="keyword">void</span> <span class="title">doCommit</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException</span>;
+<span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="function"><span class="keyword">void</span> <span class="title">doRollback</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException</span>;
+<span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">doClose</span><span class="params">()</span> </span>{}
+</code></pre><h2 id="Flume内置的Channel">Flume内置的Channel</h2><h3 id="MemoryChannel">MemoryChannel</h3><p>Memory Channel的配置如下：</p>
+<pre><code>a1<span class="class">.channels</span> = c1
+a1<span class="class">.channels</span><span class="class">.c1</span><span class="class">.type</span> = memory
+a1<span class="class">.channels</span><span class="class">.c1</span><span class="class">.capacity</span> = <span class="number">10000</span>
+a1<span class="class">.channels</span><span class="class">.c1</span><span class="class">.transactionCapacity</span> = <span class="number">10000</span>
+</code></pre><p>MemoryChannel继承BasicChannelSemantics。</p>
+<p>MemoryChannel的configure读取配置信息，它的内部有个重要的属性如下：</p>
+<pre><code><span class="keyword">private</span> LinkedBlockingDeque&lt;Event&gt; <span class="built_in">queue</span>; <span class="comment">// 阻塞事件队列</span>
+</code></pre><p>MemoryChannel内部有个MemoryTransaction类继承自BasicTransactionSemantics，这个事务对象就是MemoryChannel使用的事务对象。</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">protected</span> <span class="function">BasicTransactionSemantics <span class="title">createTransaction</span><span class="params">()</span> </span>{
+  <span class="keyword">return</span> <span class="keyword">new</span> MemoryTransaction(transCapacity, channelCounter);
+}
+</code></pre><p>MemoryTransaction的属性如下：</p>
+<pre><code><span class="comment">// 取走事件列表</span>
+<span class="keyword">private</span> LinkedBlockingDeque&lt;Event&gt; takeList;
+<span class="comment">// 放入事件列表</span>
+<span class="keyword">private</span> LinkedBlockingDeque&lt;Event&gt; putList;
+<span class="keyword">private</span> final ChannelCounter channelCounter;
+<span class="keyword">private</span> <span class="keyword">int</span> putByteCounter = <span class="number">0</span>;
+<span class="keyword">private</span> <span class="keyword">int</span> takeByteCounter = <span class="number">0</span>;
+</code></pre><p>之前分析过，Channel对事件的各个操作由具体的Transaction实现，也就是由MemoryTransaction实现。</p>
+<p>doPut方法，加入事件，doPut方法只针对Source提供过来的Event，跟Sink无关：</p>
+<pre><code>@<span class="function">Override
+<span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPut</span>(<span class="params">Event <span class="keyword">event</span></span>) throws InterruptedException </span>{
+  channelCounter.incrementEventPutAttemptCount();
+  <span class="keyword">int</span> eventByteSize = (<span class="keyword">int</span>)Math.ceil(estimateEventSize(<span class="keyword">event</span>)/byteCapacitySlotSize);
+
+  <span class="keyword">if</span> (!putList.offer(<span class="keyword">event</span>)) { <span class="comment">// 事件存储到MemoryTransaction的加入事件列表中</span>
+    <span class="keyword">throw</span> <span class="keyword">new</span> ChannelException(
+      <span class="string">"Put queue for MemoryTransaction of capacity "</span> +
+        putList.size() + <span class="string">" full, consider committing more frequently, "</span> +
+        <span class="string">"increasing capacity or increasing thread count"</span>);
+  }
+  putByteCounter += eventByteSize;
+}
+</code></pre><p>doTake方法，取走事件，doTake方法只针对Sink，负责给Sink传递Event数据：</p>
+<pre><code>@<span class="function">Override
+<span class="keyword">protected</span> Event <span class="title">doTake</span>(<span class="params"></span>) throws InterruptedException </span>{
+  channelCounter.incrementEventTakeAttemptCount();
+  <span class="keyword">if</span>(takeList.remainingCapacity() == <span class="number">0</span>) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> ChannelException(<span class="string">"Take list for MemoryTransaction, capacity "</span> +
+        takeList.size() + <span class="string">" full, consider committing more frequently, "</span> +
+        <span class="string">"increasing capacity, or increasing thread count"</span>);
+  }
+  <span class="keyword">if</span>(!queueStored.tryAcquire(keepAlive, TimeUnit.SECONDS)) {
+    <span class="keyword">return</span> <span class="keyword">null</span>;
+  }
+  Event <span class="keyword">event</span>;
+  synchronized(queueLock) {
+    <span class="keyword">event</span> = queue.poll(); <span class="comment">// 取出MemoryChannel中阻塞事件队列中的事件</span>
+  }
+  Preconditions.checkNotNull(<span class="keyword">event</span>, <span class="string">"Queue.poll returned NULL despite semaphore "</span> +
+      <span class="string">"signalling existence of entry"</span>);
+  takeList.put(<span class="keyword">event</span>); <span class="comment">// 放到MemoryTransaction的取出事件列表中</span>
+
+  <span class="keyword">int</span> eventByteSize = (<span class="keyword">int</span>)Math.ceil(estimateEventSize(<span class="keyword">event</span>)/byteCapacitySlotSize);
+  takeByteCounter += eventByteSize;
+
+  <span class="keyword">return</span> <span class="keyword">event</span>;
+}
+</code></pre><p>doCommit的部分代码，提交处理的事件，doCommit只处理putList，所以提交的是Source过来的数据，并交给MemoryChannel内部的阻塞队列：</p>
+<pre><code>@Override
+<span class="keyword">protected</span> <span class="keyword">void</span> doCommit() <span class="keyword">throws</span> InterruptedException {
+  <span class="built_in">int</span> puts = putList.<span class="built_in">size</span>();
+  <span class="built_in">int</span> takes = takeList.<span class="built_in">size</span>();
+  <span class="keyword">synchronized</span>(queueLock) {
+    <span class="keyword">if</span>(puts &gt; <span class="number">0</span> ) {
+      <span class="keyword">while</span>(!putList.isEmpty()) { <span class="comment">// 加入事件列表中不空的话</span>
+        <span class="keyword">if</span>(!queue.offer(putList.removeFirst())) { <span class="comment">// 在MemoryChannel里的阻塞事件队列中加入MemoryTransaction的加入事件队列，也就是说在MemoryTransaction中新加入的所有事件全部移植到MemoryChannel中的阻塞队列中</span>
+          <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Queue add failed, this shouldn't be able to happen"</span>);
+        }
+      }
+    }
+    putList.<span class="built_in">clear</span>();
+    takeList.<span class="built_in">clear</span>();
+  }
+}
+</code></pre><p>doRollback方法，回滚处理的事件, 回滚操作只针对Sink，回滚要交给Sink的事件到MemoryChannel的阻塞队列里：</p>
+<pre><code>@<span class="function">Override
+<span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doRollback</span><span class="params">()</span> </span>{
+  <span class="keyword">int</span> takes = takeList.size();
+  synchronized(queueLock) {
+    Preconditions.checkState(<span class="built_in">queue</span>.remainingCapacity() &gt;= takeList.size(), <span class="string">"Not enough space in memory channel "</span> +
+        <span class="string">"queue to rollback takes. This should never happen, please report"</span>);
+    <span class="keyword">while</span>(!takeList.isEmpty()) {
+      <span class="comment">// MemoryTransaction处理的事件全部回滚，回到MemoryChannel的阻塞队列里。因为MemoryTransaction处理的事件数据是从MemoryChannel的阻塞队列里取走的</span>
+      <span class="built_in">queue</span>.addFirst(takeList.removeLast());
+    }
+    putList.clear();
+  }
+  bytesRemaining.release(putByteCounter);
+  putByteCounter = <span class="number">0</span>;
+  takeByteCounter = <span class="number">0</span>;
+
+  queueStored.release(takes);
+  channelCounter.setChannelSize(<span class="built_in">queue</span>.size());
+}
+</code></pre><p>MemoryChannel总结：</p>
+<p>MemoryChannel是个Channel，Channel的作用是收集Source发来的事件数据(put操作)和发送给Sink由Source发来的事件数据(take操作)。Channel内部对事件的处理使用Transaction完成。</p>
+<p>put操作：先放到MemoryTransaction的putList列表中，MemoryTransaction做commit操作的时候写入到MemoryChannel的阻塞队列里。</p>
+<p>take操作：先取出MemoryChannel中阻塞队列里的事件数据，然后放入MemoryTransaction里的takeList列表中，当需要回滚的时候会将takeList列表中的事件数据回滚到MemoryChannel中的阻塞队列里。commit操作不需要任何处理，因为事件已经从MemoryChannel中的阻塞队列里取出。</p>
+<p>MemoryChannel有2个队列容量配置，分别是capacity和transactionCapacity。capacity是MemoryChannel里的阻塞队列的容量，transactionCapacity是MemoryTransaction里的putList和takeList列表容量。</p>
+<h2 id="Channel总结">Channel总结</h2><p>Channel是Flume中的桥梁，连接着Source和Sink,重要性不言而喻。Flume内置也有很多的Channel。同样地，并不是所有的Channel都能符合需求。</p>
+<p>比如MemoryChannel在内存中处理，速度很快，但是却不能持久化，当服务器挂了，Channel中的数据会丢失，这时就需要用FileChannel或JDBCChannel，但这2种Channel速度慢。因此可以实现一个自定义的Channel，美团的<a href="http://tech.meituan.com/mt-log-system-optimization.html地址上就说明了一些Flume可以改进和优化的地方。" target="_blank" rel="external">http://tech.meituan.com/mt-log-system-optimization.html地址上就说明了一些Flume可以改进和优化的地方。</a></p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/06/21/flume-source/" itemprop="url">
+                  Flume Source组件分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-06-21T23:23:23+08:00" content="2015-06-21">
+              2015-06-21
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/06/21/flume-source/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/21/flume-source/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p>Flume的介绍以及它的架构之前已经分析过。本文分析flume的Source组件。</p>
+<p>Flume内置了很多Source，比如Avro Source，Spooling Directory Source，NetCat Source，Kafka Source等。</p>
+<p>以源码的角度分析Source组件。</p>
+<h2 id="Source接口">Source接口</h2><p>Source接口的定义：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Source</span> <span class="keyword">extends</span> <span class="title">LifecycleAware</span>, <span class="title">NamedComponent</span> </span>{
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setChannelProcessor</span><span class="params">(ChannelProcessor channelProcessor)</span></span>;
+
+  <span class="function"><span class="keyword">public</span> ChannelProcessor <span class="title">getChannelProcessor</span><span class="params">()</span></span>;
+
+}
+</code></pre><p>Source接口只有2个方法，分别是setChannelProcessor和getChannelProcessor。ChannelProcessor是一个Channel处理器，会暴露一些操作用来将事件存储到channel中。</p>
+<p>Source接口继承了LifecycleAware和NamedComponent接口。</p>
+<p>LifecycleAware接口表示实现了该接口的类是具有状态的，有生命周期的特性。</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">LifecycleAware</span> {
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span>(<span class="params"></span>)</span>; <span class="comment">// 启动一个服务或组件</span>
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">stop</span>(<span class="params"></span>)</span>; <span class="comment">// 关闭一个服务或组件</span>
+
+  <span class="function"><span class="keyword">public</span> LifecycleState <span class="title">getLifecycleState</span>(<span class="params"></span>)</span>; <span class="comment">// 得到当前组件或服务的状态</span>
+
+}
+</code></pre><p>NamedComponent接口是一个可以让组件拥有名字的接口，这样组件可以在配置中被引用。</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">NamedComponent</span> {
+
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span>(<span class="params">String name</span>)</span>;
+
+  <span class="function"><span class="keyword">public</span> String <span class="title">getName</span>(<span class="params"></span>)</span>;
+
+}
+</code></pre><p>Source接口的实现类AbstractSource，基本上所有的Source都会继承这个AbstractSource：</p>
+<p>AbstractSource属性：</p>
+<pre><code><span class="keyword">private</span> ChannelProcessor channelProcessor;
+<span class="keyword">private</span> <span class="keyword">String</span> name;
+<span class="keyword">private</span> LifecycleState lifecycleState;
+</code></pre><p>这3个属性是都是都会在Source接口的方法中被使用到。</p>
+<pre><code><span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>{
+    Preconditions.checkState(channelProcessor != <span class="keyword">null</span>,
+        <span class="string">"No channel processor configured"</span>);
+
+    lifecycleState = LifecycleState.START;
+  }
+
+  <span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">stop</span><span class="params">()</span> </span>{
+    lifecycleState = LifecycleState.STOP;
+  }
+
+  <span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">setChannelProcessor</span><span class="params">(ChannelProcessor cp)</span> </span>{
+    channelProcessor = cp;
+  }
+
+  <span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function">ChannelProcessor <span class="title">getChannelProcessor</span><span class="params">()</span> </span>{
+    <span class="keyword">return</span> channelProcessor;
+  }
+
+  <span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function">LifecycleState <span class="title">getLifecycleState</span><span class="params">()</span> </span>{
+    <span class="keyword">return</span> lifecycleState;
+  }
+
+  <span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>{
+    <span class="keyword">this</span>.name = name;
+  }
+
+  <span class="annotation">@Override</span>
+  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function">String <span class="title">getName</span><span class="params">()</span> </span>{
+    <span class="keyword">return</span> name;
+  }
+</code></pre><h2 id="Flume内置的Source例子">Flume内置的Source例子</h2><h3 id="NetCat_Source">NetCat Source</h3><p>首先看最简单的NetCat Source。</p>
+<p>NetCat Source配置如下：</p>
+<pre><code>a1<span class="class">.sources</span><span class="class">.r1</span><span class="class">.type</span> = netcat
+a1<span class="class">.sources</span><span class="class">.r1</span><span class="class">.bind</span> = localhost
+a1<span class="class">.sources</span><span class="class">.r1</span><span class="class">.port</span> = <span class="number">44444</span>
+</code></pre><p>NetCat Source对应的Source类是NetcatSource，定义如下：</p>
+<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">NetcatSource</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">AbstractSource</span> <span class="title">implements</span> <span class="title">Configurable</span>,
+</span>        <span class="type">EventDrivenSource</span>
+</code></pre><p>EventDrivenSource接口表示这个Source不需要外部驱动来收集event，而是自身会实现。这个接口只是一个标识，没有任何方法。</p>
+<p>Configurable接口提供了一个public void configure(Context context);方法，会使用以下Context进行一些数据的配置。</p>
+<p>NetcatSource覆盖了AbstractSource的start和stop方法，也实现了Configurable中的configure方法。</p>
+<p>实现configure方法：</p>
+<p>读取配置文件中的信息host和port信息(还有其他一些属性的配置，比如max-line-length和ack-every-event)。</p>
+<p>覆盖start方法：</p>
+<p>内部会使用ServerSocketChannel监听对应地址和端口发来的数据。</p>
+<p>覆盖stop方法：</p>
+<p>关闭ServerSocketChannel。</p>
+<p>start方法内部会用线程池起一个新的进程来监听数据，其中有个processEvents方法，processEvents方法内部会读取Socket发来的数据，有段代码：</p>
+<pre><code>Event <span class="keyword">event</span> = EventBuilder.withBody(body);
+<span class="comment">// process event</span>
+ChannelException ex = <span class="keyword">null</span>;
+<span class="keyword">try</span> {
+  source.getChannelProcessor().processEvent(<span class="keyword">event</span>);
+} <span class="keyword">catch</span> (ChannelException chEx) {
+  ex = chEx;
+}
+</code></pre><p>这段代码就会处理socket读取的数据并构造成一个Event，然后放到ChannelProcessor里，这个ChannelProcessor是在AbstractSource中定义的。</p>
+<h3 id="Kafka_Source">Kafka Source</h3><p>Kafka Source也是Flume内置的一个Source之一，配置如下：</p>
+<pre><code>tier1<span class="class">.sources</span><span class="class">.source1</span><span class="class">.type</span> = org<span class="class">.apache</span><span class="class">.flume</span><span class="class">.source</span><span class="class">.kafka</span><span class="class">.KafkaSource</span>
+tier1<span class="class">.sources</span><span class="class">.source1</span><span class="class">.channels</span> = channel1
+tier1<span class="class">.sources</span><span class="class">.source1</span><span class="class">.zookeeperConnect</span> = localhost:<span class="number">2181</span>
+tier1<span class="class">.sources</span><span class="class">.source1</span><span class="class">.topic</span> = test1
+tier1<span class="class">.sources</span><span class="class">.source1</span><span class="class">.groupId</span> = flume
+tier1<span class="class">.sources</span><span class="class">.source1</span><span class="class">.kafka</span><span class="class">.consumer</span><span class="class">.timeout</span><span class="class">.ms</span> = <span class="number">100</span>
+</code></pre><p>对应的Source类是KafkaSource：</p>
+<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">KafkaSource</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">AbstractSource</span>
+</span>    implements <span class="type">Configurable</span>, <span class="type">PollableSource</span>
+</code></pre><p>PollableSource接口表示Source需要自己去查询数据(poll)。</p>
+<pre><code>public interface <span class="constant">PollableSource</span> extends <span class="constant">Source</span> {
+
+  <span class="regexp">//</span> process方法的返回值是个<span class="constant">Status</span>，有<span class="number">2</span>个状态，分别是<span class="constant">READY</span>和<span class="constant">BACKOFF</span>
+  public <span class="constant">Status</span> process() throws <span class="constant">EventDeliveryException</span>;
+
+  public static <span class="class"><span class="keyword">enum</span> <span class="title">Status</span> {</span>
+    <span class="constant">READY</span>, <span class="constant">BACKOFF</span>
+  }
+}
+</code></pre><p>KafkaSource的configure方法同样是读取配置文件信息。KafkaSource有几个特殊的配置，zookeeperConnect，groupId，topic都是kafka本身需要的配置。batchSize和batchDurationMillis是批处理的配置。batchSize表示批次数，每batchSize个event需要写入到Channel中，默认值是1000。batchDurationMillis是处理Kafka对i读取数据的时间，默认是1000毫秒，比如批次个数没有到1000，但是batchDurationMillis到了的话还是会丢到channel里。</p>
+<p>start方法构造Kafka的ConsumerConnector，start方法还会调用父类AbstractSource的start方法，也就是初始化lifecycleState属性，说明这个Source是有生命周期的。</p>
+<p>stop方法关闭Kafka的ConsumerConnector，同理stop也会调用父类的stop方法。</p>
+<p>process方法是PollableSource接口的方法，KafkaSource需要我们自己去查询数据。</p>
+<p>process部分源码如下：</p>
+<pre><code><span class="keyword">long</span> batchStartTime = System.currentTimeMillis();
+<span class="keyword">long</span> batchEndTime = System.currentTimeMillis() + timeUpperLimit;
+<span class="keyword">try</span> {
+  <span class="built_in">boolean</span> iterStatus = <span class="keyword">false</span>;
+  <span class="comment">// 批次个数和处理时间全部符合才会进行处理</span>
+  <span class="keyword">while</span> (eventList.<span class="built_in">size</span>() &lt; batchUpperLimit &amp;&amp;
+          System.currentTimeMillis() &lt; batchEndTime) {
+    iterStatus = hasNext();
+    <span class="keyword">if</span> (iterStatus) {
+      <span class="comment">// kafka队列存在数据的话，提取数据，构造Event，放到eventList里，eventList是KafkaSource里的一个属性</span>
+      MessageAndMetadata&lt;<span class="built_in">byte</span>[], <span class="built_in">byte</span>[]&gt; messageAndMetadata = it.next();
+      kafkaMessage = messageAndMetadata.message();
+      kafkaKey = messageAndMetadata.<span class="variable">key</span>();
+
+      headers = <span class="keyword">new</span> <span class="keyword">HashMap</span>&lt;<span class="keyword">String</span>, <span class="keyword">String</span>&gt;();
+      headers.put(KafkaSourceConstants.TIMESTAMP,
+              <span class="keyword">String</span>.valueOf(System.currentTimeMillis()));
+      headers.put(KafkaSourceConstants.TOPIC, topic);
+      headers.put(KafkaSourceConstants.KEY, <span class="keyword">new</span> <span class="keyword">String</span>(kafkaKey));
+
+      event = EventBuilder.withBody(kafkaMessage, headers);
+      eventList.<span class="built_in">add</span>(event);
+    }
+
+  }
+  <span class="keyword">if</span> (eventList.<span class="built_in">size</span>() &gt; <span class="number">0</span>) {
+    <span class="comment">// eventList列表里有数据的话，将数据丢到channel里，清空eventList。代码执行到这里说明要么读取了1000条数据，要么处理时间到了</span>
+    getChannelProcessor().processEventBatch(eventList);
+    eventList.<span class="built_in">clear</span>();
+
+    <span class="keyword">if</span> (!kafkaAutoCommitEnabled) {
+      consumer.commitOffsets();
+    }
+  }
+  <span class="comment">// kafka队列没有数据的话返回BACKOFF状态</span>
+  <span class="keyword">if</span> (!iterStatus) {
+    <span class="keyword">return</span> Status.BACKOFF;
+  }
+  <span class="comment">// kafka队列还有数据的话返回READY状态</span>
+  <span class="keyword">return</span> Status.READY;
+} <span class="keyword">catch</span> (Exception e) {
+  <span class="built_in">log</span>.error(<span class="string">"KafkaSource EXCEPTION, {}"</span>, e);
+  <span class="keyword">return</span> Status.BACKOFF;
+}
+</code></pre><h3 id="编写自定义的Source">编写自定义的Source</h3><p>Flume尽管已经提供了不少Source，但始终无法满足所有的需求。 比如数据库中的数据想使用Flume写入了其他渠道。</p>
+<p>编写SQLSource只需要继承AbstractSource，且实现Configurable和PollableSource接口，SQLSource跟KafkaSource一样都需要自身去查询数据，所以都得实现PollableSource接口。</p>
+<p>SQLSource在github上已经有人实现过了: <a href="https://github.com/keedio/flume-ng-sql-source" target="_blank" rel="external">https://github.com/keedio/flume-ng-sql-source</a></p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/06/21/flume-introduction/" itemprop="url">
+                  Flume介绍
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-06-21T21:23:34+08:00" content="2015-06-21">
+              2015-06-21
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/06/21/flume-introduction/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/21/flume-introduction/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p><a href="https://flume.apache.org/" target="_blank" rel="external">Flume</a>是一个分布式的，效率高的用来收集日志数据的开源框架。它的架构是基于流式数据，有3个重要的组件，分别是Source，Channel和Sink。</p>
+<h2 id="Flume架构和特点">Flume架构和特点</h2><p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/flume1.png" alt=""></p>
+<p>Flume架构图如上，非常简单。</p>
+<p>一个Flume的事件(event)表示数据流中的一个单位，它会带有字节数据和可选的字符串属性。一个Flume的agent是一个JVM进程，agent持有3个组件，这3个组件分别是Source，Channel和Sink。</p>
+<p>Source组件会消费来自外部的一些事件源数据，这个外部事件源比如是一个web服务器。外部事件源会将事件以某种格式发送给Flume的Source，当Source接收到事件之后，会存储到一个或多个Channel中。</p>
+<p>Channel是一个被动型的存储容器，它会一直保留事件直到事件被Sink消费。</p>
+<p>Sink会消费Channel里的事件，然后会将事件放到外部仓库里，比如hdfs；或者Sink会转发到下一步Flume agent里做重复的事情。</p>
+<p>Source和Sink在agent里异步执行处理channel里的事件。</p>
+<p>Flume内部提供了一些常用的Source，Channel和Sink。</p>
+<p>举个例子：</p>
+<p>Source使用Spooling Directory Source，这个Source会读取文件系统中的文件数据(文件系统中的外部数据相当于之前说的事件源)，读取数据之后会放到Channel中，比如使用Memory Channel,将Source接收到的事件存储到内存中，最后使用HDFS这个Sink将Memory Channel中的事件数据写入到hdfs中。</p>
+<p>Spooling Directory Source， Memory Channel, HDFS Sink都是Flume内部提供的组件。</p>
+<p>Flume非常可靠。每个agent的事件从Source进入到Channel之后，会存储在Channel中。这些事件只有在<strong>存储到下一步agent的Channel中或者外部存储仓库(比如hdfs)</strong>后，才会在Channel中被移除。</p>
+<p>Flume还会使用事务来保证事件处理过程。</p>
+<p>Flume还具有很高的可恢复性。事件是存储在channel中的，当使用File Channel的时候，当服务器挂了之后这些文件都还在，但是如果使用的是Memory Channel，就不具备容灾性。</p>
+<p>一个简单的Flume配置如下：</p>
+<pre><code><span class="preprocessor"># agent名字是a1，有<span class="number">1</span>个source:r1, <span class="number">1</span>个sink:k1, <span class="number">1</span>个channel:c1</span>
+a1.sources = r1
+a1.sinks = k1
+a1.channels = c1
+
+<span class="preprocessor"># 使用netcat source</span>
+a1.sources.r1.type = netcat
+a1.sources.r1.bind = localhost
+a1.sources.r1.port = <span class="number">44444</span>
+
+<span class="preprocessor"># 使用 logger sink</span>
+a1.sinks.k1.type = logger
+
+<span class="preprocessor"># 使用memory channel，容器为<span class="number">1000</span>，事务容量为<span class="number">100</span></span>
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = <span class="number">1000</span>
+a1.channels.c1.transactionCapacity = <span class="number">100</span>
+
+<span class="preprocessor"># 将channel讲source和sink关联</span>
+a1.sources.r1.channels = c1
+a1.sinks.k1.channel = c1
+</code></pre><p>之后至少还会有3篇Flume相关的文章，分别是讲解Source，Channel和Sink源码相关的文章。</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/06/21/hhkb-desc/" itemprop="url">
+                  HHKB装上了彩色键帽
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-06-21T15:23:34+08:00" content="2015-06-21">
+              2015-06-21
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/hhkb/" itemprop="url" rel="index">
+                    <span itemprop="name">hhkb</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/06/21/hhkb-desc/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/21/hhkb-desc/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p>hhkb已经入手半年多了，早已习惯它的键位。</p>
+<p>上个月已经给hhkb装上了彩色键帽，彩色键帽已经绝版了，只能在豆瓣上买其他人不要的键帽了。买了橙色和绿色的，红色和蓝色是之前在日亚买的。</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/hhkb4.JPG" alt=""></p>
+<p>coollllllll!</p>
+<p>装上了键帽之后，逼格瞬间提高许多，心情也好了很多 &gt;….&lt;!!</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/hhkb5.JPG" alt=""></p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/hhkb6.JPG" alt=""></p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/hhkb7.JPG" alt=""></p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/hhkb2.JPG" alt=""></p>
+<p>唯一的缺点是第二排的红色键帽其实是第三排的control，因为大小刚好，所以就放下去了，虽然高度低了点。</p>
+<p><a href="http://elitekeyboards.com/products.php?sub=access,toprekeys" target="_blank" rel="external">http://elitekeyboards.com/products.php?sub=access,toprekeys</a> 上的其他键帽也还不错，有机会还会继续入手~~</p>
+<p>nice!!</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+  </section>
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/12/">12</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right"></i></a>
+  </nav>
+
+
+
+        </div>
+
+        
+
+
+        
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = 'page/4/index.html';
+      var disqus_title = '';
+      var disqus_url = '';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

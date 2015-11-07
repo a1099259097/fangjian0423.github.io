@@ -1,0 +1,886 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="big data,hbase," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="前言HBase在公司已经用过一段时间，在Flume中添加一个HBase sink将一些数据存储到HBase里。
+当时HBase也没学，看了看几个例子，了解了它是基于列的表设计之后，就马上上手了，而且也把东西做出来了。 现在记录一下HBase的一些学习笔记。
+HBase简介HBase是什么？
+HBase是运行在hadoop上的数据库，是一个分布式的，扩展性高的，存储大数据的数据库。
+HBase也是开">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HBase介绍">
+<meta property="og:url" content="http://fangjian0423.github.io/2015/08/07/hbase-intro/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="前言HBase在公司已经用过一段时间，在Flume中添加一个HBase sink将一些数据存储到HBase里。
+当时HBase也没学，看了看几个例子，了解了它是基于列的表设计之后，就马上上手了，而且也把东西做出来了。 现在记录一下HBase的一些学习笔记。
+HBase简介HBase是什么？
+HBase是运行在hadoop上的数据库，是一个分布式的，扩展性高的，存储大数据的数据库。
+HBase也是开">
+<meta property="og:updated_time" content="2015-11-07T08:40:45.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HBase介绍">
+<meta name="twitter:description" content="前言HBase在公司已经用过一段时间，在Flume中添加一个HBase sink将一些数据存储到HBase里。
+当时HBase也没学，看了看几个例子，了解了它是基于列的表设计之后，就马上上手了，而且也把东西做出来了。 现在记录一下HBase的一些学习笔记。
+HBase简介HBase是什么？
+HBase是运行在hadoop上的数据库，是一个分布式的，扩展性高的，存储大数据的数据库。
+HBase也是开">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> HBase介绍 | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                HBase介绍
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-08-07T00:22:33+08:00" content="2015-08-07">
+              2015-08-07
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/hbase/" itemprop="url" rel="index">
+                    <span itemprop="name">hbase</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/08/07/hbase-intro/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/08/07/hbase-intro/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><h2 id="前言">前言</h2><p>HBase在公司已经用过一段时间，在Flume中添加一个HBase sink将一些数据存储到HBase里。</p>
+<p>当时HBase也没学，看了看几个例子，了解了它是基于列的表设计之后，就马上上手了，而且也把东西做出来了。 现在记录一下HBase的一些学习笔记。</p>
+<h2 id="HBase简介">HBase简介</h2><p>HBase是什么？</p>
+<p>HBase是运行在hadoop上的数据库，是一个分布式的，扩展性高的，存储大数据的数据库。</p>
+<p>HBase也是开源的，非关系型数据库。基于Google的Bigtable设计。</p>
+<p>什么时候需要使用HBase？</p>
+<p>需要实时地读写大数据。HBase的目的就是管理亿级的数据。</p>
+<h2 id="HBase基本概念">HBase基本概念</h2><p>HBase是基于列设计的，那什么是基于列呢？</p>
+<p>首先看下关系型数据库的表结构，第一行是table的所有列，第二行开始就是各个列对应的值：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">id</th>
+<th style="text-align:center">name</th>
+<th style="text-align:center">age</th>
+<th style="text-align:center">birth_date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">format1</td>
+<td style="text-align:center">11</td>
+<td style="text-align:center">1980-01-01</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">format2</td>
+<td style="text-align:center">22</td>
+<td style="text-align:center">1985-01-01</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">format3</td>
+<td style="text-align:center">33</td>
+<td style="text-align:center">1990-01-01</td>
+</tr>
+</tbody>
+</table>
+<p>HBase的表结构是这样的：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Row Key</th>
+<th style="text-align:center">Time Stamp</th>
+<th style="text-align:center">ColumnFamily contents</th>
+<th style="text-align:center">ColumnFamily names</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">‘me.format.hbase’</td>
+<td style="text-align:center">t1</td>
+<td style="text-align:center">contents:format = “format1”</td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td style="text-align:center">‘me.format.hbase’</td>
+<td style="text-align:center">t2</td>
+<td style="text-align:center">contents:title = “title1”</td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td style="text-align:center">‘me.format.hbase’</td>
+<td style="text-align:center">t3</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">names:gogogo = “data1”</td>
+</tr>
+</tbody>
+</table>
+<p>从上面这个HBase表的例子来说明HBase的存储结构。</p>
+<p>Row Key：行的键值，其实就相当于这一行的标识符。上面的数据其实只有1行，因为他们的标识符是一样的。</p>
+<p>TimeStamp：时间戳，创建数据的时间戳，hbase默认会自动生成</p>
+<p>ColumnFamily：列的前缀，一列可以存储多条数据，具体存储什么类型的数据还需要另外一个标示符qualify，上面那个例子中，contents和names就是两个Column Family</p>
+<p>ColumnFamily qualify：列前缀后的标识符，一个ColumnFamily可以有多个qualify。上面那个例子中format和title就是contents这个ColumnFamily的qualify。gogogo是names这个ColumnFamily的qualify</p>
+<h2 id="HBase的启动">HBase的启动</h2><p>HBase下载完之后解压，解压后使用以下命令启动hbase：</p>
+<pre><code>$ ./bin/<span class="literal">start</span>-hbase.sh
+</code></pre><p>启动之前注意，机器要装好jdk，并且启动hadoop。因为hbase底层数据是存储在hdfs上的。</p>
+<h2 id="HBase的基本操作">HBase的基本操作</h2><h3 id="表的创建">表的创建</h3><p>创建一个表名位tableName，ColumnFamily有contents和names的表，qualify不需要声明，每次添加数据随意指定qualify即可：</p>
+<pre><code><span class="built_in">create</span> <span class="string">'tableName'</span>,[<span class="string">'contents'</span>, <span class="string">'names'</span>]
+</code></pre><h3 id="表的删除">表的删除</h3><p>删除表的所有数据：</p>
+<pre><code>truncate <span class="built_in">table</span> <span class="built_in">table</span>Name
+</code></pre><p>删除表，删除之前需要先disable表，然后才可删除：</p>
+<pre><code><span class="built_in">disable</span> <span class="string">'tableName'</span>
+drop <span class="string">'tableName'</span>
+</code></pre><h3 id="数据查询">数据查询</h3><p>查询tableName表数据：</p>
+<pre><code><span class="built_in">scan</span> tableName
+</code></pre><p>返回：</p>
+<pre><code>ROW                                         COLUMN+CELL
+ me.<span class="keyword">format</span>.hbase                            column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438875060466</span>, <span class="keyword">value</span>=format1
+</code></pre><h3 id="数据删除">数据删除</h3><p>比如，表tableName里有如下数据：</p>
+<pre><code>ROW                                         COLUMN+CELL
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875566613</span>, value=format1
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=names:gogogo, timestamp=<span class="number">1438875597592</span>, value=data1
+</code></pre><p>进行删除操作，删除ColumnFamily qulify为contents:format的数据：</p>
+<pre><code>delete <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:format'
+</code></pre><h3 id="数据修改">数据修改</h3><p>HBase没有直接的update操作，只有put操作，put操作如果对应的地方有值，会覆盖：</p>
+<pre><code>put <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:format', <span class="symbol">'format111'</span>
+</code></pre><h3 id="添加数据">添加数据</h3><p>在tableName表里插入一个Row Key为me.format.hbase, ColumnFamily为contents，qualify为format，值的format1的数据：</p>
+<pre><code>put <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:format', <span class="symbol">'format1'</span>
+</code></pre><h3 id="计数器">计数器</h3><p>HBase提供了一种计数器的概念，每次可以对某个值进行incr操作：</p>
+<pre><code>incr <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">1</span>
+</code></pre><p>查询数据：</p>
+<pre><code>me.format.hbase                            column=contents:num, timestamp=1438875837362, value=<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>01
+</code></pre><p>可以使用get_counter命令获得计数器的值：</p>
+<pre><code>get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">0</span>
+</code></pre><p>返回：</p>
+<pre><code>COUNTER VALUE = <span class="number">1</span>
+</code></pre><p>再次修改：</p>
+<pre><code>incr <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">100</span>
+
+get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">0</span>
+
+<span class="type">COUNTER</span> <span class="type">VALUE</span> = <span class="number">101</span>
+
+incr <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', -<span class="number">102</span>
+
+get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">0</span>
+
+<span class="type">COUNTER</span> <span class="type">VALUE</span> = -<span class="number">1</span>
+</code></pre><h3 id="带条件的数据查询">带条件的数据查询</h3><p>scan查询可以带几个参数。</p>
+<p>COLUMNS： ColumnFamily和qualify的值<br>LIMIT：展示的个数<br>FILTER：过滤条件</p>
+<p>比如有以下数据：</p>
+<pre><code>ROW                                         COLUMN+CELL
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875707700</span>, value=format1
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:num, timestamp=<span class="number">1438876106259</span>, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=names:gogogo, timestamp=<span class="number">1438875597592</span>, value=data1
+ me<span class="class">.format</span><span class="class">.hbase1</span>                           column=contents:format, timestamp=<span class="number">1438877417358</span>, value=format1
+ me<span class="class">.format</span><span class="class">.hbase2</span>                           column=contents:format, timestamp=<span class="number">1438877422756</span>, value=format1
+ me<span class="class">.format</span><span class="class">.hbase3</span>                           column=contents:format, timestamp=<span class="number">1438877427312</span>, value=format1
+</code></pre><p>查询ColumnFamily，qualify为contents:format的数据：</p>
+<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents:format"</span>, LIMIT =&gt; <span class="number">10</span> }
+</code></pre><p>结果：</p>
+<pre><code>ROW                                         COLUMN+CELL
+ me.<span class="keyword">format</span>.hbase                            column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438875707700</span>, <span class="keyword">value</span>=format1
+ me.<span class="keyword">format</span>.hbase1                           column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438877417358</span>, <span class="keyword">value</span>=format1
+ me.<span class="keyword">format</span>.hbase2                           column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438877422756</span>, <span class="keyword">value</span>=format1
+ me.<span class="keyword">format</span>.hbase3                           column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438877427312</span>, <span class="keyword">value</span>=format1
+</code></pre><p>查询ColumnFamily未contents的数据：</p>
+<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents"</span>, LIMIT =&gt; <span class="number">10</span> }
+</code></pre><p>结果：</p>
+<pre><code>ROW                                         COLUMN+CELL
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875707700</span>, value=format1
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:num, timestamp=<span class="number">1438876106259</span>, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
+ me<span class="class">.format</span><span class="class">.hbase1</span>                           column=contents:format, timestamp=<span class="number">1438877417358</span>, value=format1
+ me<span class="class">.format</span><span class="class">.hbase2</span>                           column=contents:format, timestamp=<span class="number">1438877422756</span>, value=format1
+ me<span class="class">.format</span><span class="class">.hbase3</span>                           column=contents:format, timestamp=<span class="number">1438877427312</span>, value=format1
+</code></pre><p>查询ColumnFamily未contents的数据，并只展示2行数据：</p>
+<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents"</span>, LIMIT =&gt; <span class="number">2</span> }
+</code></pre><p>结果：</p>
+<pre><code>ROW                                         COLUMN+CELL
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875707700</span>, value=format1
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:num, timestamp=<span class="number">1438876106259</span>, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
+ me<span class="class">.format</span><span class="class">.hbase1</span>                           column=contents:format, timestamp=<span class="number">1438877417358</span>, value=format1
+</code></pre><p>查询ColumnFamily未contents的数据，并只展示2行数据：</p>
+<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents"</span>, FILTER =&gt; <span class="string">"ValueFilter( =, 'binaryprefix:title' )"</span> }
+</code></pre><p>结果：</p>
+<pre><code>ROW                                         COLUMN+CELL
+ me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
+</code></pre><p>scan命令具体其他的参数就不一一列举了，可查询文档解决。</p>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/big-data/" rel="tag">#big data</a>
+          
+            <a href="/tags/hbase/" rel="tag">#hbase</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/07/31/hive-intro/" rel="next" title="Hive介绍">
+                <i class="fa fa-chevron-left"></i> Hive介绍
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/08/14/scala-future/" rel="prev" title="Scala并发的Future">
+                Scala并发的Future <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">分类</span>
+              
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            
+              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-name">标签</span>
+              
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HBase简介"><span class="nav-number">2.</span> <span class="nav-text">HBase简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HBase基本概念"><span class="nav-number">3.</span> <span class="nav-text">HBase基本概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HBase的启动"><span class="nav-number">4.</span> <span class="nav-text">HBase的启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HBase的基本操作"><span class="nav-number">5.</span> <span class="nav-text">HBase的基本操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#表的创建"><span class="nav-number">5.1.</span> <span class="nav-text">表的创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#表的删除"><span class="nav-number">5.2.</span> <span class="nav-text">表的删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据查询"><span class="nav-number">5.3.</span> <span class="nav-text">数据查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据删除"><span class="nav-number">5.4.</span> <span class="nav-text">数据删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据修改"><span class="nav-number">5.5.</span> <span class="nav-text">数据修改</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#添加数据"><span class="nav-number">5.6.</span> <span class="nav-text">添加数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#计数器"><span class="nav-number">5.7.</span> <span class="nav-text">计数器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#带条件的数据查询"><span class="nav-number">5.8.</span> <span class="nav-text">带条件的数据查询</span></a></li></ol></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2015</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2015/08/07/hbase-intro/';
+      var disqus_title = 'HBase介绍';
+      var disqus_url = 'http://fangjian0423.github.io/2015/08/07/hbase-intro/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

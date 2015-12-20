@@ -203,8 +203,8 @@
             
             
               
-                <a class="post-title-link" href="/2015/09/21/springboot-intro/" itemprop="url">
-                  Spring Boot 部分特性记录
+                <a class="post-title-link" href="/2015/07/26/google-guava-intro/" itemprop="url">
+                  google guava类库介绍
                 </a>
               
             
@@ -214,170 +214,8 @@
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2015-09-21T00:21:49+08:00" content="2015-09-21">
-              2015-09-21
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/springboot/" itemprop="url" rel="index">
-                    <span itemprop="name">springboot</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2015/09/21/springboot-intro/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/09/21/springboot-intro/" itemprop="commentsCount"></span>
-              </a>
-            </span>
-            
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body">
-
-      
-      
-
-      
-        
-          <span itemprop="articleBody">
-            
-              <p>SpringBoot是Java的一个micro-service框架。它设计的目的是简化Spring应用的初始搭建以及开发过程。使用SpringBoot可以避免大量的xml配置文件，它内部使用很多约定的方式。</p>
-<p>以一个最简单的MVC例子来说，使用SpringBoot进行开发的话定义好对应的Controller，Repository和Entity之后，加上各自的Annotation即可。</p>
-<p>Repository框架可以选择Spring Data或者Hibernate，可通过自由配置。</p>
-<p>视图框架也可通过配置选择freemarker或者velocity等视图框架。</p>
-<p>下面，介绍一下SpringBoot的一些功能。</p>
-<h2 id="SpringBoot框架的启动">SpringBoot框架的启动</h2><p>SpringBoot使用SpringApplication这个类进行项目的启动。一般都会这么写：</p>
-<pre><code><span class="annotation">@SpringBootApplication</span>
-<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Application</span> {</span>
-    <span class="keyword">public</span> <span class="keyword">static</span> <span class="typename">void</span> main(String[] args) {
-        SpringApplication.run(Application.<span class="keyword">class</span>, args);
-    }
-}
-</code></pre><p>使用SpringBootApplication注解相当于使用了3个注解，分别是@ComponentScan，@Configuration，@EnableAutoConfiguration。</p>
-<p>这里需要注意的是Application这个类所有的package位置。</p>
-<p>比如你的项目的包路径是 me.format.project1，对应的controller和repository包是 me.format.project1.controller和me.format.project1.repository。 那么这个Application需要在的包路径为 me.format.project1。 因为SpringBootApplication注解内部是使用ComponentScan注解，这个注解会扫描Application包所在的路径下的各个bean。</p>
-<h2 id="Profile的使用">Profile的使用</h2><p>可以在springboot项目中加入配置文件application.yml。</p>
-<p>yaml中可以定义多个profile，也可以指定激活的profile：</p>
-<pre><code><span class="attribute">spring</span>:
-  profiles.<span class="attribute">active</span>: dev
-
----
-<span class="attribute">spring</span>:
-  <span class="attribute">profiles</span>: dev
-<span class="attribute">myconfig</span>:
-  <span class="attribute">config1</span>: dev-enviroment
-
----
-<span class="attribute">spring</span>:
-  <span class="attribute">profiles</span>: test
-<span class="attribute">myconfig</span>:
-  <span class="attribute">config1</span>: test-enviroment
-
----
-<span class="attribute">spring</span>:
-  <span class="attribute">profiles</span>: prod
-<span class="attribute">myconfig</span>:
-  <span class="attribute">config1</span>: prod-envioment
-</code></pre><p>也可以在运行的执行指定profile：</p>
-<pre><code>java -Dspring<span class="class">.profiles</span><span class="class">.active</span>=<span class="string">"prod"</span> -jar yourjar.jar
-</code></pre><p>还可以使用Profile注解，MyConfig只会在prod这个profile下才会生效，其他profile不会生效：</p>
-<pre><code><span class="variable">@Profile</span>(<span class="string">"prod"</span>)
-<span class="variable">@Component</span>
-public class MyConfig {
-    ....
-}
-</code></pre><h2 id="自定义的一些Conveter，Interceptor">自定义的一些Conveter，Interceptor</h2><p>如果想配置springmvc的HandlerInterceptorAdapter或者HttpMessageConverter。 只需要定义自己的interceptor或者converter，然后加上Component注解。这样SpringBoot会自动处理这些类，不用自己在配置文件里指定对应的内容。 这个也是相当方便的。</p>
-<pre><code><span class="annotation">@Component</span>
-public <span class="class"><span class="keyword">class</span> <span class="title">AuthInterceptor</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">HandlerInterceptorAdapter</span> {</span>
-    ...
-}
-
-<span class="annotation">@Component</span>
-public <span class="class"><span class="keyword">class</span> <span class="title">MyConverter</span> <span class="title">implements</span> <span class="title">HttpMessageConverter&lt;MyObj&gt;</span> {</span> 
-    ...
-}
-</code></pre><h2 id="模板的使用">模板的使用</h2><p>比如使用freemarker的时候，加入以下依赖：</p>
-<pre><code><span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-starter-freemarker<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
-</code></pre><p>然后在resources目录下建立一个templates目录即可，视图将会从这个templates位置开始找。</p>
-<h2 id="其他">其他</h2><p>关于其他的特性可以参考官方文档：</p>
-<p><a href="http://docs.spring.io/spring-boot/docs/current/reference/html/" target="_blank" rel="external">http://docs.spring.io/spring-boot/docs/current/reference/html/</a></p>
-<p>springboot还提供了一系列sample供参考：</p>
-<p><a href="https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples" target="_blank" rel="external">https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples</a></p>
-
-            
-          </span>
-        
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                <a class="post-title-link" href="/2015/08/18/slick-intro/" itemprop="url">
-                  Scala持久层框架Slick介绍
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2015-08-18T23:22:33+08:00" content="2015-08-18">
-              2015-08-18
+            <time itemprop="dateCreated" datetime="2015-07-26T16:32:33+08:00" content="2015-07-26">
+              2015-07-26
             </time>
           </span>
 
@@ -402,8 +240,8 @@ public <span class="class"><span class="keyword">class</span> <span class="title
             
               <span class="post-comments-count">
               &nbsp; | &nbsp;
-              <a href="/2015/08/18/slick-intro/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/08/18/slick-intro/" itemprop="commentsCount"></span>
+              <a href="/2015/07/26/google-guava-intro/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/26/google-guava-intro/" itemprop="commentsCount"></span>
               </a>
             </span>
             
@@ -423,237 +261,12 @@ public <span class="class"><span class="keyword">class</span> <span class="title
 
       
         
-          <span itemprop="articleBody">
-            
-              <h2 id="FRM介绍">FRM介绍</h2><p>最近看到了一个FRM的框架Slick。 FRM的意思是Functional Relational Mapping， 一种基于函数式的ORM。</p>
-<p>举一个最简单的例子：</p>
-<pre><code>val queryResult = db.query(queryStr)
-
-queryResult.onSuccess { <span class="literal">result</span> =&gt;
-    <span class="literal">result</span>.doSomething ...
-}
-</code></pre><p>数据库db查询一条sql语句。查询成功的时候使用闭包完成处理。 看到这段代码的第一反应就是js的ajax处理，代码几乎是一样的，也发现之前在学校里写nodejs的时候查询db也是这样的语法。</p>
-<pre><code><span class="keyword">var</span> jqxhr = $.ajax( {
-    url: 'url',
-    <span class="keyword">method</span>: '<span class="type">GET</span>',
-    data: [user: 'format']
-});
-
-jqxhr.success(function() {
-    ...
-});
-</code></pre><p>FRM相比ORM最明显的优势就是FRM基于多线程的Future的数据查询，而ORM是单线程的线性执行。</p>
-<p>FRM构造sql查询也是相当简单的：</p>
-<pre><code><span class="comment">// 构造查询</span>
-val newQuery = students.<span class="function"><span class="title">filter</span><span class="params">(_.age &gt; <span class="number">24</span>)</span></span>.<span class="function"><span class="title">sortBy</span><span class="params">(_.name)</span></span>
-<span class="comment">// 执行查询</span>
-db.<span class="function"><span class="title">run</span><span class="params">(newQuery)</span></span>
-</code></pre><p>FRM其他的优势可以参考<a href="http://slick.typesafe.com/doc/3.0.1/introduction.html#functional-relational-mapping" target="_blank" rel="external">官方文档</a>。</p>
-<h2 id="Slick实例">Slick实例</h2><p>下面以一个Students和Classrooms的实例来说明一下Slick的使用。</p>
-<p>首先是创建对应的domain，学生与教室的关系是1对多。</p>
-<p>Students domain(使用Option类型说明该列是可为空的)：</p>
-<pre><code>class Student(tag: Tag) extends Table[<span class="link_label">(Int, String, Int, Int, Option[Date</span>])](tag, "Students") {
-
-  def id: Rep[<span class="link_label">Int</span>] = column[<span class="link_label">Int</span>](<span class="link_url">"id", O.PrimaryKey, O.AutoInc</span>)
-  def name: Rep[<span class="link_label">String</span>] = column[<span class="link_label">String</span>](<span class="link_url">"name"</span>)
-  def age: Rep[<span class="link_label">Int</span>] = column[<span class="link_label">Int</span>](<span class="link_url">"age"</span>)
-  def birthDate: Rep[<span class="link_label">Option[Date</span>]] = column[<span class="link_label">Option[Date</span>]]("birth_date")
-  def classroomId = column[<span class="link_label">Int</span>](<span class="link_url">"classroom_id"</span>)
-
-   def * : ProvenShape[(Int, String, Int, Int, Option[Date])] = (id, name, age, classroomId, birthDate)
-
-  def classroom: ForeignKeyQuery[Classroom, (Int, String)] = foreignKey("FK<span class="emphasis">_CLASSROOM", classroomId, TableQuery[Classroom])(_</span>.id)
-}
-</code></pre><p>Classrooms domain：</p>
-<pre><code>class Classroom(tag: Tag) extends Table[<span class="link_label">(Int, String)</span>](<span class="link_url">tag, "Classrooms"</span>) {
-  def id = column[<span class="link_label">Int</span>](<span class="link_url">"id", O.PrimaryKey, O.AutoInc</span>)
-  def name = column[<span class="link_label">String</span>](<span class="link_url">"name"</span>)
-
-  def * = (id, name)
-}
-</code></pre><p>各个db操作，schema创建，sql插入，sql查询等操作如下，加了几句备注，具体的代码就不分析了：</p>
-<pre><code><span class="keyword">object</span> <span class="type">SampleSlickDemo</span> extends <span class="type">App</span> {
-
-  val db = <span class="type">Database</span>.forConfig(<span class="string">"h2mem1"</span>)
-
-  <span class="keyword">try</span> {
-
-    val classrooms = <span class="type">TableQuery</span>[<span class="type">Classroom</span>]
-    val students = <span class="type">TableQuery</span>[<span class="type">Student</span>]
-
-
-    val setupAction: <span class="type">DBIO</span>[<span class="type">Unit</span>] = <span class="type">DBIO</span>.<span class="type">seq</span>(
-      // create student <span class="keyword">and</span> classroom table <span class="keyword">in</span> database
-      (classrooms.schema ++ students.schema).create,
-      // insert some rows <span class="keyword">in</span> classroom
-      classrooms += (<span class="number">1</span>, <span class="string">"classroom1"</span>),
-      classrooms += (<span class="number">2</span>, <span class="string">"classroom2"</span>),
-      classrooms += (<span class="number">3</span>, <span class="string">"classroom2"</span>)
-    )
-
-    val setupFuture = db.run(setupAction)
-
-    val f = setupFuture.flatMap { _ =&gt;
-
-      val insertAction: <span class="type">DBIO</span>[<span class="type">Option</span>[<span class="type">Int</span>]] = students ++= <span class="type">Seq</span> (
-        (<span class="number">1</span>, <span class="string">"format1"</span>, <span class="number">11</span>, <span class="number">1</span>, new <span class="type">Date</span>(<span class="type">System</span>.currentTimeMillis())),
-        (<span class="number">2</span>, <span class="string">"format2"</span>, <span class="number">22</span>, <span class="number">2</span>, new <span class="type">Date</span>((<span class="type">System</span>.currentTimeMillis()))),
-        (<span class="number">3</span>, <span class="string">"format3"</span>, <span class="number">33</span>, <span class="number">3</span>, new <span class="type">Date</span>((<span class="type">System</span>.currentTimeMillis())))
-      )
-
-      val insertAndPrintAction = insertAction.map { studentResult =&gt;
-        studentResult.foreach { numRows =&gt;
-          println(<span class="string">s"inserted $numRows students"</span>)
-        }
-      }
-
-      db.run(insertAndPrintAction)
-    }.flatMap { _ =&gt;
-
-      // print <span class="type">All</span> <span class="type">Classrooms</span>
-      db.run(classrooms.<span class="literal">result</span>).map { classroom =&gt;
-        classroom.foreach(println);
-      }
-
-      // print <span class="type">All</span> <span class="type">Students</span>
-      db.run(students.<span class="literal">result</span>).map { studnet =&gt;
-        studnet.foreach(println);
-      }
-
-      // condition search
-      val studentQuery = students.filter(_.age &gt; <span class="number">20</span>).sortBy(_.name)
-      db.run(studentQuery.<span class="literal">result</span>).map { student =&gt;
-        student.foreach(println)
-      }
-    }
-    <span class="type">Await</span>.<span class="literal">result</span>(f, <span class="type">Duration</span>.<span class="type">Inf</span>)
-  } <span class="keyword">finally</span> db.close()
-}
-</code></pre><h2 id="数据库配置">数据库配置</h2><p>在配置文件application.conf里配置数据库配置信息：</p>
-<pre><code><span class="title">h2mem1</span> = {
-  <span class="title">url</span> = <span class="string">"jdbc:h2:mem:test1"</span>
-  driver = org.h2.Driver
-  connectionPool = disabled
-  keepAliveConnection = <span class="built_in">true</span>
-}
-</code></pre><p>然后就可使用Database初始化数据库，参数就是配置文件里对应的数据库name：</p>
-<pre><code>val db = Database.<span class="function"><span class="title">forConfig</span><span class="params">(<span class="string">"h2mem1"</span>)</span></span>
-</code></pre><h2 id="DBIOAction介绍">DBIOAction介绍</h2><p>DBIOAction就是数据库的一个操作，比如Insert，Update，Delete，Query等操作。</p>
-<p>可以使用上面分析的数据库配置变量db进行操作。</p>
-<p>db有个run方法使用DBIOAction作为参数，返回Future类型的返回值。</p>
-<p>DBIO是一个单例对象，它的seq方法可以传入多个DBIOAction，然后返回一个新的DBIOAction。 += 方法返回的也是DBIOAction。</p>
-<pre><code>val setupAction: DBIO[Unit] = DBIO.se<span class="string">q(
-  (classrooms.schema ++ students.schema)</span>.create,
-  classrooms += (<span class="number">1</span>, <span class="string">"classroom1"</span>),
-  classrooms += (<span class="number">2</span>, <span class="string">"classroom2"</span>),
-  classrooms += (<span class="number">3</span>, <span class="string">"classroom2"</span>)
-)
-</code></pre><p>++=方法跟+=方法一样会返回DBIOAction，只不过它的参数是个Iterable：</p>
-<pre><code>val insertAction: DBIO[Option[Int]] = students ++= Seq (
-    (<span class="number">1</span>, <span class="string">"format1"</span>, <span class="number">11</span>, <span class="number">1</span>, <span class="keyword">new</span> Date(System.currentTimeMillis())),
-    (<span class="number">2</span>, <span class="string">"format2"</span>, <span class="number">22</span>, <span class="number">2</span>, <span class="keyword">new</span> Date((System.currentTimeMillis()))),
-    (<span class="number">3</span>, <span class="string">"format3"</span>, <span class="number">33</span>, <span class="number">3</span>, <span class="keyword">new</span> Date((System.currentTimeMillis())))
-  )
-</code></pre><p>DBIOAction提供许多好用的方法：</p>
-<p>map方法：参数是个函数，这个函数可以返回任意类型的值，返回是个DBIOAction。 所以可以使用map关联起来多个DBIOAction。</p>
-<p>flatMap方法：参数是个函数，这个函数的返回值必须是个DBIOAction，返回值是个DBIOAction。作用跟map类似，只不过函数参数的返回值不一样。</p>
-<p>filter方法：参数是个函数，这个函数的返回值必须是个Boolean，返回值是个DBIOAction。过滤作用。</p>
-<p>andThen方法：参数是个DBIOAction，返回值是个DBIOAction。在Action完成后执行另外一个Action。</p>
-<h2 id="增删改查操作">增删改查操作</h2><h3 id="查询">查询</h3><p>Slick的查询可以直接通过TableQuery操作，使用TableQuery提供的filter可以实现过滤操作，使用drop和take完成分页操作，使用sortBy完成排序操作。</p>
-<pre><code>students.<span class="function"><span class="title">filter</span><span class="params">(_.classroomId === <span class="number">1</span>)</span></span>
-students.<span class="function"><span class="title">drop</span><span class="params">(<span class="number">1</span>)</span></span>.<span class="function"><span class="title">take</span><span class="params">(<span class="number">2</span>)</span></span>
-students.<span class="function"><span class="title">sortBy</span><span class="params">(_.age.desc)</span></span>
-</code></pre><p>可以使用map方法找出需要的列。 </p>
-<p>多列：</p>
-<pre><code><span class="component">students.map { student =&gt;
-  (student<span class="string">.name</span>, student<span class="string">.age)</span>
-}</span>
-</code></pre><p>一列：</p>
-<pre><code>students.<span class="function"><span class="title">map</span><span class="params">(_.name)</span></span>
-</code></pre><p>Join方法：</p>
-<p>cross join操作：</p>
-<pre><code>val crossJoin = <span class="keyword">for</span> {
-  (s, c) &lt;- students <span class="built_in">join</span> classrooms
-} yield (s.<span class="built_in">name</span>, c.<span class="built_in">name</span>)
-</code></pre><p>inner Join操作：</p>
-<pre><code>val innerJoin = <span class="keyword">for</span> {
-  (s, c) &lt;- students join classrooms <span class="function_start"><span class="keyword">on</span></span> (_.classroomId === _.<span class="property">id</span>)
-} yield (s.<span class="property">name</span>, c.<span class="property">name</span>)
-</code></pre><p>另外一个inner join：</p>
-<pre><code>val innerJoin = <span class="keyword">for</span> {
-  s &lt;- students
-  c &lt;- classrooms <span class="keyword">if</span> c.<span class="property">id</span> === s.classroomId
-} yield (s.<span class="property">name</span>, c.<span class="property">name</span>)
-</code></pre><p>left join操作：</p>
-<pre><code>val leftJoin = <span class="keyword">for</span> {
-  (s, c) &lt;- students joinLeft classrooms <span class="function_start"><span class="keyword">on</span></span> (_.classroomId === _.<span class="property">id</span>)
-} yield (s.<span class="property">name</span>, c.map(_.<span class="property">name</span>))
-</code></pre><p>right join操作：</p>
-<pre><code>val rightJoin = <span class="keyword">for</span> {
-  (s, c) &lt;- students joinRight classrooms <span class="function_start"><span class="keyword">on</span></span> (_.classroomId === _.<span class="property">id</span>)
-} yield (s.map(_.<span class="property">name</span>), c.<span class="property">name</span>)
-</code></pre><h3 id="新增">新增</h3><p>所有列都有值：</p>
-<pre><code>val insertAction = DBIO.seq(
-  students += (<span class="number">4</span>, <span class="string">"format4"</span>, <span class="number">44</span>, <span class="number">3</span>, <span class="keyword">new</span> Date(System.currentTimeMillis())),
-  students += (<span class="number">5</span>, <span class="string">"format5"</span>, <span class="number">55</span>, <span class="number">3</span>, <span class="keyword">new</span> Date(System.currentTimeMillis())),
-
-  students ++= Seq (
-    (<span class="number">6</span>, <span class="string">"format6"</span>, <span class="number">66</span>, <span class="number">3</span>, <span class="keyword">new</span> Date(System.currentTimeMillis())),
-    (<span class="number">7</span>, <span class="string">"format7"</span>, <span class="number">77</span>, <span class="number">3</span>, <span class="keyword">new</span> Date(System.currentTimeMillis()))
-  )
-)
-</code></pre><p>部分列有值：</p>
-<pre><code>students.<span class="built_in">map</span>(s =&gt; (s.name, s.age, s.classroomId)) += (<span class="string">"format8"</span>, <span class="number">88</span>, <span class="number">3</span>)
-</code></pre><h3 id="删除">删除</h3><p>删除classroomId为3的所有数据：</p>
-<pre><code><span class="variable"><span class="keyword">val</span> q</span> = students.filter(_.classroomId === <span class="number">3</span>)
-<span class="variable"><span class="keyword">val</span> affectedRowsCountFuture</span> = db.run(q.delete)
-affectedRowsCountFuture.map { rows =&gt;
-  println(rows)
-}
-</code></pre><h3 id="修改">修改</h3><p>修改单列：</p>
-<pre><code>val <span class="tag">q</span> = students.<span class="function"><span class="title">filter</span><span class="params">(_.id === <span class="number">2</span>)</span></span>.<span class="function"><span class="title">map</span><span class="params">(_.name)</span></span>
-val updateSql = <span class="tag">q</span>.<span class="function"><span class="title">update</span><span class="params">(<span class="string">"format2222"</span>)</span></span>
-db.<span class="function"><span class="title">run</span><span class="params">(updateSql)</span></span>
-</code></pre><p>修改多列：</p>
-<pre><code>val <span class="tag">q</span> = students.<span class="function"><span class="title">filter</span><span class="params">(_.id === <span class="number">2</span>)</span></span>.<span class="function"><span class="title">map</span><span class="params">(s =&gt; (s.name, s.age)</span></span>)
-val updateSql = <span class="tag">q</span>.<span class="function"><span class="title">update</span><span class="params">((<span class="string">"format2222"</span>, <span class="number">222</span>)</span></span>)
-db.<span class="function"><span class="title">run</span><span class="params">(updateSql)</span></span>
-</code></pre><h2 id="CaseClass的使用">CaseClass的使用</h2><p>之前的例子都是使用Tuple构造domain。 还有一种更方便的方式，那就是使用CaseClass。</p>
-<pre><code><span class="keyword">case</span> <span class="keyword">class</span> People(id: Long, <span class="keyword">name</span>: String, age: <span class="built_in">Int</span>)
-</code></pre><p>例子：</p>
-<pre><code>private class PeopleTable(tag: Tag) extends Table[<span class="link_label">People</span>](<span class="link_url">tag, "people"</span>) {
-  val id = column[<span class="link_label">Long</span>](<span class="link_url">"id", O.PrimaryKey, O.AutoInc</span>)
-  val name = column[<span class="link_label">String</span>](<span class="link_url">"name"</span>)
-  val age = column[<span class="link_label">Int</span>](<span class="link_url">"age"</span>)
-
-  def * = (id, name, age) <span class="xml"><span class="tag">&lt;&gt;</span></span> ((People.apply _).tupled, People.unapply)
-}
-
-val db = Database.forConfig("h2mem1")
-
-try {
-
-  val people = TableQuery[PeopleTable]
-
-  val setupAction = DBIO.seq(
-<span class="code">      people.schema.create,</span>
-<span class="code">      people += People(1, "format1", 11)</span>
-  )
-
-  val setupFuture = db.run(setupAction);
-
-  val f = setupFuture.flatMap { _ =&gt;
-<span class="code">    db.run(people.result).map { p =&gt;</span>
-<span class="code">      p.foreach(println)</span>
-<span class="code">    }</span>
-  }
-
-  Await.result(f, Duration.Inf)
-
-} finally db.close()
-</code></pre>
-            
-          </span>
+          <span itemprop="description">Guava是一个Google开发的基于java的扩展项目，提供了很多有用的工具类，可以让java代码更加优雅，更加简洁 ...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2015/07/26/google-guava-intro/">
+              阅读全文 &raquo;
+            </a>
+          </div>
         
       
     </div>
@@ -688,8 +301,8 @@ try {
             
             
               
-                <a class="post-title-link" href="/2015/08/14/scala-future/" itemprop="url">
-                  Scala并发的Future
+                <a class="post-title-link" href="/2015/07/24/java-poolthread/" itemprop="url">
+                  java内置的线程池笔记
                 </a>
               
             
@@ -699,8 +312,8 @@ try {
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2015-08-14T20:22:33+08:00" content="2015-08-14">
-              2015-08-14
+            <time itemprop="dateCreated" datetime="2015-07-24T20:32:33+08:00" content="2015-07-24">
+              2015-07-24
             </time>
           </span>
 
@@ -725,8 +338,8 @@ try {
             
               <span class="post-comments-count">
               &nbsp; | &nbsp;
-              <a href="/2015/08/14/scala-future/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/08/14/scala-future/" itemprop="commentsCount"></span>
+              <a href="/2015/07/24/java-poolthread/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/24/java-poolthread/" itemprop="commentsCount"></span>
               </a>
             </span>
             
@@ -746,98 +359,12 @@ try {
 
       
         
-          <span itemprop="articleBody">
-            
-              <p>Future这个概念其实java里也已经有了， 表示一个未来的意思。 某线程执行一项操作，这个操作有延迟的话，Future会提供一系列方法来处理这个线程过程，可取消，可操作完成后执行其他操作等等。</p>
-<p>使用Future是非阻塞的，在Future中可以使用回调函数可以避免阻塞操作。 Scala在Future中提供了flatMap，foreach，filter等方法。</p>
-<h2 id="Future概念">Future概念</h2><p>Future的状态：</p>
-<p>1.未完成：线程操作还未结束<br>2.已完成：操作操作完成，并且有返回值或者有异常。 当一个Future完成的时候，它就变成了一个不可变对象，永远不会被重写</p>
-<p>构造Future最简单的方法是使用Future这个object提供的apply方法：</p>
-<pre><code><span class="tag">Future</span> {
-    ...
-}
-</code></pre><p>来看一个最简单的Future操作， 计算和：</p>
-<pre><code>import <span class="keyword">scala</span>.concurrent.ExecutionContext.Implicits.<span class="keyword">global</span>
-import <span class="keyword">scala</span>.concurrent.duration.Duration
-import <span class="keyword">scala</span>.concurrent.{Await, Future}
-
-val sumFuture = Future[Int] {
-  <span class="keyword">var</span> <span class="keyword">sum</span> = 0
-  <span class="keyword">for</span>(i &lt;- <span class="keyword">Range</span>(1,100000)) <span class="keyword">sum</span> = <span class="keyword">sum</span> + <span class="literal">i</span>
-  <span class="literal">sum</span>
-}
-
-sumFuture.onSuccess {
-  case <span class="keyword">sum</span> =&gt; println(<span class="keyword">sum</span>)
-}
-
-Await.result(sumFuture, Duration.<span class="keyword">Inf</span>)
-</code></pre><p>Await的作用是阻断Future等待Future的执行结果。 import scala.concurrent.ExecutionContext.Implicits.global 这个global表示一个ExecutionContext，类似线程池，所有线程的提交都得交给ExecutionContext。如果没有import这个global对象，那么执行的时候会报错。</p>
-<p>文本文件中找关键字的例子，读io文件的时候如果文件很大，肯定会阻塞。使用Future完成，可以更有效率，等关键字索引找到的时候再去拿数据。这段时间完成可以去做其他事情：</p>
-<pre><code><span class="variable"><span class="keyword">val</span> keywordIndex</span> = Future[<span class="typename">Int</span>] {
-  <span class="variable"><span class="keyword">val</span> source</span> = scala.io.Source.fromFile(<span class="string">"intro.txx"</span>)
-  source.toSeq.indexOfSlice(<span class="string">"format"</span>)
-}
-</code></pre><h2 id="回调">回调</h2><p>Future提供了3种Callback，分别是 onComplete，onFailure，onSuccess。</p>
-<p>onComplete回调表示Future执行完毕了。需要1个Try[T] =&gt; U类型的参数，如果执行成功且没发生一次，那么匹配Success类型，否则匹配Failure类型。</p>
-<p>onComplete例子：</p>
-<pre><code>val calFuture = <span class="type">Future</span>[<span class="type">Int</span>] {
-  val a = <span class="number">1</span> / <span class="number">1</span>
-  a
-}
-
-calFuture.onComplete {
-  <span class="keyword">case</span> <span class="type">Success</span>(<span class="literal">result</span>) =&gt; println(<span class="literal">result</span>)
-  <span class="keyword">case</span> <span class="type">Failure</span>(e) =&gt; println(<span class="string">"error: "</span> + e.getMessage)
-}
-</code></pre><p>onFailure回调表示Future已经执行完成，但是出错了。</p>
-<pre><code>val errorFuture = Future[Unit] {
-  <span class="number">1</span> / <span class="number">0</span>
-}
-
-errorFuture.onFailure {
-  <span class="keyword">case</span> e =&gt; println(e.getMessage)
-}
-</code></pre><p>onSuccess回调表示Future已经执行完成，而且执行成功了。</p>
-<pre><code>val successFuture = Future[Int] {
-  <span class="number">1000</span>
-}
-
-successFuture.onSuccess {
-  <span class="keyword">case</span> <span class="built_in">num</span> =&gt; println(<span class="built_in">num</span>)
-}
-</code></pre><h2 id="Future的组合">Future的组合</h2><p>使用map方法可以组合Future：</p>
-<pre><code>val firstValFuture = <span class="type">Future</span>[<span class="type">Int</span>] {
-  <span class="number">1</span>
-}
-
-val secondFuture = firstValFuture.map { num =&gt;
-  println(<span class="string">"firstFuture: "</span> + num)
-  num + <span class="string">"111"</span>
-}
-
-secondFuture.onSuccess {
-  <span class="keyword">case</span> <span class="literal">result</span> =&gt; println(<span class="literal">result</span>)
-}
-</code></pre><p>flapMap方法也可以组合Future，map方法和flatMap方法唯一的区别是flatMap内部需要返回Future，而map不是。</p>
-<pre><code>val firstValFuture = <span class="type">Future</span>[<span class="type">Int</span>] {
-  <span class="number">1</span>
-}
-
-val secondFuture = firstValFuture.flatMap { num =&gt;
-  println(<span class="string">"firstFuture: "</span> + num)
-  <span class="type">Future</span> {
-    num + <span class="string">"111"</span>
-  }
-}
-
-secondFuture.onSuccess {
-  <span class="keyword">case</span> <span class="literal">result</span> =&gt; println(<span class="literal">result</span>)
-}
-</code></pre><p>其他资料参考<a href="http://docs.scala-lang.org/overviews/core/futures.html" target="_blank" rel="external">Scala的官方文档</a>即可。</p>
-
-            
-          </span>
+          <span itemprop="description">写这篇博客的时候又刚好想起了当时自己实习的时候遇到的一个问题。1000个爬虫任务使用了多线程的处理方式，比如开5个线程处理这1000个任务 ...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2015/07/24/java-poolthread/">
+              阅读全文 &raquo;
+            </a>
+          </div>
         
       
     </div>
@@ -872,8 +399,8 @@ secondFuture.onSuccess {
             
             
               
-                <a class="post-title-link" href="/2015/08/07/hbase-intro/" itemprop="url">
-                  HBase介绍
+                <a class="post-title-link" href="/2015/07/20/flume-hdfs-sink/" itemprop="url">
+                  通过源码分析Flume HDFSSink 写hdfs文件的过程
                 </a>
               
             
@@ -883,8 +410,8 @@ secondFuture.onSuccess {
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2015-08-07T00:22:33+08:00" content="2015-08-07">
-              2015-08-07
+            <time itemprop="dateCreated" datetime="2015-07-20T23:32:33+08:00" content="2015-07-20">
+              2015-07-20
             </time>
           </span>
 
@@ -893,8 +420,8 @@ secondFuture.onSuccess {
               &nbsp; | &nbsp; 分类于
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/hbase/" itemprop="url" rel="index">
-                    <span itemprop="name">hbase</span>
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
                   </a>
                 </span>
 
@@ -909,8 +436,8 @@ secondFuture.onSuccess {
             
               <span class="post-comments-count">
               &nbsp; | &nbsp;
-              <a href="/2015/08/07/hbase-intro/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/08/07/hbase-intro/" itemprop="commentsCount"></span>
+              <a href="/2015/07/20/flume-hdfs-sink/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/20/flume-hdfs-sink/" itemprop="commentsCount"></span>
               </a>
             </span>
             
@@ -930,175 +457,12 @@ secondFuture.onSuccess {
 
       
         
-          <span itemprop="articleBody">
-            
-              <h2 id="前言">前言</h2><p>HBase在公司已经用过一段时间，在Flume中添加一个HBase sink将一些数据存储到HBase里。</p>
-<p>当时HBase也没学，看了看几个例子，了解了它是基于列的表设计之后，就马上上手了，而且也把东西做出来了。 现在记录一下HBase的一些学习笔记。</p>
-<h2 id="HBase简介">HBase简介</h2><p>HBase是什么？</p>
-<p>HBase是运行在hadoop上的数据库，是一个分布式的，扩展性高的，存储大数据的数据库。</p>
-<p>HBase也是开源的，非关系型数据库。基于Google的Bigtable设计。</p>
-<p>什么时候需要使用HBase？</p>
-<p>需要实时地读写大数据。HBase的目的就是管理亿级的数据。</p>
-<h2 id="HBase基本概念">HBase基本概念</h2><p>HBase是基于列设计的，那什么是基于列呢？</p>
-<p>首先看下关系型数据库的表结构，第一行是table的所有列，第二行开始就是各个列对应的值：</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">id</th>
-<th style="text-align:center">name</th>
-<th style="text-align:center">age</th>
-<th style="text-align:center">birth_date</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">1</td>
-<td style="text-align:center">format1</td>
-<td style="text-align:center">11</td>
-<td style="text-align:center">1980-01-01</td>
-</tr>
-<tr>
-<td style="text-align:center">2</td>
-<td style="text-align:center">format2</td>
-<td style="text-align:center">22</td>
-<td style="text-align:center">1985-01-01</td>
-</tr>
-<tr>
-<td style="text-align:center">3</td>
-<td style="text-align:center">format3</td>
-<td style="text-align:center">33</td>
-<td style="text-align:center">1990-01-01</td>
-</tr>
-</tbody>
-</table>
-<p>HBase的表结构是这样的：</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">Row Key</th>
-<th style="text-align:center">Time Stamp</th>
-<th style="text-align:center">ColumnFamily contents</th>
-<th style="text-align:center">ColumnFamily names</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">‘me.format.hbase’</td>
-<td style="text-align:center">t1</td>
-<td style="text-align:center">contents:format = “format1”</td>
-<td style="text-align:center"></td>
-</tr>
-<tr>
-<td style="text-align:center">‘me.format.hbase’</td>
-<td style="text-align:center">t2</td>
-<td style="text-align:center">contents:title = “title1”</td>
-<td style="text-align:center"></td>
-</tr>
-<tr>
-<td style="text-align:center">‘me.format.hbase’</td>
-<td style="text-align:center">t3</td>
-<td style="text-align:center"></td>
-<td style="text-align:center">names:gogogo = “data1”</td>
-</tr>
-</tbody>
-</table>
-<p>从上面这个HBase表的例子来说明HBase的存储结构。</p>
-<p>Row Key：行的键值，其实就相当于这一行的标识符。上面的数据其实只有1行，因为他们的标识符是一样的。</p>
-<p>TimeStamp：时间戳，创建数据的时间戳，hbase默认会自动生成</p>
-<p>ColumnFamily：列的前缀，一列可以存储多条数据，具体存储什么类型的数据还需要另外一个标示符qualify，上面那个例子中，contents和names就是两个Column Family</p>
-<p>ColumnFamily qualify：列前缀后的标识符，一个ColumnFamily可以有多个qualify。上面那个例子中format和title就是contents这个ColumnFamily的qualify。gogogo是names这个ColumnFamily的qualify</p>
-<h2 id="HBase的启动">HBase的启动</h2><p>HBase下载完之后解压，解压后使用以下命令启动hbase：</p>
-<pre><code>$ ./bin/<span class="literal">start</span>-hbase.sh
-</code></pre><p>启动之前注意，机器要装好jdk，并且启动hadoop。因为hbase底层数据是存储在hdfs上的。</p>
-<h2 id="HBase的基本操作">HBase的基本操作</h2><h3 id="表的创建">表的创建</h3><p>创建一个表名位tableName，ColumnFamily有contents和names的表，qualify不需要声明，每次添加数据随意指定qualify即可：</p>
-<pre><code><span class="built_in">create</span> <span class="string">'tableName'</span>,[<span class="string">'contents'</span>, <span class="string">'names'</span>]
-</code></pre><h3 id="表的删除">表的删除</h3><p>删除表的所有数据：</p>
-<pre><code>truncate <span class="built_in">table</span> <span class="built_in">table</span>Name
-</code></pre><p>删除表，删除之前需要先disable表，然后才可删除：</p>
-<pre><code><span class="built_in">disable</span> <span class="string">'tableName'</span>
-drop <span class="string">'tableName'</span>
-</code></pre><h3 id="数据查询">数据查询</h3><p>查询tableName表数据：</p>
-<pre><code><span class="built_in">scan</span> tableName
-</code></pre><p>返回：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me.<span class="keyword">format</span>.hbase                            column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438875060466</span>, <span class="keyword">value</span>=format1
-</code></pre><h3 id="数据删除">数据删除</h3><p>比如，表tableName里有如下数据：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875566613</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=names:gogogo, timestamp=<span class="number">1438875597592</span>, value=data1
-</code></pre><p>进行删除操作，删除ColumnFamily qulify为contents:format的数据：</p>
-<pre><code>delete <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:format'
-</code></pre><h3 id="数据修改">数据修改</h3><p>HBase没有直接的update操作，只有put操作，put操作如果对应的地方有值，会覆盖：</p>
-<pre><code>put <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:format', <span class="symbol">'format111'</span>
-</code></pre><h3 id="添加数据">添加数据</h3><p>在tableName表里插入一个Row Key为me.format.hbase, ColumnFamily为contents，qualify为format，值的format1的数据：</p>
-<pre><code>put <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:format', <span class="symbol">'format1'</span>
-</code></pre><h3 id="计数器">计数器</h3><p>HBase提供了一种计数器的概念，每次可以对某个值进行incr操作：</p>
-<pre><code>incr <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">1</span>
-</code></pre><p>查询数据：</p>
-<pre><code>me.format.hbase                            column=contents:num, timestamp=1438875837362, value=<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>01
-</code></pre><p>可以使用get_counter命令获得计数器的值：</p>
-<pre><code>get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">0</span>
-</code></pre><p>返回：</p>
-<pre><code>COUNTER VALUE = <span class="number">1</span>
-</code></pre><p>再次修改：</p>
-<pre><code>incr <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">100</span>
-
-get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">0</span>
-
-<span class="type">COUNTER</span> <span class="type">VALUE</span> = <span class="number">101</span>
-
-incr <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', -<span class="number">102</span>
-
-get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">0</span>
-
-<span class="type">COUNTER</span> <span class="type">VALUE</span> = -<span class="number">1</span>
-</code></pre><h3 id="带条件的数据查询">带条件的数据查询</h3><p>scan查询可以带几个参数。</p>
-<p>COLUMNS： ColumnFamily和qualify的值<br>LIMIT：展示的个数<br>FILTER：过滤条件</p>
-<p>比如有以下数据：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875707700</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:num, timestamp=<span class="number">1438876106259</span>, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=names:gogogo, timestamp=<span class="number">1438875597592</span>, value=data1
- me<span class="class">.format</span><span class="class">.hbase1</span>                           column=contents:format, timestamp=<span class="number">1438877417358</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase2</span>                           column=contents:format, timestamp=<span class="number">1438877422756</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase3</span>                           column=contents:format, timestamp=<span class="number">1438877427312</span>, value=format1
-</code></pre><p>查询ColumnFamily，qualify为contents:format的数据：</p>
-<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents:format"</span>, LIMIT =&gt; <span class="number">10</span> }
-</code></pre><p>结果：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me.<span class="keyword">format</span>.hbase                            column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438875707700</span>, <span class="keyword">value</span>=format1
- me.<span class="keyword">format</span>.hbase1                           column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438877417358</span>, <span class="keyword">value</span>=format1
- me.<span class="keyword">format</span>.hbase2                           column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438877422756</span>, <span class="keyword">value</span>=format1
- me.<span class="keyword">format</span>.hbase3                           column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438877427312</span>, <span class="keyword">value</span>=format1
-</code></pre><p>查询ColumnFamily未contents的数据：</p>
-<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents"</span>, LIMIT =&gt; <span class="number">10</span> }
-</code></pre><p>结果：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875707700</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:num, timestamp=<span class="number">1438876106259</span>, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
- me<span class="class">.format</span><span class="class">.hbase1</span>                           column=contents:format, timestamp=<span class="number">1438877417358</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase2</span>                           column=contents:format, timestamp=<span class="number">1438877422756</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase3</span>                           column=contents:format, timestamp=<span class="number">1438877427312</span>, value=format1
-</code></pre><p>查询ColumnFamily未contents的数据，并只展示2行数据：</p>
-<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents"</span>, LIMIT =&gt; <span class="number">2</span> }
-</code></pre><p>结果：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875707700</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:num, timestamp=<span class="number">1438876106259</span>, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
- me<span class="class">.format</span><span class="class">.hbase1</span>                           column=contents:format, timestamp=<span class="number">1438877417358</span>, value=format1
-</code></pre><p>查询ColumnFamily未contents的数据，并只展示2行数据：</p>
-<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents"</span>, FILTER =&gt; <span class="string">"ValueFilter( =, 'binaryprefix:title' )"</span> }
-</code></pre><p>结果：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
-</code></pre><p>scan命令具体其他的参数就不一一列举了，可查询文档解决。</p>
-
-            
-          </span>
+          <span itemprop="description">分析Flume HDFSSink写hdfs文件过程</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2015/07/20/flume-hdfs-sink/">
+              阅读全文 &raquo;
+            </a>
+          </div>
         
       
     </div>
@@ -1133,8 +497,8 @@ get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</sp
             
             
               
-                <a class="post-title-link" href="/2015/07/31/hive-intro/" itemprop="url">
-                  Hive介绍
+                <a class="post-title-link" href="/2015/07/14/flume-notes/" itemprop="url">
+                  Flume几个比较有用的功能(用到新功能后会更新文章)
                 </a>
               
             
@@ -1144,8 +508,8 @@ get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</sp
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2015-07-31T13:32:33+08:00" content="2015-07-31">
-              2015-07-31
+            <time itemprop="dateCreated" datetime="2015-07-14T22:23:23+08:00" content="2015-07-14">
+              2015-07-14
             </time>
           </span>
 
@@ -1154,8 +518,8 @@ get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</sp
               &nbsp; | &nbsp; 分类于
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/hive/" itemprop="url" rel="index">
-                    <span itemprop="name">hive</span>
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
                   </a>
                 </span>
 
@@ -1170,8 +534,8 @@ get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</sp
             
               <span class="post-comments-count">
               &nbsp; | &nbsp;
-              <a href="/2015/07/31/hive-intro/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/31/hive-intro/" itemprop="commentsCount"></span>
+              <a href="/2015/07/14/flume-notes/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/14/flume-notes/" itemprop="commentsCount"></span>
               </a>
             </span>
             
@@ -1191,184 +555,600 @@ get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</sp
 
       
         
-          <span itemprop="articleBody">
+          <span itemprop="description">根据项目的经验，介绍几个flume比较有用的功能...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2015/07/14/flume-notes/">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
             
-              <p>Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集。</p>
-<p>Hive提供了一种叫做HiveQL的类似SQL查询语言用来查询数据，HiveQL也允许熟悉MapReduce开发者开发自定义的mapper和reducer来处理内建的mapper和reducer无法完成的复杂的分析工作。</p>
-<p>Hive的工作模式是提交一个任务，等到任务结束时被通知，而不是实时查询。</p>
-<h2 id="Hive安装">Hive安装</h2><p>直接去<a href="https://hive.apache.org/" target="_blank" rel="external">Hive官网</a>下载最新的文件，解压。</p>
-<p>运行bin目录里的hive文件，运行之前先启动hadoop，运行的时候可能会出现：</p>
-<pre><code>Missing Hive <span class="keyword">CLI</span> Jar ....
-</code></pre><p>将hive解压出来的lib目录里的jline<em>.jar拷贝到$HADOOP/share/hadoop/yarn/lib里，同时将$HADOOP/share/hadoop/yarn/lib里的jline</em>.jar删除，重启hadoop。</p>
-<p>再次运行，可能还会出现</p>
-<pre><code>The reported blocks <span class="number">2662</span> has reached <span class="operator">the</span> threshold <span class="number">0.9990</span> <span class="operator">of</span> total blocks <span class="number">2662.</span> The <span class="built_in">number</span> <span class="operator">of</span> live datanodes <span class="number">1</span> has reached <span class="operator">the</span> minimum <span class="built_in">number</span> <span class="number">0.</span> In safe mode extension. Safe mode will be turned off automatically <span class="operator">in</span> <span class="number">0</span> <span class="built_in">seconds</span>. ...
-</code></pre><p>类似的问题，关闭hdfs的安全模式即可：</p>
-<pre><code><span class="title">hadoop</span> dfsadmin -safemode leave
-</code></pre><h2 id="基本命令">基本命令</h2><p>HiveQL就是模仿sql而创建的，以SQL的角度来介绍HiveQL。</p>
-<h3 id="DDL操作">DDL操作</h3><p>创建表：</p>
-<pre><code>hive&gt; create table users(age <span class="built_in">INT</span>, name <span class="built_in">STRING</span>)<span class="comment">;</span>
-</code></pre><p>查看所有的表：</p>
-<pre><code>hive&gt; <span class="built_in">show</span> <span class="built_in">tables</span>;
-</code></pre><p>查看以CLIENT开头的表：</p>
-<pre><code>hive&gt; <span class="built_in">show</span> <span class="built_in">tables</span> 'CLIENT.*';
-</code></pre><p>表加列：</p>
-<pre><code>hive&gt; alter table users add columns<span class="list">(<span class="keyword">gender</span> BOOLEAN)</span><span class="comment">;</span>
-</code></pre><p>改表名字：</p>
-<pre><code>hive&gt; alter <span class="built_in">table</span> users rename <span class="keyword">to</span> <span class="keyword">user</span>;
-</code></pre><p>删除表：</p>
-<pre><code>hive&gt; drop <span class="built_in">table</span> <span class="keyword">user</span>;
-</code></pre><p>查看表的具体信息：</p>
-<pre><code>hive&gt; descibe user<span class="comment">;</span>
-hive&gt; desc user<span class="comment">;</span>
-</code></pre><h3 id="DML操作">DML操作</h3><p>hive创建表的时候可以指定分隔符，由于hive操作的是hdfs，数据最终会存储在hdfs上，所以hdfs上的内容肯定是以某种分隔符分开各个列的。 hive默认的列分隔符是 <strong>^A</strong> 。 我们可以自定义自己的分隔符，在创建表的时候指定分隔符即可。</p>
-<p>本地导入数据到hive：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table users;
-</code></pre><p>users表的结构只有2列，name和age，而且使用默认的分隔符。</p>
-<p>比如本地文件的内容是这样的：</p>
-<pre><code><span class="xml">format1</span><span class="keyword">^A11</span><span class="xml">
-format2</span><span class="keyword">^A22</span><span class="xml"></span>
-</code></pre><p>导入之后进行查询：</p>
-<pre><code>hive&gt; <span class="keyword">select</span> * <span class="keyword">from</span> users;
-</code></pre><p>显示结果：</p>
-<pre><code>OK
-format1    <span class="number">11</span>
-format2    <span class="number">22</span>
-Time taken: <span class="number">0.362</span> seconds, Fetched: <span class="number">2</span> row(s)
-</code></pre><p>在创建表的时候可以指定列分隔符和数组分隔符：</p>
-<pre><code>hive&gt; create table users(name <span class="built_in">string</span>, age int)
- &gt; ROW FORMAT DELIMITED
- &gt; FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">'\t'</span>
- &gt; COLLECTION ITEMS TERMINATED <span class="keyword">BY</span> <span class="string">','</span>;
-</code></pre><p>导入数据还有几个参数：</p>
-<p>local参数意味着从本地加载文件，如果没有local参数，那表示从hdfs加载文件。</p>
-<p>关键字overwrite意味着当前表中已经存在的数据将会被删除掉，没有overwrite关键字，表示数据是追加，追加到原先数据集里面。</p>
-<p>插入数据，插入数据后会起一个map reduce job去跑插入的数据：</p>
-<pre><code>hive&gt; <span class="function">insert <span class="keyword">into</span> table users <span class="title">values</span>(<span class="params"><span class="string">'formatgogo'</span>, <span class="number">222</span></span>)</span>;
-</code></pre><p>带条件的查询数据：</p>
-<pre><code>hive&gt; <span class="keyword">select</span> * <span class="keyword">from</span> users <span class="keyword">where</span> age = <span class="number">11</span>;
-</code></pre><p>group by查询：</p>
-<pre><code>hive&gt; <span class="keyword">select</span> age, <span class="built_in">count</span>(<span class="number">1</span>) <span class="keyword">from</span> users <span class="built_in">group</span> <span class="keyword">by</span> age;
-</code></pre><p>partition的使用，以部门表为例，用type进行partition：</p>
-<pre><code>hive&gt; create table dept<span class="list">(<span class="keyword">name</span> STRING)</span> partitioned by <span class="list">(<span class="keyword">type</span> INT)</span><span class="comment">;</span>
-</code></pre><p>以2个文件为例，dept1.txt：</p>
-<pre><code><span class="label">dept1</span>^<span class="literal">A1</span>
-<span class="label">dept11</span>^<span class="literal">A1</span>
-<span class="label">dept111</span>^<span class="literal">A1</span>
-<span class="label">dept1111</span>^<span class="literal">A1</span>
-<span class="label">dept11111</span>^<span class="literal">A1</span>
-<span class="label">dept111111</span>^<span class="literal">A1</span>
-</code></pre><p>dept2.txt</p>
-<pre><code><span class="label">dept2</span>^<span class="literal">A2</span>
-<span class="label">dept22</span>^<span class="literal">A2</span>
-<span class="label">dept222</span>^<span class="literal">A2</span>
-<span class="label">dept2222</span>^<span class="literal">A2</span>
-<span class="label">dept22222</span>^<span class="literal">A2</span>
-<span class="label">dept222222</span>^<span class="literal">A2</span>
-</code></pre><p>使用partition之后，导入数据的时候需要指定对应的partition：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'$PATH/dept1.txt'</span> overwrite <span class="keyword">into</span> table dept partition(<span class="keyword">type</span>=<span class="number">1</span>);
-hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'$PATH/dept2.txt'</span> overwrite <span class="keyword">into</span> table dept partition(<span class="keyword">type</span>=<span class="number">2</span>);
-
-hive&gt; <span class="keyword">select</span> * from dept;
-</code></pre><p>结果：</p>
-<pre><code>OK
-dept1    <span class="number">1</span>
-dept11    <span class="number">1</span>
-dept111    <span class="number">1</span>
-dept1111    <span class="number">1</span>
-dept11111    <span class="number">1</span>
-dept111111    <span class="number">1</span>
-dept2    <span class="number">2</span>
-dept22    <span class="number">2</span>
-dept222    <span class="number">2</span>
-dept2222    <span class="number">2</span>
-dept22222    <span class="number">2</span>
-dept222222    <span class="number">2</span>
-Time taken: <span class="number">0.114</span> seconds, Fetched: <span class="number">12</span> row(s)
-</code></pre><p>insert可以将数据导出到指定目录，将users表导入到本地文件。 去掉local关键字表示导出到hdfs目录：</p>
-<pre><code>hive&gt; insert overwrite <span class="keyword">local</span> directory <span class="string">'localFileName'</span> <span class="keyword">select</span> * from users<span class="comment">;</span>
-</code></pre><h3 id="hive存储在hdfs的位置">hive存储在hdfs的位置</h3><p>进入hive控制台之后，可以使用：</p>
-<pre><code><span class="tag">hive</span>&gt; <span class="tag">set</span> <span class="tag">hive</span><span class="class">.metastore</span><span class="class">.warehouse</span><span class="class">.dir</span>;
-</code></pre><p>查看hive存储在hdfs的位置，默认是存在 /user/hive/warehouse 目录。</p>
-<p>之前的users表，会存储在/user/hive/warehouse/user目录里。</p>
-<p>有partition的表会存在的不同位置，比如之前的dept表的type为1和2的分别存储在 /user/hive/warehouse/dept/type=1 和 /user/hive/warehouse/dept/type=2。</p>
-<h2 id="数据类型">数据类型</h2><p>hive中的数据类型分2种，简单类型和复杂类型。</p>
-<p>简单类型有以下几种：TINYINT, SMALLINT, INT, BIGINT, BOOLEAN, FLOAT, DOUBLE, STRING。</p>
-<p>复杂类型有以下几种：Structs(结构体，学过C都知道)，MAPS(key-value键值对)，Arrays(数组类型，数组内的元素类型都必须一致)</p>
-<p>简单类型就不分析了，来看一下复杂类型的使用：</p>
-<h3 id="Structs">Structs</h3><pre><code><span class="label">hive</span>&gt; create table employee(id INT, <span class="preprocessor">info</span> <span class="keyword">struct&lt;name:STRING, </span>age:INT&gt;)
-      &gt; ROW FORMAT DELIMITED FIELDS TERMINATED <span class="keyword">BY </span><span class="string">','</span> 
-      &gt; COLLECTION <span class="keyword">ITEMS </span>TERMINATED <span class="keyword">BY </span><span class="string">':'</span><span class="comment">; </span>
-</code></pre><p>要导入的数据：</p>
-<pre><code><span class="number">1</span>,format:<span class="number">11</span>
-<span class="number">2</span>,fj:<span class="number">22</span>
-<span class="number">3</span>,formatfj:<span class="number">33</span>
-</code></pre><p>导入数据：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table employee;
-</code></pre><p>查询：</p>
-<pre><code>select * from employee;
-
-OK
-<span class="number">1</span>    {<span class="string">"name"</span>:<span class="string">"format"</span>,<span class="string">"age"</span>:<span class="number">11</span>}
-<span class="number">2</span>    {<span class="string">"name"</span>:<span class="string">"fj"</span>,<span class="string">"age"</span>:<span class="number">22</span>}
-<span class="number">3</span>    {<span class="string">"name"</span>:<span class="string">"formatfj"</span>,<span class="string">"age"</span>:<span class="number">33</span>}
-Time taken: <span class="number">0.042</span> seconds, Fetched: <span class="number">3</span> row(s)
-
-hive&gt; select info.name from employee;
-
-OK
-format
-fj
-formatfj
-Time taken: <span class="number">0.061</span> seconds, Fetched: <span class="number">3</span> row(s)
-</code></pre><h3 id="Maps">Maps</h3><pre><code>hive&gt; create table lessons(id <span class="built_in">string</span>, score <span class="built_in">map</span>&lt;<span class="built_in">string</span>, int&gt;)
-    &gt; ROW FORMAT DELIMITED
-    &gt; FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">'\t'</span>
-    &gt; COLLECTION ITEMS TERMINATED <span class="keyword">BY</span> <span class="string">','</span>
-    &gt; <span class="built_in">MAP</span> KEYS TERMINATED <span class="keyword">BY</span> <span class="string">':'</span>;
-</code></pre><p>要导入的数据：</p>
-<pre><code><span class="number">1</span>       chinese:<span class="number">80</span>,english:<span class="number">60</span>,math:<span class="number">70</span>  
-<span class="number">2</span>       computer:<span class="number">60</span>,chemistry:<span class="number">80</span>   
-</code></pre><p>导入数据：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table lessons;
-</code></pre><p>查询：</p>
-<pre><code>hive&gt; <span class="keyword">select</span> score[<span class="string">'chinese'</span>] <span class="keyword">from</span> lessions;
-
-OK
-<span class="number">80</span>
-NULL
-Time taken: <span class="number">0.05</span> seconds, Fetched: <span class="number">2</span> row(s)
-
-hive&gt; <span class="keyword">select</span> * <span class="keyword">from</span> lessons;
-OK
-<span class="number">1</span>    {<span class="string">"chinese"</span>:<span class="number">80</span>,<span class="string">"english"</span>:<span class="number">60</span>,<span class="string">"math"</span>:<span class="number">70</span>}
-<span class="number">2</span>    {<span class="string">"computer"</span>:<span class="number">60</span>,<span class="string">"chemistry"</span>:<span class="number">80</span>}
-Time taken: <span class="number">0.032</span> seconds, Fetched: <span class="number">2</span> row(s)
-</code></pre><h3 id="Arrays">Arrays</h3><pre><code>hive&gt; create table student(name <span class="built_in">string</span>, hobby_list <span class="built_in">array</span>&lt;<span class="built_in">STRING</span>&gt;)
-    &gt; ROW FORMAT DELIMITED
-    &gt; FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">','</span>
-    &gt; COLLECTION ITEMS TERMINATED <span class="keyword">BY</span> <span class="string">':'</span>;
-</code></pre><p>要导入的数据：</p>
-<pre><code><span class="tag">format</span>,<span class="tag">basketball</span><span class="pseudo">:football</span><span class="pseudo">:swimming</span>
-<span class="tag">fj</span>,<span class="tag">coding</span><span class="pseudo">:running</span>
-</code></pre><p>导入数据：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table student;
-</code></pre><p>查询(数组下标没对应的值的话返回NULL)：</p>
-<pre><code>hive&gt; select * from student;
-
-OK
-format    [<span class="string">"basketball"</span>,<span class="string">"football"</span>,<span class="string">"swimming"</span>]
-fj    [<span class="string">"coding"</span>,<span class="string">"running"</span>]
-Time taken: <span class="number">0.041</span> seconds, Fetched: <span class="number">2</span> row(s)
-
-hive&gt; select hobby_list[<span class="number">2</span>] from student;
-
-OK
-swimming
-<span class="literal">NULL</span>
-Time taken: <span class="number">0.07</span> seconds, Fetched: <span class="number">2</span> row(s)
-</code></pre>
             
+              
+                <a class="post-title-link" href="/2015/07/12/elasticsearch-tutorials/" itemprop="url">
+                  Elasticsearch入门
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-07-12T03:06:59+08:00" content="2015-07-12">
+              2015-07-12
+            </time>
           </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/07/12/elasticsearch-tutorials/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/12/elasticsearch-tutorials/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="description">Elasticsearch是一个基于Lucene的搜索服务器。它提供了一个分布式多用户能力的全文搜索引擎，使用RESTful web暴露接口 ...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2015/07/12/elasticsearch-tutorials/">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/07/07/flume-run/" itemprop="url">
+                  Flume运行过程源码分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-07-07T23:23:23+08:00" content="2015-07-07">
+              2015-07-07
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/07/07/flume-run/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/07/flume-run/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="description">Flume运行的主类是org.apache.flume.node.Application的main方法 ...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2015/07/07/flume-run/">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/06/23/flume-sink/" itemprop="url">
+                  Flume Sink组件分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-06-23T01:23:23+08:00" content="2015-06-23">
+              2015-06-23
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/06/23/flume-sink/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/23/flume-sink/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="description">Flume内置了很多Sink，比如HDFS Sink, Hive Sink, File Roll Sink, HBase Sink, ElasticSearch Sink等 ...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2015/06/23/flume-sink/">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/06/22/flume-channel/" itemprop="url">
+                  Flume Channel组件分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-06-22T23:23:23+08:00" content="2015-06-22">
+              2015-06-22
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/06/22/flume-channel/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/22/flume-channel/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="description">Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等 ...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2015/06/22/flume-channel/">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/06/21/flume-source/" itemprop="url">
+                  Flume Source组件分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-06-21T23:23:23+08:00" content="2015-06-21">
+              2015-06-21
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/06/21/flume-source/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/21/flume-source/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="description">Flume内置了很多Source，比如Avro Source，Spooling Directory Source，NetCat Source，Kafka Source等 ...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2015/06/21/flume-source/">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2015/06/21/flume-introduction/" itemprop="url">
+                  Flume介绍
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-06-21T21:23:34+08:00" content="2015-06-21">
+              2015-06-21
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/06/21/flume-introduction/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/21/flume-introduction/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="description">Flume是一个分布式的，效率高的用来收集日志数据的开源框架。它的架构是基于流式数据，有3个重要的组件，分别是Source，Channel和Sink</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2015/06/21/flume-introduction/">
+              阅读全文 &raquo;
+            </a>
+          </div>
         
       
     </div>
@@ -1391,7 +1171,7 @@ Time taken: <span class="number">0.07</span> seconds, Fetched: <span class="numb
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/12/">12</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 

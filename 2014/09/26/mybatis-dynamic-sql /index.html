@@ -55,18 +55,12 @@
 
 
 
-<meta name="description" content="前言废话不多说，直接进入文章。我们在使用mybatis的时候，会在xml中编写sql语句。比如这段动态sql代码：
-&amp;lt;update id=&quot;update&quot; parameterType=&quot;org.format.dynamicproxy.mybatis.bean.User&quot;&amp;gt;
-    UPDATE users
-    &amp;lt;trim prefix=&quot;SET&quot; prefixOverride">
+<meta name="description" content="MyBatis动态SQL底层原理分析">
 <meta property="og:type" content="article">
 <meta property="og:title" content="MyBatis动态SQL底层原理分析">
 <meta property="og:url" content="http://fangjian0423.github.io/2014/09/26/mybatis-dynamic-sql /index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="前言废话不多说，直接进入文章。我们在使用mybatis的时候，会在xml中编写sql语句。比如这段动态sql代码：
-&amp;lt;update id=&quot;update&quot; parameterType=&quot;org.format.dynamicproxy.mybatis.bean.User&quot;&amp;gt;
-    UPDATE users
-    &amp;lt;trim prefix=&quot;SET&quot; prefixOverride">
+<meta property="og:description" content="MyBatis动态SQL底层原理分析">
 <meta property="og:image" content="http://format-blog-image.qiniudn.com/dynamicsql2.png">
 <meta property="og:image" content="http://format-blog-image.qiniudn.com/dynamicsql3.png">
 <meta property="og:image" content="http://format-blog-image.qiniudn.com/dynamicsql1.png">
@@ -83,13 +77,10 @@
 <meta property="og:image" content="http://format-blog-image.qiniudn.com/dynamicsql14.png">
 <meta property="og:image" content="http://format-blog-image.qiniudn.com/dynamicsql15.png">
 <meta property="og:image" content="http://format-blog-image.qiniudn.com/dynamicsql16.png">
-<meta property="og:updated_time" content="2015-11-07T08:41:58.000Z">
+<meta property="og:updated_time" content="2015-12-20T17:02:45.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="MyBatis动态SQL底层原理分析">
-<meta name="twitter:description" content="前言废话不多说，直接进入文章。我们在使用mybatis的时候，会在xml中编写sql语句。比如这段动态sql代码：
-&amp;lt;update id=&quot;update&quot; parameterType=&quot;org.format.dynamicproxy.mybatis.bean.User&quot;&amp;gt;
-    UPDATE users
-    &amp;lt;trim prefix=&quot;SET&quot; prefixOverride">
+<meta name="twitter:description" content="MyBatis动态SQL底层原理分析">
 
 
 

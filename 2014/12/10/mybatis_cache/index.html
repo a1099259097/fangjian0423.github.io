@@ -55,26 +55,20 @@
 
 
 
-<meta name="description" content="前方高能！ 本文内容有点多，通过实际测试例子+源码分析的方式解剖MyBatis缓存的概念，对这方面有兴趣的小伙伴请继续看下去~
-MyBatis缓存介绍首先看一段wiki上关于MyBatis缓存的介绍：
-MyBatis支持声明式数据缓存（declarative data caching）。当一条SQL语句被标记为“可缓存”后，首次执行它时从数据库获取的所有数据会被存储在一段高速缓存中，今后执行这条语">
+<meta name="description" content="MyBatis支持声明式数据缓存（declarative data caching）。当一条SQL语句被标记为“可缓存”后，首次执行它时从数据库获取的所有数据会被存储在一段高速缓存中 ...">
 <meta property="og:type" content="article">
 <meta property="og:title" content="通过源码分析MyBatis的缓存">
 <meta property="og:url" content="http://fangjian0423.github.io/2014/12/10/mybatis_cache/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="前方高能！ 本文内容有点多，通过实际测试例子+源码分析的方式解剖MyBatis缓存的概念，对这方面有兴趣的小伙伴请继续看下去~
-MyBatis缓存介绍首先看一段wiki上关于MyBatis缓存的介绍：
-MyBatis支持声明式数据缓存（declarative data caching）。当一条SQL语句被标记为“可缓存”后，首次执行它时从数据库获取的所有数据会被存储在一段高速缓存中，今后执行这条语">
+<meta property="og:description" content="MyBatis支持声明式数据缓存（declarative data caching）。当一条SQL语句被标记为“可缓存”后，首次执行它时从数据库获取的所有数据会被存储在一段高速缓存中 ...">
 <meta property="og:image" content="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_mybatis_cache01.jpg">
 <meta property="og:image" content="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_mybatis_cache02.jpg">
 <meta property="og:image" content="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_mybatis_cache03.jpg">
 <meta property="og:image" content="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_mybatis_cache04.jpg">
-<meta property="og:updated_time" content="2015-11-07T08:43:01.000Z">
+<meta property="og:updated_time" content="2015-12-20T17:03:56.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="通过源码分析MyBatis的缓存">
-<meta name="twitter:description" content="前方高能！ 本文内容有点多，通过实际测试例子+源码分析的方式解剖MyBatis缓存的概念，对这方面有兴趣的小伙伴请继续看下去~
-MyBatis缓存介绍首先看一段wiki上关于MyBatis缓存的介绍：
-MyBatis支持声明式数据缓存（declarative data caching）。当一条SQL语句被标记为“可缓存”后，首次执行它时从数据库获取的所有数据会被存储在一段高速缓存中，今后执行这条语">
+<meta name="twitter:description" content="MyBatis支持声明式数据缓存（declarative data caching）。当一条SQL语句被标记为“可缓存”后，首次执行它时从数据库获取的所有数据会被存储在一段高速缓存中 ...">
 
 
 

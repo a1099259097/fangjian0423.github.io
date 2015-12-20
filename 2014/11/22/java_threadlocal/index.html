@@ -55,29 +55,20 @@
 
 
 
-<meta name="description" content="前言java猿在面试中，经常会被问到1个问题：java实现同步有哪几种方式？
-大家一般都会回答使用synchronized， 那么还有其他方式吗？  答案是肯定的， 另外一种方式也就是本文要说的ThreadLocal。
-ThreadLocal介绍ThreadLocal, 看名字也能猜到， “线程本地”, “线程本地变量”。 我们看下官方的一段话：
-This class provides threa">
+<meta name="description" content="java猿在面试中，经常会被问到1个问题：java实现同步有哪几种方式？ ...">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ThreadLocal原理及其实际应用">
 <meta property="og:url" content="http://fangjian0423.github.io/2014/11/22/java_threadlocal/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="前言java猿在面试中，经常会被问到1个问题：java实现同步有哪几种方式？
-大家一般都会回答使用synchronized， 那么还有其他方式吗？  答案是肯定的， 另外一种方式也就是本文要说的ThreadLocal。
-ThreadLocal介绍ThreadLocal, 看名字也能猜到， “线程本地”, “线程本地变量”。 我们看下官方的一段话：
-This class provides threa">
+<meta property="og:description" content="java猿在面试中，经常会被问到1个问题：java实现同步有哪几种方式？ ...">
 <meta property="og:image" content="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_threadlocal_1.jpg">
 <meta property="og:image" content="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_threadlocal_2.png">
 <meta property="og:image" content="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_threadlocal_3.png">
 <meta property="og:image" content="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_threadlocal_4.png">
-<meta property="og:updated_time" content="2015-11-07T08:46:18.000Z">
+<meta property="og:updated_time" content="2015-12-20T16:52:01.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ThreadLocal原理及其实际应用">
-<meta name="twitter:description" content="前言java猿在面试中，经常会被问到1个问题：java实现同步有哪几种方式？
-大家一般都会回答使用synchronized， 那么还有其他方式吗？  答案是肯定的， 另外一种方式也就是本文要说的ThreadLocal。
-ThreadLocal介绍ThreadLocal, 看名字也能猜到， “线程本地”, “线程本地变量”。 我们看下官方的一段话：
-This class provides threa">
+<meta name="twitter:description" content="java猿在面试中，经常会被问到1个问题：java实现同步有哪几种方式？ ...">
 
 
 

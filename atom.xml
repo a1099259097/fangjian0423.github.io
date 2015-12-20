@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2015-12-20T09:27:40.000Z</updated>
+  <updated>2015-12-20T17:11:57.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -19,7 +19,7 @@
     <link href="http://fangjian0423.github.io/2015/12/20/scala-implicit/"/>
     <id>http://fangjian0423.github.io/2015/12/20/scala-implicit/</id>
     <published>2015-12-20T07:38:22.000Z</published>
-    <updated>2015-12-20T09:27:40.000Z</updated>
+    <updated>2015-12-20T17:11:57.000Z</updated>
     <content type="html"><![CDATA[<h2 id="前言">前言</h2><p>Scala的implicit功能很强大，可以自动地给对象”添加一个属性”。 这里打上引号的原因是Scala内部进行编译的时候会自动加上隐式转换函数。</p>
 <p>很多Scala开源框架内部都大量使用了implicit。因为implicit真的很强大，写得好的implicit可以让代码更优雅。但个人感觉implicit也有一些缺点，比如使用了implicit之后，看源码或者使用一些library的时候无法下手，因为你根本不知道作者哪里写了implicit。这个也会对初学者造成一些困扰。</p>
 <p>比如Scala中Option就有一个implicit可以将Option转换成Iterable：</p>
@@ -139,7 +139,7 @@ implicitObjMethod(<span class="number">1</span>, <span class="number">2</span>) 
 implicitObjMethod(List(<span class="number">1</span>, <span class="number">2</span>), List(<span class="number">3</span>, <span class="number">4</span>)) // List(<span class="number">1</span>, <span class="number">2</span>) + List(<span class="number">3</span>, <span class="number">4</span>) = List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>)
 </code></pre>]]></content>
     <summary type="html">
-    <![CDATA[Scala的implicit功能很强大，可以自动地给对象"添加一个属性"。 这里打上引号的原因是Scala内部进行编译的时候会自动加上隐式转换函数]]>
+    <![CDATA[Scala的implicit功能很强大，可以自动地给对象"添加一个属性"。 这里打上引号的原因是Scala内部进行编译的时候会自动加上隐式转换函数 ...]]>
     
     </summary>
     
@@ -156,7 +156,7 @@ implicitObjMethod(List(<span class="number">1</span>, <span class="number">2</sp
     <link href="http://fangjian0423.github.io/2015/11/07/elasticsearch-search-template/"/>
     <id>http://fangjian0423.github.io/2015/11/07/elasticsearch-search-template/</id>
     <published>2015-11-07T08:04:25.000Z</published>
-    <updated>2015-11-07T08:24:21.000Z</updated>
+    <updated>2015-12-20T17:06:16.000Z</updated>
     <content type="html"><![CDATA[<p>最近在公司又用到了elasticsearch，也用到了查询模板，顺便写篇文章记录一下查询模板的使用。</p>
 <p>以1个需求为例讲解es模板的使用：</p>
 <p><strong>页面上某个按钮在一段时间内的点击次数统计，并且可以以小时，天，月为单位进行汇总，并且需要去重。</strong></p>
@@ -348,9 +348,8 @@ implicitObjMethod(List(<span class="number">1</span>, <span class="number">2</sp
 <p>本文只是简单说明了es查询模板的使用，也简单使用了2个aggregation。更多内容可以去官网查看相关资料。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>最近在公司又用到了elasticsearch，也用到了查询模板，顺便写篇文章记录一下查询模板的使用。</p>
-<p>以1个需求为例讲解es模板的使用：</p>
-<p><strong>页面上某个按钮在一段时间内的点击次数统计，并且可以以小时，天，月为单位进行汇总，并且需要去重]]>
+    <![CDATA[近在公司又用到了elasticsearch，也用到了查询模板，顺便写篇文章记录一下查询模板的使用 ...]]>
+    
     </summary>
     
       <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
@@ -366,7 +365,7 @@ implicitObjMethod(List(<span class="number">1</span>, <span class="number">2</sp
     <link href="http://fangjian0423.github.io/2015/10/29/html-left-right-menu/"/>
     <id>http://fangjian0423.github.io/2015/10/29/html-left-right-menu/</id>
     <published>2015-10-29T13:15:13.000Z</published>
-    <updated>2015-11-07T08:43:28.000Z</updated>
+    <updated>2015-12-20T17:06:35.000Z</updated>
     <content type="html"><![CDATA[<h2 id="正文">正文</h2><p>最近要实现一个微信端页面左边弹出菜单的实现，效果如下：</p>
 <iframe src="//jsfiddle.net/format/t0xda6zv/embedded/result,js,html,css" width="100%" height="500" frameborder="0" allowfullscreen></iframe>
 <p>绿色部分是左菜单内容，高度填充满整个页面。且有滚动条，并且滚动条内容随着滚动条的滚动不会影响正文的滚动，正文内容的滚动不会影响左菜单的滚动。</p>
@@ -386,8 +385,8 @@ implicitObjMethod(List(<span class="number">1</span>, <span class="number">2</sp
 <iframe src="//jsfiddle.net/format/kec1up6t/embedded/result,html" width="100%" height="500" frameborder="0" allowfullscreen></iframe>
 ]]></content>
     <summary type="html">
-    <![CDATA[<h2 id="正文">正文</h2><p>最近要实现一个微信端页面左边弹出菜单的实现，效果如下：</p>
-<iframe src="//jsfiddle.net/format/t0xda6zv/embedded/result,js,html,css" width="100%" ]]>
+    <![CDATA[最近要实现一个微信端页面左边弹出菜单的实现，效果如下 ...]]>
+    
     </summary>
     
       <category term="css" scheme="http://fangjian0423.github.io/tags/css/"/>
@@ -403,7 +402,7 @@ implicitObjMethod(List(<span class="number">1</span>, <span class="number">2</sp
     <link href="http://fangjian0423.github.io/2015/10/24/front-end/"/>
     <id>http://fangjian0423.github.io/2015/10/24/front-end/</id>
     <published>2015-10-24T12:15:13.000Z</published>
-    <updated>2015-11-07T08:33:52.000Z</updated>
+    <updated>2015-12-20T17:01:03.000Z</updated>
     <content type="html"><![CDATA[<p>这段时间被拉去当做前端了，做了快1个多月了，也好久没写博客了。 做了两个项目的前端，这周是第二个项目的启动，而且这周简直是灾难的一周，基本上都是23点后下班的，有两天还是凌晨2点。悲剧。</p>
 <p>做前端经验不是很多，这个月还是学到了一些前端的自己没掌握的知识。做个总结吧。</p>
 <p>1.box-sizing属性。</p>
@@ -497,8 +496,8 @@ body {
 </code></pre><p>还有其他的一些比如绝对定位，固定定位，相对定位，overflow等问题就不一一举例了。 估计之后还是得做前端的一些工作，到时候用到了一些新内容的话还会继续更新前端相关的博客的。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>这段时间被拉去当做前端了，做了快1个多月了，也好久没写博客了。 做了两个项目的前端，这周是第二个项目的启动，而且这周简直是灾难的一周，基本上都是23点后下班的，有两天还是凌晨2点。悲剧。</p>
-<p>做前端经验不是很多，这个月还是学到了一些前端的自己没掌握的知识。做个总结]]>
+    <![CDATA[这段时间被拉去当做前端了，做了快1个多月了，也好久没写博客了。 做了两个项目的前端，这周是第二个项目的启动 ...]]>
+    
     </summary>
     
       <category term="css" scheme="http://fangjian0423.github.io/tags/css/"/>
@@ -514,7 +513,7 @@ body {
     <link href="http://fangjian0423.github.io/2015/10/07/scala-predef/"/>
     <id>http://fangjian0423.github.io/2015/10/07/scala-predef/</id>
     <published>2015-10-06T16:37:20.000Z</published>
-    <updated>2015-11-07T08:42:10.000Z</updated>
+    <updated>2015-12-20T17:03:03.000Z</updated>
     <content type="html"><![CDATA[<h2 id="前言">前言</h2><p>Scala每个程序都会自动import以下3个包，分别是 java.lang.<em>  ,  scala.</em> 和 Predef._ 。跟Java程序都会自动import java.lang一样。</p>
 <p>Predef是一个单例对象，所以我们import进来之后，可以直接使用Predef中定义的方法。</p>
 <h2 id="Predef中定义的方法和属性">Predef中定义的方法和属性</h2><h3 id="常用方法和类">常用方法和类</h3><pre><code><span class="function"><span class="keyword">def</span> <span class="title">classOf</span>[</span><span class="type">T</span>]: <span class="type">Class</span>[<span class="type">T</span>] = <span class="literal">null</span> <span class="comment">// This is a stub method. The actual implementation is filled in by the compiler.</span>
@@ -708,8 +707,8 @@ doublelPositive(-<span class="number">1</span>) // java.lang.AssertionError: ass
 <span class="type">implicit</span> def Boolean2boolean(x: java.lang.Boolean): Boolean = x.booleanValue
 </code></pre>]]></content>
     <summary type="html">
-    <![CDATA[<h2 id="前言">前言</h2><p>Scala每个程序都会自动import以下3个包，分别是 java.lang.<em>  ,  scala.</em> 和 Predef._ 。跟Java程序都会自动import java.lang一样。</p>
-<p>Predef是一]]>
+    <![CDATA[Scala每个程序都会自动import以下3个包，分别是 java.lang._  ,  scala._ 和 Predef._ 。跟Java程序都会自动import java.lang一样 ...]]>
+    
     </summary>
     
       <category term="jvm" scheme="http://fangjian0423.github.io/tags/jvm/"/>
@@ -725,7 +724,7 @@ doublelPositive(-<span class="number">1</span>) // java.lang.AssertionError: ass
     <link href="http://fangjian0423.github.io/2015/09/21/springboot-intro/"/>
     <id>http://fangjian0423.github.io/2015/09/21/springboot-intro/</id>
     <published>2015-09-20T16:21:49.000Z</published>
-    <updated>2015-11-07T08:44:46.000Z</updated>
+    <updated>2015-12-20T17:07:24.000Z</updated>
     <content type="html"><![CDATA[<p>SpringBoot是Java的一个micro-service框架。它设计的目的是简化Spring应用的初始搭建以及开发过程。使用SpringBoot可以避免大量的xml配置文件，它内部使用很多约定的方式。</p>
 <p>以一个最简单的MVC例子来说，使用SpringBoot进行开发的话定义好对应的Controller，Repository和Entity之后，加上各自的Annotation即可。</p>
 <p>Repository框架可以选择Spring Data或者Hibernate，可通过自由配置。</p>
@@ -793,8 +792,8 @@ public <span class="class"><span class="keyword">class</span> <span class="title
 <p><a href="https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples" target="_blank" rel="external">https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples</a></p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>SpringBoot是Java的一个micro-service框架。它设计的目的是简化Spring应用的初始搭建以及开发过程。使用SpringBoot可以避免大量的xml配置文件，它内部使用很多约定的方式。</p>
-<p>以一个最简单的MVC例子来说，使用SpringBoo]]>
+    <![CDATA[SpringBoot是Java的一个micro-service框架。它设计的目的是简化Spring应用的初始搭建以及开发过程。使用SpringBoot可以避免大量的xml配置文件，它内部使用很多约定的方式 ...]]>
+    
     </summary>
     
       <category term="microservice" scheme="http://fangjian0423.github.io/tags/microservice/"/>
@@ -810,7 +809,7 @@ public <span class="class"><span class="keyword">class</span> <span class="title
     <link href="http://fangjian0423.github.io/2015/08/18/slick-intro/"/>
     <id>http://fangjian0423.github.io/2015/08/18/slick-intro/</id>
     <published>2015-08-18T15:22:33.000Z</published>
-    <updated>2015-11-07T08:44:01.000Z</updated>
+    <updated>2015-12-20T17:05:53.000Z</updated>
     <content type="html"><![CDATA[<h2 id="FRM介绍">FRM介绍</h2><p>最近看到了一个FRM的框架Slick。 FRM的意思是Functional Relational Mapping， 一种基于函数式的ORM。</p>
 <p>举一个最简单的例子：</p>
 <pre><code>val queryResult = db.query(queryStr)
@@ -1039,9 +1038,8 @@ try {
 } finally db.close()
 </code></pre>]]></content>
     <summary type="html">
-    <![CDATA[<h2 id="FRM介绍">FRM介绍</h2><p>最近看到了一个FRM的框架Slick。 FRM的意思是Functional Relational Mapping， 一种基于函数式的ORM。</p>
-<p>举一个最简单的例子：</p>
-<pre><code>val quer]]>
+    <![CDATA[近看到了一个FRM的框架Slick。 FRM的意思是Functional Relational Mapping， 一种基于函数式的ORM ...]]>
+    
     </summary>
     
       <category term="frm" scheme="http://fangjian0423.github.io/tags/frm/"/>
@@ -1059,7 +1057,7 @@ try {
     <link href="http://fangjian0423.github.io/2015/08/14/scala-future/"/>
     <id>http://fangjian0423.github.io/2015/08/14/scala-future/</id>
     <published>2015-08-14T12:22:33.000Z</published>
-    <updated>2015-11-07T08:33:19.000Z</updated>
+    <updated>2015-12-20T16:55:17.000Z</updated>
     <content type="html"><![CDATA[<p>Future这个概念其实java里也已经有了， 表示一个未来的意思。 某线程执行一项操作，这个操作有延迟的话，Future会提供一系列方法来处理这个线程过程，可取消，可操作完成后执行其他操作等等。</p>
 <p>使用Future是非阻塞的，在Future中可以使用回调函数可以避免阻塞操作。 Scala在Future中提供了flatMap，foreach，filter等方法。</p>
 <h2 id="Future概念">Future概念</h2><p>Future的状态：</p>
@@ -1149,8 +1147,8 @@ secondFuture.onSuccess {
 </code></pre><p>其他资料参考<a href="http://docs.scala-lang.org/overviews/core/futures.html" target="_blank" rel="external">Scala的官方文档</a>即可。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>Future这个概念其实java里也已经有了， 表示一个未来的意思。 某线程执行一项操作，这个操作有延迟的话，Future会提供一系列方法来处理这个线程过程，可取消，可操作完成后执行其他操作等等。</p>
-<p>使用Future是非阻塞的，在Future中可以使用回调函数可]]>
+    <![CDATA[Future这个概念其实java里也已经有了， 表示一个未来的意思。 某线程执行一项操作，这个操作有延迟的话，Future会提供一系列方法来处理这个线程过程，可取消，可操作完成...]]>
+    
     </summary>
     
       <category term="concurrent" scheme="http://fangjian0423.github.io/tags/concurrent/"/>
@@ -1166,7 +1164,7 @@ secondFuture.onSuccess {
     <link href="http://fangjian0423.github.io/2015/08/07/hbase-intro/"/>
     <id>http://fangjian0423.github.io/2015/08/07/hbase-intro/</id>
     <published>2015-08-06T16:22:33.000Z</published>
-    <updated>2015-11-07T08:40:45.000Z</updated>
+    <updated>2015-12-20T17:02:23.000Z</updated>
     <content type="html"><![CDATA[<h2 id="前言">前言</h2><p>HBase在公司已经用过一段时间，在Flume中添加一个HBase sink将一些数据存储到HBase里。</p>
 <p>当时HBase也没学，看了看几个例子，了解了它是基于列的表设计之后，就马上上手了，而且也把东西做出来了。 现在记录一下HBase的一些学习笔记。</p>
 <h2 id="HBase简介">HBase简介</h2><p>HBase是什么？</p>
@@ -1333,8 +1331,8 @@ get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</sp
 </code></pre><p>scan命令具体其他的参数就不一一列举了，可查询文档解决。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<h2 id="前言">前言</h2><p>HBase在公司已经用过一段时间，在Flume中添加一个HBase sink将一些数据存储到HBase里。</p>
-<p>当时HBase也没学，看了看几个例子，了解了它是基于列的表设计之后，就马上上手了，而且也把东西做出来了。 现在记录]]>
+    <![CDATA[HBase在公司已经用过一段时间，在Flume中添加一个HBase sink将一些数据存储到HBase里 ...]]>
+    
     </summary>
     
       <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
@@ -1350,7 +1348,7 @@ get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</sp
     <link href="http://fangjian0423.github.io/2015/07/31/hive-intro/"/>
     <id>http://fangjian0423.github.io/2015/07/31/hive-intro/</id>
     <published>2015-07-31T05:32:33.000Z</published>
-    <updated>2015-11-07T08:42:30.000Z</updated>
+    <updated>2015-12-20T17:04:55.000Z</updated>
     <content type="html"><![CDATA[<p>Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集。</p>
 <p>Hive提供了一种叫做HiveQL的类似SQL查询语言用来查询数据，HiveQL也允许熟悉MapReduce开发者开发自定义的mapper和reducer来处理内建的mapper和reducer无法完成的复杂的分析工作。</p>
 <p>Hive的工作模式是提交一个任务，等到任务结束时被通知，而不是实时查询。</p>
@@ -1526,8 +1524,8 @@ swimming
 Time taken: <span class="number">0.07</span> seconds, Fetched: <span class="number">2</span> row(s)
 </code></pre>]]></content>
     <summary type="html">
-    <![CDATA[<p>Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集。</p>
-<p>Hive提供了一种叫做HiveQL的类似SQL查询语言用来查询数据，HiveQL也允许熟悉MapReduce开发者开发自定义的mapper和reducer来处理内建]]>
+    <![CDATA[Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集 ...]]>
+    
     </summary>
     
       <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
@@ -1543,7 +1541,7 @@ Time taken: <span class="number">0.07</span> seconds, Fetched: <span class="numb
     <link href="http://fangjian0423.github.io/2015/07/26/google-guava-intro/"/>
     <id>http://fangjian0423.github.io/2015/07/26/google-guava-intro/</id>
     <published>2015-07-26T08:32:33.000Z</published>
-    <updated>2015-11-07T08:37:46.000Z</updated>
+    <updated>2015-12-20T16:57:40.000Z</updated>
     <content type="html"><![CDATA[<h2 id="Guava简介">Guava简介</h2><p><a href="https://mail.google.com/mail/u/0/" target="_blank" rel="external">Guava</a>是一个Google开发的基于java的扩展项目，提供了很多有用的工具类，可以让java代码更加优雅，更加简洁。</p>
 <p>Guava包括诸多工具类，比如Collections，cache，concurrent，hash，reflect，annotations，eventbus等。</p>
 <p>刚好在看flume源码的时候看到源码里面使用了很多guava提供的代码，于是记录学习一下这个类库。</p>
@@ -1566,7 +1564,8 @@ Time taken: <span class="number">0.07</span> seconds, Fetched: <span class="numb
 <h3 id="反射">反射</h3><p>Guava的Java反射机制工具类</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<h2 id="Guava简介">Guava简介</h2><p><a href="https://mail.google.com/mail/u/0/" target="_blank" rel="external">Guava</a>是一个Google开发的基于java的扩展项目，]]>
+    <![CDATA[Guava是一个Google开发的基于java的扩展项目，提供了很多有用的工具类，可以让java代码更加优雅，更加简洁 ...]]>
+    
     </summary>
     
       <category term="guava" scheme="http://fangjian0423.github.io/tags/guava/"/>
@@ -1582,7 +1581,7 @@ Time taken: <span class="number">0.07</span> seconds, Fetched: <span class="numb
     <link href="http://fangjian0423.github.io/2015/07/24/java-poolthread/"/>
     <id>http://fangjian0423.github.io/2015/07/24/java-poolthread/</id>
     <published>2015-07-24T12:32:33.000Z</published>
-    <updated>2015-11-07T08:27:53.000Z</updated>
+    <updated>2015-12-20T17:10:06.000Z</updated>
     <content type="html"><![CDATA[<p>目前的工作是接触大数据相关的内容，自己也缺少高并发的知识，刚好前几天看了flume的源码，里面也用到了各种线程池内容，刚好学习一下，做个笔记。</p>
 <p>写这篇博客的时候又刚好想起了当时自己实习的时候遇到的一个问题。1000个爬虫任务使用了多线程的处理方式，比如开5个线程处理这1000个任务，每个线程分200个任务，然后各个线程处理那200个爬虫任务→_→，太笨了。其实更合理的方法是使用阻塞队列+线程池的方法。</p>
 <h2 id="ExecutorService">ExecutorService</h2><p>ExecutorService就是线程池的概念，ExecutorService的初始化可以使用Executors类的静态方法。</p>
@@ -1799,8 +1798,8 @@ scheduleWithFixedDelay有<span class="number">4</span>个参数，第一个参�
 <pre><code>执行了<span class="number">4</span>次exec，第一次在<span class="number">0</span>秒执行，第二次在<span class="number">5</span>秒，第三次是<span class="number">10</span>秒，第四次在<span class="number">15</span>秒执行
 </code></pre>]]></content>
     <summary type="html">
-    <![CDATA[<p>目前的工作是接触大数据相关的内容，自己也缺少高并发的知识，刚好前几天看了flume的源码，里面也用到了各种线程池内容，刚好学习一下，做个笔记。</p>
-<p>写这篇博客的时候又刚好想起了当时自己实习的时候遇到的一个问题。1000个爬虫任务使用了多线程的处理方式，比如开5个线]]>
+    <![CDATA[写这篇博客的时候又刚好想起了当时自己实习的时候遇到的一个问题。1000个爬虫任务使用了多线程的处理方式，比如开5个线程处理这1000个任务 ...]]>
+    
     </summary>
     
       <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
@@ -1816,7 +1815,7 @@ scheduleWithFixedDelay有<span class="number">4</span>个参数，第一个参�
     <link href="http://fangjian0423.github.io/2015/07/20/flume-hdfs-sink/"/>
     <id>http://fangjian0423.github.io/2015/07/20/flume-hdfs-sink/</id>
     <published>2015-07-20T15:32:33.000Z</published>
-    <updated>2015-11-07T08:25:56.000Z</updated>
+    <updated>2015-12-20T17:09:49.000Z</updated>
     <content type="html"><![CDATA[<p>Flume有HDFS Sink，可以将Source进来的数据写入到hdfs中。</p>
 <p>HDFS Sink具体的逻辑代码是在HDFSEventSink这个类中。</p>
 <p>HDFS Sink跟写文件相关的配置如下：</p>
@@ -2387,10 +2386,8 @@ public void <span class="function">sync</span>() throws IOException </span>{
 <p>hdfs.minBlockReplicas表示期望hdfs对文件最小的复制块数。所以有时候我们配置了hdfs.rollInterval，hdfs.rollSize，hdfs.rollCount这3个参数，并且这3个参数都没有符合条件，但是还是生成了多个文件，这就是因为这个参数导致的，而且这个参数的优先级比hdfs.rollSize，hdfs.rollCount要高。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>Flume有HDFS Sink，可以将Source进来的数据写入到hdfs中。</p>
-<p>HDFS Sink具体的逻辑代码是在HDFSEventSink这个类中。</p>
-<p>HDFS Sink跟写文件相关的配置如下：</p>
-<p>hdfs.path -&gt; h]]>
+    <![CDATA[分析Flume HDFSSink写hdfs文件过程]]>
+    
     </summary>
     
       <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
@@ -2406,7 +2403,7 @@ public void <span class="function">sync</span>() throws IOException </span>{
     <link href="http://fangjian0423.github.io/2015/07/14/flume-notes/"/>
     <id>http://fangjian0423.github.io/2015/07/14/flume-notes/</id>
     <published>2015-07-14T14:23:23.000Z</published>
-    <updated>2015-11-07T08:28:57.000Z</updated>
+    <updated>2015-12-20T16:52:53.000Z</updated>
     <content type="html"><![CDATA[<p>根据项目的经验，介绍几个flume比较有用的功能。</p>
 <h2 id="ChannelSelector功能">ChannelSelector功能</h2><p>flume内置的ChannelSelector有两种，分别是Replicating和Multiplexing。</p>
 <p>Replicating类型的ChannelSelector会针对每一个Event，拷贝到所有的Channel中，这是默认的ChannelSelector。</p>
@@ -2544,8 +2541,8 @@ a1.channels.c2.transactionCapacity = <span class="number">100</span>
 <h2 id="其它">其它</h2><p>目前还正在用Flume开发一些功能，后续可能会使用一些新的功能，到时候回头更新这篇文章。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>根据项目的经验，介绍几个flume比较有用的功能。</p>
-<h2 id="ChannelSelector功能">ChannelSelector功能</h2><p>flume内置的ChannelSelector有两种，分别是Replicating和Multiplexing。]]>
+    <![CDATA[根据项目的经验，介绍几个flume比较有用的功能...]]>
+    
     </summary>
     
       <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
@@ -2561,7 +2558,7 @@ a1.channels.c2.transactionCapacity = <span class="number">100</span>
     <link href="http://fangjian0423.github.io/2015/07/12/elasticsearch-tutorials/"/>
     <id>http://fangjian0423.github.io/2015/07/12/elasticsearch-tutorials/</id>
     <published>2015-07-11T19:06:59.000Z</published>
-    <updated>2015-11-07T08:24:06.000Z</updated>
+    <updated>2015-12-20T17:07:52.000Z</updated>
     <content type="html"><![CDATA[<p>之前搭建logstash的时候使用过elasticsearch。 刚好最近在公司也用到了es，写篇水文记录一下也当做笔记吧。</p>
 <p><a href="https://www.elastic.co/products/elasticsearch" target="_blank" rel="external">Elasticsearch</a>是一个基于Lucene的搜索服务器。它提供了一个分布式多用户能力的全文搜索引擎，使用RESTful web暴露接口。</p>
 <p>它有许多特性，比如以下几个属性：</p>
@@ -2689,8 +2686,8 @@ a1.channels.c2.transactionCapacity = <span class="number">100</span>
 </code></pre><h2 id="总结">总结</h2><p>写了篇水文记录一下es，es还有很多很强大的功能，比如一些query，filter，aggregations等。官方文档上已经写的非常清楚了。这里就不讲了。  - -||</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>之前搭建logstash的时候使用过elasticsearch。 刚好最近在公司也用到了es，写篇水文记录一下也当做笔记吧。</p>
-<p><a href="https://www.elastic.co/products/elasticsearch" target="_bl]]>
+    <![CDATA[Elasticsearch是一个基于Lucene的搜索服务器。它提供了一个分布式多用户能力的全文搜索引擎，使用RESTful web暴露接口 ...]]>
+    
     </summary>
     
       <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
@@ -2706,7 +2703,7 @@ a1.channels.c2.transactionCapacity = <span class="number">100</span>
     <link href="http://fangjian0423.github.io/2015/07/07/flume-run/"/>
     <id>http://fangjian0423.github.io/2015/07/07/flume-run/</id>
     <published>2015-07-07T15:23:23.000Z</published>
-    <updated>2015-11-07T08:30:09.000Z</updated>
+    <updated>2015-12-20T16:54:32.000Z</updated>
     <content type="html"><![CDATA[<h2 id="Flume运行过程分析">Flume运行过程分析</h2><h3 id="入口Application">入口Application</h3><p>Flume运行的主类是org.apache.flume.node.Application的main方法。</p>
 <p>命令行args参数如下：</p>
 <pre><code><span class="literal">-</span><span class="literal">-</span><span class="comment">conf</span><span class="literal">-</span><span class="comment">file</span> <span class="comment">YourConfigFile</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">AgentName</span>
@@ -3051,8 +3048,8 @@ monitorFutures.put(lifecycleAware, future)<span class="comment">;</span>
   }
 </code></pre>]]></content>
     <summary type="html">
-    <![CDATA[<h2 id="Flume运行过程分析">Flume运行过程分析</h2><h3 id="入口Application">入口Application</h3><p>Flume运行的主类是org.apache.flume.node.Application的main方法。</p>
-<p]]>
+    <![CDATA[Flume运行的主类是org.apache.flume.node.Application的main方法 ...]]>
+    
     </summary>
     
       <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
@@ -3068,7 +3065,7 @@ monitorFutures.put(lifecycleAware, future)<span class="comment">;</span>
     <link href="http://fangjian0423.github.io/2015/06/23/flume-sink/"/>
     <id>http://fangjian0423.github.io/2015/06/23/flume-sink/</id>
     <published>2015-06-22T17:23:23.000Z</published>
-    <updated>2015-11-07T08:31:02.000Z</updated>
+    <updated>2015-12-20T16:55:37.000Z</updated>
     <content type="html"><![CDATA[<p>Source和Channel组件已经分析过，接下来看Sink组件。</p>
 <p>Flume内置了很多Sink，比如HDFS Sink, Hive Sink, File Roll Sink, HBase Sink, ElasticSearch Sink等。</p>
 <h2 id="Sink接口">Sink接口</h2><pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Sink</span> <span class="keyword">extends</span> <span class="title">LifecycleAware</span>, <span class="title">NamedComponent</span> </span>{
@@ -3351,9 +3348,8 @@ batchCounter++;
 <p>hdfs.batchSize决定是否flush文件数据。 由于HDFS Sink中每次最多只有batchSize个事件，因此BucketWriter会事件个数达到了batchSize后直接flush数据即可。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>Source和Channel组件已经分析过，接下来看Sink组件。</p>
-<p>Flume内置了很多Sink，比如HDFS Sink, Hive Sink, File Roll Sink, HBase Sink, ElasticSearch Sink等。</p>
-<h2 ]]>
+    <![CDATA[Flume内置了很多Sink，比如HDFS Sink, Hive Sink, File Roll Sink, HBase Sink, ElasticSearch Sink等 ...]]>
+    
     </summary>
     
       <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
@@ -3369,7 +3365,7 @@ batchCounter++;
     <link href="http://fangjian0423.github.io/2015/06/22/flume-channel/"/>
     <id>http://fangjian0423.github.io/2015/06/22/flume-channel/</id>
     <published>2015-06-22T15:23:23.000Z</published>
-    <updated>2015-11-07T08:44:16.000Z</updated>
+    <updated>2015-12-20T17:08:47.000Z</updated>
     <content type="html"><![CDATA[<p>Source组件已经分析过，接下来看Channel组件。</p>
 <p>Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等。</p>
 <h2 id="Channel接口">Channel接口</h2><p>Channel接口定义：</p>
@@ -3572,9 +3568,8 @@ a1<span class="class">.channels</span><span class="class">.c1</span><span class=
 <p>比如MemoryChannel在内存中处理，速度很快，但是却不能持久化，当服务器挂了，Channel中的数据会丢失，这时就需要用FileChannel或JDBCChannel，但这2种Channel速度慢。因此可以实现一个自定义的Channel，美团的<a href="http://tech.meituan.com/mt-log-system-optimization.html地址上就说明了一些Flume可以改进和优化的地方。" target="_blank" rel="external">http://tech.meituan.com/mt-log-system-optimization.html地址上就说明了一些Flume可以改进和优化的地方。</a></p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>Source组件已经分析过，接下来看Channel组件。</p>
-<p>Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等。</p>
-<h2 id="Channel接口]]>
+    <![CDATA[Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等 ...]]>
+    
     </summary>
     
       <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
@@ -3590,7 +3585,7 @@ a1<span class="class">.channels</span><span class="class">.c1</span><span class=
     <link href="http://fangjian0423.github.io/2015/06/21/flume-source/"/>
     <id>http://fangjian0423.github.io/2015/06/21/flume-source/</id>
     <published>2015-06-21T15:23:23.000Z</published>
-    <updated>2015-11-07T08:32:46.000Z</updated>
+    <updated>2015-12-20T16:56:32.000Z</updated>
     <content type="html"><![CDATA[<p>Flume的介绍以及它的架构之前已经分析过。本文分析flume的Source组件。</p>
 <p>Flume内置了很多Source，比如Avro Source，Spooling Directory Source，NetCat Source，Kafka Source等。</p>
 <p>以源码的角度分析Source组件。</p>
@@ -3766,8 +3761,8 @@ tier1<span class="class">.sources</span><span class="class">.source1</span><span
 <p>SQLSource在github上已经有人实现过了: <a href="https://github.com/keedio/flume-ng-sql-source" target="_blank" rel="external">https://github.com/keedio/flume-ng-sql-source</a></p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>Flume的介绍以及它的架构之前已经分析过。本文分析flume的Source组件。</p>
-<p>Flume内置了很多Source，比如Avro Source，Spooling Directory Source，NetCat Source，Kafka Source等。</p]]>
+    <![CDATA[Flume内置了很多Source，比如Avro Source，Spooling Directory Source，NetCat Source，Kafka Source等 ...]]>
+    
     </summary>
     
       <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
@@ -3783,7 +3778,7 @@ tier1<span class="class">.sources</span><span class="class">.source1</span><span
     <link href="http://fangjian0423.github.io/2015/06/21/flume-introduction/"/>
     <id>http://fangjian0423.github.io/2015/06/21/flume-introduction/</id>
     <published>2015-06-21T13:23:34.000Z</published>
-    <updated>2015-11-07T08:27:29.000Z</updated>
+    <updated>2015-12-20T16:51:17.000Z</updated>
     <content type="html"><![CDATA[<p><a href="https://flume.apache.org/" target="_blank" rel="external">Flume</a>是一个分布式的，效率高的用来收集日志数据的开源框架。它的架构是基于流式数据，有3个重要的组件，分别是Source，Channel和Sink。</p>
 <h2 id="Flume架构和特点">Flume架构和特点</h2><p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/flume1.png" alt=""></p>
 <p>Flume架构图如上，非常简单。</p>
@@ -3824,7 +3819,8 @@ a1.sinks.k1.channel = c1
 </code></pre><p>之后至少还会有3篇Flume相关的文章，分别是讲解Source，Channel和Sink源码相关的文章。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p><a href="https://flume.apache.org/" target="_blank" rel="external">Flume</a>是一个分布式的，效率高的用来收集日志数据的开源框架。它的架构是基于流式数据，有3个重要的组件，分别是Source，Chan]]>
+    <![CDATA[Flume是一个分布式的，效率高的用来收集日志数据的开源框架。它的架构是基于流式数据，有3个重要的组件，分别是Source，Channel和Sink]]>
+    
     </summary>
     
       <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>

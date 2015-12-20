@@ -203,8 +203,8 @@
             
             
               
-                <a class="post-title-link" href="/2015/06/07/scala-generic/" itemprop="url">
-                  Scala泛型
+                <a class="post-title-link" href="/2014/09/21/dom-parse-xml-html/" itemprop="url">
+                  简单谈谈dom解析xml和html
                 </a>
               
             
@@ -214,8 +214,8 @@
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2015-06-07T18:17:21+08:00" content="2015-06-07">
-              2015-06-07
+            <time itemprop="dateCreated" datetime="2014-09-21T09:49:50+08:00" content="2014-09-21">
+              2014-09-21
             </time>
           </span>
 
@@ -240,8 +240,8 @@
             
               <span class="post-comments-count">
               &nbsp; | &nbsp;
-              <a href="/2015/06/07/scala-generic/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/07/scala-generic/" itemprop="commentsCount"></span>
+              <a href="/2014/09/21/dom-parse-xml-html/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/21/dom-parse-xml-html/" itemprop="commentsCount"></span>
               </a>
             </span>
             
@@ -261,116 +261,12 @@
 
       
         
-          <span itemprop="articleBody">
-            
-              <h2 id="简单回顾泛型">简单回顾泛型</h2><p>java中可使用泛型进行编程，一个简单的泛型例子如下：</p>
-<pre><code>List&lt;<span class="keyword">String</span>&gt; strList = <span class="keyword">new</span> ArrayList&lt;<span class="keyword">String</span>&gt;();
-strList.<span class="built_in">add</span>(<span class="string">"one"</span>);
-strList.<span class="built_in">add</span>(<span class="string">"two"</span>);
-strList.<span class="built_in">add</span>(<span class="string">"three"</span>);
-
-<span class="keyword">String</span> one = strList.<span class="built_in">get</span>(<span class="number">0</span>); <span class="comment">// 泛型拿数据不必进行类型转换，不使用泛型的话需要对类型进行转换</span>
-</code></pre><h2 id="scala的泛型">scala的泛型</h2><p>scala中的泛型称为类型参数化(type parameterlization)。语法跟java不一样，使用”[]”表示类型。</p>
-<p>一个使用类型参数化的函数：</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">position</span>[<span class="title">A</span>]<span class="params">(xs: List[A], value: A)</span>:</span> Int = {
-    xs.indexOf(value)
-}
-
-position(List(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>), <span class="number">1</span>) // <span class="number">0</span>
-position(List(<span class="string">"one"</span>, <span class="string">"two"</span>, <span class="string">"three"</span>), <span class="string">"two"</span>) // <span class="number">1</span>
-</code></pre><p>稍微复杂点的类型参数化，实现一个map函数，需要一个List和一个函数作为参数：</p>
-<p>普通的map方法：</p>
-<pre><code>List(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>) <span class="built_in">map</span> { _ * <span class="number">2</span> }  <span class="comment">// List[Int] = List(2,4,6)</span>
-List(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>) <span class="built_in">map</span> { _ + <span class="string">"2"</span> }  <span class="comment">// List[String] = List(12, 22, 32)</span>
-</code></pre><p>使用泛型实现的map方法：</p>
-<pre><code>def <span class="built_in">map</span>[A,B](<span class="built_in">list</span>:List[A], func: A =&gt; B) = <span class="built_in">list</span>.<span class="built_in">map</span>(func)
-
-<span class="built_in">map</span>(List(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>), { num: Int =&gt; num + <span class="string">"2"</span> }) <span class="comment">// List[String] = List(12, 22, 32)</span>
-<span class="built_in">map</span>(List(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>), { num: Int =&gt; num * <span class="number">2</span> }) <span class="comment">// List[Int] = List(2, 4, 6) </span>
-</code></pre><h2 id="上限和下限">上限和下限</h2><p>scala跟java一样，也提供了上限(upper bounds)和下限(lower bounds)功能。</p>
-<h3 id="上限(upper_bounds)">上限(upper bounds)</h3><p>java中上限的使用如下：</p>
-<pre><code>&lt;T <span class="keyword">extends</span> <span class="built_in">Object</span>&gt;
-
-通配符形式
-&lt;? <span class="keyword">extends</span> <span class="built_in">Object</span>&gt;
-</code></pre><p>scala写法：</p>
-<pre><code><span class="string">[T &lt;: AnyRef]</span>
-
-通配符形式
-<span class="string">[_ &lt;: AnyRef]</span>
-</code></pre><p>上限的一些例子：</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">upperBound</span><span class="params">(List&lt;? extends Number&gt; <span class="built_in">list</span>)</span> </span>{
-    Object obj = <span class="built_in">list</span>.get(<span class="number">0</span>); <span class="comment">// Number是Object的子类，使用Object可以代替Number。</span>
-    Number num = <span class="built_in">list</span>.get(<span class="number">0</span>);
-    Integet i = <span class="built_in">list</span>.get(<span class="number">0</span>); <span class="comment">// compile error</span>
-    <span class="built_in">list</span>.add(<span class="keyword">new</span> Integer(<span class="number">1</span>)); <span class="comment">// compile error</span>
-}
-</code></pre><p>上限做参数，<strong>set的话不能确定具体的类型</strong>，所以会报编译错误。get的话得到的结果的类型的下限为参数的上限。相当于使用了上限参数的话，该参数就变成了<strong>只读参数</strong>，类似生产者，只提供数据。</p>
-<p>scala版本：</p>
-<pre><code>def upperBound[A &lt;: Animal](<span class="built_in">list</span>: ListBuffer[A]): Unit = { 
-    <span class="built_in">list</span> += <span class="keyword">new</span> Animal(<span class="string">"123"</span>) <span class="comment">// compile error</span>
-    val obj: AnyRef = <span class="built_in">list</span>(<span class="number">0</span>) <span class="comment">// ok</span>
-    val a: Animal = <span class="built_in">list</span>(<span class="number">0</span>) <span class="comment">// ok</span>
-    val a: Cat = <span class="built_in">list</span>(<span class="number">0</span>) <span class="comment">// compile error</span>
-} 
-</code></pre><p>这里使用ListBuffer作为集合，ListBuffer的+=方法会在列表内部添加数据，不会产生一个新的List。如果使用List的话，:+操作符会在新生成的List中自动得到符合所有元素的类型。</p>
-<pre><code>List[<span class="link_label">Animal</span>](<span class="link_url">new Cat(</span>)) :+ 1 // List[Any] = List(Cat@3f23a076, 1)
-</code></pre><p>生成新的List会自动根据上下文得到新的泛型类型List[AnyRef]。</p>
-<h3 id="下限(lower_bounds)">下限(lower bounds)</h3><pre><code>&lt;T <span class="keyword">super</span> MyClass&gt;
-
-通配符形式
-&lt;? <span class="keyword">super</span> MyClass&gt;
-</code></pre><p>scala写法：</p>
-<pre><code><span class="string">[T &gt;: MyClass]</span>
-
-通配符形式
-<span class="string">[_ &gt;: MyClass]</span>
-</code></pre><p>下限的一些例子：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> lowerBound(List&lt;? <span class="keyword">super</span> Number&gt; l) {
-    l.<span class="built_in">add</span>(<span class="keyword">new</span> Integer(<span class="number">1</span>));
-    l.<span class="built_in">add</span>(<span class="keyword">new</span> Float(<span class="number">2</span>));
-    <span class="keyword">Object</span> obj = l.<span class="built_in">get</span>(<span class="number">0</span>);
-    Number num = l.<span class="built_in">get</span>(<span class="number">0</span>); <span class="comment">// compile error</span>
-}
-</code></pre><p>下限做参数，get方法只能用最宽泛的类型来获取数据，相当于get只提供了数据最小级别的访问权限。类似消费者，主要用来消费数据。</p>
-<p>scala版本：</p>
-<pre><code>def lowerBound[A &gt;: Animal](<span class="built_in">list</span>: ListBuffer[A]): Unit = { 
-    <span class="built_in">list</span> += <span class="keyword">new</span> Animal() <span class="comment">// ok</span>
-    <span class="built_in">list</span> += <span class="keyword">new</span> Cat() <span class="comment">// ok</span>
-    val obj: Any = <span class="built_in">list</span>(<span class="number">0</span>) <span class="comment">// ok</span>
-    val obj: Animal = <span class="built_in">list</span>(<span class="number">0</span>) <span class="comment">// compile error</span>
-}
-</code></pre><h2 id="协变和逆变">协变和逆变</h2><p>协变(covariance)：对于一个带类型参数的类型，比如List[T]，如果对A及其子类型B，满足List[B]也符合List[A]的子类型，那么就称为协变，用加号表示。比如 MyType[+A]</p>
-<p>逆变(contravariance)：如果List[A]是List[B]的子类型，用减号表示。比如MyType[+B]</p>
-<p>如果一个类型支持协变或逆变，则称这个类型为可变的(variance)。否则称为不可变的(invariant)。</p>
-<p>在java里，泛型类型都是不可变的，比如List&lt;String&gt;并不是List&lt;Object&gt;的子类。</p>
-<pre><code><span class="class"><span class="keyword">trait</span> <span class="title">A</span>[</span><span class="type">T</span>]
-<span class="class"><span class="keyword">class</span> <span class="title">C</span>[</span><span class="type">T</span>] <span class="keyword">extends</span> <span class="type">A</span>[<span class="type">T</span>]
-<span class="class"><span class="keyword">class</span> <span class="title">Parent</span>;</span> <span class="class"><span class="keyword">class</span> <span class="title">Child</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Parent</span>
-</span><span class="keyword">val</span> c:<span class="type">C</span>[<span class="type">Parent</span>] = <span class="keyword">new</span> <span class="type">C</span>[<span class="type">Parent</span>] <span class="comment">// ok</span>
-<span class="keyword">val</span> c:<span class="type">C</span>[<span class="type">Parent</span>] = <span class="keyword">new</span> <span class="type">C</span>[<span class="type">Child</span>]; <span class="comment">// Child &lt;: Parent, but class C is invariant in type T.</span>
-</code></pre><h3 id="协变">协变</h3><p>上面的例子提示已经很明确了。类C是不可变的，改成协变即可。</p>
-<pre><code><span class="class"><span class="keyword">trait</span> <span class="title">A</span>[</span>+<span class="type">T</span>]
-<span class="class"><span class="keyword">class</span> <span class="title">C</span>[</span>+<span class="type">T</span>] <span class="keyword">extends</span> <span class="type">A</span>[<span class="type">T</span>]
-<span class="class"><span class="keyword">class</span> <span class="title">Parent</span>;</span> <span class="class"><span class="keyword">class</span> <span class="title">Child</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Parent</span>
-</span><span class="keyword">val</span> c: <span class="type">C</span>[<span class="type">Parent</span>] = <span class="keyword">new</span> <span class="type">C</span>[<span class="type">Parent</span>] <span class="comment">// ok</span>
-<span class="keyword">val</span> c: <span class="type">C</span>[<span class="type">Parent</span>] = <span class="keyword">new</span> <span class="type">C</span>[<span class="type">Child</span>]  <span class="comment">// ok</span>
-</code></pre><p>scala中List就是一个协变类。</p>
-<pre><code>val list:List[<span class="link_label">Parent</span>] = List[<span class="link_label">Child</span>](<span class="link_url">new Child(</span>))
-</code></pre><h3 id="逆变">逆变</h3><p>逆变概念与协变相反。</p>
-<pre><code><span class="class"><span class="keyword">trait</span> <span class="title">A</span>[</span>-<span class="type">T</span>]
-<span class="class"><span class="keyword">class</span> <span class="title">C</span>[</span>-<span class="type">T</span>] <span class="keyword">extends</span> <span class="type">A</span>[<span class="type">T</span>]
-<span class="class"><span class="keyword">class</span> <span class="title">Parent</span>;</span> <span class="class"><span class="keyword">class</span> <span class="title">Child</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Parent</span>
-</span><span class="keyword">val</span> c: <span class="type">C</span>[<span class="type">Parent</span>] = <span class="keyword">new</span> <span class="type">C</span>[<span class="type">Parent</span>] <span class="comment">// ok</span>
-<span class="keyword">val</span> c: <span class="type">C</span>[<span class="type">Child</span>] = <span class="keyword">new</span> <span class="type">C</span>[<span class="type">Parent</span>]  <span class="comment">// ok</span>
-</code></pre><h3 id="协变逆变注意点">协变逆变注意点</h3><p>逆变协变并不会被继承，父类声明为逆变或协变，子类如果想要保持，任需要声明：</p>
-<pre><code><span class="class"><span class="keyword">trait</span> <span class="title">A</span>[</span>+<span class="type">T</span>]
-<span class="class"><span class="keyword">class</span> <span class="title">C</span>[</span><span class="type">T</span>] <span class="keyword">extends</span> <span class="type">A</span>[<span class="type">T</span>] <span class="comment">// C是不可变的，因为它不是逆变或协变。</span>
-<span class="class"><span class="keyword">class</span> <span class="title">D</span>[</span>+<span class="type">T</span>] <span class="keyword">extends</span> <span class="type">A</span>[<span class="type">T</span>] <span class="comment">// D是可变的，是协变</span>
-<span class="class"><span class="keyword">class</span> <span class="title">E</span>[</span>-<span class="type">T</span>] <span class="keyword">extends</span> <span class="type">A</span>[<span class="type">T</span>] <span class="comment">// E是可变的，是逆变</span>
-</code></pre>
-            
-          </span>
+          <span itemprop="description">文件对象模型是W3C组织推荐的处理可扩展标志语言的标准编程接口 ...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2014/09/21/dom-parse-xml-html/">
+              阅读全文 &raquo;
+            </a>
+          </div>
         
       
     </div>
@@ -405,8 +301,8 @@ List(<span class="number">1</span>,<span class="number">2</span>,<span class="nu
             
             
               
-                <a class="post-title-link" href="/2015/06/04/scala-pattern-match/" itemprop="url">
-                  Scala模式匹配
+                <a class="post-title-link" href="/2014/09/06/MapperScannerConfigurer-analysis/" itemprop="url">
+                  Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析
                 </a>
               
             
@@ -416,8 +312,8 @@ List(<span class="number">1</span>,<span class="number">2</span>,<span class="nu
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2015-06-04T01:03:27+08:00" content="2015-06-04">
-              2015-06-04
+            <time itemprop="dateCreated" datetime="2014-09-06T21:55:12+08:00" content="2014-09-06">
+              2014-09-06
             </time>
           </span>
 
@@ -426,8 +322,8 @@ List(<span class="number">1</span>,<span class="number">2</span>,<span class="nu
               &nbsp; | &nbsp; 分类于
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/jvm/" itemprop="url" rel="index">
-                    <span itemprop="name">jvm</span>
+                  <a href="/categories/mybatis/" itemprop="url" rel="index">
+                    <span itemprop="name">mybatis</span>
                   </a>
                 </span>
 
@@ -442,8 +338,8 @@ List(<span class="number">1</span>,<span class="number">2</span>,<span class="nu
             
               <span class="post-comments-count">
               &nbsp; | &nbsp;
-              <a href="/2015/06/04/scala-pattern-match/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/04/scala-pattern-match/" itemprop="commentsCount"></span>
+              <a href="/2014/09/06/MapperScannerConfigurer-analysis/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/06/MapperScannerConfigurer-analysis/" itemprop="commentsCount"></span>
               </a>
             </span>
             
@@ -463,80 +359,12 @@ List(<span class="number">1</span>,<span class="number">2</span>,<span class="nu
 
       
         
-          <span itemprop="articleBody">
-            
-              <h2 id="模式匹配介绍">模式匹配介绍</h2><p>模式匹配是一种scala中的一种函数式编程概念，跟java中的switch case类似。</p>
-<p>java中的switch case比较局限，只支持基本类型和枚举类型；而且switch case如果case不到相应的值，除非在有写default，否则就不会执行。</p>
-<p>模式匹配简单例子：</p>
-<pre><code><span class="number">1</span> match {
-    <span class="keyword">case</span> <span class="number">1</span> =&gt; println(<span class="string">"yeah, it is 1"</span>)
-}
-</code></pre><h2 id="模式匹配的应用">模式匹配的应用</h2><p>模式匹配可以匹配字符串，复杂值，类型，变量，常量，构造函数，元组。</p>
-<p>变量匹配本文介绍的简单例子就可说明。</p>
-<h3 id="字符串匹配">字符串匹配</h3><pre><code>val name = <span class="string">"format"</span>
-name <span class="keyword">match</span> {
-    <span class="keyword">case</span> <span class="string">"format"</span> =&gt; <span class="keyword">println</span>(<span class="string">"my name is format"</span>)
-}
-</code></pre><h3 id="类型匹配">类型匹配</h3><pre><code>def printType(obj: AnyRef) = {
-    <span class="keyword">case</span> s:<span class="built_in">String</span> =&gt; println(<span class="string">"this is String"</span>)
-    <span class="keyword">case</span> l:<span class="built_in">List</span>[_] =&gt; println(<span class="string">"this is List"</span>)
-    <span class="keyword">case</span> a:Array[_] =&gt; println(<span class="string">"this is array"</span>)
-    <span class="keyword">case</span> d:java.util.Date =&gt; println(<span class="string">"this is Date"</span>)
-}
-
-printType(<span class="string">"1"</span>) <span class="comment">// this is String</span>
-printType(<span class="built_in">List</span>(<span class="number">1</span>)) <span class="comment">// this is List</span>
-printType(Array(<span class="number">1</span>)) <span class="comment">// this is Array</span>
-printType(<span class="keyword">new</span> java.util.Date()) <span class="comment">// this is Date</span>
-printType(<span class="built_in">Map</span>(<span class="number">1</span> -&gt; <span class="number">2</span>)) <span class="comment">// 报错。scala.MatchError: Map(1 -&gt; 2) (of class scala.collection.immutable.Map$Map1)</span>
-</code></pre><h3 id="构造函数匹配">构造函数匹配</h3><p>之前介绍scala的对象的<a href="http://fangjian0423.github.io/2015/05/31/scala-class-object/#unapply方法">unapply方法</a>的时候提到了这点。 构造函数的模式匹配基于对象的unapply方法。</p>
-<pre><code><span class="function"><span class="keyword">case</span> <span class="keyword">class</span> <span class="title">Person</span><span class="params">(name: String, age: Int)</span>
-val p </span>= <span class="keyword">new</span> Person(<span class="string">"format"</span>, <span class="number">99</span>)
-<span class="comment">// 打印 format,99</span>
-p match {
-    <span class="function"><span class="keyword">case</span> <span class="title">Person</span><span class="params">(name, age)</span> </span>=&gt; println(name + <span class="string">","</span> + age)
-}
-</code></pre><h3 id="元组匹配">元组匹配</h3><pre><code><span class="comment">// 打印1,2</span>
-(<span class="number">1</span>,<span class="number">2</span>) match {
-    <span class="keyword">case</span> (a,b) =&gt; println(a+<span class="string">","</span>+b)
-}
-
-<span class="comment">// 打印2</span>
-(<span class="number">1</span>,<span class="number">2</span>) match {
-    <span class="keyword">case</span> (<span class="number">1</span>, b) =&gt; println(b)
-}
-
-<span class="comment">// 打印found</span>
-(<span class="number">1</span>,<span class="number">2</span>) match {
-    <span class="keyword">case</span> (_, <span class="number">2</span>) =&gt; println(<span class="string">"found"</span>)
-}
-</code></pre><h3 id="特殊的模式匹配">特殊的模式匹配</h3><h4 id="中缀操作符匹配(infix_operation_pattern)">中缀操作符匹配(infix operation pattern)</h4><p>直接看例子：</p>
-<pre><code><span class="comment">// 得到List(1,2)</span>
-<span class="built_in">List</span>(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>) <span class="keyword">match</span> {
-    <span class="keyword">case</span> a <span class="tag">:: b</span> <span class="tag">:: other</span> =&gt; <span class="built_in">List</span>(a, b)
-    <span class="keyword">case</span> _ =&gt; <span class="built_in">List</span>()
-}
-</code></pre><p>a和b会被解析成1和2，other会被解析成List(3,4)。 :: 操作符是List的添加操作符。</p>
-<h4 id="带有逻辑判断的模式匹配">带有逻辑判断的模式匹配</h4><p>case里面可以添加部分逻辑代码：</p>
-<pre><code><span class="number">1</span> match {
-    <span class="keyword">case</span> i <span class="keyword">if</span> i &lt; <span class="number">10</span> =&gt; println(<span class="string">"less than 10"</span>)
-    <span class="keyword">case</span> i <span class="keyword">if</span> i &gt;= <span class="number">10</span> =&gt; println(<span class="string">"more than 10"</span>)
-}
-</code></pre><h2 id="模式匹配要注意的几个地方">模式匹配要注意的几个地方</h2><p>1.没有匹配到的模式匹配会报错</p>
-<pre><code><span class="comment">// 报错， 2没有匹配1</span>
-<span class="number">2</span> match {
-    <span class="keyword">case</span> <span class="number">1</span> =&gt; println(<span class="string">"get one"</span>)
-}
-</code></pre><p>2.使用 “_” 代替没匹配到的情况</p>
-<p>跟java里的switch case里的default语法一样。</p>
-<pre><code><span class="comment">// error get num</span>
-<span class="number">2</span> <span class="built_in">match</span> {
-    <span class="keyword">case</span> <span class="number">1</span> =&gt; <span class="built_in">println</span>(<span class="string">"get one"</span>)
-    <span class="keyword">case</span> _ =&gt; <span class="built_in">println</span>(<span class="string">"error get num"</span>)
-}
-</code></pre>
-            
-          </span>
+          <span itemprop="description">本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理 ...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2014/09/06/MapperScannerConfigurer-analysis/">
+              阅读全文 &raquo;
+            </a>
+          </div>
         
       
     </div>
@@ -571,8 +399,8 @@ p match {
             
             
               
-                <a class="post-title-link" href="/2015/05/31/scala-class-object/" itemprop="url">
-                  Scala类和对象
+                <a class="post-title-link" href="/2014/08/16/java-dynamic-proxy/" itemprop="url">
+                  java动态代理浅析
                 </a>
               
             
@@ -582,8 +410,8 @@ p match {
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2015-05-31T22:02:14+08:00" content="2015-05-31">
-              2015-05-31
+            <time itemprop="dateCreated" datetime="2014-08-16T15:49:50+08:00" content="2014-08-16">
+              2014-08-16
             </time>
           </span>
 
@@ -608,8 +436,8 @@ p match {
             
               <span class="post-comments-count">
               &nbsp; | &nbsp;
-              <a href="/2015/05/31/scala-class-object/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/05/31/scala-class-object/" itemprop="commentsCount"></span>
+              <a href="/2014/08/16/java-dynamic-proxy/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/08/16/java-dynamic-proxy/" itemprop="commentsCount"></span>
               </a>
             </span>
             
@@ -629,101 +457,12 @@ p match {
 
       
         
-          <span itemprop="articleBody">
-            
-              <h2 id="类的定义">类的定义</h2><pre><code><span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>(<span class="variable"><span class="keyword">val</span> name</span>:String, <span class="variable"><span class="keyword">val</span> age</span>: <span class="typename">Int</span>)
-</code></pre><h2 id="构造函数中的参数修饰符">构造函数中的参数修饰符</h2><h3 id="用val修饰，就是类的定义中的那种方式">用val修饰，就是类的定义中的那种方式</h3><p>使用val修饰，属性会有对应的getter方法。</p>
-<pre><code>val <span class="tag">p</span> = new <span class="function"><span class="title">Person</span><span class="params">(<span class="string">"format"</span>, <span class="number">99</span>)</span></span>
-<span class="tag">p</span><span class="class">.name</span> <span class="comment">// format</span>
-<span class="tag">p</span><span class="class">.name</span> = <span class="string">"new name"</span> <span class="comment">// 报错，用val修饰的变量不可变</span>
-</code></pre><h3 id="用var修饰">用var修饰</h3><p>使用var修饰，属性会有对应的getter方法。同时还会有setter方法。</p>
-<pre><code>class <span class="function"><span class="title">Person</span><span class="params">(var name:String, var age: Int)</span></span>
-val <span class="tag">p</span> = new <span class="function"><span class="title">Person</span><span class="params">(<span class="string">"format"</span>, <span class="number">99</span>)</span></span>
-<span class="tag">p</span><span class="class">.name</span> <span class="comment">// format</span>
-<span class="tag">p</span><span class="class">.name</span> = <span class="string">"new name"</span>
-<span class="tag">p</span><span class="class">.name</span> <span class="comment">// new name</span>
-<span class="tag">p</span><span class="class">.age</span> = <span class="number">100</span>
-</code></pre><h3 id="不用任何修饰符">不用任何修饰符</h3><p>不适用任何修饰符代表这个这些属性被当做私有的实例值(private instance values)，在类的外部不能被访问。</p>
-<pre><code>class <span class="function"><span class="title">Person</span><span class="params">(name:String, age: Int)</span></span>
-val <span class="tag">p</span> = new <span class="function"><span class="title">Person</span><span class="params">(<span class="string">"format"</span>, <span class="number">99</span>)</span></span>
-<span class="tag">p</span><span class="class">.name</span> <span class="comment">// 报错，error: value name is not a member of Person</span>
-<span class="tag">p</span><span class="class">.name</span> = <span class="string">"new name"</span> <span class="comment">// 报错，error: value name is not a member of Person</span>
-</code></pre><h3 id="使用private修饰符">使用private修饰符</h3><p>private修饰的属性不会有对应的生成器(accessors)，外部无法访问。</p>
-<pre><code>class <span class="function"><span class="title">Person</span><span class="params">(private var name:String, private var age: Int)</span></span>
-val <span class="tag">p</span> = new <span class="function"><span class="title">Person</span><span class="params">(<span class="string">"format"</span>, <span class="number">99</span>)</span></span>
-<span class="tag">p</span><span class="class">.name</span> <span class="comment">// error: variable name in class Person cannot be accessed in Person</span>
-</code></pre><h3 id="手动添加getter和setter生成器">手动添加getter和setter生成器</h3><pre><code><span class="class"><span class="keyword">class</span> <span class="title">Person</span>(</span>name:<span class="type">String</span>, <span class="keyword">private</span> <span class="keyword">var</span> _age: <span class="type">Int</span>) {
-       <span class="function"><span class="keyword">def</span> <span class="title">age</span> =</span> _age <span class="comment">// getter生成器</span>
-    <span class="function"><span class="keyword">def</span> <span class="title">age_=</span>(</span>newAge: <span class="type">Int</span>) = age = newAge <span class="comment">// setter生成器</span>
-}
-<span class="keyword">val</span> p = <span class="keyword">new</span> <span class="type">Person</span>(<span class="string">"format"</span>, <span class="number">99</span>)
-p.age <span class="comment">// 99</span>
-p.age = <span class="number">1</span>
-p.age <span class="comment">// 1</span>
-
-p.age = <span class="number">3</span>会被scala解析成p.age_=(<span class="number">3</span>)
-</code></pre><h3 id="构造函数的重载">构造函数的重载</h3><pre><code><span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>(<span class="variable"><span class="keyword">var</span> name</span>:String, <span class="variable"><span class="keyword">var</span> age</span>: <span class="typename">Int</span>) {
-    def this() = this(<span class="string">"format"</span>, <span class="number">11</span>)
-}
-<span class="variable"><span class="keyword">val</span> p</span> = new Person()
-p.name <span class="comment">// format</span>
-p.age <span class="comment">// 11</span>
-</code></pre><h2 id="单例对象的定义">单例对象的定义</h2><h3 id="单例对象">单例对象</h3><p>scala不提供static关键字，也就是说没有静态变量，静态类，静态方法等概念了，取而代之的是使用object关键字，也就是单例对象。</p>
-<pre><code>object Switch {
-    <span class="function"><span class="keyword">def</span> <span class="title">open</span>:</span> Boolean = true
-}
-
-Switch.open // true
-</code></pre><h3 id="apply方法">apply方法</h3><p>对象的apply方法比较特殊。</p>
-<pre><code><span class="class"><span class="keyword">object</span> <span class="title">Person</span> {</span>
-    <span class="function"><span class="keyword">def</span> <span class="title">apply</span>(</span>name: <span class="type">String</span>, age: <span class="type">Int</span>) = <span class="keyword">new</span> <span class="type">Person</span>(name, age)
-}
-
-<span class="keyword">val</span> p = <span class="type">Person</span>(<span class="string">"format"</span>, <span class="number">99</span>)
-p.name <span class="comment">// format</span>
-p.age <span class="comment">// 99</span>
-</code></pre><p>apply方法的作用也就是可以让对象被直接调用，这里Person的apply方法返回的是一个Person类的实例，Person类也就是之前定义的一个类。</p>
-<h3 id="unapply方法">unapply方法</h3><p>对象的unapply方法用于模式匹配(pattern match)。模式匹配的内容会在之后的文章中说明。</p>
-<pre><code>object Person {
-    <span class="function"><span class="keyword">def</span> <span class="title">unapply</span><span class="params">(p: Person)</span>:</span> Option[(String, Int)] = Some((p.name, p.age))
-}
-
-val p = new Person(<span class="string">"format"</span>, <span class="number">99</span>)
-p match {
-    case Person(name, age) =&gt; println(name + <span class="string">","</span> + age)
-}
-</code></pre><h2 id="样本类_(case_class)">样本类 (case class)</h2><p>样本类的定义:</p>
-<pre><code><span class="keyword">case</span> <span class="keyword">class</span> Person(<span class="keyword">name</span>: String, age: <span class="built_in">Int</span>)
-</code></pre><p>样本类会自定生成一些样本代码：</p>
-<ol>
-<li>会给所有的参数带上val前缀(可以手动改为var前缀，case class Person(var name: String, age: Int))</li>
-<li>equals和hashCode方法会根据参数自动生成</li>
-<li>toString方法也会自动生成，会带上类名和参数</li>
-<li>所有的case类都会有有一个copy方法</li>
-<li>companion object会自动生成，且还会带有apply方法，apply方法的参数跟类的参数一样(companion object也就是对应类的单例对象，比如本文提到了Person类和Person对象)</li>
-<li>companion object还会有unapply方法</li>
-<li>会有一个默认的序列化实现(a default implementation is provided for serialization)</li>
-</ol>
-<p>以之前定义的Person样本类为例，验证一些样本代码：</p>
-<pre><code>val p = Person(<span class="string">"format"</span>, <span class="number">99</span>)  <span class="comment">// case Person会生成一个带有apply的Person对象</span>
-p.name <span class="comment">// format</span>
-p.age <span class="comment">// 99</span>
-p <span class="comment">// Person(format, 99)</span>
-p == Person(<span class="string">"format"</span>, <span class="number">99</span>) <span class="comment">// true</span>
-p == Person(<span class="string">"format"</span>, <span class="number">9</span>) <span class="comment">// false</span>
-val p2 = p.copy() <span class="comment">// p2: Person(format, 99)</span>
-p == p2 <span class="comment">// true</span>
-p.copy(name=<span class="string">"newName"</span>) <span class="comment">// Person(newName, 99)</span>
-p.hashCode <span class="comment">// 187596955</span>
-p2.hashCode <span class="comment">//187596955</span>
-<span class="comment">// 模式匹配，unapply方法</span>
-p match {
-    <span class="function"><span class="keyword">case</span> <span class="title">Person</span><span class="params">(name, age)</span> </span>=&gt; println(name + <span class="string">","</span> + age)
-} 
-val p = <span class="keyword">new</span> Person(<span class="string">"name"</span>, <span class="number">99</span>) <span class="comment">// 不用单例对象，用new构造实例</span>
-</code></pre>
-            
-          </span>
+          <span itemprop="description">近在公司看到了mybatis与spring整合中MapperScannerConfigurer的使用，该类通过反向代理自动生成基于接口的动态代理类 ...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2014/08/16/java-dynamic-proxy/">
+              阅读全文 &raquo;
+            </a>
+          </div>
         
       
     </div>
@@ -758,8 +497,8 @@ val p = <span class="keyword">new</span> Person(<span class="string">"name"</spa
             
             
               
-                <a class="post-title-link" href="/2015/05/31/scala-introduction/" itemprop="url">
-                  Scala基础
+                <a class="post-title-link" href="/2014/08/16/redis/" itemprop="url">
+                  Redis简介-安装-入门
                 </a>
               
             
@@ -769,8 +508,8 @@ val p = <span class="keyword">new</span> Person(<span class="string">"name"</spa
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2015-05-31T09:49:50+08:00" content="2015-05-31">
-              2015-05-31
+            <time itemprop="dateCreated" datetime="2014-08-16T09:49:50+08:00" content="2014-08-16">
+              2014-08-16
             </time>
           </span>
 
@@ -779,8 +518,8 @@ val p = <span class="keyword">new</span> Person(<span class="string">"name"</spa
               &nbsp; | &nbsp; 分类于
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/jvm/" itemprop="url" rel="index">
-                    <span itemprop="name">jvm</span>
+                  <a href="/categories/cache/" itemprop="url" rel="index">
+                    <span itemprop="name">cache</span>
                   </a>
                 </span>
 
@@ -795,8 +534,8 @@ val p = <span class="keyword">new</span> Person(<span class="string">"name"</spa
             
               <span class="post-comments-count">
               &nbsp; | &nbsp;
-              <a href="/2015/05/31/scala-introduction/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/05/31/scala-introduction/" itemprop="commentsCount"></span>
+              <a href="/2014/08/16/redis/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/08/16/redis/" itemprop="commentsCount"></span>
               </a>
             </span>
             
@@ -816,55 +555,12 @@ val p = <span class="keyword">new</span> Person(<span class="string">"name"</spa
 
       
         
-          <span itemprop="articleBody">
-            
-              <h2 id="Scala简介">Scala简介</h2><p>Scala是一门可以运行的jvm上的动态语言，其他可以运行在jvm上的动态语言还有groovy,clojure等。</p>
-<p>Scala是一种面向对象编程语言，同时又无缝结合了命令式和函数式的编程风格。</p>
-<h2 id="变量的定义以及赋值">变量的定义以及赋值</h2><p>使用var或val定义变量。 var表示这个变量可变，val则表示这个变量不可变(类似java中的final关键字)。</p>
-<pre><code>var a = <span class="number">1</span>; a = <span class="number">2</span>
-val a = <span class="number">1</span>; a = <span class="number">1</span> <span class="comment">// 报错，a不可变</span>
-</code></pre><h2 id="基础类型">基础类型</h2><p>scala有8种基础类型，分别是Byte, Short, Int, Long, Float, Double, Boolean, Char。</p>
-<pre><code><span class="tag">var</span> <span class="tag">a</span>: Int = <span class="number">1</span> <span class="comment">// 指定变量a的类型为Int，不指定的话scala会自动根据上下文得出变量的类型</span>
-<span class="tag">var</span> str = <span class="string">"a test string"</span>
-<span class="tag">var</span> ten = <span class="string">"10"</span><span class="class">.toInt</span> <span class="comment">// string类型有toInt方法可以转换成Int类型</span>
-</code></pre><h2 id="函数的定义">函数的定义</h2><p>函数的定义语法如下：</p>
-<pre><code><span class="function"><span class="keyword">def</span> 函数名<span class="params">(参数名: 参数类型)</span>:</span> 函数返回类型 = 函数体
-</code></pre><p>1个简单的函数:</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">scalaFunc</span><span class="params">(name: String)</span>:</span> Unit = println(<span class="string">"welcome to use scala function: "</span> + name)
-
-   // 函数调用
-scalaFunc(<span class="string">"format"</span>) // 打印出 welcome to use scala cuntion: format
-</code></pre><h2 id="if语法">if语法</h2><p>if语法跟其他语言类似</p>
-<pre><code><span class="keyword">if</span>(some condition) <span class="keyword">value</span><span class="number">1</span> <span class="keyword">else</span> <span class="keyword">value</span><span class="number">2</span>
-</code></pre><h2 id="for语法">for语法</h2><p>基本使用：</p>
-<pre><code>val range = <span class="number">1</span> to <span class="number">10</span>
-<span class="comment">// 打印出1-10数字</span>
-<span class="keyword">for</span>(<span class="keyword">index</span> &lt;- num) {
-    println(<span class="keyword">index</span>)
-}
-</code></pre><p>在for循环中使用yield关键字可返回循环中的各个值并组成一个新的集合</p>
-<pre><code>val range = <span class="number">1</span> <span class="keyword">to</span> <span class="number">10</span>
-<span class="keyword">for</span>(<span class="keyword">index</span> &lt;- range) <span class="keyword">yield</span> <span class="keyword">index</span> <span class="comment">// 得到一个1-10的新的集合</span>
-</code></pre><p>for循环中可以嵌入其他语法：</p>
-<p>打印出在1-10中所有的偶数:</p>
-<pre><code><span class="keyword">for</span>(index &lt;- <span class="number">1</span> to <span class="number">10</span>) {
-    <span class="keyword">if</span>（index % <span class="number">2</span> == <span class="number">0</span>) println(index)
-}
-</code></pre><p>由于scala可以在for循环中嵌入其他语法，所以可以简化：</p>
-<pre><code><span class="keyword">for</span>(index &lt;- <span class="number">1</span> to <span class="number">10</span>; <span class="keyword">if</span>(index % <span class="number">2</span> == <span class="number">0</span>)) println(index)
-</code></pre><h2 id="List和Array的简单使用">List和Array的简单使用</h2><p>List和Array都支持类型参数化，也就是泛型。</p>
-<p>Array的使用：</p>
-<pre><code>val array = new Array[<span class="link_label">String</span>](<span class="link_url">3</span>)
-array(0) = "format01"
-array(1) = "format02"
-</code></pre><p>List的使用：</p>
-<pre><code>val <span class="built_in">list</span> = List[Int](<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)
-<span class="built_in">list</span> ++ List(<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>) <span class="comment">// List(1, 2, 3, 4, 5, 6)</span>
-<span class="number">1</span> :: <span class="built_in">list</span> <span class="comment">// list前方加入元素。 List(1, 1, 2, 3)</span>
-<span class="built_in">list</span> :+ <span class="number">1</span> <span class="comment">// list后方加入元素。 List(1, 2, 3, 1)</span>
-</code></pre>
-            
-          </span>
+          <span itemprop="description">Redis是完全开源免费的，遵守BSD协议，先进的key - value持久化产品。它通常被称为数据结构服务器 ...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2014/08/16/redis/">
+              阅读全文 &raquo;
+            </a>
+          </div>
         
       
     </div>
@@ -899,8 +595,8 @@ array(1) = "format02"
             
             
               
-                <a class="post-title-link" href="/2015/05/17/playframework-introduce/" itemprop="url">
-                  playframework简介
+                <a class="post-title-link" href="/2014/08/11/Idea_SVN/" itemprop="url">
+                  Idea使用svn的问题
                 </a>
               
             
@@ -910,34 +606,19 @@ array(1) = "format02"
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2015-05-17T23:56:38+08:00" content="2015-05-17">
-              2015-05-17
+            <time itemprop="dateCreated" datetime="2014-08-11T23:49:50+08:00" content="2014-08-11">
+              2014-08-11
             </time>
           </span>
 
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/jvm/" itemprop="url" rel="index">
-                    <span itemprop="name">jvm</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
           
 
           
             
               <span class="post-comments-count">
               &nbsp; | &nbsp;
-              <a href="/2015/05/17/playframework-introduce/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/05/17/playframework-introduce/" itemprop="commentsCount"></span>
+              <a href="/2014/08/11/Idea_SVN/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/08/11/Idea_SVN/" itemprop="commentsCount"></span>
               </a>
             </span>
             
@@ -957,148 +638,193 @@ array(1) = "format02"
 
       
         
-          <span itemprop="articleBody">
+          <span itemprop="description">Idea使用svn出现svn E204899 Cannot run program "svn"</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2014/08/11/Idea_SVN/">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
             
-              <p>好久没写博了，因为工作忙成狗了  →_→  ， 还有一个原因就在最近还在看scala in action这本书。 in action系列的就不用多介绍了，像我这种英文渣渣都能看的懂。 →_→。</p>
-<p>几个web框架说明一下：</p>
-<p>grails：工作上使用的框架，grails虽然开发也很快，但是是用groovy语言写的，不是很喜欢groovy。grails老是遇到一些莫名其妙的问题，之前还碰到过domain有个enum类型的属性，使用ordinal映射，但是数据库中字段的类型。domain做query查询，debug居然提示Variable没有找到。后来在try catch块内找到了相对正确一点的error message。而且groovy语法感觉设计地很糟糕，完全不能跟scala对比。<br>SpringMVC：不用多说了，还看过源码，还是不错的。当年写java的时候的第一选择。虽然现在还在写 →_→。<br>Struts2：不想说了，不好用，不知道现在用的人还多不。<br>Playframework：java，scala都可以使用。跟grails一样，开发速度也很快。</p>
-<h2 id="Playframework简介">Playframework简介</h2><p>记录一下play常用的功能，做个笔记。</p>
-<p>从MVC角度分别说明一下。</p>
-<h3 id="Controller">Controller</h3><p>play的controller需要继承Controller，controller中的每个方法都是一个Action。一个Action本质上就是一个 (play.api.mvc.Request =&gt; play.api.mvc.Result) 函数，这个函数处理请求并生成对应的结果。</p>
-<p>1最简单的Controller：</p>
-<pre><code><span class="keyword">package</span> controllers
-
-<span class="keyword">import</span> play.api._
-<span class="keyword">import</span> play.api.mvc._
-
-<span class="class"><span class="keyword">object</span> <span class="title">Application</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Controller</span> {</span>
-
-  <span class="function"><span class="keyword">def</span> <span class="title">index</span> =</span> <span class="type">Action</span> {
-    <span class="type">Ok</span>(<span class="string">"This is index page"</span>)
-  }
-
-}
-</code></pre><p>index方法就是一个Action。Ok代表一个返回值为200的Response。</p>
-<p>Action可以带request参数：</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">index</span></span> = <span class="constant">Action </span>{ request =&gt;
-    <span class="constant">Ok(</span><span class="string">"request: "</span> + request)
-}
-</code></pre><p>request可以加上implicit，这样其他的api也可以使用：</p>
-<pre><code>def <span class="built_in">index</span> = <span class="keyword">Action</span> { <span class="type">implicit</span> request =&gt;
-    Ok(<span class="string">"request: "</span> + request)
-}
-</code></pre><p>响应json：</p>
-<pre><code>val list = <span class="keyword">Action</span> { <span class="type">implicit</span> request =&gt;
-  val items = Item.findAll
-  render {
-    <span class="keyword">case</span> Accepts.Html() =&gt; Ok(views.html.list(items))
-    <span class="keyword">case</span> Accepts.Json() =&gt; Ok(Json.toJson(items))
-  }
-}
-</code></pre><p>除了Ok返回，还有一些其他封装好的方法(这些方法都是在play.api.mvc.Results中定义的)：</p>
-<pre><code>NotFound
-BadRequest
-InternalServerError
-<span class="keyword">Status</span>
-TODO // def <span class="built_in">index</span>(<span class="keyword">name</span>: String) = TODO
-Redirect
-</code></pre><p>还可以自定义header和response：</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">index</span></span> = <span class="constant">Action </span>{
-    <span class="constant">Result(</span>
-        header = <span class="constant">ResponseHeader(</span><span class="number">200</span>, <span class="constant">Map(CONTENT_TYPE </span>-&gt; <span class="string">"text/plain"</span>)),
-        body = <span class="constant">Enumerator(</span><span class="string">"Hello World!"</span>.getBytes())
-    )
-}
-</code></pre><p><strong>controller中定义的方法如果想被http访问，需要在routes中定义路由规则和对应的controller中的方法</strong>。 这点是我不大爽的地方，项目一大，routes中的配置内容也会变多。</p>
-<pre><code>GET   /clients/:id          controllers.Clients.show(id: Long)
-GET   /items/$id&lt;[<span class="number">0</span>-<span class="number">9</span>]+&gt;    controllers.Items.show(id: Long)
-<span class="comment">// 默认值</span>
-GET   /clients              controllers.Clients.<span class="built_in">list</span>(page: Int ?= <span class="number">1</span>)
-<span class="comment">// Option类型的参数不需要一定传递</span>
-GET   /api/<span class="built_in">list</span>-all         controllers.Api.<span class="built_in">list</span>(version: Option[String])
-</code></pre><h3 id="View">View</h3><p>play的模板引擎中可以写一些scala代码。</p>
-<p>play的模板引擎会根据对应的模板文件，生成一个类，这个类有个apply方法。</p>
-<p>比如views目录下有个index.scala.html文件，play会生成一个views.html.index类。</p>
-<p>也可以使用views.html.index方法得到对应的html文本：</p>
-<pre><code>val <span class="attribute">content</span> = views<span class="class">.html</span><span class="class">.index</span>(c, o)
-</code></pre><p>一段简单的模板代码：</p>
-<pre><code><span class="comment">@(customer: Customer, orders: List[Order])</span>
-
-<span class="variable">&lt;h1&gt;</span>Welcome <span class="comment">@customer.name!&lt;/h1&gt;</span>
-
-<span class="variable">&lt;ul&gt;</span>
-<span class="comment">@for(order &lt;- orders) {</span>
-  <span class="variable">&lt;li&gt;</span><span class="comment">@order.title&lt;/li&gt;</span>
-}
-<span class="variable">&lt;/ul&gt;</span>
-</code></pre><p>一般模板文件第一行会定义参数。然后接下来就是具体的逻辑。</p>
-<p>play的模板引擎使用@来表示scala代码。之前例子的for循环就是使用了@。</p>
-<p>还有if：</p>
-<pre><code>@<span class="keyword">if</span>(<span class="built_in">items</span>.isEmpty) {
-    &lt;h1&gt;Nothing&lt;/h1&gt;
-} <span class="keyword">else</span> {
-    &lt;h1&gt;&lt;@<span class="built_in">items</span>.<span class="built_in">size</span> <span class="built_in">items</span>/h1&gt;
-}
-</code></pre><p>模板中还可以定义函数：</p>
-<pre><code><span class="variable">@display</span>(<span class="attribute">product</span>: Product) = {
-  <span class="variable">@product</span>.name ($<span class="variable">@product</span>.price)
-}
-
-&lt;ul&gt;
-<span class="variable">@for</span>(product &lt;- products) {
-  <span class="variable">@display</span>(product)
-}
-&lt;/ul
-</code></pre><p>模板的继承：</p>
-<pre><code>@(title: String)(content: Html)
-<span class="doctype">&lt;!DOCTYPE html&gt;</span>
-<span class="tag">&lt;<span class="title">html</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">head</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">title</span>&gt;</span>@title<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
-  <span class="tag">&lt;/<span class="title">head</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">body</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">section</span> <span class="attribute">class</span>=<span class="value">"content"</span>&gt;</span>@content<span class="tag">&lt;/<span class="title">section</span>&gt;</span>
-  <span class="tag">&lt;/<span class="title">body</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">html</span>&gt;</span>
-
-@main(title = "Home") {
-
-  <span class="tag">&lt;<span class="title">h1</span>&gt;</span>Home page<span class="tag">&lt;/<span class="title">h1</span>&gt;</span>
-
-}
-</code></pre><p>2个子模板：</p>
-<pre><code>@(title: String)(sidebar: Html)(content: Html)
-<span class="doctype">&lt;!DOCTYPE html&gt;</span>
-<span class="tag">&lt;<span class="title">html</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">head</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">title</span>&gt;</span>@title<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
-  <span class="tag">&lt;/<span class="title">head</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">body</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">section</span> <span class="attribute">class</span>=<span class="value">"sidebar"</span>&gt;</span>@sidebar<span class="tag">&lt;/<span class="title">section</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">section</span> <span class="attribute">class</span>=<span class="value">"content"</span>&gt;</span>@content<span class="tag">&lt;/<span class="title">section</span>&gt;</span>
-  <span class="tag">&lt;/<span class="title">body</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">html</span>&gt;</span>
-
-@main("Home") {
-  <span class="tag">&lt;<span class="title">h1</span>&gt;</span>Sidebar<span class="tag">&lt;/<span class="title">h1</span>&gt;</span>
-
-} {
-  <span class="tag">&lt;<span class="title">h1</span>&gt;</span>Home page<span class="tag">&lt;/<span class="title">h1</span>&gt;</span>
-
-}
-</code></pre><p>或者：</p>
-<pre><code><span class="comment">@sidebar = {</span>
-  <span class="variable">&lt;h1&gt;</span>Sidebar<span class="variable">&lt;/h1&gt;</span>
-}
-
-<span class="comment">@main("Home")(sidebar) {</span>
-  <span class="variable">&lt;h1&gt;</span>Home page<span class="variable">&lt;/h1&gt;</span>
-
-}
-</code></pre><h3 id="Model">Model</h3><p>play的Model使用的是Ebean这个ORM框架</p>
-
             
+              
+                <a class="post-title-link" href="/2014/08/06/Backbone/" itemprop="url">
+                  Backbone小记录
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2014-08-06T09:49:50+08:00" content="2014-08-06">
+              2014-08-06
+            </time>
           </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/javascript/" itemprop="url" rel="index">
+                    <span itemprop="name">javascript</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2014/08/06/Backbone/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/08/06/Backbone/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="description">这两天看了下Backbone.js的知识，大概了解了这个框架的一些知识。 写篇博客总结一下 ...</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2014/08/06/Backbone/">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                <a class="post-title-link" href="/2014/07/30/Hexo_Tinny_duoshuo/" itemprop="url">
+                  Hexo框架下Tinny主题中评论框的使用
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2014-07-30T16:58:18+08:00" content="2014-07-30">
+              2014-07-30
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2014/07/30/Hexo_Tinny_duoshuo/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/07/30/Hexo_Tinny_duoshuo/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="description">Hexo中使用Tinny主题后评论框的设置</span>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2014/07/30/Hexo_Tinny_duoshuo/">
+              阅读全文 &raquo;
+            </a>
+          </div>
         
       
     </div>
@@ -1121,7 +847,7 @@ GET   /api/<span class="built_in">list</span>-all         controllers.Api.<span 
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/5/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><span class="page-number current">6</span><a class="page-number" href="/page/7/">7</a><span class="space">&hellip;</span><a class="page-number" href="/page/12/">12</a><a class="extend next" rel="next" href="/page/7/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/5/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><span class="page-number current">6</span>
   </nav>
 
 

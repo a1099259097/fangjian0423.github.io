@@ -55,14 +55,12 @@
 
 
 
-<meta name="description" content="前言本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理，之前已经分析过java中实现动态，可以使用jdk自带api和cglib第三方库生成动态代理。本文分析的mybatis版本3.2.7，mybatis-spring版本1.2.2。
-MapperScannerConfigurer介绍MapperScannerConfigurer是spring和my">
+<meta name="description" content="本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理 ...">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析">
 <meta property="og:url" content="http://fangjian0423.github.io/2014/09/06/MapperScannerConfigurer-analysis/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="前言本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理，之前已经分析过java中实现动态，可以使用jdk自带api和cglib第三方库生成动态代理。本文分析的mybatis版本3.2.7，mybatis-spring版本1.2.2。
-MapperScannerConfigurer介绍MapperScannerConfigurer是spring和my">
+<meta property="og:description" content="本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理 ...">
 <meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis1.png">
 <meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis2.png">
 <meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis3.png">
@@ -76,11 +74,10 @@ MapperScannerConfigurer介绍MapperScannerConfigurer是spring和my">
 <meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis11.png">
 <meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis12.png">
 <meta property="og:image" content="http://format-blog-image.qiniudn.com/mybatis13.png">
-<meta property="og:updated_time" content="2015-11-07T08:32:35.000Z">
+<meta property="og:updated_time" content="2015-12-20T17:00:50.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析">
-<meta name="twitter:description" content="前言本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理，之前已经分析过java中实现动态，可以使用jdk自带api和cglib第三方库生成动态代理。本文分析的mybatis版本3.2.7，mybatis-spring版本1.2.2。
-MapperScannerConfigurer介绍MapperScannerConfigurer是spring和my">
+<meta name="twitter:description" content="本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理 ...">
 
 
 

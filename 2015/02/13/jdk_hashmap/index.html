@@ -55,29 +55,17 @@
 
 
 
-<meta name="description" content="前言Map是一个映射键和值的对象。类似于Python中的字典。
-HashMap为什么会出现呢?
-因为数组这种数据结构，虽然遍历简单，但是插入和删除操作复杂，需要移动数组内部的元素；链表这种数据结构，插入和删除操作简单，但是查找复杂，只能一个一个地遍历。
-有没有一种新的数据结构，插入数据简单，同时查找也简单？ 这个时候就出现了哈希表这种数据结构。 这是一种折中的方式，插入没数组快，插入没链表快。
-哈">
+<meta name="description" content="Map是一个映射键和值的对象。类似于Python中的字典 ...">
 <meta property="og:type" content="article">
 <meta property="og:title" content="jdk源码分析之HashMap">
 <meta property="og:url" content="http://fangjian0423.github.io/2015/02/13/jdk_hashmap/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="前言Map是一个映射键和值的对象。类似于Python中的字典。
-HashMap为什么会出现呢?
-因为数组这种数据结构，虽然遍历简单，但是插入和删除操作复杂，需要移动数组内部的元素；链表这种数据结构，插入和删除操作简单，但是查找复杂，只能一个一个地遍历。
-有没有一种新的数据结构，插入数据简单，同时查找也简单？ 这个时候就出现了哈希表这种数据结构。 这是一种折中的方式，插入没数组快，插入没链表快。
-哈">
+<meta property="og:description" content="Map是一个映射键和值的对象。类似于Python中的字典 ...">
 <meta property="og:image" content="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_HashMap.png">
-<meta property="og:updated_time" content="2015-11-07T08:31:18.000Z">
+<meta property="og:updated_time" content="2015-12-20T16:54:54.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="jdk源码分析之HashMap">
-<meta name="twitter:description" content="前言Map是一个映射键和值的对象。类似于Python中的字典。
-HashMap为什么会出现呢?
-因为数组这种数据结构，虽然遍历简单，但是插入和删除操作复杂，需要移动数组内部的元素；链表这种数据结构，插入和删除操作简单，但是查找复杂，只能一个一个地遍历。
-有没有一种新的数据结构，插入数据简单，同时查找也简单？ 这个时候就出现了哈希表这种数据结构。 这是一种折中的方式，插入没数组快，插入没链表快。
-哈">
+<meta name="twitter:description" content="Map是一个映射键和值的对象。类似于Python中的字典 ...">
 
 
 

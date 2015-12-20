@@ -203,6 +203,168 @@
             
             
               
+                <a class="post-title-link" href="/2015/09/21/springboot-intro/" itemprop="url">
+                  Spring Boot 部分特性记录
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-09-21T00:21:49+08:00" content="2015-09-21">
+              2015-09-21
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/springboot/" itemprop="url" rel="index">
+                    <span itemprop="name">springboot</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/09/21/springboot-intro/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/09/21/springboot-intro/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p>SpringBoot是Java的一个micro-service框架。它设计的目的是简化Spring应用的初始搭建以及开发过程。使用SpringBoot可以避免大量的xml配置文件，它内部使用很多约定的方式。</p>
+<p>以一个最简单的MVC例子来说，使用SpringBoot进行开发的话定义好对应的Controller，Repository和Entity之后，加上各自的Annotation即可。</p>
+<p>Repository框架可以选择Spring Data或者Hibernate，可通过自由配置。</p>
+<p>视图框架也可通过配置选择freemarker或者velocity等视图框架。</p>
+<p>下面，介绍一下SpringBoot的一些功能。</p>
+<h2 id="SpringBoot框架的启动">SpringBoot框架的启动</h2><p>SpringBoot使用SpringApplication这个类进行项目的启动。一般都会这么写：</p>
+<pre><code><span class="annotation">@SpringBootApplication</span>
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Application</span> {</span>
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="typename">void</span> main(String[] args) {
+        SpringApplication.run(Application.<span class="keyword">class</span>, args);
+    }
+}
+</code></pre><p>使用SpringBootApplication注解相当于使用了3个注解，分别是@ComponentScan，@Configuration，@EnableAutoConfiguration。</p>
+<p>这里需要注意的是Application这个类所有的package位置。</p>
+<p>比如你的项目的包路径是 me.format.project1，对应的controller和repository包是 me.format.project1.controller和me.format.project1.repository。 那么这个Application需要在的包路径为 me.format.project1。 因为SpringBootApplication注解内部是使用ComponentScan注解，这个注解会扫描Application包所在的路径下的各个bean。</p>
+<h2 id="Profile的使用">Profile的使用</h2><p>可以在springboot项目中加入配置文件application.yml。</p>
+<p>yaml中可以定义多个profile，也可以指定激活的profile：</p>
+<pre><code><span class="attribute">spring</span>:
+  profiles.<span class="attribute">active</span>: dev
+
+---
+<span class="attribute">spring</span>:
+  <span class="attribute">profiles</span>: dev
+<span class="attribute">myconfig</span>:
+  <span class="attribute">config1</span>: dev-enviroment
+
+---
+<span class="attribute">spring</span>:
+  <span class="attribute">profiles</span>: test
+<span class="attribute">myconfig</span>:
+  <span class="attribute">config1</span>: test-enviroment
+
+---
+<span class="attribute">spring</span>:
+  <span class="attribute">profiles</span>: prod
+<span class="attribute">myconfig</span>:
+  <span class="attribute">config1</span>: prod-envioment
+</code></pre><p>也可以在运行的执行指定profile：</p>
+<pre><code>java -Dspring<span class="class">.profiles</span><span class="class">.active</span>=<span class="string">"prod"</span> -jar yourjar.jar
+</code></pre><p>还可以使用Profile注解，MyConfig只会在prod这个profile下才会生效，其他profile不会生效：</p>
+<pre><code><span class="variable">@Profile</span>(<span class="string">"prod"</span>)
+<span class="variable">@Component</span>
+public class MyConfig {
+    ....
+}
+</code></pre><h2 id="自定义的一些Conveter，Interceptor">自定义的一些Conveter，Interceptor</h2><p>如果想配置springmvc的HandlerInterceptorAdapter或者HttpMessageConverter。 只需要定义自己的interceptor或者converter，然后加上Component注解。这样SpringBoot会自动处理这些类，不用自己在配置文件里指定对应的内容。 这个也是相当方便的。</p>
+<pre><code><span class="annotation">@Component</span>
+public <span class="class"><span class="keyword">class</span> <span class="title">AuthInterceptor</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">HandlerInterceptorAdapter</span> {</span>
+    ...
+}
+
+<span class="annotation">@Component</span>
+public <span class="class"><span class="keyword">class</span> <span class="title">MyConverter</span> <span class="title">implements</span> <span class="title">HttpMessageConverter&lt;MyObj&gt;</span> {</span> 
+    ...
+}
+</code></pre><h2 id="模板的使用">模板的使用</h2><p>比如使用freemarker的时候，加入以下依赖：</p>
+<pre><code><span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-starter-freemarker<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
+</code></pre><p>然后在resources目录下建立一个templates目录即可，视图将会从这个templates位置开始找。</p>
+<h2 id="其他">其他</h2><p>关于其他的特性可以参考官方文档：</p>
+<p><a href="http://docs.spring.io/spring-boot/docs/current/reference/html/" target="_blank" rel="external">http://docs.spring.io/spring-boot/docs/current/reference/html/</a></p>
+<p>springboot还提供了一系列sample供参考：</p>
+<p><a href="https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples" target="_blank" rel="external">https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples</a></p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
                 <a class="post-title-link" href="/2015/08/18/slick-intro/" itemprop="url">
                   Scala持久层框架Slick介绍
                 </a>
@@ -1225,123 +1387,6 @@ Time taken: <span class="number">0.07</span> seconds, Fetched: <span class="numb
 
 
     
-      
-
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                <a class="post-title-link" href="/2015/07/26/google-guava-intro/" itemprop="url">
-                  google guava类库介绍
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2015-07-26T16:32:33+08:00" content="2015-07-26">
-              2015-07-26
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/jvm/" itemprop="url" rel="index">
-                    <span itemprop="name">jvm</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2015/07/26/google-guava-intro/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/26/google-guava-intro/" itemprop="commentsCount"></span>
-              </a>
-            </span>
-            
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body">
-
-      
-      
-
-      
-        
-          <span itemprop="articleBody">
-            
-              <h2 id="Guava简介">Guava简介</h2><p><a href="https://mail.google.com/mail/u/0/" target="_blank" rel="external">Guava</a>是一个Google开发的基于java的扩展项目，提供了很多有用的工具类，可以让java代码更加优雅，更加简洁。</p>
-<p>Guava包括诸多工具类，比如Collections，cache，concurrent，hash，reflect，annotations，eventbus等。</p>
-<p>刚好在看flume源码的时候看到源码里面使用了很多guava提供的代码，于是记录学习一下这个类库。</p>
-<h2 id="各个模块介绍">各个模块介绍</h2><p><a href="https://code.google.com/p/guava-libraries/wiki/GuavaExplained" target="_blank" rel="external">Guava的wiki</a>已经很明细地介绍了各个工具类的作用和说明。</p>
-<p>简单翻译一下各个工具类的说明，有用到的需要了解详情的直接去官网看就可以了。</p>
-<h3 id="Basic_utilties_基础工具类">Basic utilties 基础工具类</h3><p>基础工具类的作用是写java语言写的更轻松。它包括了5个子模块：</p>
-<p>1.<a href="https://code.google.com/p/guava-libraries/wiki/UsingAndAvoidingNullExplained" target="_blank" rel="external">使用和避免null</a>，null值是有歧义的，也会引起错误。有时候它会让人很不舒服，<br>2.<a href="https://code.google.com/p/guava-libraries/wiki/PreconditionsExplained" target="_blank" rel="external">前置条件</a>,让方法中的条件检查更简单<br>3.<a href="https://code.google.com/p/guava-libraries/wiki/CommonObjectUtilitiesExplained" target="_blank" rel="external">公用的object方法</a>，简化object对象的hashCode和toString<br>4.<a href="https://code.google.com/p/guava-libraries/wiki/OrderingExplained" target="_blank" rel="external">排序</a>，Guava提供了强大的fluent Comparator<br>5.<a href="https://code.google.com/p/guava-libraries/wiki/ThrowablesExplained" target="_blank" rel="external">Throwables</a>，简化了异常和错误的传播与检查</p>
-<h3 id="Collections_集合">Collections 集合</h3><p>Guava扩展了jdk提供的集合机制</p>
-<p>1.<a href="https://code.google.com/p/guava-libraries/wiki/ImmutableCollectionsExplained" target="_blank" rel="external">不可变集合</a>用不变的集合进行防御性编程和性能提升<br>2.<a href="https://code.google.com/p/guava-libraries/wiki/NewCollectionTypesExplained" target="_blank" rel="external">新集合类型</a>multisets，multimaps，tables，bidirectional map等<br>3.<a href="https://code.google.com/p/guava-libraries/wiki/CollectionUtilitiesExplained" target="_blank" rel="external">强大的集合工具类</a>提供了jdk中没有的集合工具类<br>4.<a href="https://code.google.com/p/guava-libraries/wiki/CollectionHelpersExplained" target="_blank" rel="external">扩展工具类</a>让实现和扩展集合类变得更容易，比如创建Collection的装饰器，或实现迭代器</p>
-<h3 id="Caches_缓存">Caches 缓存</h3><p>本地缓存实现，支持多种缓存过期策略</p>
-<h3 id="函数式风格">函数式风格</h3><p>Guava的函数式支持可以显著简化代码，但请谨慎使用它</p>
-<h3 id="并发">并发</h3><p>1.<a href="https://code.google.com/p/guava-libraries/wiki/ListenableFutureExplained" target="_blank" rel="external">ListenableFuture</a>：完成后触发回调的Future<br>2.<a href="https://code.google.com/p/guava-libraries/wiki/ServiceExplained" target="_blank" rel="external">Service框架</a>：抽象可开启和关闭的服务，帮助你维护服务的状态逻辑</p>
-<h3 id="字符串处理">字符串处理</h3><p>非常有用的字符串工具，包括分割、连接、填充等操作</p>
-<h3 id="原生类型">原生类型</h3><p>扩展 JDK 未提供的原生类型（如int、char）操作， 包括某些类型的无符号形式</p>
-<h3 id="区间">区间</h3><p>可比较类型的区间API，包括连续和离散类型</p>
-<h3 id="IO">IO</h3><p>简化I/O尤其是I/O流和文件的操作，针对Java5和6版本</p>
-<h3 id="散列">散列</h3><p>提供比Object.hashCode()更复杂的散列实现，并提供布鲁姆过滤器的实现</p>
-<h3 id="事件总线">事件总线</h3><p>发布-订阅模式的组件通信，但组件不需要显式地注册到其他组件中</p>
-<h3 id="数学运算">数学运算</h3><p>优化的、充分测试的数学工具类</p>
-<h3 id="反射">反射</h3><p>Guava的Java反射机制工具类</p>
-
-            
-          </span>
-        
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1387,7 +1432,7 @@ Time taken: <span class="number">0.07</span> seconds, Fetched: <span class="numb
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-count">57</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

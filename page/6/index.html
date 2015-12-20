@@ -203,6 +203,208 @@
             
             
               
+                <a class="post-title-link" href="/2015/06/07/scala-generic/" itemprop="url">
+                  Scala泛型
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2015-06-07T18:17:21+08:00" content="2015-06-07">
+              2015-06-07
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jvm/" itemprop="url" rel="index">
+                    <span itemprop="name">jvm</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2015/06/07/scala-generic/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/07/scala-generic/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <h2 id="简单回顾泛型">简单回顾泛型</h2><p>java中可使用泛型进行编程，一个简单的泛型例子如下：</p>
+<pre><code>List&lt;<span class="keyword">String</span>&gt; strList = <span class="keyword">new</span> ArrayList&lt;<span class="keyword">String</span>&gt;();
+strList.<span class="built_in">add</span>(<span class="string">"one"</span>);
+strList.<span class="built_in">add</span>(<span class="string">"two"</span>);
+strList.<span class="built_in">add</span>(<span class="string">"three"</span>);
+
+<span class="keyword">String</span> one = strList.<span class="built_in">get</span>(<span class="number">0</span>); <span class="comment">// 泛型拿数据不必进行类型转换，不使用泛型的话需要对类型进行转换</span>
+</code></pre><h2 id="scala的泛型">scala的泛型</h2><p>scala中的泛型称为类型参数化(type parameterlization)。语法跟java不一样，使用”[]”表示类型。</p>
+<p>一个使用类型参数化的函数：</p>
+<pre><code><span class="function"><span class="keyword">def</span> <span class="title">position</span>[<span class="title">A</span>]<span class="params">(xs: List[A], value: A)</span>:</span> Int = {
+    xs.indexOf(value)
+}
+
+position(List(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>), <span class="number">1</span>) // <span class="number">0</span>
+position(List(<span class="string">"one"</span>, <span class="string">"two"</span>, <span class="string">"three"</span>), <span class="string">"two"</span>) // <span class="number">1</span>
+</code></pre><p>稍微复杂点的类型参数化，实现一个map函数，需要一个List和一个函数作为参数：</p>
+<p>普通的map方法：</p>
+<pre><code>List(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>) <span class="built_in">map</span> { _ * <span class="number">2</span> }  <span class="comment">// List[Int] = List(2,4,6)</span>
+List(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>) <span class="built_in">map</span> { _ + <span class="string">"2"</span> }  <span class="comment">// List[String] = List(12, 22, 32)</span>
+</code></pre><p>使用泛型实现的map方法：</p>
+<pre><code>def <span class="built_in">map</span>[A,B](<span class="built_in">list</span>:List[A], func: A =&gt; B) = <span class="built_in">list</span>.<span class="built_in">map</span>(func)
+
+<span class="built_in">map</span>(List(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>), { num: Int =&gt; num + <span class="string">"2"</span> }) <span class="comment">// List[String] = List(12, 22, 32)</span>
+<span class="built_in">map</span>(List(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>), { num: Int =&gt; num * <span class="number">2</span> }) <span class="comment">// List[Int] = List(2, 4, 6) </span>
+</code></pre><h2 id="上限和下限">上限和下限</h2><p>scala跟java一样，也提供了上限(upper bounds)和下限(lower bounds)功能。</p>
+<h3 id="上限(upper_bounds)">上限(upper bounds)</h3><p>java中上限的使用如下：</p>
+<pre><code>&lt;T <span class="keyword">extends</span> <span class="built_in">Object</span>&gt;
+
+通配符形式
+&lt;? <span class="keyword">extends</span> <span class="built_in">Object</span>&gt;
+</code></pre><p>scala写法：</p>
+<pre><code><span class="string">[T &lt;: AnyRef]</span>
+
+通配符形式
+<span class="string">[_ &lt;: AnyRef]</span>
+</code></pre><p>上限的一些例子：</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">upperBound</span><span class="params">(List&lt;? extends Number&gt; <span class="built_in">list</span>)</span> </span>{
+    Object obj = <span class="built_in">list</span>.get(<span class="number">0</span>); <span class="comment">// Number是Object的子类，使用Object可以代替Number。</span>
+    Number num = <span class="built_in">list</span>.get(<span class="number">0</span>);
+    Integet i = <span class="built_in">list</span>.get(<span class="number">0</span>); <span class="comment">// compile error</span>
+    <span class="built_in">list</span>.add(<span class="keyword">new</span> Integer(<span class="number">1</span>)); <span class="comment">// compile error</span>
+}
+</code></pre><p>上限做参数，<strong>set的话不能确定具体的类型</strong>，所以会报编译错误。get的话得到的结果的类型的下限为参数的上限。相当于使用了上限参数的话，该参数就变成了<strong>只读参数</strong>，类似生产者，只提供数据。</p>
+<p>scala版本：</p>
+<pre><code>def upperBound[A &lt;: Animal](<span class="built_in">list</span>: ListBuffer[A]): Unit = { 
+    <span class="built_in">list</span> += <span class="keyword">new</span> Animal(<span class="string">"123"</span>) <span class="comment">// compile error</span>
+    val obj: AnyRef = <span class="built_in">list</span>(<span class="number">0</span>) <span class="comment">// ok</span>
+    val a: Animal = <span class="built_in">list</span>(<span class="number">0</span>) <span class="comment">// ok</span>
+    val a: Cat = <span class="built_in">list</span>(<span class="number">0</span>) <span class="comment">// compile error</span>
+} 
+</code></pre><p>这里使用ListBuffer作为集合，ListBuffer的+=方法会在列表内部添加数据，不会产生一个新的List。如果使用List的话，:+操作符会在新生成的List中自动得到符合所有元素的类型。</p>
+<pre><code>List[<span class="link_label">Animal</span>](<span class="link_url">new Cat(</span>)) :+ 1 // List[Any] = List(Cat@3f23a076, 1)
+</code></pre><p>生成新的List会自动根据上下文得到新的泛型类型List[AnyRef]。</p>
+<h3 id="下限(lower_bounds)">下限(lower bounds)</h3><pre><code>&lt;T <span class="keyword">super</span> MyClass&gt;
+
+通配符形式
+&lt;? <span class="keyword">super</span> MyClass&gt;
+</code></pre><p>scala写法：</p>
+<pre><code><span class="string">[T &gt;: MyClass]</span>
+
+通配符形式
+<span class="string">[_ &gt;: MyClass]</span>
+</code></pre><p>下限的一些例子：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> lowerBound(List&lt;? <span class="keyword">super</span> Number&gt; l) {
+    l.<span class="built_in">add</span>(<span class="keyword">new</span> Integer(<span class="number">1</span>));
+    l.<span class="built_in">add</span>(<span class="keyword">new</span> Float(<span class="number">2</span>));
+    <span class="keyword">Object</span> obj = l.<span class="built_in">get</span>(<span class="number">0</span>);
+    Number num = l.<span class="built_in">get</span>(<span class="number">0</span>); <span class="comment">// compile error</span>
+}
+</code></pre><p>下限做参数，get方法只能用最宽泛的类型来获取数据，相当于get只提供了数据最小级别的访问权限。类似消费者，主要用来消费数据。</p>
+<p>scala版本：</p>
+<pre><code>def lowerBound[A &gt;: Animal](<span class="built_in">list</span>: ListBuffer[A]): Unit = { 
+    <span class="built_in">list</span> += <span class="keyword">new</span> Animal() <span class="comment">// ok</span>
+    <span class="built_in">list</span> += <span class="keyword">new</span> Cat() <span class="comment">// ok</span>
+    val obj: Any = <span class="built_in">list</span>(<span class="number">0</span>) <span class="comment">// ok</span>
+    val obj: Animal = <span class="built_in">list</span>(<span class="number">0</span>) <span class="comment">// compile error</span>
+}
+</code></pre><h2 id="协变和逆变">协变和逆变</h2><p>协变(covariance)：对于一个带类型参数的类型，比如List[T]，如果对A及其子类型B，满足List[B]也符合List[A]的子类型，那么就称为协变，用加号表示。比如 MyType[+A]</p>
+<p>逆变(contravariance)：如果List[A]是List[B]的子类型，用减号表示。比如MyType[+B]</p>
+<p>如果一个类型支持协变或逆变，则称这个类型为可变的(variance)。否则称为不可变的(invariant)。</p>
+<p>在java里，泛型类型都是不可变的，比如List&lt;String&gt;并不是List&lt;Object&gt;的子类。</p>
+<pre><code><span class="class"><span class="keyword">trait</span> <span class="title">A</span>[</span><span class="type">T</span>]
+<span class="class"><span class="keyword">class</span> <span class="title">C</span>[</span><span class="type">T</span>] <span class="keyword">extends</span> <span class="type">A</span>[<span class="type">T</span>]
+<span class="class"><span class="keyword">class</span> <span class="title">Parent</span>;</span> <span class="class"><span class="keyword">class</span> <span class="title">Child</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Parent</span>
+</span><span class="keyword">val</span> c:<span class="type">C</span>[<span class="type">Parent</span>] = <span class="keyword">new</span> <span class="type">C</span>[<span class="type">Parent</span>] <span class="comment">// ok</span>
+<span class="keyword">val</span> c:<span class="type">C</span>[<span class="type">Parent</span>] = <span class="keyword">new</span> <span class="type">C</span>[<span class="type">Child</span>]; <span class="comment">// Child &lt;: Parent, but class C is invariant in type T.</span>
+</code></pre><h3 id="协变">协变</h3><p>上面的例子提示已经很明确了。类C是不可变的，改成协变即可。</p>
+<pre><code><span class="class"><span class="keyword">trait</span> <span class="title">A</span>[</span>+<span class="type">T</span>]
+<span class="class"><span class="keyword">class</span> <span class="title">C</span>[</span>+<span class="type">T</span>] <span class="keyword">extends</span> <span class="type">A</span>[<span class="type">T</span>]
+<span class="class"><span class="keyword">class</span> <span class="title">Parent</span>;</span> <span class="class"><span class="keyword">class</span> <span class="title">Child</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Parent</span>
+</span><span class="keyword">val</span> c: <span class="type">C</span>[<span class="type">Parent</span>] = <span class="keyword">new</span> <span class="type">C</span>[<span class="type">Parent</span>] <span class="comment">// ok</span>
+<span class="keyword">val</span> c: <span class="type">C</span>[<span class="type">Parent</span>] = <span class="keyword">new</span> <span class="type">C</span>[<span class="type">Child</span>]  <span class="comment">// ok</span>
+</code></pre><p>scala中List就是一个协变类。</p>
+<pre><code>val list:List[<span class="link_label">Parent</span>] = List[<span class="link_label">Child</span>](<span class="link_url">new Child(</span>))
+</code></pre><h3 id="逆变">逆变</h3><p>逆变概念与协变相反。</p>
+<pre><code><span class="class"><span class="keyword">trait</span> <span class="title">A</span>[</span>-<span class="type">T</span>]
+<span class="class"><span class="keyword">class</span> <span class="title">C</span>[</span>-<span class="type">T</span>] <span class="keyword">extends</span> <span class="type">A</span>[<span class="type">T</span>]
+<span class="class"><span class="keyword">class</span> <span class="title">Parent</span>;</span> <span class="class"><span class="keyword">class</span> <span class="title">Child</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Parent</span>
+</span><span class="keyword">val</span> c: <span class="type">C</span>[<span class="type">Parent</span>] = <span class="keyword">new</span> <span class="type">C</span>[<span class="type">Parent</span>] <span class="comment">// ok</span>
+<span class="keyword">val</span> c: <span class="type">C</span>[<span class="type">Child</span>] = <span class="keyword">new</span> <span class="type">C</span>[<span class="type">Parent</span>]  <span class="comment">// ok</span>
+</code></pre><h3 id="协变逆变注意点">协变逆变注意点</h3><p>逆变协变并不会被继承，父类声明为逆变或协变，子类如果想要保持，任需要声明：</p>
+<pre><code><span class="class"><span class="keyword">trait</span> <span class="title">A</span>[</span>+<span class="type">T</span>]
+<span class="class"><span class="keyword">class</span> <span class="title">C</span>[</span><span class="type">T</span>] <span class="keyword">extends</span> <span class="type">A</span>[<span class="type">T</span>] <span class="comment">// C是不可变的，因为它不是逆变或协变。</span>
+<span class="class"><span class="keyword">class</span> <span class="title">D</span>[</span>+<span class="type">T</span>] <span class="keyword">extends</span> <span class="type">A</span>[<span class="type">T</span>] <span class="comment">// D是可变的，是协变</span>
+<span class="class"><span class="keyword">class</span> <span class="title">E</span>[</span>-<span class="type">T</span>] <span class="keyword">extends</span> <span class="type">A</span>[<span class="type">T</span>] <span class="comment">// E是可变的，是逆变</span>
+</code></pre>
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
                 <a class="post-title-link" href="/2015/06/04/scala-pattern-match/" itemprop="url">
                   Scala模式匹配
                 </a>
@@ -915,140 +1117,6 @@ GET   /api/<span class="built_in">list</span>-all         controllers.Api.<span 
 
 
     
-      
-
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                <a class="post-title-link" href="/2015/03/30/mac-jdk/" itemprop="url">
-                  macos中jdk版本切换
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2015-03-30T00:51:12+08:00" content="2015-03-30">
-              2015-03-30
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/macos/" itemprop="url" rel="index">
-                    <span itemprop="name">macos</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/macos/jdk/" itemprop="url" rel="index">
-                    <span itemprop="name">jdk</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2015/03/30/mac-jdk/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/03/30/mac-jdk/" itemprop="commentsCount"></span>
-              </a>
-            </span>
-            
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body">
-
-      
-      
-
-      
-        
-          <span itemprop="articleBody">
-            
-              <p>简单记录一下macos中的jdk版本切换问题。</p>
-<p>macos中安装jdk就有点麻烦… 不像ubuntu一样，ubuntu解压一下放到某个文件夹下，path指定一下就ok了，macos却比较搞。</p>
-<p>我在macos上安装了<a href="http://www.jenv.be/" target="_blank" rel="external">jEnv</a>。</p>
-<p>jEnv is a command line tool to help you forget how to set the JAVA_HOME environment variable</p>
-<p>jEnv是一个命令行工具，用来帮助你忘记怎么设置JAVA_HOME环境变量的设置。 具体的install和jdk版本切换可以上官网看下，很easy的。</p>
-<p>使用jEnv设置好jdk版本之后，比如要使用maven命令，可能会出现如下错误：</p>
-<pre><code>Error: JAVA_HOME is<span class="instruction"> not </span>defined correctly.
-  We cannot<span class="instruction"> execute </span>/usr/libexec/java_home/bin/java
-FAIL
-</code></pre><p>这个时候可以使用</p>
-<pre><code>jenv <span class="built_in">enable</span>-plugin maven
-</code></pre><p>这样的话就可以使用maven命令了。</p>
-<p>同理，disable的话：</p>
-<pre><code>jenv <span class="built_in">disable</span>-plugin maven
-</code></pre><p>同理，还有其他插件，比如：</p>
-<pre><code>jenv <span class="built_in">enable</span>-plugin grails
-</code></pre><p>我的maven命令之所以出现错误是这样的：</p>
-<p>一开始安装了jdk8。 后来换成了jdk7。 但是一开始装了jdk8，macos下/usr/libexec/java_home默认指向了jdk8，装了jdk7之后，用jEnv设置默认的jdk为1.7。但是/usr/libexec/java_home还是指向jdk1.8。 然后就会出现以上情况。</p>
-<p>PS：</p>
-<p>如果不安装jEnv的话，在环境变量中加入JAVA_HOME可能会解决问题。 比如还是有2个jdk版本，1.7和1.8。</p>
-<p>使用jdk1.7版本，JAVA_HOME设置如下：</p>
-<pre><code>/usr/libexec/jav<span class="built_in">a_home</span> -v <span class="number">1.7</span>
-</code></pre><p>使用jdk1.8版本，JAVA_HOME设置如下：</p>
-<pre><code>/usr/libexec/jav<span class="built_in">a_home</span> -v <span class="number">1.8</span>
-</code></pre><p>我设置了貌似不行 → <em> → 可能装了jEnv有影响。 暂时先不研究了 → </em> →</p>
-
-            
-          </span>
-        
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1094,7 +1162,7 @@ FAIL
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-count">57</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

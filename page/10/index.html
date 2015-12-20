@@ -203,6 +203,643 @@
             
             
               
+                <a class="post-title-link" href="/2014/12/10/mybatis_cache/" itemprop="url">
+                  通过源码分析MyBatis的缓存
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2014-12-10T14:34:05+08:00" content="2014-12-10">
+              2014-12-10
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/mybatis/" itemprop="url" rel="index">
+                    <span itemprop="name">mybatis</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2014/12/10/mybatis_cache/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/12/10/mybatis_cache/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        
+          <span itemprop="articleBody">
+            
+              <p>前方高能！ 本文内容有点多，通过实际测试例子+源码分析的方式解剖MyBatis缓存的概念，对这方面有兴趣的小伙伴请继续看下去~</p>
+<h2 id="MyBatis缓存介绍">MyBatis缓存介绍</h2><p>首先看一段<a href="http://zh.wikipedia.org/wiki/MyBatis" target="_blank" rel="external">wiki</a>上关于MyBatis缓存的介绍：</p>
+<p>MyBatis支持声明式数据缓存（declarative data caching）。当一条SQL语句被标记为“可缓存”后，首次执行它时从数据库获取的所有数据会被存储在一段高速缓存中，今后执行这条语句时就会从高速缓存中读取结果，而不是再次命中数据库。MyBatis提供了默认下基于Java HashMap的缓存实现，以及用于与OSCache、Ehcache、Hazelcast和Memcached连接的默认连接器。MyBatis还提供API供其他缓存实现使用。</p>
+<p>重点的那句话就是：<strong>MyBatis执行SQL语句之后，这条语句就是被缓存，以后再执行这条语句的时候，会直接从缓存中拿结果，而不是再次执行SQL</strong></p>
+<p>这也就是大家常说的MyBatis一级缓存，一级缓存的作用域scope是SqlSession。</p>
+<p>MyBatis同时还提供了一种全局作用域global scope的缓存，这也叫做二级缓存，也称作全局缓存。</p>
+<h2 id="一级缓存">一级缓存</h2><h3 id="测试">测试</h3><p>同个session进行两次相同查询：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>{
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+    <span class="keyword">try</span> {
+        User user = (User)sqlSession.selectOne(<span class="string">"org.format.mybatis.cache.UserMapper.getById"</span>, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user);
+        User user2 = (User)sqlSession.selectOne(<span class="string">"org.format.mybatis.cache.UserMapper.getById"</span>, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user2);
+    } finally {
+        sqlSession.close();
+    }
+}
+</code></pre><p>MyBatis只进行1次数据库查询：</p>
+<pre><code>==&gt;  Preparing: select * from USERS WHERE ID = ? 
+==&gt; Parameters: 1(Integer)
+<span class="tag">&lt;<span class="title">==</span>      <span class="attribute">Total:</span> <span class="attribute">1</span>
+<span class="attribute">User</span>{<span class="attribute">id</span>=<span class="value">1,</span> <span class="attribute">name</span>=<span class="value">'format'</span><span class="value">,</span> <span class="attribute">age</span>=<span class="value">23,</span> <span class="attribute">birthday</span>=<span class="value">Sun</span> <span class="attribute">Oct</span> <span class="attribute">12</span> <span class="attribute">23:20:13</span> <span class="attribute">CST</span> <span class="attribute">2014</span>}
+<span class="attribute">User</span>{<span class="attribute">id</span>=<span class="value">1,</span> <span class="attribute">name</span>=<span class="value">'format'</span><span class="value">,</span> <span class="attribute">age</span>=<span class="value">23,</span> <span class="attribute">birthday</span>=<span class="value">Sun</span> <span class="attribute">Oct</span> <span class="attribute">12</span> <span class="attribute">23:20:13</span> <span class="attribute">CST</span> <span class="attribute">2014</span>}</span>
+</code></pre><p>同个session进行两次不同的查询：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>{
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+    <span class="keyword">try</span> {
+        User user = (User)sqlSession.selectOne(<span class="string">"org.format.mybatis.cache.UserMapper.getById"</span>, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user);
+        User user2 = (User)sqlSession.selectOne(<span class="string">"org.format.mybatis.cache.UserMapper.getById"</span>, <span class="number">2</span>);
+        <span class="built_in">log</span>.debug(user2);
+    } finally {
+        sqlSession.close();
+    }
+}
+</code></pre><p>MyBatis进行两次数据库查询：</p>
+<pre><code>=<span class="ruby"><span class="status">=&gt;</span>  <span class="constant">Preparing</span><span class="symbol">:</span> select * from <span class="constant">USERS</span> <span class="constant">WHERE</span> <span class="constant">ID</span> = ? 
+</span>=<span class="ruby"><span class="status">=&gt;</span> <span class="constant">Parameters</span><span class="symbol">:</span> <span class="number">1</span>(<span class="constant">Integer</span>)
+</span>&lt;==      Total: 1
+User{id=1, name='format', age=23, birthday=Sun Oct 12 23:20:13 CST 2014}
+=<span class="ruby"><span class="status">=&gt;</span>  <span class="constant">Preparing</span><span class="symbol">:</span> select * from <span class="constant">USERS</span> <span class="constant">WHERE</span> <span class="constant">ID</span> = ? 
+</span>=<span class="ruby"><span class="status">=&gt;</span> <span class="constant">Parameters</span><span class="symbol">:</span> <span class="number">2</span>(<span class="constant">Integer</span>)
+</span>&lt;==      Total: 1
+User{id=2, name='FFF', age=50, birthday=Sat Dec 06 17:12:01 CST 2014}
+</code></pre><p>不同session，进行相同查询： </p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>{
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+    SqlSession sqlSession2 = sqlSessionFactory.openSession();
+    <span class="keyword">try</span> {
+        User user = (User)sqlSession.selectOne(<span class="string">"org.format.mybatis.cache.UserMapper.getById"</span>, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user);
+        User user2 = (User)sqlSession2.selectOne(<span class="string">"org.format.mybatis.cache.UserMapper.getById"</span>, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user2);
+    } finally {
+        sqlSession.close();
+        sqlSession2.close();
+    }
+}
+</code></pre><p>MyBatis进行了两次数据库查询：</p>
+<pre><code>=<span class="ruby"><span class="status">=&gt;</span>  <span class="constant">Preparing</span><span class="symbol">:</span> select * from <span class="constant">USERS</span> <span class="constant">WHERE</span> <span class="constant">ID</span> = ? 
+</span>=<span class="ruby"><span class="status">=&gt;</span> <span class="constant">Parameters</span><span class="symbol">:</span> <span class="number">1</span>(<span class="constant">Integer</span>)
+</span>&lt;==      Total: 1
+User{id=1, name='format', age=23, birthday=Sun Oct 12 23:20:13 CST 2014}
+=<span class="ruby"><span class="status">=&gt;</span>  <span class="constant">Preparing</span><span class="symbol">:</span> select * from <span class="constant">USERS</span> <span class="constant">WHERE</span> <span class="constant">ID</span> = ? 
+</span>=<span class="ruby"><span class="status">=&gt;</span> <span class="constant">Parameters</span><span class="symbol">:</span> <span class="number">1</span>(<span class="constant">Integer</span>)
+</span>&lt;==      Total: 1
+User{id=1, name='format', age=23, birthday=Sun Oct 12 23:20:13 CST 2014}
+</code></pre><p>同个session,查询之后更新数据，再次查询相同的语句：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>{
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+    <span class="keyword">try</span> {
+        User user = (User)sqlSession.selectOne(<span class="string">"org.format.mybatis.cache.UserMapper.getById"</span>, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user);
+        user.setAge(<span class="number">100</span>);
+        sqlSession.update(<span class="string">"org.format.mybatis.cache.UserMapper.update"</span>, user);
+        User user2 = (User)sqlSession.selectOne(<span class="string">"org.format.mybatis.cache.UserMapper.getById"</span>, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user2);
+        sqlSession.commit();
+    } finally {
+        sqlSession.close();
+    }
+}
+</code></pre><p>更新操作之后缓存会被清除：</p>
+<pre><code>=<span class="ruby"><span class="status">=&gt;</span>  <span class="constant">Preparing</span><span class="symbol">:</span> select * from <span class="constant">USERS</span> <span class="constant">WHERE</span> <span class="constant">ID</span> = ? 
+</span>=<span class="ruby"><span class="status">=&gt;</span> <span class="constant">Parameters</span><span class="symbol">:</span> <span class="number">1</span>(<span class="constant">Integer</span>)
+</span>&lt;==      Total: 1
+User{id=1, name='format', age=23, birthday=Sun Oct 12 23:20:13 CST 2014}
+=<span class="ruby"><span class="status">=&gt;</span>  <span class="constant">Preparing</span><span class="symbol">:</span> update <span class="constant">USERS</span> <span class="constant">SET</span> <span class="constant">NAME</span> = ? , <span class="constant">AGE</span> = ? , <span class="constant">BIRTHDAY</span> = ? where <span class="constant">ID</span> = ? 
+</span>=<span class="ruby"><span class="status">=&gt;</span> <span class="constant">Parameters</span><span class="symbol">:</span> format(<span class="constant">String</span>), <span class="number">23</span>(<span class="constant">Integer</span>), <span class="number">2014</span>-<span class="number">10</span>-<span class="number">12</span> <span class="number">23</span><span class="symbol">:</span><span class="number">20</span><span class="symbol">:</span><span class="number">13.0</span>(<span class="constant">Timestamp</span>), <span class="number">1</span>(<span class="constant">Integer</span>)
+</span>&lt;==    Updates: 1
+=<span class="ruby"><span class="status">=&gt;</span>  <span class="constant">Preparing</span><span class="symbol">:</span> select * from <span class="constant">USERS</span> <span class="constant">WHERE</span> <span class="constant">ID</span> = ? 
+</span>=<span class="ruby"><span class="status">=&gt;</span> <span class="constant">Parameters</span><span class="symbol">:</span> <span class="number">1</span>(<span class="constant">Integer</span>)
+</span>&lt;==      Total: 1
+User{id=1, name='format', age=23, birthday=Sun Oct 12 23:20:13 CST 2014}
+</code></pre><p>很明显，结果验证了一级缓存的概念，<strong>在同个SqlSession中，查询语句相同的sql会被缓存，但是一旦执行新增或更新或删除操作，缓存就会被清除</strong></p>
+<h3 id="源码分析">源码分析</h3><p>在分析MyBatis的一级缓存之前，我们先简单看下MyBatis中几个重要的类和接口：</p>
+<p>org.apache.ibatis.session.Configuration类：MyBatis全局配置信息类</p>
+<p>org.apache.ibatis.session.SqlSessionFactory接口：操作SqlSession的工厂接口，具体的实现类是DefaultSqlSessionFactory</p>
+<p>org.apache.ibatis.session.SqlSession接口：执行sql，管理事务的接口，具体的实现类是DefaultSqlSession</p>
+<p>org.apache.ibatis.executor.Executor接口：sql执行器，SqlSession执行sql最终是通过该接口实现的，常用的实现类有SimpleExecutor和CachingExecutor,这些实现类都使用了<a href="http://zh.wikipedia.org/wiki/%E4%BF%AE%E9%A5%B0%E6%A8%A1%E5%BC%8F" target="_blank" rel="external">装饰者设计模式</a></p>
+<p>一级缓存的作用域是SqlSession，那么我们就先看一下SqlSession的select过程：</p>
+<p>这是DefaultSqlSession（SqlSession接口实现类，MyBatis默认使用这个类）的selectList源码（我们例子上使用的是selectOne方法，调用selectOne方法最终会执行selectList方法）：</p>
+<pre><code>public &lt;E&gt; <span class="type">List</span>&lt;E&gt; selectList(<span class="type">String</span> statement, <span class="type">Object</span> parameter, <span class="type">RowBounds</span> rowBounds) {
+    <span class="keyword">try</span> {
+      <span class="type">MappedStatement</span> ms = configuration.getMappedStatement(statement);
+      <span class="type">List</span>&lt;E&gt; <span class="literal">result</span> = executor.query(ms, wrapCollection(parameter), rowBounds, <span class="type">Executor</span>.<span class="type">NO_RESULT_HANDLER</span>);
+      <span class="keyword">return</span> <span class="literal">result</span>;
+    } catch (<span class="type">Exception</span> e) {
+      throw <span class="type">ExceptionFactory</span>.wrapException(<span class="string">"Error querying database.  Cause: "</span> + e, e);
+    } <span class="keyword">finally</span> {
+      <span class="type">ErrorContext</span>.instance().reset();
+    }
+}
+</code></pre><p>我们看到SqlSession最终会调用Executor接口的方法。</p>
+<p>接下来我们看下DefaultSqlSession中的executor接口属性具体是哪个实现类。</p>
+<p>DefaultSqlSession的构造过程（DefaultSqlSessionFactory内部）：</p>
+<pre><code><span class="keyword">private</span> <span class="function">SqlSession <span class="title">openSessionFromDataSource</span><span class="params">(ExecutorType execType, TransactionIsolationLevel level, <span class="keyword">boolean</span> autoCommit)</span> </span>{
+    Transaction tx = <span class="keyword">null</span>;
+    <span class="keyword">try</span> {
+      <span class="keyword">final</span> Environment environment = configuration.getEnvironment();
+      <span class="keyword">final</span> TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
+      tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);
+      <span class="keyword">final</span> Executor executor = configuration.newExecutor(tx, execType, autoCommit);
+      <span class="keyword">return</span> <span class="keyword">new</span> DefaultSqlSession(configuration, executor);
+    } <span class="keyword">catch</span> (Exception e) {
+      closeTransaction(tx); <span class="comment">// may have fetched a connection so lets call close()</span>
+      <span class="keyword">throw</span> ExceptionFactory.wrapException(<span class="string">"Error opening session.  Cause: "</span> + e, e);
+    } <span class="keyword">finally</span> {
+      ErrorContext.instance().reset();
+    }
+}
+</code></pre><p>我们看到DefaultSqlSessionFactory构造DefaultSqlSession的时候，Executor接口的实现类是由Configuration构造的：</p>
+<pre><code><span class="keyword">public</span> Executor newExecutor(Transaction transaction, ExecutorType executorType, <span class="typename">boolean</span> autoCommit) {
+    executorType = executorType == <span class="literal">null</span> ? defaultExecutorType : executorType;
+    executorType = executorType == <span class="literal">null</span> ? ExecutorType.SIMPLE : executorType;
+    Executor executor;
+    <span class="keyword">if</span> (ExecutorType.BATCH == executorType) {
+      executor = <span class="keyword">new</span> BatchExecutor(<span class="keyword">this</span>, transaction);
+    } <span class="keyword">else</span> <span class="keyword">if</span> (ExecutorType.REUSE == executorType) {
+      executor = <span class="keyword">new</span> ReuseExecutor(<span class="keyword">this</span>, transaction);
+    } <span class="keyword">else</span> {
+      executor = <span class="keyword">new</span> SimpleExecutor(<span class="keyword">this</span>, transaction);
+    }
+    <span class="keyword">if</span> (cacheEnabled) {
+      executor = <span class="keyword">new</span> CachingExecutor(executor, autoCommit);
+    }
+    executor = (Executor) interceptorChain.pluginAll(executor);
+    <span class="keyword">return</span> executor;
+}
+</code></pre><p>Executor根据ExecutorType的不同而创建，最常用的是SimpleExecutor，本文的例子也是创建这个实现类。 最后我们发现如果cacheEnabled这个属性为true的话，那么executor会被包一层装饰器，这个装饰器是CachingExecutor。其中cacheEnabled这个属性是mybatis总配置文件中settings节点中cacheEnabled子节点的值，默认就是true，也就是说我们在mybatis总配置文件中不配cacheEnabled的话，它也是默认为打开的。</p>
+<p>现在，问题就剩下一个了，<strong>CachingExecutor执行sql的时候到底做了什么？</strong></p>
+<p>带着这个问题，我们继续走下去（CachingExecutor的query方法）：</p>
+<pre><code><span class="keyword">public</span> &lt;E&gt; <span class="built_in">List</span>&lt;E&gt; query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
+    <span class="keyword">Cache</span> <span class="keyword">cache</span> = ms<span class="built_in">.</span>getCache();
+    <span class="keyword">if</span> (<span class="keyword">cache</span> != <span class="built_in">null</span>) {
+      flushCacheIfRequired(ms);
+      <span class="keyword">if</span> (ms<span class="built_in">.</span>isUseCache() <span class="subst">&amp;&amp;</span> resultHandler == <span class="built_in">null</span>) { 
+        ensureNoOutParams(ms, parameterObject, boundSql);
+        <span class="keyword">if</span> (<span class="subst">!</span>dirty) {
+          <span class="keyword">cache</span><span class="built_in">.</span>getReadWriteLock()<span class="built_in">.</span>readLock()<span class="built_in">.</span>lock();
+          try {
+            @SuppressWarnings(<span class="string">"unchecked"</span>)
+            <span class="built_in">List</span>&lt;E&gt; cachedList = (<span class="built_in">List</span>&lt;E&gt;) <span class="keyword">cache</span><span class="built_in">.</span>getObject(key);
+            <span class="keyword">if</span> (cachedList != <span class="built_in">null</span>) <span class="keyword">return</span> cachedList;
+          } finally {
+            <span class="keyword">cache</span><span class="built_in">.</span>getReadWriteLock()<span class="built_in">.</span>readLock()<span class="built_in">.</span>unlock();
+          }
+        }
+        <span class="built_in">List</span>&lt;E&gt; <span class="built_in">list</span> = delegate<span class="built_in">.</span>&lt;E&gt; query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
+        tcm<span class="built_in">.</span>putObject(<span class="keyword">cache</span>, key, <span class="built_in">list</span>); <span class="comment">// issue #578. Query must be not synchronized to prevent deadlocks</span>
+        <span class="keyword">return</span> <span class="built_in">list</span>;
+      }
+    }
+    <span class="keyword">return</span> delegate<span class="built_in">.</span>&lt;E&gt;query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
+}
+</code></pre><p>其中Cache cache = ms.getCache();这句代码中，这个cache实际上就是个二级缓存，由于我们没有开启二级缓存(二级缓存的内容下面会分析)，因此这里执行了最后一句话。这里的delegate也就是SimpleExecutor,SimpleExecutor没有Override父类的query方法，因此最终执行了SimpleExecutor的父类BaseExecutor的query方法。</p>
+<p><strong>所以一级缓存最重要的代码就是BaseExecutor的query方法!</strong></p>
+<p><img src="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_mybatis_cache01.jpg" alt="">    </p>
+<p><strong>BaseExecutor的属性localCache是个PerpetualCache类型的实例，PerpetualCache类是实现了MyBatis的Cache缓存接口的实现类之一，内部有个Map<object, object="">类型的属性用来存储缓存数据。 这个localCache的类型在BaseExecutor内部是写死的。 这个localCache就是一级缓存！</object,></strong></p>
+<p>接下来我们看下<strong>为何执行新增或更新或删除操作，一级缓存就会被清除</strong>这个问题。</p>
+<p>首先MyBatis处理新增或删除的时候，最终都是调用update方法，也就是说<strong>新增或者删除操作在MyBatis眼里都是一个更新操作。</strong></p>
+<p>我们看下DefaultSqlSession的update方法：</p>
+<pre><code><span class="keyword">public</span> <span class="built_in">int</span> update(<span class="keyword">String</span> statement, <span class="keyword">Object</span> parameter) {
+    <span class="keyword">try</span> {
+      dirty = <span class="keyword">true</span>;
+      MappedStatement ms = configuration.getMappedStatement(statement);
+      <span class="keyword">return</span> executor.update(ms, wrapCollection(parameter));
+    } <span class="keyword">catch</span> (Exception e) {
+      <span class="keyword">throw</span> ExceptionFactory.wrapException(<span class="string">"Error updating database.  Cause: "</span> + e, e);
+    } <span class="keyword">finally</span> {
+      ErrorContext.instance().reset();
+    }
+}
+</code></pre><p>很明显，这里调用了CachingExecutor的update方法：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">int</span> <span class="title">update</span><span class="params">(MappedStatement ms, Object parameterObject)</span> <span class="keyword">throws</span> SQLException </span>{
+    flushCacheIfRequired(ms);
+    <span class="function"><span class="keyword">return</span> delegate.<span class="title">update</span><span class="params">(ms, parameterObject)</span></span>;
+}
+</code></pre><p>这里的flushCacheIfRequired方法清除的是二级缓存，我们之后会分析。 CachingExecutor委托给了(之前已经分析过)SimpleExecutor的update方法，SimpleExecutor没有Override父类BaseExecutor的update方法，因此我们看BaseExecutor的update方法：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">int</span> <span class="title">update</span><span class="params">(MappedStatement ms, Object parameter)</span> <span class="keyword">throws</span> SQLException </span>{
+    ErrorContext.instance().resource(ms.getResource()).activity(<span class="string">"executing an update"</span>).object(ms.getId());
+    <span class="keyword">if</span> (closed) <span class="keyword">throw</span> <span class="keyword">new</span> ExecutorException(<span class="string">"Executor was closed."</span>);
+    clearLocalCache();
+    <span class="function"><span class="keyword">return</span> <span class="title">doUpdate</span><span class="params">(ms, parameter)</span></span>;
+}
+</code></pre><p>我们看到了关键的一句代码： clearLocalCache();  进去看看：</p>
+<pre><code>public void clearLocalCache<span class="comment">()</span> {
+    <span class="keyword">if</span> <span class="comment">(!closed)</span> {
+      localCache.clear<span class="comment">()</span>;
+      localOutputParameterCache.clear<span class="comment">()</span>;
+    }
+}
+</code></pre><p>没错，就是这条，<strong>sqlsession没有关闭的话，进行新增、删除、修改操作的话就是清除一级缓存，也就是SqlSession的缓存。</strong></p>
+<h2 id="二级缓存">二级缓存</h2><p>二级缓存的作用域是全局，换句话说，二级缓存已经脱离SqlSession的控制了。</p>
+<p>在测试二级缓存之前，我先把结论说一下：</p>
+<p><strong>二级缓存的作用域是全局的，二级缓存在SqlSession关闭或提交之后才会生效。</strong></p>
+<p>在分析MyBatis的二级缓存之前，我们先简单看下MyBatis中一个关于二级缓存的类(其他相关的类和接口之前已经分析过)：</p>
+<p>org.apache.ibatis.mapping.MappedStatement：</p>
+<p>MappedStatement类在Mybatis框架中用于表示XML文件中一个sql语句节点，即一个&lt;select /&gt;、&lt;update /&gt;或者&lt;insert /&gt;标签。Mybatis框架在初始化阶段会对XML配置文件进行读取，将其中的sql语句节点对象化为一个个MappedStatement对象。</p>
+<h3 id="配置">配置</h3><p>二级缓存跟一级缓存不同，一级缓存不需要配置任何东西，且默认打开。 二级缓存就需要配置一些东西。</p>
+<p>本文就说下最简单的配置，在mapper文件上加上这句配置即可：</p>
+<pre><code><span class="tag">&lt;cache/&gt;</span>
+</code></pre><p>其实二级缓存跟3个配置有关：</p>
+<ol>
+<li>mybatis全局配置文件中的setting中的cacheEnabled需要为true(默认为true，不设置也行)</li>
+<li>mapper配置文件中需要加入&lt;cache&gt;节点</li>
+<li>mapper配置文件中的select节点需要加上属性useCache需要为true(默认为true，不设置也行)</li>
+</ol>
+<h3 id="测试-1">测试</h3><p>不同SqlSession，查询相同语句，第一次查询之后commit SqlSession：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testCache2</span><span class="params">()</span> </span>{
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+    SqlSession sqlSession2 = sqlSessionFactory.openSession();
+    <span class="keyword">try</span> {
+        String sql = <span class="string">"org.format.mybatis.cache.UserMapper.getById"</span>;
+        User user = (User)sqlSession.selectOne(sql, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user);
+        <span class="comment">// 注意，这里一定要提交。 不提交还是会查询两次数据库</span>
+        sqlSession.commit();
+        User user2 = (User)sqlSession2.selectOne(sql, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user2);
+    } finally {
+        sqlSession.close();
+        sqlSession2.close();
+    }
+}
+</code></pre><p>MyBatis仅进行了一次数据库查询：</p>
+<pre><code>==&gt;  Preparing: select * from USERS WHERE ID = ? 
+==&gt; Parameters: 1(Integer)
+<span class="tag">&lt;<span class="title">==</span>      <span class="attribute">Total:</span> <span class="attribute">1</span>
+<span class="attribute">User</span>{<span class="attribute">id</span>=<span class="value">1,</span> <span class="attribute">name</span>=<span class="value">'format'</span><span class="value">,</span> <span class="attribute">age</span>=<span class="value">23,</span> <span class="attribute">birthday</span>=<span class="value">Sun</span> <span class="attribute">Oct</span> <span class="attribute">12</span> <span class="attribute">23:20:13</span> <span class="attribute">CST</span> <span class="attribute">2014</span>}
+<span class="attribute">User</span>{<span class="attribute">id</span>=<span class="value">1,</span> <span class="attribute">name</span>=<span class="value">'format'</span><span class="value">,</span> <span class="attribute">age</span>=<span class="value">23,</span> <span class="attribute">birthday</span>=<span class="value">Sun</span> <span class="attribute">Oct</span> <span class="attribute">12</span> <span class="attribute">23:20:13</span> <span class="attribute">CST</span> <span class="attribute">2014</span>}</span>
+</code></pre><p>不同SqlSession，查询相同语句，第一次查询之后close SqlSession：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testCache2</span><span class="params">()</span> </span>{
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+    SqlSession sqlSession2 = sqlSessionFactory.openSession();
+    <span class="keyword">try</span> {
+        String sql = <span class="string">"org.format.mybatis.cache.UserMapper.getById"</span>;
+        User user = (User)sqlSession.selectOne(sql, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user);
+        sqlSession.close();
+        User user2 = (User)sqlSession2.selectOne(sql, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user2);
+    } finally {
+        sqlSession2.close();
+    }
+}
+</code></pre><p>MyBatis仅进行了一次数据库查询：</p>
+<pre><code>==&gt;  Preparing: select * from USERS WHERE ID = ? 
+==&gt; Parameters: 1(Integer)
+<span class="tag">&lt;<span class="title">==</span>      <span class="attribute">Total:</span> <span class="attribute">1</span>
+<span class="attribute">User</span>{<span class="attribute">id</span>=<span class="value">1,</span> <span class="attribute">name</span>=<span class="value">'format'</span><span class="value">,</span> <span class="attribute">age</span>=<span class="value">23,</span> <span class="attribute">birthday</span>=<span class="value">Sun</span> <span class="attribute">Oct</span> <span class="attribute">12</span> <span class="attribute">23:20:13</span> <span class="attribute">CST</span> <span class="attribute">2014</span>}
+<span class="attribute">User</span>{<span class="attribute">id</span>=<span class="value">1,</span> <span class="attribute">name</span>=<span class="value">'format'</span><span class="value">,</span> <span class="attribute">age</span>=<span class="value">23,</span> <span class="attribute">birthday</span>=<span class="value">Sun</span> <span class="attribute">Oct</span> <span class="attribute">12</span> <span class="attribute">23:20:13</span> <span class="attribute">CST</span> <span class="attribute">2014</span>}</span>
+</code></pre><p>不同SqlSesson，查询相同语句。 第一次查询之后SqlSession不提交：</p>
+<pre><code>@<span class="function">Test
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testCache2</span><span class="params">()</span> </span>{
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+    SqlSession sqlSession2 = sqlSessionFactory.openSession();
+    <span class="keyword">try</span> {
+        String sql = <span class="string">"org.format.mybatis.cache.UserMapper.getById"</span>;
+        User user = (User)sqlSession.selectOne(sql, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user);
+        User user2 = (User)sqlSession2.selectOne(sql, <span class="number">1</span>);
+        <span class="built_in">log</span>.debug(user2);
+    } finally {
+        sqlSession.close();
+        sqlSession2.close();
+    }
+}
+</code></pre><p>MyBatis执行了两次数据库查询：</p>
+<pre><code>=<span class="ruby"><span class="status">=&gt;</span>  <span class="constant">Preparing</span><span class="symbol">:</span> select * from <span class="constant">USERS</span> <span class="constant">WHERE</span> <span class="constant">ID</span> = ? 
+</span>=<span class="ruby"><span class="status">=&gt;</span> <span class="constant">Parameters</span><span class="symbol">:</span> <span class="number">1</span>(<span class="constant">Integer</span>)
+</span>&lt;==      Total: 1
+User{id=1, name='format', age=23, birthday=Sun Oct 12 23:20:13 CST 2014}
+=<span class="ruby"><span class="status">=&gt;</span>  <span class="constant">Preparing</span><span class="symbol">:</span> select * from <span class="constant">USERS</span> <span class="constant">WHERE</span> <span class="constant">ID</span> = ? 
+</span>=<span class="ruby"><span class="status">=&gt;</span> <span class="constant">Parameters</span><span class="symbol">:</span> <span class="number">1</span>(<span class="constant">Integer</span>)
+</span>&lt;==      Total: 1
+User{id=1, name='format', age=23, birthday=Sun Oct 12 23:20:13 CST 2014}
+</code></pre><h3 id="源码分析-1">源码分析</h3><p>我们从在mapper文件中加入的&lt;cache/&gt;中开始分析源码，关于MyBatis的SQL解析请参考另外一篇博客<a href="http://www.cnblogs.com/fangjian0423/p/mybaits-dynamic-sql-analysis.html" target="_blank" rel="external">Mybatis解析动态sql原理分析</a>。接下来我们看下这个cache的解析：</p>
+<p>XMLMappedBuilder（解析每个mapper配置文件的解析类，每一个mapper配置都会实例化一个XMLMapperBuilder类）的解析方法：</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">configurationElement</span><span class="params">(XNode context)</span> </span>{
+    <span class="keyword">try</span> {
+      String <span class="keyword">namespace</span> = context.getStringAttribute(<span class="string">"namespace"</span>);
+      <span class="keyword">if</span> (<span class="keyword">namespace</span>.equals(<span class="string">""</span>)) {
+          <span class="keyword">throw</span> <span class="keyword">new</span> BuilderException(<span class="string">"Mapper's namespace cannot be empty"</span>);
+      }
+      builderAssistant.setCurrentNamespace(<span class="keyword">namespace</span>);
+      cacheRefElement(context.evalNode(<span class="string">"cache-ref"</span>));
+      cacheElement(context.evalNode(<span class="string">"cache"</span>));
+      parameterMapElement(context.evalNodes(<span class="string">"/mapper/parameterMap"</span>));
+      resultMapElements(context.evalNodes(<span class="string">"/mapper/resultMap"</span>));
+      sqlElement(context.evalNodes(<span class="string">"/mapper/sql"</span>));
+      buildStatementFromContext(context.evalNodes(<span class="string">"select|insert|update|delete"</span>));
+    } <span class="keyword">catch</span> (Exception e) {
+      <span class="keyword">throw</span> <span class="keyword">new</span> BuilderException(<span class="string">"Error parsing Mapper XML. Cause: "</span> + e, e);
+    }
+}
+</code></pre><p>我们看到了解析cache的那段代码：</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">void</span> cacheElement(XNode context) <span class="keyword">throws</span> Exception {
+    <span class="keyword">if</span> (context != <span class="keyword">null</span>) {
+      String type = context.getStringAttribute(<span class="string">"type"</span>, <span class="string">"PERPETUAL"</span>);
+      <span class="keyword">Class</span>&lt;? <span class="keyword">extends</span> Cache&gt; typeClass = typeAliasRegistry.resolveAlias(type);
+      String eviction = context.getStringAttribute(<span class="string">"eviction"</span>, <span class="string">"LRU"</span>);
+      <span class="keyword">Class</span>&lt;? <span class="keyword">extends</span> Cache&gt; evictionClass = typeAliasRegistry.resolveAlias(eviction);
+      <span class="keyword">Long</span> flushInterval = context.getLongAttribute(<span class="string">"flushInterval"</span>);
+      Integer <span class="keyword">size</span> = context.getIntAttribute(<span class="string">"size"</span>);
+      <span class="keyword">boolean</span> readWrite = !context.getBooleanAttribute(<span class="string">"readOnly"</span>, <span class="keyword">false</span>);
+      Properties props = context.getChildrenAsProperties();
+      builderAssistant.useNewCache(typeClass, evictionClass, flushInterval, <span class="keyword">size</span>, readWrite, props);
+    }
+}
+</code></pre><p>解析完cache标签之后会使用builderAssistant的userNewCache方法，这里的builderAssistant是一个MapperBuilderAssistant类型的帮助类，每个XMLMappedBuilder构造的时候都会实例化这个属性，MapperBuilderAssistant类内部有个Cache类型的currentCache属性，这个属性也就是mapper配置文件中cache节点所代表的值：</p>
+<pre><code><span class="keyword">public</span> Cache useNewCache(<span class="keyword">Class</span>&lt;? <span class="keyword">extends</span> Cache&gt; typeClass,
+  <span class="keyword">Class</span>&lt;? <span class="keyword">extends</span> Cache&gt; evictionClass,
+  Long flushInterval,
+  <span class="type">Integer</span> <span class="built_in">size</span>,
+  boolean <span class="keyword">readWrite</span>,
+  Properties props) {
+    typeClass = valueOrDefault(typeClass, PerpetualCache.<span class="keyword">class</span>);
+    evictionClass = valueOrDefault(evictionClass, LruCache.<span class="keyword">class</span>);
+    Cache cache = new CacheBuilder(currentNamespace)
+        .implementation(typeClass)
+        .addDecorator(evictionClass)
+        .clearInterval(flushInterval)
+        .<span class="built_in">size</span>(<span class="built_in">size</span>)
+        .<span class="keyword">readWrite</span>(<span class="keyword">readWrite</span>)
+        .properties(props)
+        .build();
+    configuration.addCache(cache);
+    currentCache = cache;
+    <span class="keyword">return</span> cache;
+}
+</code></pre><p>ok，现在mapper配置文件中的cache节点被解析到了XMLMapperBuilder实例中的builderAssistant属性中的currentCache值里。</p>
+<p>接下来XMLMapperBuilder会解析select节点，解析select节点的时候使用XMLStatementBuilder进行解析(也包括其他insert，update，delete节点)：</p>
+<pre><code><span class="label">public</span> void parseStatementNode() {
+    <span class="keyword">String </span>id = context.getStringAttribute(<span class="string">"id"</span>)<span class="comment">;</span>
+    <span class="keyword">String </span>databaseId = context.getStringAttribute(<span class="string">"databaseId"</span>)<span class="comment">;</span>
+
+    <span class="preprocessor">if</span> (!databaseIdMatchesCurrent(id, databaseId, this.requiredDatabaseId)) return<span class="comment">;</span>
+
+    Integer fetchSize = context.getIntAttribute(<span class="string">"fetchSize"</span>)<span class="comment">;</span>
+    Integer timeout = context.getIntAttribute(<span class="string">"timeout"</span>)<span class="comment">;</span>
+    <span class="keyword">String </span>parameterMap = context.getStringAttribute(<span class="string">"parameterMap"</span>)<span class="comment">;</span>
+    <span class="keyword">String </span>parameterType = context.getStringAttribute(<span class="string">"parameterType"</span>)<span class="comment">;</span>
+    Class&lt;?&gt; parameterTypeClass = resolveClass(parameterType)<span class="comment">;</span>
+    <span class="keyword">String </span>resultMap = context.getStringAttribute(<span class="string">"resultMap"</span>)<span class="comment">;</span>
+    <span class="keyword">String </span>resultType = context.getStringAttribute(<span class="string">"resultType"</span>)<span class="comment">;</span>
+    <span class="keyword">String </span>lang = context.getStringAttribute(<span class="string">"lang"</span>)<span class="comment">;</span>
+    LanguageDriver langDriver = getLanguageDriver(lang)<span class="comment">;</span>
+
+    Class&lt;?&gt; resultTypeClass = resolveClass(resultType)<span class="comment">;</span>
+    <span class="keyword">String </span>resultSetType = context.getStringAttribute(<span class="string">"resultSetType"</span>)<span class="comment">;</span>
+    StatementType statementType = StatementType.valueOf(context.getStringAttribute(<span class="string">"statementType"</span>, StatementType.PREPARED.toString()))<span class="comment">;</span>
+    ResultSetType resultSetTypeEnum = resolveResultSetType(resultSetType)<span class="comment">;</span>
+
+    <span class="keyword">String </span>nodeName = context.getNode().getNodeName()<span class="comment">;</span>
+    SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH))<span class="comment">;</span>
+    <span class="keyword">boolean </span>isSelect = sqlCommandType == SqlCommandType.<span class="keyword">SELECT;
+</span>    <span class="keyword">boolean </span>flushCache = context.getBooleanAttribute(<span class="string">"flushCache"</span>, !isSelect)<span class="comment">;</span>
+    <span class="keyword">boolean </span>useCache = context.getBooleanAttribute(<span class="string">"useCache"</span>, isSelect)<span class="comment">;</span>
+    <span class="keyword">boolean </span>resultOrdered = context.getBooleanAttribute(<span class="string">"resultOrdered"</span>, false)<span class="comment">;</span>
+
+    // <span class="preprocessor">Include</span> Fragments <span class="keyword">before </span>parsing
+    XMLIncludeTransformer includeParser = new XMLIncludeTransformer(configuration, <span class="keyword">builderAssistant);
+</span>    includeParser.applyIncludes(context.getNode())<span class="comment">;</span>
+
+    // Parse <span class="keyword">selectKey </span>after includes <span class="keyword">and </span>remove them.
+    processSelectKeyNodes(id, parameterTypeClass, langDriver)<span class="comment">;</span>
+
+    // Parse the SQL (pre: &lt;<span class="keyword">selectKey&gt; </span><span class="keyword">and </span>&lt;<span class="preprocessor">include</span>&gt; were parsed <span class="keyword">and </span>removed)
+    SqlSource sqlSource = langDriver.createSqlSource(configuration, context, parameterTypeClass)<span class="comment">;</span>
+    <span class="keyword">String </span>resultSets = context.getStringAttribute(<span class="string">"resultSets"</span>)<span class="comment">;</span>
+    <span class="keyword">String </span>keyProperty = context.getStringAttribute(<span class="string">"keyProperty"</span>)<span class="comment">;</span>
+    <span class="keyword">String </span>keyColumn = context.getStringAttribute(<span class="string">"keyColumn"</span>)<span class="comment">;</span>
+    KeyGenerator keyGenerator<span class="comment">;</span>
+    <span class="keyword">String </span>keyStatementId = id + <span class="keyword">SelectKeyGenerator.SELECT_KEY_SUFFIX;
+</span>    keyStatementId = <span class="keyword">builderAssistant.applyCurrentNamespace(keyStatementId, </span>true)<span class="comment">;</span>
+    <span class="preprocessor">if</span> (configuration.hasKeyGenerator(keyStatementId)) {
+      keyGenerator = configuration.getKeyGenerator(keyStatementId)<span class="comment">;</span>
+    } <span class="preprocessor">else</span> {
+      keyGenerator = context.getBooleanAttribute(<span class="string">"useGeneratedKeys"</span>,
+          configuration.isUseGeneratedKeys() &amp;&amp; SqlCommandType.INSERT.equals(sqlCommandType))
+          ? new Jdbc3KeyGenerator() : new NoKeyGenerator()<span class="comment">;</span>
+    }
+
+    <span class="keyword">builderAssistant.addMappedStatement(id, </span>sqlSource, statementType, sqlCommandType,
+        fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass,
+        resultSetTypeEnum, flushCache, useCache, resultOrdered, 
+        keyGenerator, keyProperty, keyColumn, databaseId, langDriver, resultSets)<span class="comment">;</span>
+}
+</code></pre><p>这段代码前面都是解析一些标签的属性，我们看到了最后一行使用builderAssistant添加MappedStatement，其中builderAssistant属性是构造XMLStatementBuilder的时候通过XMLMappedBuilder传入的，我们继续看builderAssistant的addMappedStatement方法：</p>
+<p><img src="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_mybatis_cache02.jpg" alt="">    </p>
+<p>进入setStatementCache：</p>
+<pre><code><span class="keyword">private</span> <span class="literal">void</span> setStatementCache(
+  <span class="built_in">boolean</span> isSelect,
+  <span class="built_in">boolean</span> flushCache,
+  <span class="built_in">boolean</span> useCache,
+  <span class="keyword">Cache</span> <span class="keyword">cache</span>,
+  MappedStatement<span class="built_in">.</span>Builder statementBuilder) {
+    flushCache = valueOrDefault(flushCache, <span class="subst">!</span>isSelect);
+    useCache = valueOrDefault(useCache, isSelect);
+    statementBuilder<span class="built_in">.</span>flushCacheRequired(flushCache);
+    statementBuilder<span class="built_in">.</span>useCache(useCache);
+    statementBuilder<span class="built_in">.</span><span class="keyword">cache</span>(<span class="keyword">cache</span>);
+}
+</code></pre><p>最终mapper配置文件中的&lt;cache/&gt;被设置到了XMLMapperBuilder的builderAssistant属性中，XMLMapperBuilder中使用XMLStatementBuilder遍历CRUD节点，遍历CRUD节点的时候将这个cache节点设置到这些CRUD节点中，这个cache就是所谓的二级缓存！</p>
+<p>接下来我们回过头来看查询的源码，CachingExecutor的query方法：</p>
+<p><img src="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_mybatis_cache03.jpg" alt="">    </p>
+<p>进入TransactionalCacheManager的putObject方法：</p>
+<pre><code><span class="keyword">public</span> <span class="literal">void</span> putObject(<span class="keyword">Cache</span> <span class="keyword">cache</span>, CacheKey key, Object value) {
+    getTransactionalCache(<span class="keyword">cache</span>)<span class="built_in">.</span>putObject(key, value);
+}
+
+
+<span class="keyword">private</span> TransactionalCache getTransactionalCache(<span class="keyword">Cache</span> <span class="keyword">cache</span>) {
+    TransactionalCache txCache = transactionalCaches<span class="built_in">.</span>get(<span class="keyword">cache</span>);
+    <span class="keyword">if</span> (txCache == <span class="built_in">null</span>) {
+      txCache = <span class="literal">new</span> TransactionalCache(<span class="keyword">cache</span>);
+      transactionalCaches<span class="built_in">.</span>put(<span class="keyword">cache</span>, txCache);
+    }
+    <span class="keyword">return</span> txCache;
+}
+</code></pre><p>TransactionalCache的putObject方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">void</span> putObject(<span class="keyword">Object</span> <span class="variable">key</span>, <span class="keyword">Object</span> object) {
+    entriesToRemoveOnCommit.remove(<span class="variable">key</span>);
+    entriesToAddOnCommit.put(<span class="variable">key</span>, <span class="keyword">new</span> AddEntry(delegate, <span class="variable">key</span>, object));
+}
+</code></pre><p>我们看到，数据被加入到了entriesToAddOnCommit中，这个entriesToAddOnCommit是什么东西呢，它是TransactionalCache的一个Map属性：</p>
+<pre><code><span class="label">private</span> <span class="preprocessor">Map</span>&lt;Object, <span class="keyword">AddEntry&gt; </span>entriesToAddOnCommit<span class="comment">;</span>
+</code></pre><p>AddEntry是TransactionalCache内部的一个类：</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">AddEntry</span> {
+    <span class="keyword">private</span> Cache cache;
+    <span class="keyword">private</span> Object key;
+    <span class="keyword">private</span> Object <span class="keyword">value</span>;
+
+    <span class="function"><span class="keyword">public</span> <span class="title">AddEntry</span>(<span class="params">Cache cache, Object key, Object <span class="keyword">value</span></span>) </span>{
+      <span class="keyword">this</span>.cache = cache;
+      <span class="keyword">this</span>.key = key;
+      <span class="keyword">this</span>.<span class="keyword">value</span> = <span class="keyword">value</span>;
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">commit</span>(<span class="params"></span>) </span>{
+      cache.putObject(key, <span class="keyword">value</span>);
+    }
+}
+</code></pre><p>好了，现在我们发现使用二级缓存之后：查询数据的话，先从二级缓存中拿数据，如果没有的话，去一级缓存中拿，一级缓存也没有的话再查询数据库。有了数据之后在丢到TransactionalCache这个对象的entriesToAddOnCommit属性中。</p>
+<p><strong>接下来我们来验证为什么SqlSession commit或close之后，二级缓存才会生效这个问题。</strong></p>
+<p>DefaultSqlSession的commit方法：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">commit</span><span class="params">(<span class="keyword">boolean</span> force)</span> </span>{
+    <span class="keyword">try</span> {
+      executor.commit(isCommitOrRollbackRequired(force));
+      dirty = <span class="keyword">false</span>;
+    } <span class="keyword">catch</span> (Exception e) {
+      <span class="keyword">throw</span> ExceptionFactory.wrapException(<span class="string">"Error committing transaction.  Cause: "</span> + e, e);
+    } <span class="keyword">finally</span> {
+      ErrorContext.instance().reset();
+    }
+}
+</code></pre><p>CachingExecutor的commit方法：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">commit</span><span class="params">(<span class="keyword">boolean</span> required)</span> <span class="keyword">throws</span> SQLException </span>{
+    delegate.commit(required);
+    tcm.commit();
+    dirty = <span class="keyword">false</span>;
+}
+</code></pre><p>tcm.commit即 TransactionalCacheManager的commit方法：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">commit</span><span class="params">()</span> </span>{
+    <span class="keyword">for</span> (TransactionalCache txCache : transactionalCaches.values()) {
+      txCache.commit();
+    }
+}
+</code></pre><p>TransactionalCache的commit方法：</p>
+<pre><code>public void commit<span class="literal">()</span> {
+    delegate.getReadWriteLock<span class="literal">()</span>.writeLock<span class="literal">()</span>.lock<span class="literal">()</span>;
+    try {
+      <span class="keyword">if</span> (clearOnCommit) {
+        delegate.clear<span class="literal">()</span>;
+      } <span class="keyword">else</span> {
+        for (<span class="type">RemoveEntry</span> entry : entriesToRemoveOnCommit.values<span class="literal">()</span>) {
+          entry.commit<span class="literal">()</span>;
+        }
+      }
+      for (<span class="type">AddEntry</span> entry : entriesToAddOnCommit.values<span class="literal">()</span>) {
+        entry.commit<span class="literal">()</span>;
+      }
+      reset<span class="literal">()</span>;
+    } finally {
+      delegate.getReadWriteLock<span class="literal">()</span>.writeLock<span class="literal">()</span>.unlock<span class="literal">()</span>;
+    }
+}
+</code></pre><p>发现调用了AddEntry的commit方法：</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">commit</span>(<span class="params"></span>) </span>{
+  cache.putObject(key, <span class="keyword">value</span>);
+}
+</code></pre><p>发现了！ AddEntry的commit方法会把数据丢到cache中，也就是丢到二级缓存中！</p>
+<p>关于为何调用close方法后，二级缓存才会生效，因为close方法内部会调用commit方法。本文就不具体说了。 读者有兴趣的话看一看源码就知道为什么了。</p>
+<h2 id="其他">其他</h2><h3 id="Cache接口简介">Cache接口简介</h3><p>org.apache.ibatis.cache.Cache是MyBatis的缓存接口，想要实现自定义的缓存需要实现这个接口。</p>
+<p>MyBatis中关于Cache接口的实现类也使用了装饰者设计模式。</p>
+<p>我们看下它的一些实现类：</p>
+<p><img src="http://images.cnblogs.com/cnblogs_com/fangjian0423/603237/o_mybatis_cache04.jpg" alt="">    </p>
+<p>简单说明：</p>
+<p>LRU – 最近最少使用的:移除最长时间不被使用的对象。</p>
+<p>FIFO – 先进先出:按对象进入缓存的顺序来移除它们。</p>
+<p>SOFT – 软引用:移除基于垃圾回收器状态和软引用规则的对象。</p>
+<p>WEAK – 弱引用:更积极地移除基于垃圾收集器状态和弱引用规则的对象。</p>
+<pre><code>&lt;cache
+  eviction=<span class="string">"FIFO"</span>
+  flushInterval=<span class="string">"60000"</span>
+  size=<span class="string">"512"</span>
+  <span class="preprocessor">readOnly</span>=<span class="string">"true"</span>/&gt;
+</code></pre><p>可以通过cache节点的eviction属性设置，也可以设置其他的属性。</p>
+<h3 id="cache-ref节点">cache-ref节点</h3><p>mapper配置文件中还可以加入cache-ref节点，它有个属性namespace。</p>
+<p>如果每个mapper文件都是用cache-ref，且namespace都一样，那么就代表着真正意义上的全局缓存。</p>
+<p>如果只用了cache节点，那仅代表这个这个mapper内部的查询被缓存了，其他mapper文件的不起作用，这并不是所谓的全局缓存。</p>
+<h2 id="总结">总结</h2><p>总体来说，MyBatis的源码看起来还是比较轻松的，本文从实践和源码方面深入分析了MyBatis的缓存原理，希望对读者有帮助。</p>
+
+            
+          </span>
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
                 <a class="post-title-link" href="/2014/11/22/java_threadlocal/" itemprop="url">
                   ThreadLocal原理及其实际应用
                 </a>
@@ -1017,263 +1654,6 @@ private <span class="type">void</span> applyPrefix(<span class="type">StringBuil
 
 
     
-      
-
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                <a class="post-title-link" href="/2014/09/21/dom-parse-xml-html/" itemprop="url">
-                  简单谈谈dom解析xml和html
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2014-09-21T09:49:50+08:00" content="2014-09-21">
-              2014-09-21
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/jvm/" itemprop="url" rel="index">
-                    <span itemprop="name">jvm</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2014/09/21/dom-parse-xml-html/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/21/dom-parse-xml-html/" itemprop="commentsCount"></span>
-              </a>
-            </span>
-            
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body">
-
-      
-      
-
-      
-        
-          <span itemprop="articleBody">
-            
-              <h2 id="前言">前言</h2><p><a href="http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/" target="_blank" rel="external">文件对象模型（Document Object Model，简称DOM）</a>，是W3C组织推荐的处理可扩展标志语言的标准编程接口。html，xml都是基于这个模型构造的。这也是一个W3C推出的标准。java，python，javascript等语言都提供了一套基于dom的编程接口。</p>
-<h2 id="java使用dom解析xml">java使用dom解析xml</h2><p>一段xml文档, note.xml：</p>
-<pre><code><span class="pi">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
-<span class="tag">&lt;<span class="title">note</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">to</span> <span class="attribute">id</span>=<span class="value">"1"</span>&gt;</span>George<span class="tag">&lt;/<span class="title">to</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">from</span>&gt;</span>John<span class="tag">&lt;/<span class="title">from</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">heading</span>&gt;</span>Reminder<span class="tag">&lt;/<span class="title">heading</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">body</span>&gt;</span>Don't forget the meeting!<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">note</span>&gt;</span>
-</code></pre><p>我们先使用w3c dom解析该xml：</p>
-<pre><code>@<span class="function">Test
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span>(<span class="params"></span>) </span>{
-    NodeList nodeList = doc.getChildNodes().item(<span class="number">0</span>).getChildNodes();
-    System.<span class="keyword">out</span>.println(<span class="string">"xml size: "</span> + nodeList.getLength());
-    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nodeList.getLength(); i ++) {
-        Node node = nodeList.item(i);
-        System.<span class="keyword">out</span>.println(node.getNodeType());
-        System.<span class="keyword">out</span>.println(node.getNodeName());
-    }
-}
-</code></pre><p>输出：</p>
-<pre><code>xml size: <span class="number">9</span>
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-<span class="number">1</span>
-to
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-<span class="number">1</span>
-from
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-<span class="number">1</span>
-heading
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-<span class="number">1</span>
-body
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-</code></pre><p>我们看到代码输出note节点的字节点的时候，有9个节点，但是xml文档中note节点实际上只有to、from、heading、body4个节点。 那为什么是9个呢，原因是这样的。<br>选取几个w3c规范中关于节点类型的描述：</p>
-<table>
-<thead>
-<tr>
-<th>节点类型</th>
-<th style="text-align:center">描述</th>
-<th style="text-align:right">nodeName返回值</th>
-<th style="text-align:right">nodeValue返回值</th>
-<th style="text-align:right">子元素</th>
-<th style="text-align:right">类型常量值</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Document</td>
-<td style="text-align:center">表示整个文档（DOM 树的根节点）</td>
-<td style="text-align:right">#document</td>
-<td style="text-align:right">null</td>
-<td style="text-align:right">Element(max. one)，Comment，DocumentType</td>
-<td style="text-align:right">9</td>
-</tr>
-<tr>
-<td>Element</td>
-<td style="text-align:center">表示 element（元素）元素</td>
-<td style="text-align:right">element name</td>
-<td style="text-align:right">null</td>
-<td style="text-align:right">Text，Comment，CDATASection</td>
-<td style="text-align:right">1</td>
-</tr>
-<tr>
-<td>Attr</td>
-<td style="text-align:center">表示属性</td>
-<td style="text-align:right">属性名称</td>
-<td style="text-align:right">属性值</td>
-<td style="text-align:right">Text</td>
-<td style="text-align:right">2</td>
-</tr>
-<tr>
-<td>Text</td>
-<td style="text-align:center">表示元素或属性中的文本内容。</td>
-<td style="text-align:right">#text</td>
-<td style="text-align:right">节点内容</td>
-<td style="text-align:right">None</td>
-<td style="text-align:right">3</td>
-</tr>
-<tr>
-<td>CDATASection</td>
-<td style="text-align:center">表示文档中的 CDATA 区段（文本不会被解析器解析）</td>
-<td style="text-align:right">#cdata-section</td>
-<td style="text-align:right">节点内容</td>
-<td style="text-align:right">None</td>
-<td style="text-align:right">4</td>
-</tr>
-<tr>
-<td>Comment</td>
-<td style="text-align:center">表示注释</td>
-<td style="text-align:right">#comment</td>
-<td style="text-align:right">注释文本</td>
-<td style="text-align:right">None</td>
-<td style="text-align:right">8</td>
-</tr>
-</tbody>
-</table>
-<p>更多细节请查看<a href="http://www.w3school.com.cn/xmldom/dom_nodetype.asp" target="_blank" rel="external">w3c DOM节点类型</a></p>
-<p>下面解释一下文档节点的字节点的处理过程：<br><img src="http://format-blog-image.qiniudn.com/dom_parse_xml1.png" alt=""></p>
-<p>其中红色部分为Text节点，紫色部分是Element节点(只画了部分)。&lt;/body&gt;后面的也是一个Element节点，所有4个Element节点，5个Text节点。</p>
-<p>所以输出的内容中3 #text表示该节点是个Text节点，1 节点name是个Element节点，这与表格中表述的是一样的。</p>
-<p>测试代码：</p>
-<pre><code>@<span class="function">Test
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test1</span><span class="params">()</span> </span>{
-    NodeList nodeList = doc.getChildNodes().item(<span class="number">0</span>).getChildNodes();
-    System.out.println(<span class="string">"xml size: "</span> + nodeList.getLength());
-    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nodeList.getLength(); i ++) {
-        Node node = nodeList.item(i);
-        <span class="keyword">if</span>(node.getNodeType() == Node.TEXT_NODE) {
-            System.out.println(node.getNodeValue().replace(<span class="string">"\n"</span>,<span class="string">"hr"</span>).replace(<span class="string">' '</span>, <span class="string">'-'</span>));
-        }
-    }
-}
-</code></pre><p><img src="http://format-blog-image.qiniudn.com/dom_parse_xml2.png" alt=""><br>很明显，我们把空格和回车键替换打印后发现我们的结论是正确的。</p>
-<p>测试代码：</p>
-<pre><code>@Test
-<span class="component">public void test2() {
-    System<span class="string">.out.println("doc</span> type: " + doc<span class="string">.getNodeType())</span>;
-    NodeList nodeList = doc<span class="string">.getChildNodes().item(0).getChildNodes()</span>;
-    Node secondNode = nodeList<span class="string">.item(1)</span>;
-    System<span class="string">.out.println("element</span> [to] node type: " + secondNode<span class="string">.getNodeType())</span>;
-    System<span class="string">.out.println("element</span> [to] node name: " + secondNode<span class="string">.getNodeName())</span>;
-    System<span class="string">.out.println("element</span> [to] node value: " + secondNode<span class="string">.getNodeValue())</span>;
-    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> len: " + secondNode<span class="string">.getChildNodes().getLength())</span>;
-    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node type: " + secondNode<span class="string">.getChildNodes().item(0).getNodeType())</span>;
-    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node value: " + secondNode<span class="string">.getChildNodes().item(0).getNodeValue())</span>;
-    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node name: " + secondNode<span class="string">.getChildNodes().item(0).getNodeName())</span>;
-    Node attNode = secondNode<span class="string">.getAttributes().item(0)</span>;
-    System<span class="string">.out.println("attr</span> type: " + attNode<span class="string">.getNodeType())</span>;
-}</span>
-</code></pre><p><img src="http://format-blog-image.qiniudn.com/dom_parse_xml3.png" alt=""><br>输出结果跟表格中是一样的。</p>
-<p>大家有兴趣的话其他类型的节点比如CDATA节点大家可以自行测试～</p>
-<h2 id="javascript使用dom解析html">javascript使用dom解析html</h2><p>html代码：</p>
-<pre><code><span class="doctype">&lt;!DOCTYPE html&gt;</span>
-<span class="tag">&lt;<span class="title">html</span>&gt;</span>
-<span class="tag">&lt;<span class="title">head</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">title</span>&gt;</span>JS Bin<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">head</span>&gt;</span>
-<span class="tag">&lt;<span class="title">body</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">div</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">p</span>&gt;</span>gogogo<span class="tag">&lt;/<span class="title">p</span>&gt;</span>
-  <span class="tag">&lt;/<span class="title">div</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">html</span>&gt;</span>
-</code></pre><p>js代码：</p>
-<pre><code><span class="built_in">console</span>.log(<span class="built_in">document</span>.nodeType);
-<span class="keyword">var</span> div = <span class="built_in">document</span>.getElementsByTagName(<span class="string">"div"</span>)[<span class="number">0</span>]; <span class="comment">//9</span>
-<span class="built_in">console</span>.log(div.nodeType); <span class="comment">//1</span>
-<span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>;i &lt; div.childNodes.length; i ++) {
-  <span class="built_in">console</span>.log(div.childNodes[i].nodeType);
-}
-</code></pre><p>分别输出9，1，3，1，3<br>跟我们在表格中对应～</p>
-<h2 id="总结">总结</h2><p>本次博客主要讲解了dom解析xml和html。 以前使用java解析xml的时候总是使用一些第三方库，比如jdom。 但是dom却是w3c的规范，不止java，包括javascript，python这些主流语言也都主持，有了规范，语言只是实现了这些规范而已。</p>
-
-            
-          </span>
-        
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1319,7 +1699,7 @@ body
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">56</span>
+              <span class="site-state-item-count">57</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

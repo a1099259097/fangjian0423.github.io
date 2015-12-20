@@ -61,7 +61,7 @@
 <meta property="og:url" content="http://fangjian0423.github.io/2015/12/20/scala-implicit/index.html">
 <meta property="og:site_name" content="Format's Notes">
 <meta property="og:description" content="Scala的implicit功能很强大，可以自动地给对象&quot;添加一个属性&quot;。 这里打上引号的原因是Scala内部进行编译的时候会自动加上隐式转换函数">
-<meta property="og:updated_time" content="2015-12-20T07:59:04.000Z">
+<meta property="og:updated_time" content="2015-12-20T09:27:40.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Scala 隐式转换和隐式参数">
 <meta name="twitter:description" content="Scala的implicit功能很强大，可以自动地给对象&quot;添加一个属性&quot;。 这里打上引号的原因是Scala内部进行编译的时候会自动加上隐式转换函数">
@@ -343,18 +343,37 @@ implicitParamFunc(<span class="string">"format"</span>)
 }
 
 <span class="keyword">import</span> MyUtils.a
-</code></pre><p>隐式转换修饰符可以加在class，method，变量上面。</p>
-<p>方法的隐式转换和变量的隐式转换本文已经介绍过，就不说了。</p>
-<p>类的隐式转换：</p>
+</code></pre><p>隐式转换修饰符implicit可以修饰class，method，变量，object。</p>
+<p>修饰方法和变量的隐式转换本文已经介绍过，就不继续说了。</p>
+<p>修饰class的隐式转换，它的作用跟修饰method的隐式转换类似：</p>
 <pre><code><span class="type">implicit</span> <span class="keyword">class</span> RangeMarker(val start: <span class="built_in">Int</span>) {
     def --&gt;(<span class="keyword">end</span>: <span class="built_in">Int</span>) = start to <span class="keyword">end</span>
 }
 
 <span class="number">1</span> --&gt; <span class="number">10</span> // <span class="built_in">Range</span>(<span class="number">1</span>, <span class="number">10</span>)
-</code></pre><p>还可以使用Value Class完成类的隐式转换：</p>
+</code></pre><p>上段代码可以改造成使用Value Class完成类的隐式转换：</p>
 <pre><code><span class="type">implicit</span> <span class="keyword">class</span> RangeMaker(start: <span class="built_in">Int</span>) <span class="keyword">extends</span> AnyVal {
     def --&gt;(<span class="keyword">end</span>: <span class="built_in">Int</span>) = start to <span class="keyword">end</span>
 }
+</code></pre><p>修饰object的隐式转换：</p>
+<pre><code>trait Calculate[T] {
+    <span class="function"><span class="keyword">def</span> <span class="title">add</span><span class="params">(x: T, y: T)</span>:</span> T
+}
+
+implicit object IntCal extends Calculate[Int] {
+    <span class="function"><span class="keyword">def</span> <span class="title">add</span><span class="params">(x: Int, y: Int)</span>:</span> Int = x + y
+}
+
+implicit object ListCal extends Calculate[List[Int]] {
+    <span class="function"><span class="keyword">def</span> <span class="title">add</span><span class="params">(x: List[Int], y: List[Int])</span>:</span> List[Int] = x ::: y
+}
+
+<span class="function"><span class="keyword">def</span> <span class="title">implicitObjMethod</span>[<span class="title">T</span>]<span class="params">(x: T, y: T)</span><span class="params">(implicit cal: Calculate[T])</span>:</span> Unit = {
+    println(x + <span class="string">" + "</span> + y + <span class="string">" = "</span> + cal.add(x, y))
+}
+
+implicitObjMethod(<span class="number">1</span>, <span class="number">2</span>) // <span class="number">1</span> + <span class="number">2</span> = <span class="number">3</span>
+implicitObjMethod(List(<span class="number">1</span>, <span class="number">2</span>), List(<span class="number">3</span>, <span class="number">4</span>)) // List(<span class="number">1</span>, <span class="number">2</span>) + List(<span class="number">3</span>, <span class="number">4</span>) = List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>)
 </code></pre></span>
       
     </div>

@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2015-12-31T16:45:44.000Z</updated>
+  <updated>2015-12-31T16:48:01.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -19,7 +19,7 @@
     <link href="http://fangjian0423.github.io/2016/01/01/2015_end/"/>
     <id>http://fangjian0423.github.io/2016/01/01/2015_end/</id>
     <published>2015-12-31T16:22:35.000Z</published>
-    <updated>2015-12-31T16:45:44.000Z</updated>
+    <updated>2015-12-31T16:48:01.000Z</updated>
     <content type="html"><![CDATA[<h2 id="2015年总结">2015年总结</h2><p>又是一年年底，2015年年底了。总结，总结，总结，还是分3个部分。</p>
 <h3 id="工作">工作</h3><p>今年2月份春节过完之后就换了工作，之后在这家公司工作到了现在。</p>
 <p>来新公司主要的目的是为了做大数据的，但是一进来就是给别人擦屁股，改bug = =。 后来大数据的东西只做了一部分，大概3个月的时间，之后被拉过去做公众号相关的东西了。没办法，公司人手太少，自己负责的etl这部分还有很多不完善的地方，可惜没有时间继续做下去。</p>
@@ -54,7 +54,7 @@
 <p>2016年计划以及展望：</p>
 <ol>
 <li>继续看书，要看更多的书。 15年居然只看了两本书，对不起自己…. 16年要5本+。</li>
-<li><p>技术方面<br>大数据的深入学习，不仅仅局限于会使用。包括spark，es，hbase，hadoop等。<br>分布式方面的学习<br>docker<br>scala的继续深入，要开始用scala写代码<br>netty<br>github继续贡献开源项目</p>
+<li><p>技术方面<br>大数据的深入学习，不仅仅局限于会使用。包括spark，es，hbase，hadoop等。<br>分布式方面的学习<br>docker<br>scala的继续深入，要开始用scala写代码<br>netty<br>github继续贡献开源项目<br>jvm</p>
 </li>
 <li><p>继续写博客</p>
 </li>

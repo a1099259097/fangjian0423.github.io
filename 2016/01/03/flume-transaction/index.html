@@ -37,7 +37,7 @@
 <link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo,Tinny,duoshuo," />
+  <meta name="keywords" content="big data,flume," />
 
 
 
@@ -55,16 +55,16 @@
 
 
 
-<meta name="description" content="Hexo中使用Tinny主题后评论框的设置">
+<meta name="description" content="Flume中有一个Transaction的概念。本文仅分析Transaction的实现类MemoryTransaction的实现原理，JdbcTransaction的原理跟数据库中的Transaction类似 ...">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo框架下Tinny主题中评论框的使用">
-<meta property="og:url" content="http://fangjian0423.github.io/2014/07/30/Hexo_Tinny_duoshuo/index.html">
+<meta property="og:title" content="Flume Transaction介绍">
+<meta property="og:url" content="http://fangjian0423.github.io/2016/01/03/flume-transaction/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="Hexo中使用Tinny主题后评论框的设置">
-<meta property="og:updated_time" content="2014-10-12T16:23:29.000Z">
+<meta property="og:description" content="Flume中有一个Transaction的概念。本文仅分析Transaction的实现类MemoryTransaction的实现原理，JdbcTransaction的原理跟数据库中的Transaction类似 ...">
+<meta property="og:updated_time" content="2016-01-03T09:37:34.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hexo框架下Tinny主题中评论框的使用">
-<meta name="twitter:description" content="Hexo中使用Tinny主题后评论框的设置">
+<meta name="twitter:title" content="Flume Transaction介绍">
+<meta name="twitter:description" content="Flume中有一个Transaction的概念。本文仅分析Transaction的实现类MemoryTransaction的实现原理，JdbcTransaction的原理跟数据库中的Transaction类似 ...">
 
 
 
@@ -76,7 +76,7 @@
   };
 </script>
 
-  <title> Hexo框架下Tinny主题中评论框的使用 | Format's Notes </title>
+  <title> Flume Transaction介绍 | Format's Notes </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -202,7 +202,7 @@
             
             
               
-                Hexo框架下Tinny主题中评论框的使用
+                Flume Transaction介绍
               
             
           </h1>
@@ -211,19 +211,34 @@
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2014-07-30T16:58:18+08:00" content="2014-07-30">
-              2014-07-30
+            <time itemprop="dateCreated" datetime="2016-01-03T17:35:53+08:00" content="2016-01-03">
+              2016-01-03
             </time>
           </span>
 
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
           
 
           
             
               <span class="post-comments-count">
               &nbsp; | &nbsp;
-              <a href="/2014/07/30/Hexo_Tinny_duoshuo/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/07/30/Hexo_Tinny_duoshuo/" itemprop="commentsCount"></span>
+              <a href="/2016/01/03/flume-transaction/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/01/03/flume-transaction/" itemprop="commentsCount"></span>
               </a>
             </span>
             
@@ -242,16 +257,215 @@
       
 
       
-        <span itemprop="articleBody"><p>##Hexo及Tinny介绍</p>
-<p><a href="http://hexo.io/" target="_blank" rel="external">Hexo</a>是一个快速、简单、功能强大的博客框架，基于<a href="http://www.nodejs.org/" target="_blank" rel="external">Node.js</a>。</p>
-<p><a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="external">Tinny</a>主题基于<a href="https://github.com/A-limon/pacman" target="_blank" rel="external">Pacman</a>主题，可以在Hexo中使用这些主题。</p>
-<p>##具体操作</p>
-<p>在Tinny中使用<a href="http://duoshuo.com/" target="_blank" rel="external">多说评论框</a>的通用代码的时候需要改掉 <strong>站点ID</strong>，<strong>标题</strong>，<strong>文章地址</strong> 这3个参数。</p>
-<p>具体代码如下，站点ID对应 &lt;%= page.path %&gt;, 标题 &lt;%= page.title %&gt;, 文章地址 &lt;%= page.permalink %&gt;：</p>
-<pre><code><span class="xml"><span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"ds-thread"</span> <span class="attribute">data-thread-key</span>=<span class="value">"</span></span></span>&lt;%=<span class="ruby"> page.path </span>%&gt;<span class="xml"><span class="tag"><span class="value">"</span> <span class="attribute">data-title</span>=<span class="value">"</span></span></span>&lt;%=<span class="ruby"> page.title </span>%&gt;<span class="xml"><span class="tag"><span class="value">"</span> <span class="attribute">data-url</span>=<span class="value">"</span></span></span>&lt;%=<span class="ruby"> page.permalink </span>%&gt;<span class="xml"><span class="tag"><span class="value">"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span>
-</code></pre><p>这段代码(js代码已省略)放到Tinny主题的 layout/_partial/post/comment.ejs 文件中。</p>
-<p>跟JSP好像 0 0. 但是为什么不用$呢，由于没有了解过Hexo，所以就不晓得了。</p>
-<p>有时间看看Hexo的一些底层代码。</p>
+        <span itemprop="articleBody"><p>Flume中有一个Transaction的概念。本文仅分析Transaction的实现类MemoryTransaction的实现原理，JdbcTransaction的原理跟数据库中的Transaction类似。</p>
+<p>Transaction接口定义如下：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">begin</span><span class="params">()</span></span>;
+
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">commit</span><span class="params">()</span></span>;
+
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">rollback</span><span class="params">()</span></span>;
+
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">close</span><span class="params">()</span></span>;
+</code></pre><p>Transaction跟数据库中的Transaction概念类似，都有begin，commit，rollback，close方法。</p>
+<p>Flume中的Transaction是在Channel中使用的，主要用来处理Source数据进入Channel的过程和Channel中的数据被Sink处理的过程。下面会从这2个方面根据源码分析Transaction的原理。</p>
+<p>在分析具体的事务操作之前，看一下MemoryTransaction中的各个方法实现原理。</p>
+<p>首先先看一下事务的获取方法：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="function">Transaction <span class="title">getTransaction</span><span class="params">()</span> </span>{
+
+    <span class="keyword">if</span> (!initialized) {
+      <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
+        <span class="keyword">if</span> (!initialized) {
+          initialize();
+          initialized = <span class="keyword">true</span>;
+        }
+      }
+    }
+    <span class="comment">// currentTransaction是一个ThreadLocal对象</span>
+    BasicTransactionSemantics transaction = currentTransaction.get();
+    <span class="comment">// 如果是第一次获取事务或者当前事务的已经close。那么会重新create一个新的事务</span>
+    <span class="keyword">if</span> (transaction == <span class="keyword">null</span> || transaction.getState().equals(
+            BasicTransactionSemantics.State.CLOSED)) {
+      transaction = createTransaction();
+      currentTransaction.set(transaction);
+    }
+    <span class="keyword">return</span> transaction;
+}
+</code></pre><p><strong>再重复一下，第一次拿事务或者事务关闭之后，才会重新去构造一个新的事务。各个线程之间的事务都是独立的</strong></p>
+<p>MemoryTransaction是MemoryChannel中的一个内部类。</p>
+<p>然后介绍一下MemoryTransaction和MemoryChannel中的几个重要属性。</p>
+<p>MemoryTransaction中有2个阻塞队列，分别是putList和takeList。putList放Source进来的数据，Sink从MemoryChannel中的queue中拿数据，然后这个数据丢到takeList中。</p>
+<p>MemoryChannel中有个阻塞队列queue。每次事务commit的时候都会把putList中的数据丢到queue中。</p>
+<p>begin方法MemoryTransaction没做任何处理，就不分析了。</p>
+<p>put方法：</p>
+<pre><code>@<span class="function">Override
+<span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPut</span>(<span class="params">Event <span class="keyword">event</span></span>) throws InterruptedException </span>{
+  channelCounter.incrementEventPutAttemptCount();
+  <span class="keyword">int</span> eventByteSize = (<span class="keyword">int</span>)Math.ceil(estimateEventSize(<span class="keyword">event</span>)/byteCapacitySlotSize);
+
+  <span class="keyword">if</span> (!putList.offer(<span class="keyword">event</span>)) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> ChannelException(
+      <span class="string">"Put queue for MemoryTransaction of capacity "</span> +
+        putList.size() + <span class="string">" full, consider committing more frequently, "</span> +
+        <span class="string">"increasing capacity or increasing thread count"</span>);
+  }
+  putByteCounter += eventByteSize;
+}
+</code></pre><p>put方法把数据丢入putList中，这个也就是之前分析的putList这个属性的作用，putList放Source进来的数据。</p>
+<p>commit方法的关键性代码：</p>
+<pre><code>@Override
+<span class="keyword">protected</span> <span class="keyword">void</span> doCommit() <span class="keyword">throws</span> InterruptedException {
+  <span class="built_in">int</span> puts = putList.<span class="built_in">size</span>();
+  <span class="built_in">int</span> takes = takeList.<span class="built_in">size</span>();
+  <span class="keyword">synchronized</span>(queueLock) {
+    <span class="keyword">if</span>(puts &gt; <span class="number">0</span> ) {
+      <span class="comment">// 清空putList，丢到外部类MemoryChannel中的queue队列里</span>
+      <span class="keyword">while</span>(!putList.isEmpty()) {
+        <span class="comment">// MemoryChannel中的queue队列</span>
+        <span class="keyword">if</span>(!queue.offer(putList.removeFirst())) {
+          <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Queue add failed, this shouldn't be able to happen"</span>);
+        }
+      }
+    }
+    putList.<span class="built_in">clear</span>();
+    takeList.<span class="built_in">clear</span>();
+  }
+}
+</code></pre><p>rollback方法关键性代码：</p>
+<pre><code>@Override
+<span class="keyword">protected</span> <span class="keyword">void</span> doRollback() {
+  <span class="built_in">int</span> takes = takeList.<span class="built_in">size</span>();
+  <span class="keyword">synchronized</span>(queueLock) {
+    Preconditions.checkState(queue.remainingCapacity() &gt;= takeList.<span class="built_in">size</span>(), <span class="string">"Not enough space in memory channel "</span> +
+        <span class="string">"queue to rollback takes. This should never happen, please report"</span>);
+    <span class="comment">// 把takeList中的数据放回到queue中</span>
+    <span class="keyword">while</span>(!takeList.isEmpty()) {
+      queue.addFirst(takeList.removeLast());
+    }
+    putList.<span class="built_in">clear</span>();
+  }
+}
+</code></pre><p>发生异常后才会调用rollback方法。也就是说take方法被调用之后，由于take方法是从queue中拿数据，并且放到takeList里。所以回滚的时候需要把takeList中的数据还给queue。</p>
+<p>MemoryTransaction的close方法只是把状态改成了CLOSED，其他没做什么，就不分析了。</p>
+<p>MemoryTransaction的take方法：</p>
+<p>take方法从queue中拉出数据，然后放到takeList中。</p>
+<pre><code>@<span class="function">Override
+<span class="keyword">protected</span> Event <span class="title">doTake</span>(<span class="params"></span>) throws InterruptedException </span>{
+  channelCounter.incrementEventTakeAttemptCount();
+  <span class="keyword">if</span>(takeList.remainingCapacity() == <span class="number">0</span>) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> ChannelException(<span class="string">"Take list for MemoryTransaction, capacity "</span> +
+        takeList.size() + <span class="string">" full, consider committing more frequently, "</span> +
+        <span class="string">"increasing capacity, or increasing thread count"</span>);
+  }
+  <span class="keyword">if</span>(!queueStored.tryAcquire(keepAlive, TimeUnit.SECONDS)) {
+    <span class="keyword">return</span> <span class="keyword">null</span>;
+  }
+  Event <span class="keyword">event</span>;
+  synchronized(queueLock) {
+    <span class="keyword">event</span> = queue.poll();
+  }
+  Preconditions.checkNotNull(<span class="keyword">event</span>, <span class="string">"Queue.poll returned NULL despite semaphore "</span> +
+      <span class="string">"signalling existence of entry"</span>);
+  takeList.put(<span class="keyword">event</span>);
+
+  <span class="keyword">int</span> eventByteSize = (<span class="keyword">int</span>)Math.ceil(estimateEventSize(<span class="keyword">event</span>)/byteCapacitySlotSize);
+  takeByteCounter += eventByteSize;
+
+  <span class="keyword">return</span> <span class="keyword">event</span>;
+}
+</code></pre><p>Source数据进入Channel过程中Transaction的处理过程：</p>
+<p>ChannelProcessor处理这个过程：</p>
+<pre><code><span class="keyword">for</span> (Channel reqChannel : reqChannelQueue.keySet()) {
+  <span class="comment">// 获取事务</span>
+  Transaction tx = reqChannel.getTransaction();
+  Preconditions.checkNotNull(tx, <span class="string">"Transaction object must not be null"</span>);
+  <span class="keyword">try</span> {
+    <span class="comment">// 事务开始</span>
+    tx.begin();
+    <span class="comment">// 获取Source处理的一个批次中的所有Event</span>
+    List&lt;Event&gt; batch = reqChannelQueue.get(reqChannel);
+
+    <span class="keyword">for</span> (Event event : batch) {
+      <span class="comment">// MemoryChannel的put方法会MemoryTransaction的put方法。</span>
+      reqChannel.put(event);
+    }
+    <span class="comment">// 提交事务</span>
+    tx.commit();
+  } <span class="keyword">catch</span> (Throwable t) {
+      <span class="comment">// 发生异常回滚事务</span>
+    tx.rollback();
+    <span class="keyword">if</span> (t <span class="keyword">instanceof</span> Error) {
+      LOG.<span class="keyword">error</span>(<span class="string">"Error while writing to required channel: "</span> +
+          reqChannel, t);
+      <span class="keyword">throw</span> (Error) t;
+    } <span class="keyword">else</span> {
+      <span class="keyword">throw</span> <span class="keyword">new</span> ChannelException(<span class="string">"Unable to put batch on required "</span> +
+          <span class="string">"channel: "</span> + reqChannel, t);
+    }
+  } <span class="keyword">finally</span> {
+    <span class="keyword">if</span> (tx != <span class="keyword">null</span>) {
+      <span class="comment">// 最后结束事务</span>
+      tx.close();
+    }
+  }
+}
+</code></pre><p>Channel中的数据被Sink处理的过程：</p>
+<p>以hdfs sink为例讲解：</p>
+<pre><code><span class="keyword">public</span> <span class="function">Status <span class="title">process</span><span class="params">()</span> <span class="keyword">throws</span> EventDeliveryException </span>{
+    Channel channel = getChannel();
+    Transaction transaction = channel.getTransaction();
+    List&lt;BucketWriter&gt; writers = Lists.newArrayList();
+    transaction.begin();
+    <span class="keyword">try</span> {
+      <span class="keyword">int</span> txnEventCount = <span class="number">0</span>;
+      <span class="keyword">for</span> (txnEventCount = <span class="number">0</span>; txnEventCount &lt; batchSize; txnEventCount++) {
+        Event event = channel.take();
+        <span class="keyword">if</span> (event == <span class="keyword">null</span>) {
+          <span class="keyword">break</span>;
+        }
+
+      ... 
+
+      transaction.commit();
+
+      <span class="keyword">if</span> (txnEventCount &lt; <span class="number">1</span>) {
+        <span class="keyword">return</span> Status.BACKOFF;
+      } <span class="keyword">else</span> {
+        sinkCounter.addToEventDrainSuccessCount(txnEventCount);
+        <span class="keyword">return</span> Status.READY;
+      }
+    } <span class="keyword">catch</span> (IOException eIO) {
+      transaction.rollback();
+      LOG.warn(<span class="string">"HDFS IO error"</span>, eIO);
+      <span class="keyword">return</span> Status.BACKOFF;
+    } <span class="keyword">catch</span> (Throwable th) {
+      transaction.rollback();
+      LOG.<span class="keyword">error</span>(<span class="string">"process failed"</span>, th);
+      <span class="keyword">if</span> (th <span class="keyword">instanceof</span> Error) {
+        <span class="keyword">throw</span> (Error) th;
+      } <span class="keyword">else</span> {
+        <span class="keyword">throw</span> <span class="keyword">new</span> EventDeliveryException(th);
+      }
+    } <span class="keyword">finally</span> {
+      transaction.close();
+    }
+ }
+</code></pre><p>也是一样的流程，begin，take，commit or rollback，close。</p>
+<p>总结：</p>
+<ol>
+<li><p>MemoryTransaction是MemoryChannel中的一个内部类，内部有2个阻塞队列putList和takeList。MemoryChannel内部有个queue阻塞队列。</p>
+</li>
+<li><p>putList接收Source交给Channel的event数据，takeList保存Channel交给Sink的event数据。</p>
+</li>
+<li><p>如果是Source交给Channel任务完成，进行commit的时候。会把putList中的所有event放到MemoryChannel中的queue。</p>
+</li>
+<li><p>如果是Source交给Channel任务失败，进行rollback的时候。程序就不会继续走下去，比如KafkaSource需要commitOffsets，如果任务失败就不会commitOffsets。</p>
+</li>
+<li><p>如果是Sink处理完Channel带来的event，进行commit的时候。会清空takeList中的event数据，因为已经没consume。</p>
+</li>
+<li><p>如果是Sink处理Channel带来的event失败的话，进行rollback的时候。会把takeList中的event写回到queue中。</p>
+</li>
+</ol>
 </span>
       
     </div>
@@ -260,11 +474,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/Hexo/" rel="tag">#Hexo</a>
+            <a href="/tags/big-data/" rel="tag">#big data</a>
           
-            <a href="/tags/Tinny/" rel="tag">#Tinny</a>
-          
-            <a href="/tags/duoshuo/" rel="tag">#duoshuo</a>
+            <a href="/tags/flume/" rel="tag">#flume</a>
           
         </div>
       
@@ -273,13 +485,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2016/01/01/2015_end/" rel="next" title="2015总结">
+                <i class="fa fa-chevron-left"></i> 2015总结
+              </a>
+            
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2014/08/06/Backbone/" rel="prev" title="Backbone小记录">
-                Backbone小记录 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -491,9 +703,9 @@
 
     <script type="text/javascript">
       var disqus_shortname = 'fangjian0423';
-      var disqus_identifier = '2014/07/30/Hexo_Tinny_duoshuo/';
-      var disqus_title = 'Hexo框架下Tinny主题中评论框的使用';
-      var disqus_url = 'http://fangjian0423.github.io/2014/07/30/Hexo_Tinny_duoshuo/';
+      var disqus_identifier = '2016/01/03/flume-transaction/';
+      var disqus_title = 'Flume Transaction介绍';
+      var disqus_url = 'http://fangjian0423.github.io/2016/01/03/flume-transaction/';
 
       function run_disqus_script(disqus_script){
         var dsq = document.createElement('script');

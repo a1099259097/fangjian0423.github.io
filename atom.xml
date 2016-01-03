@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2015-12-31T16:48:01.000Z</updated>
+  <updated>2016-01-03T09:37:34.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -13,6 +13,235 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[Flume Transaction介绍]]></title>
+    <link href="http://fangjian0423.github.io/2016/01/03/flume-transaction/"/>
+    <id>http://fangjian0423.github.io/2016/01/03/flume-transaction/</id>
+    <published>2016-01-03T09:35:53.000Z</published>
+    <updated>2016-01-03T09:37:34.000Z</updated>
+    <content type="html"><![CDATA[<p>Flume中有一个Transaction的概念。本文仅分析Transaction的实现类MemoryTransaction的实现原理，JdbcTransaction的原理跟数据库中的Transaction类似。</p>
+<p>Transaction接口定义如下：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">begin</span><span class="params">()</span></span>;
+
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">commit</span><span class="params">()</span></span>;
+
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">rollback</span><span class="params">()</span></span>;
+
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">close</span><span class="params">()</span></span>;
+</code></pre><p>Transaction跟数据库中的Transaction概念类似，都有begin，commit，rollback，close方法。</p>
+<p>Flume中的Transaction是在Channel中使用的，主要用来处理Source数据进入Channel的过程和Channel中的数据被Sink处理的过程。下面会从这2个方面根据源码分析Transaction的原理。</p>
+<p>在分析具体的事务操作之前，看一下MemoryTransaction中的各个方法实现原理。</p>
+<p>首先先看一下事务的获取方法：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="function">Transaction <span class="title">getTransaction</span><span class="params">()</span> </span>{
+
+    <span class="keyword">if</span> (!initialized) {
+      <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
+        <span class="keyword">if</span> (!initialized) {
+          initialize();
+          initialized = <span class="keyword">true</span>;
+        }
+      }
+    }
+    <span class="comment">// currentTransaction是一个ThreadLocal对象</span>
+    BasicTransactionSemantics transaction = currentTransaction.get();
+    <span class="comment">// 如果是第一次获取事务或者当前事务的已经close。那么会重新create一个新的事务</span>
+    <span class="keyword">if</span> (transaction == <span class="keyword">null</span> || transaction.getState().equals(
+            BasicTransactionSemantics.State.CLOSED)) {
+      transaction = createTransaction();
+      currentTransaction.set(transaction);
+    }
+    <span class="keyword">return</span> transaction;
+}
+</code></pre><p><strong>再重复一下，第一次拿事务或者事务关闭之后，才会重新去构造一个新的事务。各个线程之间的事务都是独立的</strong></p>
+<p>MemoryTransaction是MemoryChannel中的一个内部类。</p>
+<p>然后介绍一下MemoryTransaction和MemoryChannel中的几个重要属性。</p>
+<p>MemoryTransaction中有2个阻塞队列，分别是putList和takeList。putList放Source进来的数据，Sink从MemoryChannel中的queue中拿数据，然后这个数据丢到takeList中。</p>
+<p>MemoryChannel中有个阻塞队列queue。每次事务commit的时候都会把putList中的数据丢到queue中。</p>
+<p>begin方法MemoryTransaction没做任何处理，就不分析了。</p>
+<p>put方法：</p>
+<pre><code>@<span class="function">Override
+<span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPut</span>(<span class="params">Event <span class="keyword">event</span></span>) throws InterruptedException </span>{
+  channelCounter.incrementEventPutAttemptCount();
+  <span class="keyword">int</span> eventByteSize = (<span class="keyword">int</span>)Math.ceil(estimateEventSize(<span class="keyword">event</span>)/byteCapacitySlotSize);
+
+  <span class="keyword">if</span> (!putList.offer(<span class="keyword">event</span>)) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> ChannelException(
+      <span class="string">"Put queue for MemoryTransaction of capacity "</span> +
+        putList.size() + <span class="string">" full, consider committing more frequently, "</span> +
+        <span class="string">"increasing capacity or increasing thread count"</span>);
+  }
+  putByteCounter += eventByteSize;
+}
+</code></pre><p>put方法把数据丢入putList中，这个也就是之前分析的putList这个属性的作用，putList放Source进来的数据。</p>
+<p>commit方法的关键性代码：</p>
+<pre><code>@Override
+<span class="keyword">protected</span> <span class="keyword">void</span> doCommit() <span class="keyword">throws</span> InterruptedException {
+  <span class="built_in">int</span> puts = putList.<span class="built_in">size</span>();
+  <span class="built_in">int</span> takes = takeList.<span class="built_in">size</span>();
+  <span class="keyword">synchronized</span>(queueLock) {
+    <span class="keyword">if</span>(puts &gt; <span class="number">0</span> ) {
+      <span class="comment">// 清空putList，丢到外部类MemoryChannel中的queue队列里</span>
+      <span class="keyword">while</span>(!putList.isEmpty()) {
+        <span class="comment">// MemoryChannel中的queue队列</span>
+        <span class="keyword">if</span>(!queue.offer(putList.removeFirst())) {
+          <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Queue add failed, this shouldn't be able to happen"</span>);
+        }
+      }
+    }
+    putList.<span class="built_in">clear</span>();
+    takeList.<span class="built_in">clear</span>();
+  }
+}
+</code></pre><p>rollback方法关键性代码：</p>
+<pre><code>@Override
+<span class="keyword">protected</span> <span class="keyword">void</span> doRollback() {
+  <span class="built_in">int</span> takes = takeList.<span class="built_in">size</span>();
+  <span class="keyword">synchronized</span>(queueLock) {
+    Preconditions.checkState(queue.remainingCapacity() &gt;= takeList.<span class="built_in">size</span>(), <span class="string">"Not enough space in memory channel "</span> +
+        <span class="string">"queue to rollback takes. This should never happen, please report"</span>);
+    <span class="comment">// 把takeList中的数据放回到queue中</span>
+    <span class="keyword">while</span>(!takeList.isEmpty()) {
+      queue.addFirst(takeList.removeLast());
+    }
+    putList.<span class="built_in">clear</span>();
+  }
+}
+</code></pre><p>发生异常后才会调用rollback方法。也就是说take方法被调用之后，由于take方法是从queue中拿数据，并且放到takeList里。所以回滚的时候需要把takeList中的数据还给queue。</p>
+<p>MemoryTransaction的close方法只是把状态改成了CLOSED，其他没做什么，就不分析了。</p>
+<p>MemoryTransaction的take方法：</p>
+<p>take方法从queue中拉出数据，然后放到takeList中。</p>
+<pre><code>@<span class="function">Override
+<span class="keyword">protected</span> Event <span class="title">doTake</span>(<span class="params"></span>) throws InterruptedException </span>{
+  channelCounter.incrementEventTakeAttemptCount();
+  <span class="keyword">if</span>(takeList.remainingCapacity() == <span class="number">0</span>) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> ChannelException(<span class="string">"Take list for MemoryTransaction, capacity "</span> +
+        takeList.size() + <span class="string">" full, consider committing more frequently, "</span> +
+        <span class="string">"increasing capacity, or increasing thread count"</span>);
+  }
+  <span class="keyword">if</span>(!queueStored.tryAcquire(keepAlive, TimeUnit.SECONDS)) {
+    <span class="keyword">return</span> <span class="keyword">null</span>;
+  }
+  Event <span class="keyword">event</span>;
+  synchronized(queueLock) {
+    <span class="keyword">event</span> = queue.poll();
+  }
+  Preconditions.checkNotNull(<span class="keyword">event</span>, <span class="string">"Queue.poll returned NULL despite semaphore "</span> +
+      <span class="string">"signalling existence of entry"</span>);
+  takeList.put(<span class="keyword">event</span>);
+
+  <span class="keyword">int</span> eventByteSize = (<span class="keyword">int</span>)Math.ceil(estimateEventSize(<span class="keyword">event</span>)/byteCapacitySlotSize);
+  takeByteCounter += eventByteSize;
+
+  <span class="keyword">return</span> <span class="keyword">event</span>;
+}
+</code></pre><p>Source数据进入Channel过程中Transaction的处理过程：</p>
+<p>ChannelProcessor处理这个过程：</p>
+<pre><code><span class="keyword">for</span> (Channel reqChannel : reqChannelQueue.keySet()) {
+  <span class="comment">// 获取事务</span>
+  Transaction tx = reqChannel.getTransaction();
+  Preconditions.checkNotNull(tx, <span class="string">"Transaction object must not be null"</span>);
+  <span class="keyword">try</span> {
+    <span class="comment">// 事务开始</span>
+    tx.begin();
+    <span class="comment">// 获取Source处理的一个批次中的所有Event</span>
+    List&lt;Event&gt; batch = reqChannelQueue.get(reqChannel);
+
+    <span class="keyword">for</span> (Event event : batch) {
+      <span class="comment">// MemoryChannel的put方法会MemoryTransaction的put方法。</span>
+      reqChannel.put(event);
+    }
+    <span class="comment">// 提交事务</span>
+    tx.commit();
+  } <span class="keyword">catch</span> (Throwable t) {
+      <span class="comment">// 发生异常回滚事务</span>
+    tx.rollback();
+    <span class="keyword">if</span> (t <span class="keyword">instanceof</span> Error) {
+      LOG.<span class="keyword">error</span>(<span class="string">"Error while writing to required channel: "</span> +
+          reqChannel, t);
+      <span class="keyword">throw</span> (Error) t;
+    } <span class="keyword">else</span> {
+      <span class="keyword">throw</span> <span class="keyword">new</span> ChannelException(<span class="string">"Unable to put batch on required "</span> +
+          <span class="string">"channel: "</span> + reqChannel, t);
+    }
+  } <span class="keyword">finally</span> {
+    <span class="keyword">if</span> (tx != <span class="keyword">null</span>) {
+      <span class="comment">// 最后结束事务</span>
+      tx.close();
+    }
+  }
+}
+</code></pre><p>Channel中的数据被Sink处理的过程：</p>
+<p>以hdfs sink为例讲解：</p>
+<pre><code><span class="keyword">public</span> <span class="function">Status <span class="title">process</span><span class="params">()</span> <span class="keyword">throws</span> EventDeliveryException </span>{
+    Channel channel = getChannel();
+    Transaction transaction = channel.getTransaction();
+    List&lt;BucketWriter&gt; writers = Lists.newArrayList();
+    transaction.begin();
+    <span class="keyword">try</span> {
+      <span class="keyword">int</span> txnEventCount = <span class="number">0</span>;
+      <span class="keyword">for</span> (txnEventCount = <span class="number">0</span>; txnEventCount &lt; batchSize; txnEventCount++) {
+        Event event = channel.take();
+        <span class="keyword">if</span> (event == <span class="keyword">null</span>) {
+          <span class="keyword">break</span>;
+        }
+
+      ... 
+
+      transaction.commit();
+
+      <span class="keyword">if</span> (txnEventCount &lt; <span class="number">1</span>) {
+        <span class="keyword">return</span> Status.BACKOFF;
+      } <span class="keyword">else</span> {
+        sinkCounter.addToEventDrainSuccessCount(txnEventCount);
+        <span class="keyword">return</span> Status.READY;
+      }
+    } <span class="keyword">catch</span> (IOException eIO) {
+      transaction.rollback();
+      LOG.warn(<span class="string">"HDFS IO error"</span>, eIO);
+      <span class="keyword">return</span> Status.BACKOFF;
+    } <span class="keyword">catch</span> (Throwable th) {
+      transaction.rollback();
+      LOG.<span class="keyword">error</span>(<span class="string">"process failed"</span>, th);
+      <span class="keyword">if</span> (th <span class="keyword">instanceof</span> Error) {
+        <span class="keyword">throw</span> (Error) th;
+      } <span class="keyword">else</span> {
+        <span class="keyword">throw</span> <span class="keyword">new</span> EventDeliveryException(th);
+      }
+    } <span class="keyword">finally</span> {
+      transaction.close();
+    }
+ }
+</code></pre><p>也是一样的流程，begin，take，commit or rollback，close。</p>
+<p>总结：</p>
+<ol>
+<li><p>MemoryTransaction是MemoryChannel中的一个内部类，内部有2个阻塞队列putList和takeList。MemoryChannel内部有个queue阻塞队列。</p>
+</li>
+<li><p>putList接收Source交给Channel的event数据，takeList保存Channel交给Sink的event数据。</p>
+</li>
+<li><p>如果是Source交给Channel任务完成，进行commit的时候。会把putList中的所有event放到MemoryChannel中的queue。</p>
+</li>
+<li><p>如果是Source交给Channel任务失败，进行rollback的时候。程序就不会继续走下去，比如KafkaSource需要commitOffsets，如果任务失败就不会commitOffsets。</p>
+</li>
+<li><p>如果是Sink处理完Channel带来的event，进行commit的时候。会清空takeList中的event数据，因为已经没consume。</p>
+</li>
+<li><p>如果是Sink处理Channel带来的event失败的话，进行rollback的时候。会把takeList中的event写回到queue中。</p>
+</li>
+</ol>
+]]></content>
+    <summary type="html">
+    <![CDATA[Flume中有一个Transaction的概念。本文仅分析Transaction的实现类MemoryTransaction的实现原理，JdbcTransaction的原理跟数据库中的Transaction类似 ...]]>
+    
+    </summary>
+    
+      <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
+    
+      <category term="flume" scheme="http://fangjian0423.github.io/tags/flume/"/>
+    
+      <category term="flume" scheme="http://fangjian0423.github.io/categories/flume/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[2015总结]]></title>
@@ -3692,226 +3921,6 @@ batchCounter++;
 ]]></content>
     <summary type="html">
     <![CDATA[Flume内置了很多Sink，比如HDFS Sink, Hive Sink, File Roll Sink, HBase Sink, ElasticSearch Sink等 ...]]>
-    
-    </summary>
-    
-      <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
-    
-      <category term="flume" scheme="http://fangjian0423.github.io/tags/flume/"/>
-    
-      <category term="flume" scheme="http://fangjian0423.github.io/categories/flume/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Flume Channel组件分析]]></title>
-    <link href="http://fangjian0423.github.io/2015/06/22/flume-channel/"/>
-    <id>http://fangjian0423.github.io/2015/06/22/flume-channel/</id>
-    <published>2015-06-22T15:23:23.000Z</published>
-    <updated>2015-12-20T17:08:47.000Z</updated>
-    <content type="html"><![CDATA[<p>Source组件已经分析过，接下来看Channel组件。</p>
-<p>Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等。</p>
-<h2 id="Channel接口">Channel接口</h2><p>Channel接口定义：</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Channel</span> <span class="keyword">extends</span> <span class="title">LifecycleAware</span>, <span class="title">NamedComponent</span> </span>{
-
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(Event event)</span> <span class="keyword">throws</span> ChannelException</span>;
-
-  <span class="function"><span class="keyword">public</span> Event <span class="title">take</span><span class="params">()</span> <span class="keyword">throws</span> ChannelException</span>;
-
-  <span class="function"><span class="keyword">public</span> Transaction <span class="title">getTransaction</span><span class="params">()</span></span>;
-}
-</code></pre><p>LifecycleAware接口和NamedComponent接口之前在分析Source的时候已经说明过。</p>
-<p>Channel接口有3个方法，分别是put，take和getTransaction。</p>
-<p>Channel是存储Source收集过来的数据的，所以提供put(存储Source的Event)和take(交付给Sink)方法，它也支持事务。</p>
-<p>AbstractChannel抽象类是Channel接口的实现类，作用跟AbstractSource是Source的实现类类似。</p>
-<p>BasicChannelSemantics是AbstractChannel的子类，是Channel的基础实现类，内部使用ThreadLocal完成事件的处理和事务功能，实现了getTransaction方法，在这个方法内部调用createTransaction得到事务对象，createTransaction也被抽象成了一个抽象方法。</p>
-<p>BasicChannelSemantics实现了Channel接口的put和take方法，使用Transaction接口的put和take方法。</p>
-<pre><code><span class="annotation">@Override</span>
-  <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">put</span><span class="params">(Event event)</span> <span class="keyword">throws</span> ChannelException </span>{
-    BasicTransactionSemantics transaction = currentTransaction.get();
-    Preconditions.checkState(transaction != <span class="keyword">null</span>,
-        <span class="string">"No transaction exists for this thread"</span>);
-    transaction.put(event);
-  }
-
-<span class="annotation">@Override</span>
-  <span class="keyword">public</span> <span class="function">Event <span class="title">take</span><span class="params">()</span> <span class="keyword">throws</span> ChannelException </span>{
-    BasicTransactionSemantics transaction = currentTransaction.get();
-    Preconditions.checkState(transaction != <span class="keyword">null</span>,
-        <span class="string">"No transaction exists for this thread"</span>);
-    <span class="function"><span class="keyword">return</span> transaction.<span class="title">take</span><span class="params">()</span></span>;
-}
-</code></pre><p>currentTransaction是个ThreadLocal：</p>
-<pre><code><span class="keyword">private</span> ThreadLocal&lt;BasicTransactionSemantics&gt; currentTransaction
-      = <span class="keyword">new</span> ThreadLocal&lt;BasicTransactionSemantics&gt;();
-</code></pre><p>currentTransaction的初始化：</p>
-<pre><code><span class="annotation">@Override</span>
-  <span class="keyword">public</span> <span class="function">Transaction <span class="title">getTransaction</span><span class="params">()</span> </span>{
-
-    <span class="keyword">if</span> (!initialized) {
-      <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
-        <span class="keyword">if</span> (!initialized) {
-          initialize();
-          initialized = <span class="keyword">true</span>;
-        }
-      }
-    }
-
-    BasicTransactionSemantics transaction = currentTransaction.get();
-    <span class="keyword">if</span> (transaction == <span class="keyword">null</span> || transaction.getState().equals(
-            BasicTransactionSemantics.State.CLOSED)) {
-      transaction = createTransaction(); <span class="comment">// 抽象方法，子类实现</span>
-      currentTransaction.set(transaction);
-    }
-    <span class="keyword">return</span> transaction;
-  }
-</code></pre><p>这样，Channel的put和take操作就由抽象类createTransaction中得到的Transaction实现。<strong>因此，Channel对事件的各个操作由具体的Transaction实现。</strong></p>
-<p>一般普通的Channel继承这个BasicChannelSemantics类即可。</p>
-<h2 id="Transaction接口">Transaction接口</h2><p>由于Channel内部使用了事务特性，因此有必要介绍一个Flume事务相关的结构。</p>
-<p>Transaction接口定义：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">Transaction</span> {
-
-<span class="keyword">public</span> <span class="keyword">enum</span> TransactionState {Started, Committed, RolledBack, Closed };
-
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">begin</span>(<span class="params"></span>)</span>;
-
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">commit</span>(<span class="params"></span>)</span>;
-
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">rollback</span>(<span class="params"></span>)</span>;
-
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span>(<span class="params"></span>)</span>;
-}
-</code></pre><p>基本的事务封装类BasicTransactionSemantics，BasicTransactionSemantics实现了Transaction接口的4个方法，并引入了状态的概念，内部也有个state变量表示状态，Transaction接口的4个方法的实现会基于状态：</p>
-<p>BasicTransactionSemantics构造函数会初始化状态state为State.NEW, 实现Transaction接口的begin方法如下：</p>
-<pre><code>public void begin() {
-    Preconditions.checkState(Thread.currentThread().getId() == initialThreadId,
-        <span class="string">"begin() called from different thread than getTransaction()!"</span>);
-    Preconditions.checkState(<span class="keyword">state</span>.equals(State.NEW),
-        <span class="string">"begin() called when transaction is "</span> + <span class="keyword">state</span> + <span class="string">"!"</span>);
-
-    try {
-      doBegin();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new ChannelException(e.<span class="keyword">to</span>String(), e);
-    }
-    <span class="keyword">state</span> = State.OPEN;
-  }
-</code></pre><p>begin方法需要状态为NEW才可执行。同理commit方法需要状态为OPEN，rollback需要状态为OPEN，close方法需要状态为NEW或COMPLETED。BasicTransactionSemantics又提供了put和take方法用来放事件和取事件，所以又抽象出了4个抽象方法和2个默认实现方法：</p>
-<pre><code><span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">doBegin</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>{}
-<span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="function"><span class="keyword">void</span> <span class="title">doPut</span><span class="params">(Event event)</span> <span class="keyword">throws</span> InterruptedException</span>;
-<span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="function">Event <span class="title">doTake</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException</span>;
-<span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="function"><span class="keyword">void</span> <span class="title">doCommit</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException</span>;
-<span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="function"><span class="keyword">void</span> <span class="title">doRollback</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException</span>;
-<span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">doClose</span><span class="params">()</span> </span>{}
-</code></pre><h2 id="Flume内置的Channel">Flume内置的Channel</h2><h3 id="MemoryChannel">MemoryChannel</h3><p>Memory Channel的配置如下：</p>
-<pre><code>a1<span class="class">.channels</span> = c1
-a1<span class="class">.channels</span><span class="class">.c1</span><span class="class">.type</span> = memory
-a1<span class="class">.channels</span><span class="class">.c1</span><span class="class">.capacity</span> = <span class="number">10000</span>
-a1<span class="class">.channels</span><span class="class">.c1</span><span class="class">.transactionCapacity</span> = <span class="number">10000</span>
-</code></pre><p>MemoryChannel继承BasicChannelSemantics。</p>
-<p>MemoryChannel的configure读取配置信息，它的内部有个重要的属性如下：</p>
-<pre><code><span class="keyword">private</span> LinkedBlockingDeque&lt;Event&gt; <span class="built_in">queue</span>; <span class="comment">// 阻塞事件队列</span>
-</code></pre><p>MemoryChannel内部有个MemoryTransaction类继承自BasicTransactionSemantics，这个事务对象就是MemoryChannel使用的事务对象。</p>
-<pre><code><span class="annotation">@Override</span>
-<span class="keyword">protected</span> <span class="function">BasicTransactionSemantics <span class="title">createTransaction</span><span class="params">()</span> </span>{
-  <span class="keyword">return</span> <span class="keyword">new</span> MemoryTransaction(transCapacity, channelCounter);
-}
-</code></pre><p>MemoryTransaction的属性如下：</p>
-<pre><code><span class="comment">// 取走事件列表</span>
-<span class="keyword">private</span> LinkedBlockingDeque&lt;Event&gt; takeList;
-<span class="comment">// 放入事件列表</span>
-<span class="keyword">private</span> LinkedBlockingDeque&lt;Event&gt; putList;
-<span class="keyword">private</span> final ChannelCounter channelCounter;
-<span class="keyword">private</span> <span class="keyword">int</span> putByteCounter = <span class="number">0</span>;
-<span class="keyword">private</span> <span class="keyword">int</span> takeByteCounter = <span class="number">0</span>;
-</code></pre><p>之前分析过，Channel对事件的各个操作由具体的Transaction实现，也就是由MemoryTransaction实现。</p>
-<p>doPut方法，加入事件，doPut方法只针对Source提供过来的Event，跟Sink无关：</p>
-<pre><code>@<span class="function">Override
-<span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPut</span>(<span class="params">Event <span class="keyword">event</span></span>) throws InterruptedException </span>{
-  channelCounter.incrementEventPutAttemptCount();
-  <span class="keyword">int</span> eventByteSize = (<span class="keyword">int</span>)Math.ceil(estimateEventSize(<span class="keyword">event</span>)/byteCapacitySlotSize);
-
-  <span class="keyword">if</span> (!putList.offer(<span class="keyword">event</span>)) { <span class="comment">// 事件存储到MemoryTransaction的加入事件列表中</span>
-    <span class="keyword">throw</span> <span class="keyword">new</span> ChannelException(
-      <span class="string">"Put queue for MemoryTransaction of capacity "</span> +
-        putList.size() + <span class="string">" full, consider committing more frequently, "</span> +
-        <span class="string">"increasing capacity or increasing thread count"</span>);
-  }
-  putByteCounter += eventByteSize;
-}
-</code></pre><p>doTake方法，取走事件，doTake方法只针对Sink，负责给Sink传递Event数据：</p>
-<pre><code>@<span class="function">Override
-<span class="keyword">protected</span> Event <span class="title">doTake</span>(<span class="params"></span>) throws InterruptedException </span>{
-  channelCounter.incrementEventTakeAttemptCount();
-  <span class="keyword">if</span>(takeList.remainingCapacity() == <span class="number">0</span>) {
-    <span class="keyword">throw</span> <span class="keyword">new</span> ChannelException(<span class="string">"Take list for MemoryTransaction, capacity "</span> +
-        takeList.size() + <span class="string">" full, consider committing more frequently, "</span> +
-        <span class="string">"increasing capacity, or increasing thread count"</span>);
-  }
-  <span class="keyword">if</span>(!queueStored.tryAcquire(keepAlive, TimeUnit.SECONDS)) {
-    <span class="keyword">return</span> <span class="keyword">null</span>;
-  }
-  Event <span class="keyword">event</span>;
-  synchronized(queueLock) {
-    <span class="keyword">event</span> = queue.poll(); <span class="comment">// 取出MemoryChannel中阻塞事件队列中的事件</span>
-  }
-  Preconditions.checkNotNull(<span class="keyword">event</span>, <span class="string">"Queue.poll returned NULL despite semaphore "</span> +
-      <span class="string">"signalling existence of entry"</span>);
-  takeList.put(<span class="keyword">event</span>); <span class="comment">// 放到MemoryTransaction的取出事件列表中</span>
-
-  <span class="keyword">int</span> eventByteSize = (<span class="keyword">int</span>)Math.ceil(estimateEventSize(<span class="keyword">event</span>)/byteCapacitySlotSize);
-  takeByteCounter += eventByteSize;
-
-  <span class="keyword">return</span> <span class="keyword">event</span>;
-}
-</code></pre><p>doCommit的部分代码，提交处理的事件，doCommit只处理putList，所以提交的是Source过来的数据，并交给MemoryChannel内部的阻塞队列：</p>
-<pre><code>@Override
-<span class="keyword">protected</span> <span class="keyword">void</span> doCommit() <span class="keyword">throws</span> InterruptedException {
-  <span class="built_in">int</span> puts = putList.<span class="built_in">size</span>();
-  <span class="built_in">int</span> takes = takeList.<span class="built_in">size</span>();
-  <span class="keyword">synchronized</span>(queueLock) {
-    <span class="keyword">if</span>(puts &gt; <span class="number">0</span> ) {
-      <span class="keyword">while</span>(!putList.isEmpty()) { <span class="comment">// 加入事件列表中不空的话</span>
-        <span class="keyword">if</span>(!queue.offer(putList.removeFirst())) { <span class="comment">// 在MemoryChannel里的阻塞事件队列中加入MemoryTransaction的加入事件队列，也就是说在MemoryTransaction中新加入的所有事件全部移植到MemoryChannel中的阻塞队列中</span>
-          <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Queue add failed, this shouldn't be able to happen"</span>);
-        }
-      }
-    }
-    putList.<span class="built_in">clear</span>();
-    takeList.<span class="built_in">clear</span>();
-  }
-}
-</code></pre><p>doRollback方法，回滚处理的事件, 回滚操作只针对Sink，回滚要交给Sink的事件到MemoryChannel的阻塞队列里：</p>
-<pre><code>@<span class="function">Override
-<span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doRollback</span><span class="params">()</span> </span>{
-  <span class="keyword">int</span> takes = takeList.size();
-  synchronized(queueLock) {
-    Preconditions.checkState(<span class="built_in">queue</span>.remainingCapacity() &gt;= takeList.size(), <span class="string">"Not enough space in memory channel "</span> +
-        <span class="string">"queue to rollback takes. This should never happen, please report"</span>);
-    <span class="keyword">while</span>(!takeList.isEmpty()) {
-      <span class="comment">// MemoryTransaction处理的事件全部回滚，回到MemoryChannel的阻塞队列里。因为MemoryTransaction处理的事件数据是从MemoryChannel的阻塞队列里取走的</span>
-      <span class="built_in">queue</span>.addFirst(takeList.removeLast());
-    }
-    putList.clear();
-  }
-  bytesRemaining.release(putByteCounter);
-  putByteCounter = <span class="number">0</span>;
-  takeByteCounter = <span class="number">0</span>;
-
-  queueStored.release(takes);
-  channelCounter.setChannelSize(<span class="built_in">queue</span>.size());
-}
-</code></pre><p>MemoryChannel总结：</p>
-<p>MemoryChannel是个Channel，Channel的作用是收集Source发来的事件数据(put操作)和发送给Sink由Source发来的事件数据(take操作)。Channel内部对事件的处理使用Transaction完成。</p>
-<p>put操作：先放到MemoryTransaction的putList列表中，MemoryTransaction做commit操作的时候写入到MemoryChannel的阻塞队列里。</p>
-<p>take操作：先取出MemoryChannel中阻塞队列里的事件数据，然后放入MemoryTransaction里的takeList列表中，当需要回滚的时候会将takeList列表中的事件数据回滚到MemoryChannel中的阻塞队列里。commit操作不需要任何处理，因为事件已经从MemoryChannel中的阻塞队列里取出。</p>
-<p>MemoryChannel有2个队列容量配置，分别是capacity和transactionCapacity。capacity是MemoryChannel里的阻塞队列的容量，transactionCapacity是MemoryTransaction里的putList和takeList列表容量。</p>
-<h2 id="Channel总结">Channel总结</h2><p>Channel是Flume中的桥梁，连接着Source和Sink,重要性不言而喻。Flume内置也有很多的Channel。同样地，并不是所有的Channel都能符合需求。</p>
-<p>比如MemoryChannel在内存中处理，速度很快，但是却不能持久化，当服务器挂了，Channel中的数据会丢失，这时就需要用FileChannel或JDBCChannel，但这2种Channel速度慢。因此可以实现一个自定义的Channel，美团的<a href="http://tech.meituan.com/mt-log-system-optimization.html地址上就说明了一些Flume可以改进和优化的地方。" target="_blank" rel="external">http://tech.meituan.com/mt-log-system-optimization.html地址上就说明了一些Flume可以改进和优化的地方。</a></p>
-]]></content>
-    <summary type="html">
-    <![CDATA[Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等 ...]]>
     
     </summary>
     

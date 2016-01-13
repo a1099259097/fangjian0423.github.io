@@ -61,7 +61,7 @@
 <meta property="og:url" content="http://fangjian0423.github.io/2016/01/03/flume-transaction/index.html">
 <meta property="og:site_name" content="Format's Notes">
 <meta property="og:description" content="Flume中有一个Transaction的概念。本文仅分析Transaction的实现类MemoryTransaction的实现原理，JdbcTransaction的原理跟数据库中的Transaction类似 ...">
-<meta property="og:updated_time" content="2016-01-03T09:37:34.000Z">
+<meta property="og:updated_time" content="2016-01-11T14:19:42.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Flume Transaction介绍">
 <meta name="twitter:description" content="Flume中有一个Transaction的概念。本文仅分析Transaction的实现类MemoryTransaction的实现原理，JdbcTransaction的原理跟数据库中的Transaction类似 ...">
@@ -466,6 +466,8 @@
 <li><p>如果是Sink处理Channel带来的event失败的话，进行rollback的时候。会把takeList中的event写回到queue中。</p>
 </li>
 </ol>
+<p>缺点：</p>
+<p>Flume的Transaction跟数据库的Transaction不一样。数据库中的事务回滚之后所有操作的数据都会进行处理。而Flume的却不能还原。比如HDFSSink写数据到HDFS的时候需要rollback，比如本来要写入10000条数据，但是写到5000条的时候rollback，那么已经写入的5000条数据不能回滚，而那10000条数据回到了阻塞队列里，下次再写入的时候还会重新写入这10000条数据。这样就多了5000条重复数据，这是flume设计上的缺陷。</p>
 </span>
       
     </div>
@@ -492,6 +494,10 @@
           </div>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/01/13/kafka-intro/" rel="prev" title="Kafka介绍">
+                Kafka介绍 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -563,21 +569,21 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">60</span>
+              <span class="site-state-item-count">61</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
 
           <div class="site-state-item site-state-categories">
             
-              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-count">18</span>
               <span class="site-state-item-name">分类</span>
               
           </div>
 
           <div class="site-state-item site-state-tags">
             
-              <span class="site-state-item-count">52</span>
+              <span class="site-state-item-count">53</span>
               <span class="site-state-item-name">标签</span>
               
           </div>

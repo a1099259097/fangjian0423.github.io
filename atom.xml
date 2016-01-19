@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-01-13T15:55:05.000Z</updated>
+  <updated>2016-01-19T12:11:10.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -13,6 +13,133 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[记录Flume Channel队列满了之后发生的怪异问题]]></title>
+    <link href="http://fangjian0423.github.io/2016/01/19/flume-channel-full-exception/"/>
+    <id>http://fangjian0423.github.io/2016/01/19/flume-channel-full-exception/</id>
+    <published>2016-01-19T12:07:35.000Z</published>
+    <updated>2016-01-19T12:11:10.000Z</updated>
+    <content type="html"><![CDATA[<p>Flume的这个问题纠结了2个月，因为之前实在太忙了，没有时间来研究这个问题产生的原理，今天终于研究出来了，找出了这个问题所在。</p>
+<p>先来描述一下这个问题的现象：</p>
+<p>Flume的Sink用的是Custom Sink，由于这个Custom Sink写的有一点小问题，比如batchSize是5000次，第4000条就会发生exception，这样每次都会写入4000条数据。Sink处理的时候都会发生异常，每次都会rollback，rollback方面的知识可以参考<a href="http://fangjian0423.github.io/2016/01/03/flume-transaction/">Flume Transaction介绍</a>。</p>
+<p>这样造成的后果有2个：</p>
+<p>1.Channel中的数据满了。会发生以下异常：</p>
+<pre><code>Caused by: org.apache.flume.ChannelFullException: Space <span class="keyword">for</span> commit <span class="keyword">to</span> queue couldn<span class="attribute">'t</span> be acquired. Sinks are likely <span class="keyword">not</span> keeping up <span class="keyword">with</span> sources, <span class="keyword">or</span> the <span class="keyword">buffer</span> size <span class="keyword">is</span> too tight
+</code></pre><p>2.Sink会一直写数据，造成数据量暴增。</p>
+<p>3.如果用了interceptor，且修改了event中的数据，那么会重复处理这些修改完后的event数据。</p>
+<p>前面2个很容易理解，Sink发生异常，transaction rollback，导致channel中的队列满了。</p>
+<p>关键是第三点，很让人费解。</p>
+<p>以一段伪需求和伪代码为例，TestInterceptor的intercept方法：</p>
+<p>比如处理一段json：</p>
+<pre><code>{"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">languages</span>": <span class="value">[<span class="string">"java"</span>, <span class="string">"scala"</span>, <span class="string">"javascript"</span>]</span>}
+</code></pre><p>使用interceptor处理成:</p>
+<pre><code>[{"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">language</span>": <span class="value"><span class="string">"java"</span></span>}, {"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">language</span>": <span class="value"><span class="string">"scala"</span></span>}, {"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">language</span>": <span class="value"><span class="string">"javascript"</span></span>}]
+</code></pre><p>interceptor代码如下：</p>
+<pre><code><span class="function"><span class="keyword">public</span> Event <span class="title">intercept</span>(<span class="params">Event <span class="keyword">event</span></span>) </span>{
+    Model model = <span class="keyword">null</span>;
+    String jsonStr = <span class="keyword">new</span> String(<span class="keyword">event</span>.getBody(), <span class="string">"UTF-8"</span>);
+    <span class="keyword">try</span> {
+        model = parseJsonStr(jsonStr);
+    } <span class="keyword">catch</span> (Exception e) {
+        log.error(<span class="string">"convert json data error"</span>);
+    }
+    <span class="keyword">event</span>.setBody(model.getJsonString().getBytes());
+    <span class="keyword">return</span> <span class="keyword">event</span>;
+}
+</code></pre><p>当Channel中的队列已经满了以后，上述代码会打印出convert json data error，而且jsonStr的内容居然是转换后的数据，这一点一开始让我十分费解，误以为transaction rollback之后会修改source中的数据。后来debug源码发现错误在Source中。</p>
+<p>后来发现并不是这样的。</p>
+<p>以KafkaSource为例，KafkaSource中有一个属性eventList，是个ArrayList。用来接收kafka consume的message。</p>
+<p>直接说明KafkaSource的process方法源码：</p>
+<pre><code><span class="keyword">public</span> Status process() <span class="keyword">throws</span> EventDeliveryException {
+
+  <span class="built_in">byte</span>[] kafkaMessage;
+  <span class="built_in">byte</span>[] kafkaKey;
+  Event event;
+  Map&lt;<span class="keyword">String</span>, <span class="keyword">String</span>&gt; headers;
+  <span class="keyword">long</span> batchStartTime = System.currentTimeMillis();
+  <span class="keyword">long</span> batchEndTime = System.currentTimeMillis() + timeUpperLimit;
+  <span class="keyword">try</span> {
+
+    <span class="comment">/** 这里读取kafka中的message **/</span>
+    <span class="built_in">boolean</span> iterStatus = <span class="keyword">false</span>;
+    <span class="keyword">while</span> (eventList.<span class="built_in">size</span>() &lt; batchUpperLimit &amp;&amp;
+            System.currentTimeMillis() &lt; batchEndTime) {
+      iterStatus = hasNext();
+      <span class="keyword">if</span> (iterStatus) {
+        <span class="comment">// get next message</span>
+        MessageAndMetadata&lt;<span class="built_in">byte</span>[], <span class="built_in">byte</span>[]&gt; messageAndMetadata = it.next();
+        kafkaMessage = messageAndMetadata.message();
+        kafkaKey = messageAndMetadata.<span class="variable">key</span>();
+
+        <span class="comment">// Add headers to event (topic, timestamp, and key)</span>
+        headers = <span class="keyword">new</span> <span class="keyword">HashMap</span>&lt;<span class="keyword">String</span>, <span class="keyword">String</span>&gt;();
+        headers.put(KafkaSourceConstants.TIMESTAMP,
+                <span class="keyword">String</span>.valueOf(System.currentTimeMillis()));
+        headers.put(KafkaSourceConstants.TOPIC, topic);
+        headers.put(KafkaSourceConstants.KEY, <span class="keyword">new</span> <span class="keyword">String</span>(kafkaKey));
+        <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
+          <span class="built_in">log</span>.debug(<span class="string">"Message: {}"</span>, <span class="keyword">new</span> <span class="keyword">String</span>(kafkaMessage));
+        }
+        event = EventBuilder.withBody(kafkaMessage, headers);
+        eventList.<span class="built_in">add</span>(event);
+      }
+      <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
+        <span class="built_in">log</span>.debug(<span class="string">"Waited: {} "</span>, System.currentTimeMillis() - batchStartTime);
+        <span class="built_in">log</span>.debug(<span class="string">"Event #: {}"</span>, eventList.<span class="built_in">size</span>());
+      }
+    }
+    <span class="comment">/** 这里读取kafka中的message **/</span>
+
+    <span class="comment">// If we have events, send events to channel</span>
+    <span class="comment">// clear the event list</span>
+    <span class="comment">// and commit if Kafka doesn't auto-commit</span>
+    <span class="keyword">if</span> (eventList.<span class="built_in">size</span>() &gt; <span class="number">0</span>) {
+      <span class="comment">// 使用ChannelProcess将Source中读取的数据给各个Channel</span>
+      <span class="comment">// 如果getChannelProcessor().processEventBatch(eventList);发生了异常，eventList不会被清空，而且processEventBatch方法会调用Interceptor处理event中的数据，event中的数据已经被转换。所以下一次会将转换后的event数据再次传给Interceptor。</span>
+      getChannelProcessor().processEventBatch(eventList);
+      eventList.<span class="built_in">clear</span>();
+      <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
+        <span class="built_in">log</span>.debug(<span class="string">"Wrote {} events to channel"</span>, eventList.<span class="built_in">size</span>());
+      }
+      <span class="keyword">if</span> (!kafkaAutoCommitEnabled) {
+        <span class="comment">// commit the read transactions to Kafka to avoid duplicates</span>
+        consumer.commitOffsets();
+      }
+    }
+    <span class="keyword">if</span> (!iterStatus) {
+      <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
+        <span class="built_in">log</span>.debug(<span class="string">"Returning with backoff. No more data to read"</span>);
+      }
+      <span class="keyword">return</span> Status.BACKOFF;
+    }
+    <span class="keyword">return</span> Status.READY;
+  } <span class="keyword">catch</span> (Exception e) {
+    <span class="built_in">log</span>.error(<span class="string">"KafkaSource EXCEPTION, {}"</span>, e);
+    <span class="keyword">return</span> Status.BACKOFF;
+  }
+}
+</code></pre><p>上述代码已经加了备注，再重申一下：ChannelProcess的processEventBatch方法会调用Interceptor处理event中的数据。所以如果Channel中的队列满了，那么processEventBatch方法会发生异常，发生异常之后eventList中的没有进入channel的数据已经被Interceptor修改，且不会被清空。因此下次还是会使用这些数据，所以会发生convert json data error错误。</p>
+<p>画了一个序列图如下：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/flume-channel-full01.png" alt=""></p>
+<p>第6步添加event到channel中的时候，队列已满，所以会抛出异常。最终异常被KafkaSource捕捉，但是eventList内部的部分数据已经被interceptor修改过。</p>
+<p>多个channel的影响：</p>
+<p>如果有多个channel，这个问题也会影响。比如有2个channel，c1和c2。c1的sink没有问题，一直稳定执行，c2对应的sink是一个CustomSink，会有问题。这样c2中的队列迟早会爆满，爆满之后，ChannelProcess批量处理event的时候，由于c2的队列满了，所以Source中的eventList永远不会被清空，eventList永远不会被清空的话，所有的channel都会被影响到，这就好比水源被污染之后，所有的用水都会受到影响。</p>
+<p>举个例子：source为s1，c1对应的sink是k1，c2对应的sink是k2。k1和k2的batchSize都是5000，k2处理第4000条数据的时候总会发生异常，进行回滚。k1很稳定。这样c2迟早会爆满，爆满之后s1的eventList一直不能clear，这样也会导致c1一直在处理，所以k1的数据量跟k2一样也会暴增。</p>
+<p>要避免本文所说的这一系列情况，最好的做法就是sink必须要加上很好的异常处理机制，不是任何情况都可以rollback的，要根据需求做对应的处理。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[记录Flume Channel队列满了之后发生的怪异问题。数据量暴增，Channel队列爆满 ...]]>
+    
+    </summary>
+    
+      <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
+    
+      <category term="flume" scheme="http://fangjian0423.github.io/tags/flume/"/>
+    
+      <category term="flume" scheme="http://fangjian0423.github.io/categories/flume/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[Kafka介绍]]></title>
@@ -3344,368 +3471,6 @@ a1.channels.c2.transactionCapacity = <span class="number">100</span>
       <category term="elasticsearch" scheme="http://fangjian0423.github.io/tags/elasticsearch/"/>
     
       <category term="elasticsearch" scheme="http://fangjian0423.github.io/categories/elasticsearch/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Flume运行过程源码分析]]></title>
-    <link href="http://fangjian0423.github.io/2015/07/07/flume-run/"/>
-    <id>http://fangjian0423.github.io/2015/07/07/flume-run/</id>
-    <published>2015-07-07T15:23:23.000Z</published>
-    <updated>2015-12-20T16:54:32.000Z</updated>
-    <content type="html"><![CDATA[<h2 id="Flume运行过程分析">Flume运行过程分析</h2><h3 id="入口Application">入口Application</h3><p>Flume运行的主类是org.apache.flume.node.Application的main方法。</p>
-<p>命令行args参数如下：</p>
-<pre><code><span class="literal">-</span><span class="literal">-</span><span class="comment">conf</span><span class="literal">-</span><span class="comment">file</span> <span class="comment">YourConfigFile</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">AgentName</span>
-</code></pre><p>main方法里会先判断参数中是否有z或者zkConnString，如果配置了这两个参数中其中一个的话，那么会使用PollingZooKeeperConfigurationProvider或StaticZooKeeperConfigurationProvider配置。否则使用PollingPropertiesFileConfigurationProvider或PropertiesFileConfigurationProvider配置。</p>
-<p>一般我们只传–conf-file和–name，那么就会使用PollingPropertiesFileConfigurationProvider进行配置。</p>
-<pre><code><span class="comment">// EventBus，监听者设计模式</span>
-EventBus eventBus = <span class="keyword">new</span> EventBus(agentName + <span class="string">"-event-bus"</span>);
-<span class="comment">// 构造PollingPropertiesFileConfigurationProvider，会处理配置文件相关的信息</span>
-PollingPropertiesFileConfigurationProvider configurationProvider =
-        <span class="keyword">new</span> PollingPropertiesFileConfigurationProvider(
-          agentName, configurationFile, eventBus, <span class="number">30</span>);
-components.add(configurationProvider);
-application = <span class="keyword">new</span> Application(components);
-<span class="comment">// EventBus注册application</span>
-eventBus.<span class="keyword">register</span>(application);
-
-...
-
-application.start();
-</code></pre><p>Application内部有个handleConfigurationEvent方法，使用Subscribe注解，EventBus中被使用到：</p>
-<pre><code><span class="annotation">@Subscribe</span>
-<span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">handleConfigurationEvent</span><span class="params">(MaterializedConfiguration conf)</span> </span>{
-  stopAllComponents();
-  startAllComponents(conf);
-}
-</code></pre><p>接下来看Application的start方法：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>{
-    <span class="comment">// 使用生命周期组件管理器进行管理，这里其实只有1个组件，那就是PollingPropertiesFileConfigurationProvider</span>
-    <span class="keyword">for</span>(LifecycleAware component : components) {
-      <span class="comment">// 管理器管理各个组件的时候会传入2个参数，分别是管理策略(自动重启策略)和所需状态(START状态)</span>
-      supervisor.supervise(component,
-          <span class="keyword">new</span> SupervisorPolicy.AlwaysRestartPolicy(), LifecycleState.START);
-    }
-}
-</code></pre><p>LifecycleSupervisor生命周期管理者的supervise方法的主要代码：</p>
-<pre><code>// Supervisoree是一个带有status和policy这2个属性的封装类。这2个属性分别表示状态和管理策略。其中管理策略只有2种策略，分别是AlwaysRestartPolicy(自动重启策略)和OnceOnlyPolicy(只启动一次策略)；状态表示这个组件状态，状态Status中包括首次发生，最后发生，失败次数，目标状态等属性。
-Supervisoree process = new Supervisoree()<span class="comment">;</span>
-process.status = new Status()<span class="comment">;</span>
-
-process.policy = policy<span class="comment">;</span>
-// 所需状态初始化成START
-process.status.desiredState = desiredState<span class="comment">;</span>
-process.status.error = false<span class="comment">;</span>
-
- // 起一个监控线程。 将Supervisoree和组件参数传入
-MonitorRunnable monitorRunnable = new MonitorRunnable()<span class="comment">;</span>
-monitorRunnable.lifecycleAware = lifecycleAware<span class="comment">;</span>
-monitorRunnable.supervisoree = process<span class="comment">;</span>
-monitorRunnable.monitorService = monitorService<span class="comment">;</span>
-
-supervisedProcesses.put(lifecycleAware, process)<span class="comment">;</span>
-
-ScheduledFuture&lt;?&gt; future = monitorService.scheduleWithFixedDelay(
-    monitorRunnable, 0, 3, TimeUnit.SECONDS)<span class="comment">;</span>
-monitorFutures.put(lifecycleAware, future)<span class="comment">;</span>
-</code></pre><p>监控线程MonitorRunnable的run方法主要代码：</p>
-<pre><code><span class="keyword">switch</span> (supervisoree.status.desiredState) {
-      <span class="comment">// 所需状态之前已经初始化成START状态，那么会执行组件的start方法。这里的组件是之前分析的PollingPropertiesFileConfigurationProvider</span>
-      <span class="keyword">case</span> START:
-        <span class="keyword">try</span> {
-          lifecycleAware.start();
-        } <span class="keyword">catch</span> (Throwable e) {
-          logger.<span class="keyword">error</span>(<span class="string">"Unable to start "</span> + lifecycleAware
-              + <span class="string">" - Exception follows."</span>, e);
-          <span class="keyword">if</span> (e <span class="keyword">instanceof</span> Error) {
-            <span class="comment">// This component can never recover, shut it down.</span>
-            supervisoree.status.desiredState = LifecycleState.STOP;
-            <span class="keyword">try</span> {
-              lifecycleAware.stop();
-              logger.warn(<span class="string">"Component {} stopped, since it could not be"</span>
-                  + <span class="string">"successfully started due to missing dependencies"</span>,
-                  lifecycleAware);
-            } <span class="keyword">catch</span> (Throwable e1) {
-              logger.<span class="keyword">error</span>(<span class="string">"Unsuccessful attempt to "</span>
-                  + <span class="string">"shutdown component: {} due to missing dependencies."</span>
-                  + <span class="string">" Please shutdown the agent"</span>
-                  + <span class="string">"or disable this component, or the agent will be"</span>
-                  + <span class="string">"in an undefined state."</span>, e1);
-              supervisoree.status.<span class="keyword">error</span> = <span class="keyword">true</span>;
-              <span class="keyword">if</span> (e1 <span class="keyword">instanceof</span> Error) {
-                <span class="keyword">throw</span> (Error) e1;
-              }
-              <span class="comment">// Set the state to stop, so that the conf poller can</span>
-              <span class="comment">// proceed.</span>
-            }
-          }
-          supervisoree.status.failures++;
-        }
-        <span class="keyword">break</span>;
-      <span class="keyword">case</span> STOP:
-        <span class="keyword">try</span> {
-          lifecycleAware.stop();
-        } <span class="keyword">catch</span> (Throwable e) {
-          logger.<span class="keyword">error</span>(<span class="string">"Unable to stop "</span> + lifecycleAware
-              + <span class="string">" - Exception follows."</span>, e);
-          <span class="keyword">if</span> (e <span class="keyword">instanceof</span> Error) {
-            <span class="keyword">throw</span> (Error) e;
-          }
-          supervisoree.status.failures++;
-        }
-        <span class="keyword">break</span>;
-      <span class="keyword">default</span>:
-        logger.warn(<span class="string">"I refuse to acknowledge {} as a desired state"</span>,
-            supervisoree.status.desiredState);
-    }
-</code></pre><p>PollingPropertiesFileConfigurationProvider的start方法：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">void</span> start() {
-    LOGGER.info(<span class="string">"Configuration provider starting"</span>);
-
-    Preconditions.checkState(<span class="keyword">file</span> != <span class="keyword">null</span>,
-        <span class="string">"The parameter file must not be null"</span>);
-
-    <span class="comment">// 初始化线程池</span>
-    executorService = Executors.newSingleThreadScheduledExecutor(
-            <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"conf-file-poller-%d"</span>)
-                .build());
-
-    <span class="comment">// 起一个文件观察线程</span>
-    FileWatcherRunnable fileWatcherRunnable =
-        <span class="keyword">new</span> FileWatcherRunnable(<span class="keyword">file</span>, counterGroup);
-
-    executorService.scheduleWithFixedDelay(fileWatcherRunnable, <span class="number">0</span>, interval,
-        TimeUnit.SECONDS);
-    <span class="comment">// 初始化组件的状态为START</span>
-    lifecycleState = LifecycleState.START;
-
-    LOGGER.debug(<span class="string">"Configuration provider started"</span>);
-}
-</code></pre><p>文件观察线程FileWatcherRunnable的run方法：</p>
-<pre><code>public void <span class="keyword">run</span>() {
-  LOGGER.debug(<span class="string">"Checking file:{} for changes"</span>, <span class="keyword">file</span>);
-
-  counterGroup.incrementAndGet(<span class="string">"file.checks"</span>);
-  <span class="comment">// 得到文件的上次修改时间</span>
-  long lastModified = <span class="keyword">file</span>.lastModified();
-  <span class="comment">// 如果修改了文件，那么会执行以下代码。首次发生的时候lastChange为0，所以肯定会执行一次。以后只要配置改了才会再次执行</span>
-  <span class="keyword">if</span> (lastModified &gt; lastChange) {
-    LOGGER.info(<span class="string">"Reloading configuration file:{}"</span>, <span class="keyword">file</span>);
-
-    counterGroup.incrementAndGet(<span class="string">"file.loads"</span>);
-
-    lastChange = lastModified;
-
-    try {
-      <span class="comment">// eventBus属性之前在Application中分析过，而且它注册了application实例</span>
-      <span class="comment">// Application中有个handleConfigurationEvent方法，eventBus是个观察者设计模式，所以会钓鱼handleConfigurationEvent这个方法</span>
-      <span class="comment">// getConfiguration方法会parse配置文件中的配置信息</span>
-      eventBus.<span class="keyword">post</span>(getConfiguration());
-    } catch (Exception <span class="keyword">e</span>) {
-      LOGGER.<span class="keyword">error</span>(<span class="string">"Failed to load configuration data. Exception follows."</span>,
-          <span class="keyword">e</span>);
-    } catch (NoClassDefFoundError <span class="keyword">e</span>) {
-      LOGGER.<span class="keyword">error</span>(<span class="string">"Failed to start agent because dependencies were not "</span> +
-          <span class="string">"found in classpath. Error follows."</span>, <span class="keyword">e</span>);
-    } catch (Throwable t) {
-      <span class="comment">// caught because the caller does not handle or log Throwables</span>
-      LOGGER.<span class="keyword">error</span>(<span class="string">"Unhandled error"</span>, t);
-    }
-  }
-}
-</code></pre><p>getConfiguration方法是在PollingPropertiesFileConfigurationProvider的父类AbstractConfigurationProvider中定义的：</p>
-<pre><code>public MaterializedConfiguration getConfiguration() {
-    MaterializedConfiguration conf = <span class="keyword">new</span> SimpleMaterializedConfiguration();
-    FlumeConfiguration fconfig = getFlumeConfiguration();
-    AgentConfiguration agentConf = fconfig.getConfigurationFor(getAgentName());
-    <span class="keyword">if</span> (agentConf != <span class="keyword">null</span>) {
-      <span class="comment">// 构造Channel</span>
-      <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, ChannelComponent&gt; channelComponentMap = Maps.newHashMap();
-      <span class="comment">// 构造Source</span>
-      <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, SourceRunner&gt; sourceRunnerMap = Maps.newHashMap();
-      <span class="comment">// 构造Sink</span>
-      <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, SinkRunner&gt; sinkRunnerMap = Maps.newHashMap();
-      <span class="keyword">try</span> {
-        loadChannels(agentConf, channelComponentMap);
-        loadSources(agentConf, channelComponentMap, sourceRunnerMap);
-        loadSinks(agentConf, channelComponentMap, sinkRunnerMap);
-        <span class="built_in">Set</span>&lt;<span class="built_in">String</span>&gt; channelNames =
-            <span class="keyword">new</span> HashSet&lt;<span class="built_in">String</span>&gt;(channelComponentMap.keySet());
-        <span class="keyword">for</span>(<span class="built_in">String</span> channelName : channelNames) {
-          ChannelComponent channelComponent = channelComponentMap.
-              <span class="literal">get</span>(channelName);
-          <span class="keyword">if</span>(channelComponent.components.isEmpty()) {
-            LOGGER.warn(<span class="built_in">String</span>.format(<span class="string">"Channel %s has no components connected"</span> +
-                <span class="string">" and has been removed."</span>, channelName));
-            channelComponentMap.remove(channelName);
-            <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, Channel&gt; nameChannelMap = channelCache.
-                <span class="literal">get</span>(channelComponent.channel.getClass());
-            <span class="keyword">if</span>(nameChannelMap != <span class="keyword">null</span>) {
-              nameChannelMap.remove(channelName);
-            }
-          } <span class="keyword">else</span> {
-            LOGGER.info(<span class="built_in">String</span>.format(<span class="string">"Channel %s connected to %s"</span>,
-                channelName, channelComponent.components.toString()));
-            conf.addChannel(channelName, channelComponent.channel);
-          }
-        }
-        <span class="keyword">for</span>(<span class="built_in">Map</span>.Entry&lt;<span class="built_in">String</span>, SourceRunner&gt; entry : sourceRunnerMap.entrySet()) {
-          conf.addSourceRunner(entry.getKey(), entry.getValue());
-        }
-        <span class="keyword">for</span>(<span class="built_in">Map</span>.Entry&lt;<span class="built_in">String</span>, SinkRunner&gt; entry : sinkRunnerMap.entrySet()) {
-          conf.addSinkRunner(entry.getKey(), entry.getValue());
-        }
-      } <span class="keyword">catch</span> (InstantiationException ex) {
-        LOGGER.error(<span class="string">"Failed to instantiate component"</span>, ex);
-      } <span class="keyword">finally</span> {
-        channelComponentMap.clear();
-        sourceRunnerMap.clear();
-        sinkRunnerMap.clear();
-      }
-    } <span class="keyword">else</span> {
-      LOGGER.warn(<span class="string">"No configuration found for this host:{}"</span>, getAgentName());
-    }
-    <span class="keyword">return</span> conf;
-}
-</code></pre><p>当所有的组件，Source，Channel，Sink加载完之后。会调用handleConfigurationEvent方法：</p>
-<pre><code><span class="annotation">@Subscribe</span>
-<span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">handleConfigurationEvent</span><span class="params">(MaterializedConfiguration conf)</span> </span>{
-  <span class="comment">// 先关闭之前启动的所有Source，Channel，Sink组件(首次运行的时候并没有任何开启的组件)</span>
-  stopAllComponents();
-  <span class="comment">// 再重新开启这些组件</span>
-  startAllComponents(conf);
-}
-</code></pre><p>看下startAllComponents方法：</p>
-<pre><code><span class="comment">// 启动各个组件的时候同样适用supervisor的supervise方法。然后启动MonitorRunnable线程调用各个组件的start方法。</span>
-<span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">startAllComponents</span><span class="params">(MaterializedConfiguration materializedConfiguration)</span> </span>{
-    logger.info(<span class="string">"Starting new configuration:{}"</span>, materializedConfiguration);
-
-    <span class="keyword">this</span>.materializedConfiguration = materializedConfiguration;
-
-    <span class="keyword">for</span> (Entry&lt;String, Channel&gt; entry :
-      materializedConfiguration.getChannels().entrySet()) {
-      <span class="keyword">try</span>{
-        logger.info(<span class="string">"Starting Channel "</span> + entry.getKey());
-        supervisor.supervise(entry.getValue(),
-            <span class="keyword">new</span> SupervisorPolicy.AlwaysRestartPolicy(), LifecycleState.START);
-      } <span class="keyword">catch</span> (Exception e){
-        logger.<span class="keyword">error</span>(<span class="string">"Error while starting {}"</span>, entry.getValue(), e);
-      }
-    }
-
-    <span class="comment">/*
-     * Wait for all channels to start.
-     */</span>
-    <span class="keyword">for</span>(Channel ch: materializedConfiguration.getChannels().values()){
-      <span class="keyword">while</span>(ch.getLifecycleState() != LifecycleState.START
-          &amp;&amp; !supervisor.isComponentInErrorState(ch)){
-        <span class="keyword">try</span> {
-          logger.info(<span class="string">"Waiting for channel: "</span> + ch.getName() +
-              <span class="string">" to start. Sleeping for 500 ms"</span>);
-          Thread.sleep(<span class="number">500</span>);
-        } <span class="keyword">catch</span> (InterruptedException e) {
-          logger.<span class="keyword">error</span>(<span class="string">"Interrupted while waiting for channel to start."</span>, e);
-          Throwables.propagate(e);
-        }
-      }
-    }
-
-    <span class="keyword">for</span> (Entry&lt;String, SinkRunner&gt; entry : materializedConfiguration.getSinkRunners()
-        .entrySet()) {
-      <span class="keyword">try</span>{
-        logger.info(<span class="string">"Starting Sink "</span> + entry.getKey());
-        supervisor.supervise(entry.getValue(),
-          <span class="keyword">new</span> SupervisorPolicy.AlwaysRestartPolicy(), LifecycleState.START);
-      } <span class="keyword">catch</span> (Exception e) {
-        logger.<span class="keyword">error</span>(<span class="string">"Error while starting {}"</span>, entry.getValue(), e);
-      }
-    }
-
-    <span class="keyword">for</span> (Entry&lt;String, SourceRunner&gt; entry : materializedConfiguration
-        .getSourceRunners().entrySet()) {
-      <span class="keyword">try</span>{
-        logger.info(<span class="string">"Starting Source "</span> + entry.getKey());
-        supervisor.supervise(entry.getValue(),
-          <span class="keyword">new</span> SupervisorPolicy.AlwaysRestartPolicy(), LifecycleState.START);
-      } <span class="keyword">catch</span> (Exception e) {
-        logger.<span class="keyword">error</span>(<span class="string">"Error while starting {}"</span>, entry.getValue(), e);
-      }
-    }
-
-    <span class="keyword">this</span>.loadMonitoring();
-}
-</code></pre><h3 id="Flume启动过程总结">Flume启动过程总结</h3><p>首先通过Application类加载配置文件，加载后调用Application的start方法。</p>
-<p>Application的start方法内部会针对PollingPropertiesFileConfigurationProvider组件适用组件管理者管理这个组件。也就是使用LifecycleSupervisor的supervise方法。</p>
-<p>supervise方法内部使用MonitorRunnable监控线程。  监控线程内部会调用组件的start方法。 即PollingPropertiesFileConfigurationProvider的start方法。</p>
-<p>PollingPropertiesFileConfigurationProvider的start方法会使用FileWatcherRunnable文件查看进程判断配置文件是否已经修改，修改的话重新加载配置文件信息，然后通过EventBus调用Application的handleConfigurationEvent方法关闭目前正在启动的组件，关闭之后重新开启组件。</p>
-<p>各个新开启的组件会做类似的工作，使用LifecycleSupervisor的supervise方法，也就是起各个MonitorRunnable监控线程启动各个组件的start方法。</p>
-<h2 id="Source组件的构造过程">Source组件的构造过程</h2><p>直接看AbstractConfigurationProvider的loadSources方法：</p>
-<pre><code>private <span class="keyword">void</span> loadSources(AgentConfiguration agentConf,
-  <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, ChannelComponent&gt; channelComponentMap,
-  <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, SourceRunner&gt; sourceRunnerMap)
-  throws InstantiationException {
-
-<span class="built_in">Map</span>&lt;<span class="built_in">String</span>, Context&gt; sourceContexts = agentConf.getSourceContext();
-    <span class="keyword">for</span> (<span class="built_in">String</span> sourceName : sourceNames) {
-      Context context = sourceContexts.<span class="literal">get</span>(sourceName);
-      <span class="keyword">if</span>(context != <span class="keyword">null</span>){
-        <span class="comment">// 使用sourceFactory构造Source</span>
-        Source source =
-            sourceFactory.create(sourceName,
-                context.getString(BasicConfigurationConstants.CONFIG_TYPE));
-        <span class="keyword">try</span> {
-          Configurables.configure(source, context);
-          <span class="built_in">List</span>&lt;Channel&gt; sourceChannels = <span class="keyword">new</span> ArrayList&lt;Channel&gt;();
-          <span class="built_in">String</span>[] channelNames = context.getString(
-              BasicConfigurationConstants.CONFIG_CHANNELS).split(<span class="string">"\\s+"</span>);
-          <span class="keyword">for</span> (<span class="built_in">String</span> chName : channelNames) {
-            ChannelComponent channelComponent = channelComponentMap.<span class="literal">get</span>(chName);
-            <span class="keyword">if</span>(channelComponent != <span class="keyword">null</span>) {
-              sourceChannels.add(channelComponent.channel);
-            }
-          }
-          <span class="keyword">if</span>(sourceChannels.isEmpty()) {
-            <span class="built_in">String</span> msg = <span class="built_in">String</span>.format(<span class="string">"Source %s is not connected to a "</span> +
-                <span class="string">"channel"</span>,  sourceName);
-            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(msg);
-          }
-          <span class="built_in">Map</span>&lt;<span class="built_in">String</span>, <span class="built_in">String</span>&gt; selectorConfig = context.getSubProperties(
-              BasicConfigurationConstants.CONFIG_SOURCE_CHANNELSELECTOR_PREFIX);
-
-          ChannelSelector selector = ChannelSelectorFactory.create(
-              sourceChannels, selectorConfig);
-
-          ChannelProcessor channelProcessor = <span class="keyword">new</span> ChannelProcessor(selector);
-          Configurables.configure(channelProcessor, context);
-          source.setChannelProcessor(channelProcessor);
-          sourceRunnerMap.put(sourceName,
-              SourceRunner.forSource(source));
-          <span class="comment">// source关联Channel    </span>
-          <span class="keyword">for</span>(Channel channel : sourceChannels) {
-            ChannelComponent channelComponent = Preconditions.
-                checkNotNull(channelComponentMap.<span class="literal">get</span>(channel.getName()),
-                    <span class="built_in">String</span>.format(<span class="string">"Channel %s"</span>, channel.getName()));
-            channelComponent.components.add(sourceName);
-          }
-        } <span class="keyword">catch</span> (Exception e) {
-          <span class="built_in">String</span> msg = <span class="built_in">String</span>.format(<span class="string">"Source %s has been removed due to an "</span> +
-              <span class="string">"error during configuration"</span>, sourceName);
-          LOGGER.error(msg, e);
-        }
-      }
-    }
-  }
-</code></pre>]]></content>
-    <summary type="html">
-    <![CDATA[Flume运行的主类是org.apache.flume.node.Application的main方法 ...]]>
-    
-    </summary>
-    
-      <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
-    
-      <category term="flume" scheme="http://fangjian0423.github.io/tags/flume/"/>
-    
-      <category term="flume" scheme="http://fangjian0423.github.io/categories/flume/"/>
     
   </entry>
   

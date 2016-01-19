@@ -37,7 +37,7 @@
 <link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="dom,java,javascript," />
+  <meta name="keywords" content="big data,flume," />
 
 
 
@@ -55,19 +55,17 @@
 
 
 
-<meta name="description" content="文件对象模型是W3C组织推荐的处理可扩展标志语言的标准编程接口 ...">
+<meta name="description" content="记录Flume Channel队列满了之后发生的怪异问题。数据量暴增，Channel队列爆满 ...">
 <meta property="og:type" content="article">
-<meta property="og:title" content="简单谈谈dom解析xml和html">
-<meta property="og:url" content="http://fangjian0423.github.io/2014/09/21/dom-parse-xml-html/index.html">
+<meta property="og:title" content="记录Flume Channel队列满了之后发生的怪异问题">
+<meta property="og:url" content="http://fangjian0423.github.io/2016/01/19/flume-channel-full-exception/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="文件对象模型是W3C组织推荐的处理可扩展标志语言的标准编程接口 ...">
-<meta property="og:image" content="http://format-blog-image.qiniudn.com/dom_parse_xml1.png">
-<meta property="og:image" content="http://format-blog-image.qiniudn.com/dom_parse_xml2.png">
-<meta property="og:image" content="http://format-blog-image.qiniudn.com/dom_parse_xml3.png">
-<meta property="og:updated_time" content="2015-12-20T17:04:37.000Z">
+<meta property="og:description" content="记录Flume Channel队列满了之后发生的怪异问题。数据量暴增，Channel队列爆满 ...">
+<meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/flume-channel-full01.png">
+<meta property="og:updated_time" content="2016-01-19T12:11:10.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="简单谈谈dom解析xml和html">
-<meta name="twitter:description" content="文件对象模型是W3C组织推荐的处理可扩展标志语言的标准编程接口 ...">
+<meta name="twitter:title" content="记录Flume Channel队列满了之后发生的怪异问题">
+<meta name="twitter:description" content="记录Flume Channel队列满了之后发生的怪异问题。数据量暴增，Channel队列爆满 ...">
 
 
 
@@ -79,7 +77,7 @@
   };
 </script>
 
-  <title> 简单谈谈dom解析xml和html | Format's Notes </title>
+  <title> 记录Flume Channel队列满了之后发生的怪异问题 | Format's Notes </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -251,7 +249,7 @@
             
             
               
-                简单谈谈dom解析xml和html
+                记录Flume Channel队列满了之后发生的怪异问题
               
             
           </h1>
@@ -260,8 +258,8 @@
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2014-09-21T09:49:50+08:00" content="2014-09-21">
-              2014-09-21
+            <time itemprop="dateCreated" datetime="2016-01-19T20:07:35+08:00" content="2016-01-19">
+              2016-01-19
             </time>
           </span>
 
@@ -270,8 +268,8 @@
               &nbsp; | &nbsp; 分类于
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/jvm/" itemprop="url" rel="index">
-                    <span itemprop="name">jvm</span>
+                  <a href="/categories/flume/" itemprop="url" rel="index">
+                    <span itemprop="name">flume</span>
                   </a>
                 </span>
 
@@ -286,8 +284,8 @@
             
               <span class="post-comments-count">
               &nbsp; | &nbsp;
-              <a href="/2014/09/21/dom-parse-xml-html/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/21/dom-parse-xml-html/" itemprop="commentsCount"></span>
+              <a href="/2016/01/19/flume-channel-full-exception/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/01/19/flume-channel-full-exception/" itemprop="commentsCount"></span>
               </a>
             </span>
             
@@ -306,166 +304,113 @@
       
 
       
-        <span itemprop="articleBody"><h2 id="前言">前言</h2><p><a href="http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/" target="_blank" rel="external">文件对象模型（Document Object Model，简称DOM）</a>，是W3C组织推荐的处理可扩展标志语言的标准编程接口。html，xml都是基于这个模型构造的。这也是一个W3C推出的标准。java，python，javascript等语言都提供了一套基于dom的编程接口。</p>
-<h2 id="java使用dom解析xml">java使用dom解析xml</h2><p>一段xml文档, note.xml：</p>
-<pre><code><span class="pi">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
-<span class="tag">&lt;<span class="title">note</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">to</span> <span class="attribute">id</span>=<span class="value">"1"</span>&gt;</span>George<span class="tag">&lt;/<span class="title">to</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">from</span>&gt;</span>John<span class="tag">&lt;/<span class="title">from</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">heading</span>&gt;</span>Reminder<span class="tag">&lt;/<span class="title">heading</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">body</span>&gt;</span>Don't forget the meeting!<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">note</span>&gt;</span>
-</code></pre><p>我们先使用w3c dom解析该xml：</p>
-<pre><code>@<span class="function">Test
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span>(<span class="params"></span>) </span>{
-    NodeList nodeList = doc.getChildNodes().item(<span class="number">0</span>).getChildNodes();
-    System.<span class="keyword">out</span>.println(<span class="string">"xml size: "</span> + nodeList.getLength());
-    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nodeList.getLength(); i ++) {
-        Node node = nodeList.item(i);
-        System.<span class="keyword">out</span>.println(node.getNodeType());
-        System.<span class="keyword">out</span>.println(node.getNodeName());
+        <span itemprop="articleBody"><p>Flume的这个问题纠结了2个月，因为之前实在太忙了，没有时间来研究这个问题产生的原理，今天终于研究出来了，找出了这个问题所在。</p>
+<p>先来描述一下这个问题的现象：</p>
+<p>Flume的Sink用的是Custom Sink，由于这个Custom Sink写的有一点小问题，比如batchSize是5000次，第4000条就会发生exception，这样每次都会写入4000条数据。Sink处理的时候都会发生异常，每次都会rollback，rollback方面的知识可以参考<a href="http://fangjian0423.github.io/2016/01/03/flume-transaction/">Flume Transaction介绍</a>。</p>
+<p>这样造成的后果有2个：</p>
+<p>1.Channel中的数据满了。会发生以下异常：</p>
+<pre><code>Caused by: org.apache.flume.ChannelFullException: Space <span class="keyword">for</span> commit <span class="keyword">to</span> queue couldn<span class="attribute">'t</span> be acquired. Sinks are likely <span class="keyword">not</span> keeping up <span class="keyword">with</span> sources, <span class="keyword">or</span> the <span class="keyword">buffer</span> size <span class="keyword">is</span> too tight
+</code></pre><p>2.Sink会一直写数据，造成数据量暴增。</p>
+<p>3.如果用了interceptor，且修改了event中的数据，那么会重复处理这些修改完后的event数据。</p>
+<p>前面2个很容易理解，Sink发生异常，transaction rollback，导致channel中的队列满了。</p>
+<p>关键是第三点，很让人费解。</p>
+<p>以一段伪需求和伪代码为例，TestInterceptor的intercept方法：</p>
+<p>比如处理一段json：</p>
+<pre><code>{"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">languages</span>": <span class="value">[<span class="string">"java"</span>, <span class="string">"scala"</span>, <span class="string">"javascript"</span>]</span>}
+</code></pre><p>使用interceptor处理成:</p>
+<pre><code>[{"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">language</span>": <span class="value"><span class="string">"java"</span></span>}, {"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">language</span>": <span class="value"><span class="string">"scala"</span></span>}, {"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">language</span>": <span class="value"><span class="string">"javascript"</span></span>}]
+</code></pre><p>interceptor代码如下：</p>
+<pre><code><span class="function"><span class="keyword">public</span> Event <span class="title">intercept</span>(<span class="params">Event <span class="keyword">event</span></span>) </span>{
+    Model model = <span class="keyword">null</span>;
+    String jsonStr = <span class="keyword">new</span> String(<span class="keyword">event</span>.getBody(), <span class="string">"UTF-8"</span>);
+    <span class="keyword">try</span> {
+        model = parseJsonStr(jsonStr);
+    } <span class="keyword">catch</span> (Exception e) {
+        log.error(<span class="string">"convert json data error"</span>);
     }
+    <span class="keyword">event</span>.setBody(model.getJsonString().getBytes());
+    <span class="keyword">return</span> <span class="keyword">event</span>;
 }
-</code></pre><p>输出：</p>
-<pre><code>xml size: <span class="number">9</span>
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-<span class="number">1</span>
-to
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-<span class="number">1</span>
-from
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-<span class="number">1</span>
-heading
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-<span class="number">1</span>
-body
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-</code></pre><p>我们看到代码输出note节点的字节点的时候，有9个节点，但是xml文档中note节点实际上只有to、from、heading、body4个节点。 那为什么是9个呢，原因是这样的。<br>选取几个w3c规范中关于节点类型的描述：</p>
-<table>
-<thead>
-<tr>
-<th>节点类型</th>
-<th style="text-align:center">描述</th>
-<th style="text-align:right">nodeName返回值</th>
-<th style="text-align:right">nodeValue返回值</th>
-<th style="text-align:right">子元素</th>
-<th style="text-align:right">类型常量值</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Document</td>
-<td style="text-align:center">表示整个文档（DOM 树的根节点）</td>
-<td style="text-align:right">#document</td>
-<td style="text-align:right">null</td>
-<td style="text-align:right">Element(max. one)，Comment，DocumentType</td>
-<td style="text-align:right">9</td>
-</tr>
-<tr>
-<td>Element</td>
-<td style="text-align:center">表示 element（元素）元素</td>
-<td style="text-align:right">element name</td>
-<td style="text-align:right">null</td>
-<td style="text-align:right">Text，Comment，CDATASection</td>
-<td style="text-align:right">1</td>
-</tr>
-<tr>
-<td>Attr</td>
-<td style="text-align:center">表示属性</td>
-<td style="text-align:right">属性名称</td>
-<td style="text-align:right">属性值</td>
-<td style="text-align:right">Text</td>
-<td style="text-align:right">2</td>
-</tr>
-<tr>
-<td>Text</td>
-<td style="text-align:center">表示元素或属性中的文本内容。</td>
-<td style="text-align:right">#text</td>
-<td style="text-align:right">节点内容</td>
-<td style="text-align:right">None</td>
-<td style="text-align:right">3</td>
-</tr>
-<tr>
-<td>CDATASection</td>
-<td style="text-align:center">表示文档中的 CDATA 区段（文本不会被解析器解析）</td>
-<td style="text-align:right">#cdata-section</td>
-<td style="text-align:right">节点内容</td>
-<td style="text-align:right">None</td>
-<td style="text-align:right">4</td>
-</tr>
-<tr>
-<td>Comment</td>
-<td style="text-align:center">表示注释</td>
-<td style="text-align:right">#comment</td>
-<td style="text-align:right">注释文本</td>
-<td style="text-align:right">None</td>
-<td style="text-align:right">8</td>
-</tr>
-</tbody>
-</table>
-<p>更多细节请查看<a href="http://www.w3school.com.cn/xmldom/dom_nodetype.asp" target="_blank" rel="external">w3c DOM节点类型</a></p>
-<p>下面解释一下文档节点的字节点的处理过程：<br><img src="http://format-blog-image.qiniudn.com/dom_parse_xml1.png" alt=""></p>
-<p>其中红色部分为Text节点，紫色部分是Element节点(只画了部分)。&lt;/body&gt;后面的也是一个Element节点，所有4个Element节点，5个Text节点。</p>
-<p>所以输出的内容中3 #text表示该节点是个Text节点，1 节点name是个Element节点，这与表格中表述的是一样的。</p>
-<p>测试代码：</p>
-<pre><code>@<span class="function">Test
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test1</span><span class="params">()</span> </span>{
-    NodeList nodeList = doc.getChildNodes().item(<span class="number">0</span>).getChildNodes();
-    System.out.println(<span class="string">"xml size: "</span> + nodeList.getLength());
-    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nodeList.getLength(); i ++) {
-        Node node = nodeList.item(i);
-        <span class="keyword">if</span>(node.getNodeType() == Node.TEXT_NODE) {
-            System.out.println(node.getNodeValue().replace(<span class="string">"\n"</span>,<span class="string">"hr"</span>).replace(<span class="string">' '</span>, <span class="string">'-'</span>));
+</code></pre><p>当Channel中的队列已经满了以后，上述代码会打印出convert json data error，而且jsonStr的内容居然是转换后的数据，这一点一开始让我十分费解，误以为transaction rollback之后会修改source中的数据。后来debug源码发现错误在Source中。</p>
+<p>后来发现并不是这样的。</p>
+<p>以KafkaSource为例，KafkaSource中有一个属性eventList，是个ArrayList。用来接收kafka consume的message。</p>
+<p>直接说明KafkaSource的process方法源码：</p>
+<pre><code><span class="keyword">public</span> Status process() <span class="keyword">throws</span> EventDeliveryException {
+
+  <span class="built_in">byte</span>[] kafkaMessage;
+  <span class="built_in">byte</span>[] kafkaKey;
+  Event event;
+  Map&lt;<span class="keyword">String</span>, <span class="keyword">String</span>&gt; headers;
+  <span class="keyword">long</span> batchStartTime = System.currentTimeMillis();
+  <span class="keyword">long</span> batchEndTime = System.currentTimeMillis() + timeUpperLimit;
+  <span class="keyword">try</span> {
+
+    <span class="comment">/** 这里读取kafka中的message **/</span>
+    <span class="built_in">boolean</span> iterStatus = <span class="keyword">false</span>;
+    <span class="keyword">while</span> (eventList.<span class="built_in">size</span>() &lt; batchUpperLimit &amp;&amp;
+            System.currentTimeMillis() &lt; batchEndTime) {
+      iterStatus = hasNext();
+      <span class="keyword">if</span> (iterStatus) {
+        <span class="comment">// get next message</span>
+        MessageAndMetadata&lt;<span class="built_in">byte</span>[], <span class="built_in">byte</span>[]&gt; messageAndMetadata = it.next();
+        kafkaMessage = messageAndMetadata.message();
+        kafkaKey = messageAndMetadata.<span class="variable">key</span>();
+
+        <span class="comment">// Add headers to event (topic, timestamp, and key)</span>
+        headers = <span class="keyword">new</span> <span class="keyword">HashMap</span>&lt;<span class="keyword">String</span>, <span class="keyword">String</span>&gt;();
+        headers.put(KafkaSourceConstants.TIMESTAMP,
+                <span class="keyword">String</span>.valueOf(System.currentTimeMillis()));
+        headers.put(KafkaSourceConstants.TOPIC, topic);
+        headers.put(KafkaSourceConstants.KEY, <span class="keyword">new</span> <span class="keyword">String</span>(kafkaKey));
+        <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
+          <span class="built_in">log</span>.debug(<span class="string">"Message: {}"</span>, <span class="keyword">new</span> <span class="keyword">String</span>(kafkaMessage));
         }
+        event = EventBuilder.withBody(kafkaMessage, headers);
+        eventList.<span class="built_in">add</span>(event);
+      }
+      <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
+        <span class="built_in">log</span>.debug(<span class="string">"Waited: {} "</span>, System.currentTimeMillis() - batchStartTime);
+        <span class="built_in">log</span>.debug(<span class="string">"Event #: {}"</span>, eventList.<span class="built_in">size</span>());
+      }
     }
+    <span class="comment">/** 这里读取kafka中的message **/</span>
+
+    <span class="comment">// If we have events, send events to channel</span>
+    <span class="comment">// clear the event list</span>
+    <span class="comment">// and commit if Kafka doesn't auto-commit</span>
+    <span class="keyword">if</span> (eventList.<span class="built_in">size</span>() &gt; <span class="number">0</span>) {
+      <span class="comment">// 使用ChannelProcess将Source中读取的数据给各个Channel</span>
+      <span class="comment">// 如果getChannelProcessor().processEventBatch(eventList);发生了异常，eventList不会被清空，而且processEventBatch方法会调用Interceptor处理event中的数据，event中的数据已经被转换。所以下一次会将转换后的event数据再次传给Interceptor。</span>
+      getChannelProcessor().processEventBatch(eventList);
+      eventList.<span class="built_in">clear</span>();
+      <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
+        <span class="built_in">log</span>.debug(<span class="string">"Wrote {} events to channel"</span>, eventList.<span class="built_in">size</span>());
+      }
+      <span class="keyword">if</span> (!kafkaAutoCommitEnabled) {
+        <span class="comment">// commit the read transactions to Kafka to avoid duplicates</span>
+        consumer.commitOffsets();
+      }
+    }
+    <span class="keyword">if</span> (!iterStatus) {
+      <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
+        <span class="built_in">log</span>.debug(<span class="string">"Returning with backoff. No more data to read"</span>);
+      }
+      <span class="keyword">return</span> Status.BACKOFF;
+    }
+    <span class="keyword">return</span> Status.READY;
+  } <span class="keyword">catch</span> (Exception e) {
+    <span class="built_in">log</span>.error(<span class="string">"KafkaSource EXCEPTION, {}"</span>, e);
+    <span class="keyword">return</span> Status.BACKOFF;
+  }
 }
-</code></pre><p><img src="http://format-blog-image.qiniudn.com/dom_parse_xml2.png" alt=""><br>很明显，我们把空格和回车键替换打印后发现我们的结论是正确的。</p>
-<p>测试代码：</p>
-<pre><code>@Test
-<span class="component">public void test2() {
-    System<span class="string">.out.println("doc</span> type: " + doc<span class="string">.getNodeType())</span>;
-    NodeList nodeList = doc<span class="string">.getChildNodes().item(0).getChildNodes()</span>;
-    Node secondNode = nodeList<span class="string">.item(1)</span>;
-    System<span class="string">.out.println("element</span> [to] node type: " + secondNode<span class="string">.getNodeType())</span>;
-    System<span class="string">.out.println("element</span> [to] node name: " + secondNode<span class="string">.getNodeName())</span>;
-    System<span class="string">.out.println("element</span> [to] node value: " + secondNode<span class="string">.getNodeValue())</span>;
-    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> len: " + secondNode<span class="string">.getChildNodes().getLength())</span>;
-    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node type: " + secondNode<span class="string">.getChildNodes().item(0).getNodeType())</span>;
-    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node value: " + secondNode<span class="string">.getChildNodes().item(0).getNodeValue())</span>;
-    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node name: " + secondNode<span class="string">.getChildNodes().item(0).getNodeName())</span>;
-    Node attNode = secondNode<span class="string">.getAttributes().item(0)</span>;
-    System<span class="string">.out.println("attr</span> type: " + attNode<span class="string">.getNodeType())</span>;
-}</span>
-</code></pre><p><img src="http://format-blog-image.qiniudn.com/dom_parse_xml3.png" alt=""><br>输出结果跟表格中是一样的。</p>
-<p>大家有兴趣的话其他类型的节点比如CDATA节点大家可以自行测试～</p>
-<h2 id="javascript使用dom解析html">javascript使用dom解析html</h2><p>html代码：</p>
-<pre><code><span class="doctype">&lt;!DOCTYPE html&gt;</span>
-<span class="tag">&lt;<span class="title">html</span>&gt;</span>
-<span class="tag">&lt;<span class="title">head</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">title</span>&gt;</span>JS Bin<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">head</span>&gt;</span>
-<span class="tag">&lt;<span class="title">body</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">div</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">p</span>&gt;</span>gogogo<span class="tag">&lt;/<span class="title">p</span>&gt;</span>
-  <span class="tag">&lt;/<span class="title">div</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">html</span>&gt;</span>
-</code></pre><p>js代码：</p>
-<pre><code><span class="built_in">console</span>.log(<span class="built_in">document</span>.nodeType);
-<span class="keyword">var</span> div = <span class="built_in">document</span>.getElementsByTagName(<span class="string">"div"</span>)[<span class="number">0</span>]; <span class="comment">//9</span>
-<span class="built_in">console</span>.log(div.nodeType); <span class="comment">//1</span>
-<span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>;i &lt; div.childNodes.length; i ++) {
-  <span class="built_in">console</span>.log(div.childNodes[i].nodeType);
-}
-</code></pre><p>分别输出9，1，3，1，3<br>跟我们在表格中对应～</p>
-<h2 id="总结">总结</h2><p>本次博客主要讲解了dom解析xml和html。 以前使用java解析xml的时候总是使用一些第三方库，比如jdom。 但是dom却是w3c的规范，不止java，包括javascript，python这些主流语言也都主持，有了规范，语言只是实现了这些规范而已。</p>
+</code></pre><p>上述代码已经加了备注，再重申一下：ChannelProcess的processEventBatch方法会调用Interceptor处理event中的数据。所以如果Channel中的队列满了，那么processEventBatch方法会发生异常，发生异常之后eventList中的没有进入channel的数据已经被Interceptor修改，且不会被清空。因此下次还是会使用这些数据，所以会发生convert json data error错误。</p>
+<p>画了一个序列图如下：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/flume-channel-full01.png" alt=""></p>
+<p>第6步添加event到channel中的时候，队列已满，所以会抛出异常。最终异常被KafkaSource捕捉，但是eventList内部的部分数据已经被interceptor修改过。</p>
+<p>多个channel的影响：</p>
+<p>如果有多个channel，这个问题也会影响。比如有2个channel，c1和c2。c1的sink没有问题，一直稳定执行，c2对应的sink是一个CustomSink，会有问题。这样c2中的队列迟早会爆满，爆满之后，ChannelProcess批量处理event的时候，由于c2的队列满了，所以Source中的eventList永远不会被清空，eventList永远不会被清空的话，所有的channel都会被影响到，这就好比水源被污染之后，所有的用水都会受到影响。</p>
+<p>举个例子：source为s1，c1对应的sink是k1，c2对应的sink是k2。k1和k2的batchSize都是5000，k2处理第4000条数据的时候总会发生异常，进行回滚。k1很稳定。这样c2迟早会爆满，爆满之后s1的eventList一直不能clear，这样也会导致c1一直在处理，所以k1的数据量跟k2一样也会暴增。</p>
+<p>要避免本文所说的这一系列情况，最好的做法就是sink必须要加上很好的异常处理机制，不是任何情况都可以rollback的，要根据需求做对应的处理。</p>
 </span>
       
     </div>
@@ -474,11 +419,9 @@ body
       
         <div class="post-tags">
           
-            <a href="/tags/dom/" rel="tag">#dom</a>
+            <a href="/tags/big-data/" rel="tag">#big data</a>
           
-            <a href="/tags/java/" rel="tag">#java</a>
-          
-            <a href="/tags/javascript/" rel="tag">#javascript</a>
+            <a href="/tags/flume/" rel="tag">#flume</a>
           
         </div>
       
@@ -487,17 +430,13 @@ body
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2014/09/06/MapperScannerConfigurer-analysis/" rel="next" title="Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析">
-                <i class="fa fa-chevron-left"></i> Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析
+              <a href="/2016/01/13/kafka-intro/" rel="next" title="Kafka介绍">
+                <i class="fa fa-chevron-left"></i> Kafka介绍
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2014/09/26/mybatis-dynamic-sql /" rel="prev" title="MyBatis动态SQL底层原理分析">
-                MyBatis动态SQL底层原理分析 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -661,7 +600,7 @@ body
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#java使用dom解析xml"><span class="nav-number">2.</span> <span class="nav-text">java使用dom解析xml</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#javascript使用dom解析html"><span class="nav-number">3.</span> <span class="nav-text">javascript使用dom解析html</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+              <p class="post-toc-empty">此文章未包含目录</p>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator"></div>
@@ -709,9 +648,9 @@ body
 
     <script type="text/javascript">
       var disqus_shortname = 'fangjian0423';
-      var disqus_identifier = '2014/09/21/dom-parse-xml-html/';
-      var disqus_title = '简单谈谈dom解析xml和html';
-      var disqus_url = 'http://fangjian0423.github.io/2014/09/21/dom-parse-xml-html/';
+      var disqus_identifier = '2016/01/19/flume-channel-full-exception/';
+      var disqus_title = '记录Flume Channel队列满了之后发生的怪异问题';
+      var disqus_url = 'http://fangjian0423.github.io/2016/01/19/flume-channel-full-exception/';
 
       function run_disqus_script(disqus_script){
         var dsq = document.createElement('script');

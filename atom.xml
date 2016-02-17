@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-02-09T17:46:12.000Z</updated>
+  <updated>2016-02-17T03:25:25.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -13,6 +13,325 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[Spark DataFrame介绍]]></title>
+    <link href="http://fangjian0423.github.io/2016/02/17/spark-sql/"/>
+    <id>http://fangjian0423.github.io/2016/02/17/spark-sql/</id>
+    <published>2016-02-17T01:22:22.000Z</published>
+    <updated>2016-02-17T03:25:25.000Z</updated>
+    <content type="html"><![CDATA[<h2 id="DataFrame是什么">DataFrame是什么</h2><p>DataFrame是一个以命名列方式组织的分布式数据集。在概念上，它跟关系型数据库中的一张表或者1个Python(或者R)中的data frame一样，但是比他们更优化。DataFrame可以根据结构化的数据文件、hive表、外部数据库或者已经存在的RDD构造。</p>
+<h2 id="DataFrame的创建">DataFrame的创建</h2><p>Spark DataFrame可以从一个已经存在的RDD、hive表或者数据源中创建。</p>
+<p>以下一个例子就表示一个DataFrame基于一个json文件创建：</p>
+<pre><code>val sc: SparkContext <span class="comment">// An existing SparkContext.</span>
+val sqlContext = new org<span class="class">.apache</span><span class="class">.spark</span><span class="class">.sql</span><span class="class">.SQLContext</span>(sc)
+
+val df = sqlContext<span class="class">.read</span><span class="class">.json</span>(<span class="string">"examples/src/main/resources/people.json"</span>)
+
+<span class="comment">// Displays the content of the DataFrame to stdout</span>
+df.<span class="function"><span class="title">show</span><span class="params">()</span></span>
+</code></pre><h2 id="DataFrame的操作">DataFrame的操作</h2><p>直接以1个例子来说明DataFrame的操作：</p>
+<p>json文件内容：</p>
+<pre><code>{"<span class="attribute">name</span>":<span class="value"><span class="string">"Michael"</span></span>}
+{"<span class="attribute">name</span>":<span class="value"><span class="string">"Andy"</span></span>, "<span class="attribute">age</span>":<span class="value"><span class="number">30</span></span>}
+{"<span class="attribute">name</span>":<span class="value"><span class="string">"Justin"</span></span>, "<span class="attribute">age</span>":<span class="value"><span class="number">19</span></span>}
+</code></pre><p>程序内容：</p>
+<pre><code>val conf = new SparkConf().setMaster("local").setAppName("DataFrameTest")
+
+val sc = new SparkContext(conf)
+
+val sqlContext = new SQLContext(sc)
+
+val df = sqlContext.read.json(this.getClass.getResource("/").toString + "people.json")
+
+<span class="header">  /** 展示DataFrame的内容
++----+-------+</span>
+<span class="header">| age|   name|
++----+-------+</span>
+|null|Michael|
+|  30|   Andy|
+|  19| Justin|
+<span class="code">+----+</span>-------+  
+<span class="code">  **/</span>
+df.show()
+
+/** 以树的形式打印出DataFrame的schema
+root
+<span class="code"> |-- age: long (nullable = true)</span>
+<span class="code"> |-- name: string (nullable = true)</span>
+*<span class="strong">*/
+df.printSchema()
+
+</span><span class="header">/** 打印出name列的数据
++-------+</span>
+<span class="header">|   name|
++-------+</span>
+|Michael|
+|   Andy|
+| Justin|
+<span class="code">+-------+</span>   
+*<span class="strong">*/
+df.select("name").show()
+
+</span><span class="header">/** 打印出name列和age列+1的数据，DataFrame的apply方法返回Column
++-------+---------+</span>
+<span class="header">|   name|(age + 1)|
++-------+---------+</span>
+|Michael|     null|
+|   Andy|       31|
+<span class="header">| Justin|       20|
++-------+---------+</span>
+*<span class="strong">*/
+df.select(df("name"), df("age") + 1).show()
+
+</span><span class="header">/** 添加过滤条件，过滤出age字段大于21的数据
++---+----+</span>
+<span class="header">|age|name|
++---+----+</span>
+<span class="header">| 30|Andy|
++---+----+</span>
+*<span class="strong">*/
+df.filter(df("age") &gt; 21).show()
+
+</span><span class="header">/** 以age字段分组进行统计
++----+-----+</span>
+<span class="header">| age|count|
++----+-----+</span>
+|null|    1|
+|  19|    1|
+<span class="header">|  30|    1|
++----+-----+</span>
+*<span class="strong">*/
+df.groupBy(df("age")).count().show()</span>
+</code></pre><h2 id="使用反射推断出Schema">使用反射推断出Schema</h2><p>Spark SQL的Scala接口支持将包括case class数据的RDD转换成DataFrame。</p>
+<p>case class定义表的schema，case class的属性会被读取并且成为列的名字，这里case class也可以被当成别的case class的属性或者是复杂的类型，比如Sequence或Array。</p>
+<p>RDD会被隐式转换成DataFrame并且被注册成一个表，这个表可以被用在查询语句中：</p>
+<pre><code><span class="comment">// sc is an existing SparkContext.</span>
+val sqlContext = new org<span class="class">.apache</span><span class="class">.spark</span><span class="class">.sql</span><span class="class">.SQLContext</span>(sc)
+<span class="comment">// this is used to implicitly convert an RDD to a DataFrame.</span>
+import sqlContext<span class="class">.implicits</span>._
+
+<span class="comment">// Define the schema using a case class.</span>
+<span class="comment">// <span class="doctag">Note:</span> Case classes in Scala 2.10 can support only up to 22 fields. To work around this limit,</span>
+<span class="comment">// you can use custom classes that implement the Product interface.</span>
+case class <span class="function"><span class="title">Person</span><span class="params">(name: String, age: Int)</span></span>
+
+<span class="comment">// Create an RDD of Person objects and register it as a table.</span>
+val people = sc.<span class="function"><span class="title">textFile</span><span class="params">(<span class="string">"examples/src/main/resources/people.txt"</span>)</span></span>.<span class="function"><span class="title">map</span><span class="params">(_.split(<span class="string">","</span>)</span></span>).<span class="function"><span class="title">map</span><span class="params">(p =&gt; Person(p(<span class="number">0</span>)</span></span>, <span class="function"><span class="title">p</span><span class="params">(<span class="number">1</span>)</span></span><span class="class">.trim</span><span class="class">.toInt</span>)).<span class="function"><span class="title">toDF</span><span class="params">()</span></span>
+people.<span class="function"><span class="title">registerTempTable</span><span class="params">(<span class="string">"people"</span>)</span></span>
+
+<span class="comment">// SQL statements can be run by using the sql methods provided by sqlContext.</span>
+val teenagers = sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"SELECT name, age FROM people WHERE age &gt;= 13 AND age &lt;= 19"</span>)</span></span>
+
+<span class="comment">// The results of SQL queries are DataFrames and support all the normal RDD operations.</span>
+<span class="comment">// The columns of a row in the result can be accessed by field index:</span>
+teenagers.<span class="function"><span class="title">map</span><span class="params">(t =&gt; <span class="string">"Name: "</span> + t(<span class="number">0</span>)</span></span>).<span class="function"><span class="title">collect</span><span class="params">()</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(println)</span></span>
+
+<span class="comment">// or by field name:</span>
+teenagers.<span class="function"><span class="title">map</span><span class="params">(t =&gt; <span class="string">"Name: "</span> + t.getAs[String](<span class="string">"name"</span>)</span></span>).<span class="function"><span class="title">collect</span><span class="params">()</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(println)</span></span>
+
+<span class="comment">// row.getValuesMap[T] retrieves multiple columns at once into a Map[String, T]</span>
+teenagers.<span class="function"><span class="title">map</span><span class="params">(_.getValuesMap[Any](List(<span class="string">"name"</span>, <span class="string">"age"</span>)</span></span>)).<span class="function"><span class="title">collect</span><span class="params">()</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(println)</span></span>
+<span class="comment">// Map("name" -&gt; "Justin", "age" -&gt; 19)</span>
+</code></pre><h2 id="使用编程指定Schema">使用编程指定Schema</h2><p>当case class不能提前确定（例如，记录的结构是经过编码的字符串，或者一个文本集合将会被解析，不同的字段投影给不同的用户），一个 DataFrame 可以通过三步来创建。</p>
+<p>1.从原来的 RDD 创建一个行的 RDD<br>2.创建由一个 StructType 表示的模式与第一步创建的 RDD 的行结构相匹配<br>3.在行 RDD 上通过 applySchema 方法应用模式</p>
+<pre><code><span class="comment">// sc is an existing SparkContext.</span>
+<span class="variable"><span class="keyword">val</span> sqlContext</span> = new org.apache.spark.sql.SQLContext(sc)
+
+<span class="comment">// Create an RDD</span>
+<span class="variable"><span class="keyword">val</span> people</span> = sc.textFile(<span class="string">"examples/src/main/resources/people.txt"</span>)
+
+<span class="comment">// The schema is encoded in a string</span>
+<span class="variable"><span class="keyword">val</span> schemaString</span> = <span class="string">"name age"</span>
+
+<span class="comment">// Import Row.</span>
+<span class="keyword">import</span> org.apache.spark.sql.Row;
+
+<span class="comment">// Import Spark SQL data types</span>
+<span class="keyword">import</span> org.apache.spark.sql.types.{StructType,StructField,StringType};
+
+<span class="comment">// Generate the schema based on the string of schema</span>
+<span class="variable"><span class="keyword">val</span> schema</span> =
+  StructType(
+    schemaString.split(<span class="string">" "</span>).map(fieldName =&gt; StructField(fieldName, StringType, <span class="literal">true</span>)))
+
+<span class="comment">// Convert records of the RDD (people) to Rows.</span>
+<span class="variable"><span class="keyword">val</span> rowRDD</span> = people.map(_.split(<span class="string">","</span>)).map(p =&gt; Row(p(<span class="number">0</span>), p(<span class="number">1</span>).trim))
+
+<span class="comment">// Apply the schema to the RDD.</span>
+<span class="variable"><span class="keyword">val</span> peopleDataFrame</span> = sqlContext.createDataFrame(rowRDD, schema)
+
+<span class="comment">// Register the DataFrames as a table.</span>
+peopleDataFrame.registerTempTable(<span class="string">"people"</span>)
+
+<span class="comment">// SQL statements can be run by using the sql methods provided by sqlContext.</span>
+<span class="variable"><span class="keyword">val</span> results</span> = sqlContext.sql(<span class="string">"SELECT name FROM people"</span>)
+
+<span class="comment">// The results of SQL queries are DataFrames and support all the normal RDD operations.</span>
+<span class="comment">// The columns of a row in the result can be accessed by field index or by field name.</span>
+results.map(t =&gt; <span class="string">"Name: "</span> + t(<span class="number">0</span>)).collect().foreach(println)
+</code></pre><h2 id="数据源">数据源</h2><p>Spark SQL默认使用的数据源是parquet(可以通过spark.sql.sources.default修改)。</p>
+<pre><code>val df = sqlContext<span class="class">.read</span><span class="class">.load</span>(<span class="string">"examples/src/main/resources/users.parquet"</span>)
+df.<span class="function"><span class="title">select</span><span class="params">(<span class="string">"name"</span>, <span class="string">"favorite_color"</span>)</span></span><span class="class">.write</span><span class="class">.save</span>(<span class="string">"namesAndFavColors.parquet"</span>)
+</code></pre><p>可以在读取数据源的时候指定一些往外的参数。数据源也可以使用全名称，比如org.apache.spark.sql.parquet，但是内置的数据源可以使用短名称，比如json, parquet, jdbc。任何类型的DataFrame都可以使用这种方式转换成其他类型：</p>
+<pre><code>val df = sqlContext<span class="class">.read</span><span class="class">.format</span>(<span class="string">"json"</span>).<span class="function"><span class="title">load</span><span class="params">(<span class="string">"examples/src/main/resources/people.json"</span>)</span></span>
+df.<span class="function"><span class="title">select</span><span class="params">(<span class="string">"name"</span>, <span class="string">"age"</span>)</span></span><span class="class">.write</span><span class="class">.format</span>(<span class="string">"parquet"</span>).<span class="function"><span class="title">save</span><span class="params">(<span class="string">"namesAndAges.parquet"</span>)</span></span>
+</code></pre><p>使用read方法读取数据源得到DataFrame，还可以使用sql直接查询文件的方式：</p>
+<pre><code>val df = sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"SELECT * FROM parquet.`examples/src/main/resources/users.parquet`"</span>)</span></span>
+</code></pre><p>保存模式：</p>
+<p>保存方法会需要一个可选参数SaveMode，用于处理已经存在的数据。这些保存模式内部不会用到锁的概念，也不是一个原子操作。如果使用了Overwrite这种保存模式，那么写入数据前会清空之前的老数据。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Scala/Java</th>
+<th style="text-align:center">具体值</th>
+<th style="text-align:center">含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">SaveMode.ErrorIfExists (默认值)</td>
+<td style="text-align:center">“error” (默认值)</td>
+<td style="text-align:center">当保存DataFrame到数据源的时候，如果数据源文件已经存在，那么会抛出异常</td>
+</tr>
+<tr>
+<td style="text-align:center">SaveMode.Append</td>
+<td style="text-align:center">“append”</td>
+<td style="text-align:center">如果数据源文件已经存在，append到文件末尾</td>
+</tr>
+<tr>
+<td style="text-align:center">SaveMode.Overwrite</td>
+<td style="text-align:center">“overwrite”</td>
+<td style="text-align:center">如果数据源文件已经存在，清空数据</td>
+</tr>
+<tr>
+<td style="text-align:center">SaveMode.Ignore</td>
+<td style="text-align:center">“ignore”</td>
+<td style="text-align:center">如果数据源文件已经存在，不做任何处理。跟SQL中的 CREATE TABLE IF NOT EXISTS 类似</td>
+</tr>
+</tbody>
+</table>
+<p>持久化表：</p>
+<p>当使用HiveContext的时候，使用saveAsTable方法可以把DataFrame持久化成表。跟registerTempTable方法不一样，saveAsTable方法会把DataFrame持久化成表，并且创建一个数据的指针到HiveMetastore对象中。只要获得了同一个HiveMetastore对象的链接，当Spark程序重启的时候，saveAsTable持久化后的表依然会存在。一个DataFrame持久化成一个table也可以通过SQLContext的table方法，参数就是表的名字。</p>
+<p>默认情况下，saveAsTable方法会创建一个”被管理的表”，被管理的表的意思是说表中数据的位置会被HiveMetastore所控制，如果表被删除了，HiveMetastore中的数据也相当于被删除了。</p>
+<h3 id="Parquet_Files">Parquet Files</h3><p>parquet是一种基于列的存储格式，并且可以被很多框架所支持。Spark SQL支持parquet文件的读和写操作，并且会自动维护原始数据的schema，当写一个parquet文件的时候，所有的列都允许为空。</p>
+<h4 id="加载Parquet文件">加载Parquet文件</h4><pre><code><span class="comment">// sqlContext from the previous example is used in this example.</span>
+<span class="comment">// This is used to implicitly convert an RDD to a DataFrame.</span>
+import sqlContext<span class="class">.implicits</span>._
+
+val people: RDD[Person] = ... <span class="comment">// An RDD of case class objects, from the previous example.</span>
+
+<span class="comment">// The RDD is implicitly converted to a DataFrame by implicits, allowing it to be stored using Parquet.</span>
+people<span class="class">.write</span><span class="class">.parquet</span>(<span class="string">"people.parquet"</span>)
+
+<span class="comment">// Read in the parquet file created above. Parquet files are self-describing so the schema is preserved.</span>
+<span class="comment">// The result of loading a Parquet file is also a DataFrame.</span>
+val parquetFile = sqlContext<span class="class">.read</span><span class="class">.parquet</span>(<span class="string">"people.parquet"</span>)
+
+<span class="comment">//Parquet files can also be registered as tables and then used in SQL statements.</span>
+parquetFile.<span class="function"><span class="title">registerTempTable</span><span class="params">(<span class="string">"parquetFile"</span>)</span></span>
+val teenagers = sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"SELECT name FROM parquetFile WHERE age &gt;= 13 AND age &lt;= 19"</span>)</span></span>
+teenagers.<span class="function"><span class="title">map</span><span class="params">(t =&gt; <span class="string">"Name: "</span> + t(<span class="number">0</span>)</span></span>).<span class="function"><span class="title">collect</span><span class="params">()</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(println)</span></span>
+</code></pre><h4 id="Parquet文件的Partition">Parquet文件的Partition</h4><p>Parquet文件可以根据列自动进行分区，只需要调用DataFrameWriter的partitionBy方法即可，该方法需要的参数是需要进行分区的列。比如需要分区成这样：</p>
+<pre><code>path
+└── <span class="keyword">to</span>
+    └── table
+        ├── gender=male
+        │   ├── <span class="attribute">...</span>
+        │   │
+        │   ├── country=US
+        │   │   └── <span class="built_in">data</span><span class="built_in">.</span>parquet
+        │   ├── country=<span class="literal">CN</span>
+        │   │   └── <span class="built_in">data</span><span class="built_in">.</span>parquet
+        │   └── <span class="attribute">...</span>
+        └── gender=female
+            ├── <span class="attribute">...</span>
+            │
+            ├── country=US
+            │   └── <span class="built_in">data</span><span class="built_in">.</span>parquet
+            ├── country=<span class="literal">CN</span>
+            │   └── <span class="built_in">data</span><span class="built_in">.</span>parquet
+            └── <span class="attribute">...</span>
+</code></pre><p>这个需要DataFrame就需要4列，分别是name，age，gender和country，write的时候如下：</p>
+<pre><code>dataFrame<span class="class">.write</span><span class="class">.partitionBy</span>(<span class="string">"gender"</span>, <span class="string">"country"</span>).<span class="function"><span class="title">parquet</span><span class="params">(<span class="string">"path"</span>)</span></span>
+</code></pre><h4 id="Schema_Merging">Schema Merging</h4><p>像ProtocolBuffer，Avro，Thrift一样，Parquet也支持schema的扩展。</p>
+<p>由于schema的自动扩展是一次昂贵的操作，所以默认情况下不是开启的，可以根据以下设置打开：</p>
+<p>读parquet文件的时候设置参数mergeSchema为true或者设置全局的sql属性spark.sql.parquet.mergeSchema为true：</p>
+<pre><code><span class="comment">// sqlContext from the previous example is used in this example.</span>
+<span class="comment">// This is used to implicitly convert an RDD to a DataFrame.</span>
+import sqlContext<span class="class">.implicits</span>._
+
+<span class="comment">// Create a simple DataFrame, stored into a partition directory</span>
+val df1 = sc.<span class="function"><span class="title">makeRDD</span><span class="params">(<span class="number">1</span> to <span class="number">5</span>)</span></span>.<span class="function"><span class="title">map</span><span class="params">(i =&gt; (i, i * <span class="number">2</span>)</span></span>).<span class="function"><span class="title">toDF</span><span class="params">(<span class="string">"single"</span>, <span class="string">"double"</span>)</span></span>
+df1<span class="class">.write</span><span class="class">.parquet</span>(<span class="string">"data/test_table/key=1"</span>)
+
+<span class="comment">// Create another DataFrame in a new partition directory,</span>
+<span class="comment">// adding a new column and dropping an existing column</span>
+val df2 = sc.<span class="function"><span class="title">makeRDD</span><span class="params">(<span class="number">6</span> to <span class="number">10</span>)</span></span>.<span class="function"><span class="title">map</span><span class="params">(i =&gt; (i, i * <span class="number">3</span>)</span></span>).<span class="function"><span class="title">toDF</span><span class="params">(<span class="string">"single"</span>, <span class="string">"triple"</span>)</span></span>
+df2<span class="class">.write</span><span class="class">.parquet</span>(<span class="string">"data/test_table/key=2"</span>)
+
+<span class="comment">// Read the partitioned table</span>
+val df3 = sqlContext<span class="class">.read</span><span class="class">.option</span>(<span class="string">"mergeSchema"</span>, <span class="string">"true"</span>).<span class="function"><span class="title">parquet</span><span class="params">(<span class="string">"data/test_table"</span>)</span></span>
+df3.<span class="function"><span class="title">printSchema</span><span class="params">()</span></span>
+
+<span class="comment">// The final schema consists of all 3 columns in the Parquet files together</span>
+<span class="comment">// with the partitioning column appeared in the partition directory paths.</span>
+<span class="comment">// root</span>
+<span class="comment">// |-- single: int (nullable = true)</span>
+<span class="comment">// |-- double: int (nullable = true)</span>
+<span class="comment">// |-- triple: int (nullable = true)</span>
+<span class="comment">// |-- key : int (nullable = true)</span>
+</code></pre><h3 id="JSON数据源">JSON数据源</h3><p>本文之前的一个例子就是使用的JSON数据源，使用SQLContext.read.json()读取一个带有String类型的RDD或者一个json文件。</p>
+<p>需要注意的是json文件不是一个典型的json格式的文件，每一行都是一个json对象。</p>
+<pre><code><span class="comment">// sc is an existing SparkContext.</span>
+val sqlContext = new org<span class="class">.apache</span><span class="class">.spark</span><span class="class">.sql</span><span class="class">.SQLContext</span>(sc)
+
+<span class="comment">// A JSON dataset is pointed to by path.</span>
+<span class="comment">// The path can be either a single text file or a directory storing text files.</span>
+val path = <span class="string">"examples/src/main/resources/people.json"</span>
+val people = sqlContext<span class="class">.read</span><span class="class">.json</span>(path)
+
+<span class="comment">// The inferred schema can be visualized using the printSchema() method.</span>
+people.<span class="function"><span class="title">printSchema</span><span class="params">()</span></span>
+<span class="comment">// root</span>
+<span class="comment">//  |-- age: integer (nullable = true)</span>
+<span class="comment">//  |-- name: string (nullable = true)</span>
+
+<span class="comment">// Register this DataFrame as a table.</span>
+people.<span class="function"><span class="title">registerTempTable</span><span class="params">(<span class="string">"people"</span>)</span></span>
+
+<span class="comment">// SQL statements can be run by using the sql methods provided by sqlContext.</span>
+val teenagers = sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"SELECT name FROM people WHERE age &gt;= 13 AND age &lt;= 19"</span>)</span></span>
+
+<span class="comment">// Alternatively, a DataFrame can be created for a JSON dataset represented by</span>
+<span class="comment">// an RDD[String] storing one JSON object per string.</span>
+val anotherPeopleRDD = sc.parallelize(
+  <span class="string">""</span><span class="string">"{"</span>name<span class="string">":"</span>Yin<span class="string">","</span>address<span class="string">":{"</span>city<span class="string">":"</span>Columbus<span class="string">","</span>state<span class="string">":"</span>Ohio<span class="string">"}}"</span><span class="string">""</span> :: Nil)
+val anotherPeople = sqlContext<span class="class">.read</span><span class="class">.json</span>(anotherPeopleRDD)
+</code></pre><h3 id="Hive表">Hive表</h3><p>需要使用HiveContext。</p>
+<pre><code><span class="comment">// sc is an existing SparkContext.</span>
+val sqlContext = new org<span class="class">.apache</span><span class="class">.spark</span><span class="class">.sql</span><span class="class">.hive</span><span class="class">.HiveContext</span>(sc)
+
+sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"CREATE TABLE IF NOT EXISTS src (key INT, value STRING)"</span>)</span></span>
+sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"LOAD DATA LOCAL INPATH 'examples/src/main/resources/kv1.txt' INTO TABLE src"</span>)</span></span>
+
+<span class="comment">// Queries are expressed in HiveQL</span>
+sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"FROM src SELECT key, value"</span>)</span></span>.<span class="function"><span class="title">collect</span><span class="params">()</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(println)</span></span>
+</code></pre><h3 id="JDBC">JDBC</h3><p>直接使用load方法加载：</p>
+<pre><code>sqlContext<span class="built_in">.</span>load(<span class="string">"jdbc"</span>, <span class="built_in">Map</span>(<span class="string">"url"</span> <span class="subst">-&gt; </span><span class="string">"jdbc:mysql://localhost:3306/your_database?user=your_user&amp;password=your_password"</span>, <span class="string">"dbtable"</span> <span class="subst">-&gt; </span><span class="string">"your_table"</span>))
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[DataFrame是一个以命名列方式组织的分布式数据集。在概念上，它跟关系型数据库中的一张表或者1个Python(或者R)中的data frame一样，但是比他们更优化。DataFrame可以根据结构化的数据文件、hive表、外部数据库或者已经存在的RDD构造 ...]]>
+    
+    </summary>
+    
+      <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
+    
+      <category term="spark" scheme="http://fangjian0423.github.io/tags/spark/"/>
+    
+      <category term="spark" scheme="http://fangjian0423.github.io/categories/spark/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[Spark Streaming编程指南笔记]]></title>
@@ -3379,594 +3698,6 @@ scheduleWithFixedDelay有<span class="number">4</span>个参数，第一个参�
       <category term="thread" scheme="http://fangjian0423.github.io/tags/thread/"/>
     
       <category term="jvm" scheme="http://fangjian0423.github.io/categories/jvm/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[通过源码分析Flume HDFSSink 写hdfs文件的过程]]></title>
-    <link href="http://fangjian0423.github.io/2015/07/20/flume-hdfs-sink/"/>
-    <id>http://fangjian0423.github.io/2015/07/20/flume-hdfs-sink/</id>
-    <published>2015-07-20T15:32:33.000Z</published>
-    <updated>2015-12-20T17:09:49.000Z</updated>
-    <content type="html"><![CDATA[<p>Flume有HDFS Sink，可以将Source进来的数据写入到hdfs中。</p>
-<p>HDFS Sink具体的逻辑代码是在HDFSEventSink这个类中。</p>
-<p>HDFS Sink跟写文件相关的配置如下：</p>
-<p>hdfs.path -&gt; hdfs目录路径<br>hdfs.filePrefix -&gt; 文件前缀。默认值FlumeData<br>hdfs.fileSuffix -&gt; 文件后缀<br>hdfs.rollInterval -&gt; 多久时间后close hdfs文件。单位是秒，默认30秒。设置为0的话表示不根据时间close hdfs文件<br>hdfs.rollSize -&gt; 文件大小超过一定值后，close文件。默认值1024，单位是字节。设置为0的话表示不基于文件大小<br>hdfs.rollCount -&gt; 写入了多少个事件后close文件。默认值是10个。设置为0的话表示不基于事件个数<br>hdfs.fileType -&gt; 文件格式， 有3种格式可选择：SequenceFile, DataStream or CompressedStream<br>hdfs.batchSize -&gt; 批次数，HDFS Sink每次从Channel中拿的事件个数。默认值100<br>hdfs.minBlockReplicas -&gt; HDFS每个块最小的replicas数字，不设置的话会取hadoop中的配置<br>hdfs.maxOpenFiles -&gt; 允许最多打开的文件数，默认是5000。如果超过了这个值，越早的文件会被关闭<br>serializer -&gt; HDFS Sink写文件的时候会进行序列化操作。会调用对应的Serializer借口，可以自定义符合需求的Serializer<br>hdfs.retryInterval -&gt; 关闭HDFS文件失败后重新尝试关闭的延迟数，单位是秒<br>hdfs.callTimeout -&gt; HDFS操作允许的时间，比如hdfs文件的open，write，flush，close操作。单位是毫秒，默认值是10000</p>
-<h2 id="HDFSEventSink分析">HDFSEventSink分析</h2><p>以一个hdfs.path，hdfs.filePrefix和hdfs.fileSuffix分别为/data/%Y/%m/%d/%H，flume, .txt 为例子，分析源码：</p>
-<p>直接看HDFSEventSink的process方法：</p>
-<pre><code><span class="keyword">public</span> Status process() <span class="keyword">throws</span> EventDeliveryException {
-    <span class="comment">// 得到Channel</span>
-    Channel channel = getChannel();
-    Transaction transaction = channel.getTransaction();
-    <span class="comment">// 构造一个BucketWriter集合，BucketWriter就是处理hdfs文件的具体逻辑实现类</span>
-    List&lt;BucketWriter&gt; writers = Lists.newArrayList();
-    <span class="comment">// Channel的事务启动</span>
-    transaction.begin();
-    <span class="keyword">try</span> {
-      <span class="built_in">int</span> txnEventCount = <span class="number">0</span>;
-      <span class="comment">// 每次处理batchSize个事件。这里的batchSize就是之前配置的hdfs.batchSize</span>
-      <span class="keyword">for</span> (txnEventCount = <span class="number">0</span>; txnEventCount &lt; batchSize; txnEventCount++) {
-        Event event = channel.take();
-        <span class="keyword">if</span> (event == <span class="keyword">null</span>) {
-          <span class="keyword">break</span>;
-        }
-
-        <span class="comment">// 构造hdfs文件所在的路径</span>
-        <span class="keyword">String</span> realPath = BucketPath.escapeString(filePath, event.getHeaders(),
-            timeZone, needRounding, roundUnit, roundValue, useLocalTime);
-        <span class="comment">// 构造hdfs文件名, fileName就是之前配置的hdfs.filePrefix，即flume</span>
-        <span class="keyword">String</span> realName = BucketPath.escapeString(fileName, event.getHeaders(),
-          timeZone, needRounding, roundUnit, roundValue, useLocalTime);
-
-        <span class="comment">// 构造hdfs文件路径，根据之前的path，filePrefix，fileSuffix</span>
-        <span class="comment">// 得到这里的lookupPath为 /data/2015/07/20/15/flume</span>
-        <span class="keyword">String</span> lookupPath = realPath + DIRECTORY_DELIMITER + realName;
-        BucketWriter bucketWriter;
-        HDFSWriter hdfsWriter = <span class="keyword">null</span>;
-        <span class="comment">// 构造一个回调函数</span>
-        WriterCallback closeCallback = <span class="keyword">new</span> WriterCallback() {
-          @Override
-          <span class="keyword">public</span> <span class="keyword">void</span> run(<span class="keyword">String</span> bucketPath) {
-            LOG.info(<span class="string">"Writer callback called."</span>);
-            <span class="keyword">synchronized</span> (sfWritersLock) {
-              <span class="comment">// sfWriters是一个HashMap，最多支持maxOpenFiles个键值对。超过maxOpenFiles的话会关闭越早进来的文件</span>
-              <span class="comment">// 回调函数的作用就是hdfs文件close的时候移除sfWriters中对应的那个文件。防止打开的文件数超过maxOpenFiles</span>
-              <span class="comment">// sfWriters这个Map中的key是要写的hdfs路径，value是BucketWriter</span>
-              sfWriters.remove(bucketPath);
-            }
-          }
-        };
-        <span class="keyword">synchronized</span> (sfWritersLock) {
-          <span class="comment">// 先查看sfWriters是否已经存在key为/data/2015/07/20/15/flume的BucketWriter</span>
-          bucketWriter = sfWriters.<span class="built_in">get</span>(lookupPath);
-          <span class="keyword">if</span> (bucketWriter == <span class="keyword">null</span>) {
-              <span class="comment">// 没有的话构造一个BucketWriter</span>
-            <span class="comment">// 先根据fileType得到对应的HDFSWriter，fileType默认有3种类型，分别是SequenceFile, DataStream or CompressedStream</span>
-            hdfsWriter = writerFactory.getWriter(fileType);
-            <span class="comment">// 构造一个BucketWriter，会将刚刚构造的hdfsWriter当做参数传入，BucketWriter写hdfs文件的时候会使用HDFSWriter</span>
-            bucketWriter = initializeBucketWriter(realPath, realName,
-              lookupPath, hdfsWriter, closeCallback);
-            <span class="comment">// 新构造的BucketWriter放入到sfWriters中</span>
-            sfWriters.put(lookupPath, bucketWriter);
-          }
-        }
-
-        <span class="comment">// 将BucketWriter放入到writers集合中</span>
-        <span class="keyword">if</span> (!writers.contains(bucketWriter)) {
-          writers.<span class="built_in">add</span>(bucketWriter);
-        }
-
-        <span class="comment">// 写hdfs数据</span>
-        <span class="keyword">try</span> {
-          bucketWriter.<span class="built_in">append</span>(event);
-        } <span class="keyword">catch</span> (BucketClosedException ex) {
-          LOG.info(<span class="string">"Bucket was closed while trying to append, "</span> +
-            <span class="string">"reinitializing bucket and writing event."</span>);
-          hdfsWriter = writerFactory.getWriter(fileType);
-          bucketWriter = initializeBucketWriter(realPath, realName,
-            lookupPath, hdfsWriter, closeCallback);
-          <span class="keyword">synchronized</span> (sfWritersLock) {
-            sfWriters.put(lookupPath, bucketWriter);
-          }
-          bucketWriter.<span class="built_in">append</span>(event);
-        }
-      }
-
-      <span class="keyword">if</span> (txnEventCount == <span class="number">0</span>) {
-        sinkCounter.incrementBatchEmptyCount();
-      } <span class="keyword">else</span> <span class="keyword">if</span> (txnEventCount == batchSize) {
-        sinkCounter.incrementBatchCompleteCount();
-      } <span class="keyword">else</span> {
-        sinkCounter.incrementBatchUnderflowCount();
-      }
-
-      <span class="comment">// 每个批次全部完成后flush所有的hdfs文件</span>
-      <span class="keyword">for</span> (BucketWriter bucketWriter : writers) {
-        bucketWriter.flush();
-      }
-
-      <span class="comment">// 事务提交</span>
-      transaction.commit();
-
-      <span class="keyword">if</span> (txnEventCount &lt; <span class="number">1</span>) {
-        <span class="keyword">return</span> Status.BACKOFF;
-      } <span class="keyword">else</span> {
-        sinkCounter.addToEventDrainSuccessCount(txnEventCount);
-        <span class="keyword">return</span> Status.READY;
-      }
-    } <span class="keyword">catch</span> (IOException eIO) {
-      <span class="comment">// 发生异常事务回滚</span>
-      transaction.rollback();
-      LOG.warn(<span class="string">"HDFS IO error"</span>, eIO);
-      <span class="keyword">return</span> Status.BACKOFF;
-    } <span class="keyword">catch</span> (Throwable th) {
-      <span class="comment">// 发生异常事务回滚</span>
-      transaction.rollback();
-      LOG.error(<span class="string">"process failed"</span>, th);
-      <span class="keyword">if</span> (th <span class="keyword">instanceof</span> Error) {
-        <span class="keyword">throw</span> (Error) th;
-      } <span class="keyword">else</span> {
-        <span class="keyword">throw</span> <span class="keyword">new</span> EventDeliveryException(th);
-      }
-    } <span class="keyword">finally</span> {
-      <span class="comment">// 关闭事务</span>
-      transaction.close();
-    }
-}
-</code></pre><h2 id="BucketWriter分析">BucketWriter分析</h2><p>接下来我们看下BucketWriter的append和flush方法。</p>
-<p>append方法：</p>
-<pre><code>  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="keyword">append</span>(<span class="keyword">final</span> Event event)
-      <span class="keyword">throws</span> IOException, InterruptedException {
-    checkAndThrowInterruptedException();
-    <span class="comment">// If idleFuture is not null, cancel it before we move forward to avoid a</span>
-    <span class="comment">// close call in the middle of the append.</span>
-    <span class="keyword">if</span>(idleFuture != <span class="keyword">null</span>) {
-      idleFuture.cancel(<span class="keyword">false</span>);
-      <span class="comment">// There is still a small race condition - if the idleFuture is already</span>
-      <span class="comment">// running, interrupting it can cause HDFS close operation to throw -</span>
-      <span class="comment">// so we cannot interrupt it while running. If the future could not be</span>
-      <span class="comment">// cancelled, it is already running - wait for it to finish before</span>
-      <span class="comment">// attempting to write.</span>
-      <span class="keyword">if</span>(!idleFuture.isDone()) {
-        <span class="keyword">try</span> {
-          idleFuture.get(callTimeout, TimeUnit.MILLISECONDS);
-        } <span class="keyword">catch</span> (TimeoutException ex) {
-          LOG.warn(<span class="string">"Timeout while trying to cancel closing of idle file. Idle"</span> +
-            <span class="string">" file close may have failed"</span>, ex);
-        } <span class="keyword">catch</span> (Exception ex) {
-          LOG.warn(<span class="string">"Error while trying to cancel closing of idle file. "</span>, ex);
-        }
-      }
-      idleFuture = <span class="keyword">null</span>;
-    }
-
-    <span class="comment">// 如果hdfs文件没有被打开</span>
-    <span class="keyword">if</span> (!isOpen) {
-      <span class="comment">// hdfs已关闭的话抛出异常</span>
-      <span class="keyword">if</span> (closed) {
-        <span class="keyword">throw</span> <span class="keyword">new</span> BucketClosedException(<span class="string">"This bucket writer was closed and "</span> +
-          <span class="string">"this handle is thus no longer valid"</span>);
-      }
-      <span class="comment">// 打开hdfs文件</span>
-      open();
-    }
-
-    <span class="comment">// 查看是否需要创建新文件</span>
-    <span class="keyword">if</span> (shouldRotate()) {
-      <span class="keyword">boolean</span> doRotate = <span class="keyword">true</span>;
-
-      <span class="keyword">if</span> (isUnderReplicated) {
-        <span class="keyword">if</span> (maxConsecUnderReplRotations &gt; <span class="number">0</span> &amp;&amp;
-            consecutiveUnderReplRotateCount &gt;= maxConsecUnderReplRotations) {
-          doRotate = <span class="keyword">false</span>;
-          <span class="keyword">if</span> (consecutiveUnderReplRotateCount == maxConsecUnderReplRotations) {
-            LOG.error(<span class="string">"Hit max consecutive under-replication rotations ({}); "</span> +
-                <span class="string">"will not continue rolling files under this path due to "</span> +
-                <span class="string">"under-replication"</span>, maxConsecUnderReplRotations);
-          }
-        } <span class="keyword">else</span> {
-          LOG.warn(<span class="string">"Block Under-replication detected. Rotating file."</span>);
-        }
-        consecutiveUnderReplRotateCount++;
-      } <span class="keyword">else</span> {
-        consecutiveUnderReplRotateCount = <span class="number">0</span>;
-      }
-
-      <span class="keyword">if</span> (doRotate) {
-          <span class="comment">// 如果需要创建新文件的时候会关闭文件，然后再打开新的文件。这里的close方法没有参数，表示可以再次打开新的文件</span>
-        close();
-        open();
-      }
-    }
-
-    <span class="comment">// 写event数据</span>
-    <span class="keyword">try</span> {
-      sinkCounter.incrementEventDrainAttemptCount();
-      callWithTimeout(<span class="keyword">new</span> CallRunner&lt;<span class="keyword">Void</span>&gt;() {
-        @Override
-        <span class="keyword">public</span> <span class="keyword">Void</span> <span class="keyword">call</span>() <span class="keyword">throws</span> Exception {
-          <span class="comment">// 真正的写数据使用HDFSWriter的append方法</span>
-          writer.<span class="keyword">append</span>(event); <span class="comment">// could block</span>
-          <span class="keyword">return</span> <span class="keyword">null</span>;
-        }
-      });
-    } <span class="keyword">catch</span> (IOException e) {
-      LOG.warn(<span class="string">"Caught IOException writing to HDFSWriter ({}). Closing file ("</span> +
-          bucketPath + <span class="string">") and rethrowing exception."</span>,
-          e.getMessage());
-      <span class="keyword">try</span> {
-        close(<span class="keyword">true</span>);
-      } <span class="keyword">catch</span> (IOException e2) {
-        LOG.warn(<span class="string">"Caught IOException while closing file ("</span> +
-             bucketPath + <span class="string">"). Exception follows."</span>, e2);
-      }
-      <span class="keyword">throw</span> e;
-    }
-
-    <span class="comment">// 文件大小+起来</span>
-    processSize += event.getBody().length;
-    <span class="comment">// 事件个数+1</span>
-    eventCounter++;
-    <span class="comment">// 批次数+1</span>
-    batchCounter++;
-
-    <span class="comment">// 批次数达到配置的hdfs.batchSize的话调用flush方法</span>
-    <span class="keyword">if</span> (batchCounter == batchSize) {
-      flush();
-    }
-}
-</code></pre><p>先看下open方法，打开hdfs文件的方法：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">void</span> open() <span class="keyword">throws</span> IOException, InterruptedException {
-    <span class="comment">// hdfs文件路径或HDFSWriter没构造的话抛出异常</span>
-    <span class="keyword">if</span> ((filePath == <span class="keyword">null</span>) || (writer == <span class="keyword">null</span>)) {
-      <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"Invalid file settings"</span>);
-    }
-
-    <span class="keyword">final</span> Configuration config = <span class="keyword">new</span> Configuration();
-    <span class="comment">// disable FileSystem JVM shutdown hook</span>
-    config.setBoolean(<span class="string">"fs.automatic.close"</span>, <span class="keyword">false</span>);
-
-    <span class="comment">// Hadoop is not thread safe when doing certain RPC operations,</span>
-    <span class="comment">// including getFileSystem(), when running under Kerberos.</span>
-    <span class="comment">// open() must be called by one thread at a time in the JVM.</span>
-    <span class="comment">// <span class="doctag">NOTE:</span> tried synchronizing on the underlying Kerberos principal previously</span>
-    <span class="comment">// which caused deadlocks. See FLUME-1231.</span>
-    <span class="keyword">synchronized</span> (staticLock) {
-      checkAndThrowInterruptedException();
-
-      <span class="keyword">try</span> {
-          <span class="comment">// fileExtensionCounter是一个AtomicLong类型的实例，初始化为当前时间戳的数值</span>
-        <span class="comment">// 由于之前分析的，可能存在先关闭文件，然后再次open新文件的情况。所以在同一个BucketWriter类中open方法得到的文件名时间戳仅仅相差1</span>
-        <span class="comment">// 得到时间戳counter</span>
-        <span class="keyword">long</span> counter = fileExtensionCounter.incrementAndGet();
-
-        <span class="comment">// 最终的文件名加上时间戳，这就是为什么flume生成的文件名会带有时间戳的原因</span>
-        <span class="comment">// 这里的fullFileName就是 flume.1437375933234</span>
-        String fullFileName = fileName + <span class="string">"."</span> + counter;
-
-        <span class="comment">// 加上后缀名， fullFileName就成了flume.1437375933234.txt</span>
-        <span class="keyword">if</span> (fileSuffix != <span class="keyword">null</span> &amp;&amp; fileSuffix.length() &gt; <span class="number">0</span>) {
-          fullFileName += fileSuffix;
-        } <span class="keyword">else</span> <span class="keyword">if</span> (codeC != <span class="keyword">null</span>) {
-          fullFileName += codeC.getDefaultExtension();
-        }
-
-        <span class="comment">// 由于没配置inUsePrefix和inUseSuffix。 故这两个属性的值分别为""和".tmp"</span>
-        <span class="comment">// buckerPath为 /data/2015/07/20/15/flume.1437375933234.txt.tmp</span>
-        bucketPath = filePath + <span class="string">"/"</span> + inUsePrefix
-          + fullFileName + inUseSuffix;
-        <span class="comment">// targetPath为 /data/2015/07/20/15/flume.1437375933234.txt</span>
-        targetPath = filePath + <span class="string">"/"</span> + fullFileName;
-
-        LOG.info(<span class="string">"Creating "</span> + bucketPath);
-        callWithTimeout(<span class="keyword">new</span> CallRunner&lt;<span class="keyword">Void</span>&gt;() {
-          @Override
-          <span class="keyword">public</span> <span class="keyword">Void</span> <span class="keyword">call</span>() <span class="keyword">throws</span> Exception {
-            <span class="keyword">if</span> (codeC == <span class="keyword">null</span>) {
-              <span class="comment">// Need to get reference to FS using above config before underlying</span>
-              <span class="comment">// writer does in order to avoid shutdown hook &amp;</span>
-              <span class="comment">// IllegalStateExceptions</span>
-              <span class="keyword">if</span>(!mockFsInjected) {
-                fileSystem = <span class="keyword">new</span> Path(bucketPath).getFileSystem(
-                  config);
-              }
-              <span class="comment">// 使用HDFSWriter打开文件</span>
-              writer.open(bucketPath);
-            } <span class="keyword">else</span> {
-              <span class="comment">// need to get reference to FS before writer does to</span>
-              <span class="comment">// avoid shutdown hook</span>
-              <span class="keyword">if</span>(!mockFsInjected) {
-                fileSystem = <span class="keyword">new</span> Path(bucketPath).getFileSystem(
-                  config);
-              }
-              <span class="comment">// 使用HDFSWriter打开文件</span>
-              writer.open(bucketPath, codeC, compType);
-            }
-            <span class="keyword">return</span> <span class="keyword">null</span>;
-          }
-        });
-      } <span class="keyword">catch</span> (Exception ex) {
-        sinkCounter.incrementConnectionFailedCount();
-        <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> IOException) {
-          <span class="keyword">throw</span> (IOException) ex;
-        } <span class="keyword">else</span> {
-          <span class="keyword">throw</span> Throwables.propagate(ex);
-        }
-      }
-    }
-    isClosedMethod = getRefIsClosed();
-    sinkCounter.incrementConnectionCreatedCount();
-    <span class="comment">// 重置各个计数器</span>
-    resetCounters();
-
-    <span class="comment">// 开线程处理hdfs.rollInterval配置的参数，多长时间后调用close方法</span>
-    <span class="keyword">if</span> (rollInterval &gt; <span class="number">0</span>) {
-      Callable&lt;<span class="keyword">Void</span>&gt; action = <span class="keyword">new</span> Callable&lt;<span class="keyword">Void</span>&gt;() {
-        <span class="keyword">public</span> <span class="keyword">Void</span> <span class="keyword">call</span>() <span class="keyword">throws</span> Exception {
-          LOG.debug(<span class="string">"Rolling file ({}): Roll scheduled after {} sec elapsed."</span>,
-              bucketPath, rollInterval);
-          <span class="keyword">try</span> {
-            <span class="comment">// Roll the file and remove reference from sfWriters map.</span>
-            close(<span class="keyword">true</span>);
-          } <span class="keyword">catch</span>(Throwable t) {
-            LOG.error(<span class="string">"Unexpected error"</span>, t);
-          }
-          <span class="keyword">return</span> <span class="keyword">null</span>;
-        }
-      };
-      <span class="comment">// 以秒为单位在这里指定。将这个线程执行的结果赋值给timedRollFuture这个属性</span>
-      timedRollFuture = timedRollerPool.schedule(action, rollInterval,
-          TimeUnit.SECONDS);
-    }
-
-    isOpen = <span class="keyword">true</span>;
-}
-</code></pre><p>flush方法，只会在close和append方法(处理的事件数等于批次数)中被调用：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> flush() <span class="keyword">throws</span> IOException, InterruptedException {
-    checkAndThrowInterruptedException();
-    <span class="keyword">if</span> (!isBatchComplete()) { <span class="comment">//isBatchComplete判断batchCount是否等于0。 所以这里只要batchCount不为0，那么执行下去</span>
-      doFlush(); <span class="comment">// doFlush方法会调用HDFSWriter的sync方法，并且将batchCount设置为0</span>
-
-      <span class="comment">// idleTimeout没有配置，以下代码不会执行</span>
-      <span class="keyword">if</span>(idleTimeout &gt; <span class="number">0</span>) {
-        <span class="comment">// if the future exists and couldn't be cancelled, that would mean it has already run</span>
-        <span class="comment">// or been cancelled</span>
-        <span class="keyword">if</span>(idleFuture == <span class="keyword">null</span> || idleFuture.cancel(<span class="keyword">false</span>)) {
-          Callable&lt;<span class="keyword">Void</span>&gt; idleAction = <span class="keyword">new</span> Callable&lt;<span class="keyword">Void</span>&gt;() {
-            <span class="keyword">public</span> <span class="keyword">Void</span> <span class="keyword">call</span>() <span class="keyword">throws</span> Exception {
-              LOG.info(<span class="string">"Closing idle bucketWriter {} at {}"</span>, bucketPath,
-                System.currentTimeMillis());
-              <span class="keyword">if</span> (isOpen) {
-                close(<span class="keyword">true</span>);
-              }
-              <span class="keyword">return</span> <span class="keyword">null</span>;
-            }
-          };
-          idleFuture = timedRollerPool.schedule(idleAction, idleTimeout,
-              TimeUnit.SECONDS);
-        }
-      }
-    }
-}
-</code></pre><p>close方法：</p>
-<pre><code>  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> close(<span class="keyword">boolean</span> callCloseCallback)
-        <span class="keyword">throws</span> IOException, InterruptedException {
-    checkAndThrowInterruptedException();
-    <span class="keyword">try</span> {
-      <span class="comment">// close的时候先执行flush方法，清空batchCount，并调用HDFSWriter的sync方法</span>
-      flush();
-    } <span class="keyword">catch</span> (IOException e) {
-      LOG.warn(<span class="string">"pre-close flush failed"</span>, e);
-    }
-    <span class="keyword">boolean</span> failedToClose = <span class="keyword">false</span>;
-    LOG.info(<span class="string">"Closing {}"</span>, bucketPath);
-    <span class="comment">// 创建一个关闭线程，这个线程会调用HDFSWriter的close方法</span>
-    CallRunner&lt;<span class="keyword">Void</span>&gt; closeCallRunner = createCloseCallRunner();
-    <span class="keyword">if</span> (isOpen) { <span class="comment">// 如果文件还开着</span>
-      <span class="keyword">try</span> {
-          <span class="comment">// 执行HDFSWriter的close方法</span>
-        callWithTimeout(closeCallRunner);
-        sinkCounter.incrementConnectionClosedCount();
-      } <span class="keyword">catch</span> (IOException e) {
-        LOG.warn(
-          <span class="string">"failed to close() HDFSWriter for file ("</span> + bucketPath +
-            <span class="string">"). Exception follows."</span>, e);
-        sinkCounter.incrementConnectionFailedCount();
-        failedToClose = <span class="keyword">true</span>;
-        <span class="comment">// 关闭文件失败的话起个线程，retryInterval秒后继续执行</span>
-        <span class="keyword">final</span> Callable&lt;<span class="keyword">Void</span>&gt; scheduledClose =
-          createScheduledCloseCallable(closeCallRunner);
-        timedRollerPool.schedule(scheduledClose, retryInterval,
-          TimeUnit.SECONDS);
-      }
-      isOpen = <span class="keyword">false</span>;
-    } <span class="keyword">else</span> {
-      LOG.info(<span class="string">"HDFSWriter is already closed: {}"</span>, bucketPath);
-    }
-
-    <span class="comment">// timedRollFuture就是根据hdfs.rollInterval配置生成的一个属性。如果hdfs.rollInterval配置为0，那么不会执行以下代码</span>
-    <span class="comment">// 因为要close文件，所以如果开启了hdfs.rollInterval等待时间到了flush文件，由于文件已经关闭，再次关闭会有问题</span>
-    <span class="comment">// 所以这里取消timedRollFuture线程的执行</span>
-    <span class="keyword">if</span> (timedRollFuture != <span class="keyword">null</span> &amp;&amp; !timedRollFuture.isDone()) {
-      timedRollFuture.cancel(<span class="keyword">false</span>); <span class="comment">// do not cancel myself if running!</span>
-      timedRollFuture = <span class="keyword">null</span>;
-    }
-
-    <span class="comment">// 没有配置hdfs.idleTimeout， 不会执行</span>
-    <span class="keyword">if</span> (idleFuture != <span class="keyword">null</span> &amp;&amp; !idleFuture.isDone()) {
-      idleFuture.cancel(<span class="keyword">false</span>); <span class="comment">// do not cancel myself if running!</span>
-      idleFuture = <span class="keyword">null</span>;
-    }
-
-    <span class="comment">// 重命名文件，如果报错了，不会重命名文件</span>
-    <span class="keyword">if</span> (bucketPath != <span class="keyword">null</span> &amp;&amp; fileSystem != <span class="keyword">null</span> &amp;&amp; !failedToClose) {
-      <span class="comment">// 将 /data/2015/07/20/15/flume.1437375933234.txt.tmp 重命名为 /data/2015/07/20/15/flume.1437375933234.txt</span>
-      renameBucket(bucketPath, targetPath, fileSystem);
-    }
-    <span class="keyword">if</span> (callCloseCallback) { <span class="comment">// callCloseCallback是close方法的参数</span>
-
-      <span class="comment">// 调用关闭文件的回调函数，也就是BucketWriter的onCloseCallback属性</span>
-      <span class="comment">// 这个onCloseCallback属性就是在HDFSEventSink里的回调函数closeCallback。 用来处理sfWriters.remove(bucketPath);</span>
-      <span class="comment">// 如果onCloseCallback属性为true，那么说明这个BucketWriter已经不会再次open新的文件了。生命周期已经到了。</span>
-      <span class="comment">// onCloseCallback只有在append方法中调用shouldRotate方法的时候需要close文件的时候才会传入false，其他情况都是true</span>
-      runCloseAction(); 
-
-      closed = <span class="keyword">true</span>;
-    }
-}
-</code></pre><p>再回过头来看下append方法里的shouldRotate方法，shouldRotate方法执行下去的话会关闭文件然后再次打开新的文件：</p>
-<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">boolean</span> <span class="title">shouldRotate</span><span class="params">()</span> </span>{
-    <span class="keyword">boolean</span> doRotate = <span class="keyword">false</span>;
-
-    <span class="comment">// 调用HDFSWriter的isUnderReplicated方法，用来判断当前hdfs文件是否正在复制。</span>
-    <span class="keyword">if</span> (writer.isUnderReplicated()) {
-      <span class="keyword">this</span>.isUnderReplicated = <span class="keyword">true</span>;
-      doRotate = <span class="keyword">true</span>;
-    } <span class="keyword">else</span> {
-      <span class="keyword">this</span>.isUnderReplicated = <span class="keyword">false</span>;
-    }
-
-    <span class="comment">// rollCount就是配置的hdfs.rollCount。 eventCounter事件数达到rollCount之后，会close文件，然后创建新的文件</span>
-    <span class="keyword">if</span> ((rollCount &gt; <span class="number">0</span>) &amp;&amp; (rollCount &lt;= eventCounter)) {
-      LOG.debug(<span class="string">"rolling: rollCount: {}, events: {}"</span>, rollCount, eventCounter);
-      doRotate = <span class="keyword">true</span>;
-    }
-
-    <span class="comment">// rollSize就是配置的hdfs.rollSize。processSize是每个事件加起来的文件大小。当processSize超过rollSize的时候，会close文件，然后创建新的文件</span>
-    <span class="keyword">if</span> ((rollSize &gt; <span class="number">0</span>) &amp;&amp; (rollSize &lt;= processSize)) {
-      LOG.debug(<span class="string">"rolling: rollSize: {}, bytes: {}"</span>, rollSize, processSize);
-      doRotate = <span class="keyword">true</span>;
-    }
-
-    <span class="keyword">return</span> doRotate;
-}
-</code></pre><h2 id="HDFSWriter分析">HDFSWriter分析</h2><p>每个BucketWriter中对应只有一个HDFSWriter。</p>
-<p>HDFSWriter是一个接口，有3个具体的实现类，分别是：HDFSDataStream，HDFSSequenceFile和HDFSCompressedDataStream。分别对应fileType为DataStream，SequenceFile和CompressedStream。</p>
-<p>我们以HDFSDataStream为例，分析一下在BucketWriter中用到的HDFSWriter的一些方法：</p>
-<p>append方法，写hdfs文件：</p>
-<pre><code><span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">append</span><span class="params">(Event e)</span> <span class="keyword">throws</span> IOException </span>{
-    <span class="comment">// 非常简单，直接使用serializer的write方法</span>
-    <span class="comment">// serializer是org.apache.flume.serialization.EventSerializer接口的实现类</span>
-    <span class="comment">// 默认的Serializer是BodyTextEventSerializer</span>
-    serializer.write(e);
-}
-</code></pre><p>open方法：</p>
-<pre><code><span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">open</span><span class="params">(String filePath)</span> <span class="keyword">throws</span> IOException </span>{
-    Configuration conf = <span class="keyword">new</span> Configuration();
-    <span class="comment">// 构造hdfs路径</span>
-    Path dstPath = <span class="keyword">new</span> Path(filePath);
-    FileSystem hdfs = getDfs(conf, dstPath);
-    <span class="comment">// 调用doOpen方法</span>
-    doOpen(conf, dstPath, hdfs);
-}
-
-<span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">doOpen</span><span class="params">(Configuration conf,
-    Path dstPath, FileSystem hdfs)</span> <span class="keyword">throws</span>
-        IOException </span>{
-    <span class="keyword">if</span>(useRawLocalFileSystem) {
-      <span class="keyword">if</span>(hdfs <span class="keyword">instanceof</span> LocalFileSystem) {
-        hdfs = ((LocalFileSystem)hdfs).getRaw();
-      } <span class="keyword">else</span> {
-        logger.warn(<span class="string">"useRawLocalFileSystem is set to true but file system "</span> +
-            <span class="string">"is not of type LocalFileSystem: "</span> + hdfs.getClass().getName());
-      }
-    }
-
-    <span class="keyword">boolean</span> appending = <span class="keyword">false</span>;
-    <span class="comment">// 构造FSDataOutputStream，作为属性outStream</span>
-    <span class="keyword">if</span> (conf.getBoolean(<span class="string">"hdfs.append.support"</span>, <span class="keyword">false</span>) == <span class="keyword">true</span> &amp;&amp; hdfs.isFile
-            (dstPath)) {
-      outStream = hdfs.append(dstPath);
-      appending = <span class="keyword">true</span>;
-    } <span class="keyword">else</span> {
-      outStream = hdfs.create(dstPath);
-    }
-
-    <span class="comment">// 初始化Serializer</span>
-    serializer = EventSerializerFactory.getInstance(
-        serializerType, serializerContext, outStream);
-    <span class="keyword">if</span> (appending &amp;&amp; !serializer.supportsReopen()) {
-      outStream.close();
-      serializer = <span class="keyword">null</span>;
-      <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"serializer ("</span> + serializerType +
-          <span class="string">") does not support append"</span>);
-    }
-
-    <span class="comment">// must call superclass to check for replication issues</span>
-    registerCurrentStream(outStream, hdfs, dstPath);
-
-    <span class="keyword">if</span> (appending) {
-      serializer.afterReopen();
-    } <span class="keyword">else</span> {
-      serializer.afterCreate();
-    }
-}
-</code></pre><p>close方法：</p>
-<pre><code><span class="at_rule">@<span class="keyword">Override</span>
-public void <span class="function">close</span>() throws IOException </span>{
-    <span class="tag">serializer</span><span class="class">.flush</span>();
-    <span class="tag">serializer</span><span class="class">.beforeClose</span>();
-    <span class="tag">outStream</span><span class="class">.flush</span>();
-    <span class="tag">outStream</span><span class="class">.sync</span>();
-    <span class="tag">outStream</span><span class="class">.close</span>();
-
-    <span class="tag">unregisterCurrentStream</span>();
-}
-</code></pre><p>sync方法：</p>
-<pre><code><span class="at_rule">@<span class="keyword">Override</span>
-public void <span class="function">sync</span>() throws IOException </span>{
-    <span class="tag">serializer</span><span class="class">.flush</span>();
-    <span class="tag">outStream</span><span class="class">.flush</span>();
-    <span class="tag">outStream</span><span class="class">.sync</span>();
-}
-</code></pre><p>isUnderReplicated方法，在AbstractHDFSWriter中定义：</p>
-<pre><code><span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">isUnderReplicated</span><span class="params">()</span> </span>{
-    <span class="keyword">try</span> {
-      <span class="comment">// 得到目前文件replication后的块数</span>
-      <span class="keyword">int</span> numBlocks = getNumCurrentReplicas();
-      <span class="keyword">if</span> (numBlocks == -<span class="number">1</span>) {
-        <span class="keyword">return</span> <span class="keyword">false</span>;
-      }
-      <span class="keyword">int</span> desiredBlocks;
-      <span class="keyword">if</span> (configuredMinReplicas != <span class="keyword">null</span>) {
-        <span class="comment">// 如果配置了hdfs.minBlockReplicas</span>
-        desiredBlocks = configuredMinReplicas;
-      } <span class="keyword">else</span> {
-        <span class="comment">// 没配置hdfs.minBlockReplicas的话直接从hdfs配置中拿</span>
-        desiredBlocks = getFsDesiredReplication();
-      }
-      <span class="comment">// 如果当前复制的块比期望要复制的块数字要小的话，返回true</span>
-      <span class="keyword">return</span> numBlocks &lt; desiredBlocks;
-    } <span class="keyword">catch</span> (IllegalAccessException e) {
-      logger.<span class="keyword">error</span>(<span class="string">"Unexpected error while checking replication factor"</span>, e);
-    } <span class="keyword">catch</span> (InvocationTargetException e) {
-      logger.<span class="keyword">error</span>(<span class="string">"Unexpected error while checking replication factor"</span>, e);
-    } <span class="keyword">catch</span> (IllegalArgumentException e) {
-      logger.<span class="keyword">error</span>(<span class="string">"Unexpected error while checking replication factor"</span>, e);
-    }
-    <span class="keyword">return</span> <span class="keyword">false</span>;
-}
-</code></pre><h2 id="总结">总结</h2><p>hdfs.rollInterval，hdfs.rollSize，hdfs.rollCount，hdfs.minBlockReplicas，hdfs.batchSize这5个配置影响着hdfs文件的关闭。</p>
-<p><strong>注意，这5个配置影响的是一个hdfs文件，是一个hdfs文件。当hdfs文件关闭的时候，这些配置指标会重新开始计算。因为BucketWriter中的open方法里会调用resetCounters方法，这个方法会重置计数器。而基于hdfs.rollInterval的timedRollFuture线程返回值是在close方法中被销毁的。因此，只要close文件，并且open新文件的时候，这5个属性都会重新开始计算。</strong></p>
-<p>hdfs.rollInterval与时间有关，当时间达到hdfs.rollInterval配置的秒数，那么会close文件。</p>
-<p>hdfs.rollSize与每个event的字节大小有关，当一个一个event的字节相加起来大于等于hdfs.rollSize的时候，那么会close文件。</p>
-<p>hdfs.rollCount与事件的个数有关，当事件个数大于等于hdfs.rollCount的时候，那么会close文件。</p>
-<p>hdfs.batchSize表示当事件添加到hdfs.batchSize个的时候，也就是说HDFS Sink每次会拿hdfs.batchSize个事件，而且这些所有的事件都写进了同一个hdfs文件，这才会触发本次条件，并且其他4个配置都未达成条件。然后会close文件。</p>
-<p>hdfs.minBlockReplicas表示期望hdfs对文件最小的复制块数。所以有时候我们配置了hdfs.rollInterval，hdfs.rollSize，hdfs.rollCount这3个参数，并且这3个参数都没有符合条件，但是还是生成了多个文件，这就是因为这个参数导致的，而且这个参数的优先级比hdfs.rollSize，hdfs.rollCount要高。</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[分析Flume HDFSSink写hdfs文件过程]]>
-    
-    </summary>
-    
-      <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
-    
-      <category term="flume" scheme="http://fangjian0423.github.io/tags/flume/"/>
-    
-      <category term="flume" scheme="http://fangjian0423.github.io/categories/flume/"/>
     
   </entry>
   

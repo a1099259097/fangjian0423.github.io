@@ -1,0 +1,1051 @@
+<!doctype html>
+<html class="theme-next   use-motion ">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="big data,spark," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+
+
+
+
+
+
+<meta name="description" content="DataFrame是一个以命名列方式组织的分布式数据集。在概念上，它跟关系型数据库中的一张表或者1个Python(或者R)中的data frame一样，但是比他们更优化。DataFrame可以根据结构化的数据文件、hive表、外部数据库或者已经存在的RDD构造 ...">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark DataFrame介绍">
+<meta property="og:url" content="http://fangjian0423.github.io/2016/02/17/spark-sql/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="DataFrame是一个以命名列方式组织的分布式数据集。在概念上，它跟关系型数据库中的一张表或者1个Python(或者R)中的data frame一样，但是比他们更优化。DataFrame可以根据结构化的数据文件、hive表、外部数据库或者已经存在的RDD构造 ...">
+<meta property="og:updated_time" content="2016-02-17T03:25:25.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark DataFrame介绍">
+<meta name="twitter:description" content="DataFrame是一个以命名列方式组织的分布式数据集。在概念上，它跟关系型数据库中的一张表或者1个Python(或者R)中的data frame一样，但是比他们更优化。DataFrame可以根据结构化的数据文件、hive表、外部数据库或者已经存在的RDD构造 ...">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'always',
+    motion: true
+  };
+</script>
+
+  <title> Spark DataFrame介绍 | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <div class="container one-column page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu menu-left">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-th fa-fw"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+      
+        <li class="menu-item menu-item-search">
+          <a href="#" class="st-search-show-outputs">
+            
+              <i class="menu-item-icon fa fa-search icon-next-search"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  
+
+<script type="text/javascript">
+  (function(w,d,t,u,n,s,e){w['SwiftypeObject']=n;w[n]=w[n]||function(){
+    (w[n].q=w[n].q||[]).push(arguments);};s=d.createElement(t);
+    e=d.getElementsByTagName(t)[0];s.async=1;s.src=u;e.parentNode.insertBefore(s,e);
+  })(window,document,'script','//s.swiftypecdn.com/install/v2/st.js','_st');
+
+  _st('install', 'opcVB8zmpdXSzsKnBELd','2.0.0');
+</script>
+
+
+
+    </div>
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div id="content" class="content">
+          
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Spark DataFrame介绍
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            发表于
+            <time itemprop="dateCreated" datetime="2016-02-17T09:22:22+08:00" content="2016-02-17">
+              2016-02-17
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp; 分类于
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/spark/" itemprop="url" rel="index">
+                    <span itemprop="name">spark</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+              &nbsp; | &nbsp;
+              <a href="/2016/02/17/spark-sql/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/02/17/spark-sql/" itemprop="commentsCount"></span>
+              </a>
+            </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><h2 id="DataFrame是什么">DataFrame是什么</h2><p>DataFrame是一个以命名列方式组织的分布式数据集。在概念上，它跟关系型数据库中的一张表或者1个Python(或者R)中的data frame一样，但是比他们更优化。DataFrame可以根据结构化的数据文件、hive表、外部数据库或者已经存在的RDD构造。</p>
+<h2 id="DataFrame的创建">DataFrame的创建</h2><p>Spark DataFrame可以从一个已经存在的RDD、hive表或者数据源中创建。</p>
+<p>以下一个例子就表示一个DataFrame基于一个json文件创建：</p>
+<pre><code>val sc: SparkContext <span class="comment">// An existing SparkContext.</span>
+val sqlContext = new org<span class="class">.apache</span><span class="class">.spark</span><span class="class">.sql</span><span class="class">.SQLContext</span>(sc)
+
+val df = sqlContext<span class="class">.read</span><span class="class">.json</span>(<span class="string">"examples/src/main/resources/people.json"</span>)
+
+<span class="comment">// Displays the content of the DataFrame to stdout</span>
+df.<span class="function"><span class="title">show</span><span class="params">()</span></span>
+</code></pre><h2 id="DataFrame的操作">DataFrame的操作</h2><p>直接以1个例子来说明DataFrame的操作：</p>
+<p>json文件内容：</p>
+<pre><code>{"<span class="attribute">name</span>":<span class="value"><span class="string">"Michael"</span></span>}
+{"<span class="attribute">name</span>":<span class="value"><span class="string">"Andy"</span></span>, "<span class="attribute">age</span>":<span class="value"><span class="number">30</span></span>}
+{"<span class="attribute">name</span>":<span class="value"><span class="string">"Justin"</span></span>, "<span class="attribute">age</span>":<span class="value"><span class="number">19</span></span>}
+</code></pre><p>程序内容：</p>
+<pre><code>val conf = new SparkConf().setMaster("local").setAppName("DataFrameTest")
+
+val sc = new SparkContext(conf)
+
+val sqlContext = new SQLContext(sc)
+
+val df = sqlContext.read.json(this.getClass.getResource("/").toString + "people.json")
+
+<span class="header">  /** 展示DataFrame的内容
++----+-------+</span>
+<span class="header">| age|   name|
++----+-------+</span>
+|null|Michael|
+|  30|   Andy|
+|  19| Justin|
+<span class="code">+----+</span>-------+  
+<span class="code">  **/</span>
+df.show()
+
+/** 以树的形式打印出DataFrame的schema
+root
+<span class="code"> |-- age: long (nullable = true)</span>
+<span class="code"> |-- name: string (nullable = true)</span>
+*<span class="strong">*/
+df.printSchema()
+
+</span><span class="header">/** 打印出name列的数据
++-------+</span>
+<span class="header">|   name|
++-------+</span>
+|Michael|
+|   Andy|
+| Justin|
+<span class="code">+-------+</span>   
+*<span class="strong">*/
+df.select("name").show()
+
+</span><span class="header">/** 打印出name列和age列+1的数据，DataFrame的apply方法返回Column
++-------+---------+</span>
+<span class="header">|   name|(age + 1)|
++-------+---------+</span>
+|Michael|     null|
+|   Andy|       31|
+<span class="header">| Justin|       20|
++-------+---------+</span>
+*<span class="strong">*/
+df.select(df("name"), df("age") + 1).show()
+
+</span><span class="header">/** 添加过滤条件，过滤出age字段大于21的数据
++---+----+</span>
+<span class="header">|age|name|
++---+----+</span>
+<span class="header">| 30|Andy|
++---+----+</span>
+*<span class="strong">*/
+df.filter(df("age") &gt; 21).show()
+
+</span><span class="header">/** 以age字段分组进行统计
++----+-----+</span>
+<span class="header">| age|count|
++----+-----+</span>
+|null|    1|
+|  19|    1|
+<span class="header">|  30|    1|
++----+-----+</span>
+*<span class="strong">*/
+df.groupBy(df("age")).count().show()</span>
+</code></pre><h2 id="使用反射推断出Schema">使用反射推断出Schema</h2><p>Spark SQL的Scala接口支持将包括case class数据的RDD转换成DataFrame。</p>
+<p>case class定义表的schema，case class的属性会被读取并且成为列的名字，这里case class也可以被当成别的case class的属性或者是复杂的类型，比如Sequence或Array。</p>
+<p>RDD会被隐式转换成DataFrame并且被注册成一个表，这个表可以被用在查询语句中：</p>
+<pre><code><span class="comment">// sc is an existing SparkContext.</span>
+val sqlContext = new org<span class="class">.apache</span><span class="class">.spark</span><span class="class">.sql</span><span class="class">.SQLContext</span>(sc)
+<span class="comment">// this is used to implicitly convert an RDD to a DataFrame.</span>
+import sqlContext<span class="class">.implicits</span>._
+
+<span class="comment">// Define the schema using a case class.</span>
+<span class="comment">// <span class="doctag">Note:</span> Case classes in Scala 2.10 can support only up to 22 fields. To work around this limit,</span>
+<span class="comment">// you can use custom classes that implement the Product interface.</span>
+case class <span class="function"><span class="title">Person</span><span class="params">(name: String, age: Int)</span></span>
+
+<span class="comment">// Create an RDD of Person objects and register it as a table.</span>
+val people = sc.<span class="function"><span class="title">textFile</span><span class="params">(<span class="string">"examples/src/main/resources/people.txt"</span>)</span></span>.<span class="function"><span class="title">map</span><span class="params">(_.split(<span class="string">","</span>)</span></span>).<span class="function"><span class="title">map</span><span class="params">(p =&gt; Person(p(<span class="number">0</span>)</span></span>, <span class="function"><span class="title">p</span><span class="params">(<span class="number">1</span>)</span></span><span class="class">.trim</span><span class="class">.toInt</span>)).<span class="function"><span class="title">toDF</span><span class="params">()</span></span>
+people.<span class="function"><span class="title">registerTempTable</span><span class="params">(<span class="string">"people"</span>)</span></span>
+
+<span class="comment">// SQL statements can be run by using the sql methods provided by sqlContext.</span>
+val teenagers = sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"SELECT name, age FROM people WHERE age &gt;= 13 AND age &lt;= 19"</span>)</span></span>
+
+<span class="comment">// The results of SQL queries are DataFrames and support all the normal RDD operations.</span>
+<span class="comment">// The columns of a row in the result can be accessed by field index:</span>
+teenagers.<span class="function"><span class="title">map</span><span class="params">(t =&gt; <span class="string">"Name: "</span> + t(<span class="number">0</span>)</span></span>).<span class="function"><span class="title">collect</span><span class="params">()</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(println)</span></span>
+
+<span class="comment">// or by field name:</span>
+teenagers.<span class="function"><span class="title">map</span><span class="params">(t =&gt; <span class="string">"Name: "</span> + t.getAs[String](<span class="string">"name"</span>)</span></span>).<span class="function"><span class="title">collect</span><span class="params">()</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(println)</span></span>
+
+<span class="comment">// row.getValuesMap[T] retrieves multiple columns at once into a Map[String, T]</span>
+teenagers.<span class="function"><span class="title">map</span><span class="params">(_.getValuesMap[Any](List(<span class="string">"name"</span>, <span class="string">"age"</span>)</span></span>)).<span class="function"><span class="title">collect</span><span class="params">()</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(println)</span></span>
+<span class="comment">// Map("name" -&gt; "Justin", "age" -&gt; 19)</span>
+</code></pre><h2 id="使用编程指定Schema">使用编程指定Schema</h2><p>当case class不能提前确定（例如，记录的结构是经过编码的字符串，或者一个文本集合将会被解析，不同的字段投影给不同的用户），一个 DataFrame 可以通过三步来创建。</p>
+<p>1.从原来的 RDD 创建一个行的 RDD<br>2.创建由一个 StructType 表示的模式与第一步创建的 RDD 的行结构相匹配<br>3.在行 RDD 上通过 applySchema 方法应用模式</p>
+<pre><code><span class="comment">// sc is an existing SparkContext.</span>
+<span class="variable"><span class="keyword">val</span> sqlContext</span> = new org.apache.spark.sql.SQLContext(sc)
+
+<span class="comment">// Create an RDD</span>
+<span class="variable"><span class="keyword">val</span> people</span> = sc.textFile(<span class="string">"examples/src/main/resources/people.txt"</span>)
+
+<span class="comment">// The schema is encoded in a string</span>
+<span class="variable"><span class="keyword">val</span> schemaString</span> = <span class="string">"name age"</span>
+
+<span class="comment">// Import Row.</span>
+<span class="keyword">import</span> org.apache.spark.sql.Row;
+
+<span class="comment">// Import Spark SQL data types</span>
+<span class="keyword">import</span> org.apache.spark.sql.types.{StructType,StructField,StringType};
+
+<span class="comment">// Generate the schema based on the string of schema</span>
+<span class="variable"><span class="keyword">val</span> schema</span> =
+  StructType(
+    schemaString.split(<span class="string">" "</span>).map(fieldName =&gt; StructField(fieldName, StringType, <span class="literal">true</span>)))
+
+<span class="comment">// Convert records of the RDD (people) to Rows.</span>
+<span class="variable"><span class="keyword">val</span> rowRDD</span> = people.map(_.split(<span class="string">","</span>)).map(p =&gt; Row(p(<span class="number">0</span>), p(<span class="number">1</span>).trim))
+
+<span class="comment">// Apply the schema to the RDD.</span>
+<span class="variable"><span class="keyword">val</span> peopleDataFrame</span> = sqlContext.createDataFrame(rowRDD, schema)
+
+<span class="comment">// Register the DataFrames as a table.</span>
+peopleDataFrame.registerTempTable(<span class="string">"people"</span>)
+
+<span class="comment">// SQL statements can be run by using the sql methods provided by sqlContext.</span>
+<span class="variable"><span class="keyword">val</span> results</span> = sqlContext.sql(<span class="string">"SELECT name FROM people"</span>)
+
+<span class="comment">// The results of SQL queries are DataFrames and support all the normal RDD operations.</span>
+<span class="comment">// The columns of a row in the result can be accessed by field index or by field name.</span>
+results.map(t =&gt; <span class="string">"Name: "</span> + t(<span class="number">0</span>)).collect().foreach(println)
+</code></pre><h2 id="数据源">数据源</h2><p>Spark SQL默认使用的数据源是parquet(可以通过spark.sql.sources.default修改)。</p>
+<pre><code>val df = sqlContext<span class="class">.read</span><span class="class">.load</span>(<span class="string">"examples/src/main/resources/users.parquet"</span>)
+df.<span class="function"><span class="title">select</span><span class="params">(<span class="string">"name"</span>, <span class="string">"favorite_color"</span>)</span></span><span class="class">.write</span><span class="class">.save</span>(<span class="string">"namesAndFavColors.parquet"</span>)
+</code></pre><p>可以在读取数据源的时候指定一些往外的参数。数据源也可以使用全名称，比如org.apache.spark.sql.parquet，但是内置的数据源可以使用短名称，比如json, parquet, jdbc。任何类型的DataFrame都可以使用这种方式转换成其他类型：</p>
+<pre><code>val df = sqlContext<span class="class">.read</span><span class="class">.format</span>(<span class="string">"json"</span>).<span class="function"><span class="title">load</span><span class="params">(<span class="string">"examples/src/main/resources/people.json"</span>)</span></span>
+df.<span class="function"><span class="title">select</span><span class="params">(<span class="string">"name"</span>, <span class="string">"age"</span>)</span></span><span class="class">.write</span><span class="class">.format</span>(<span class="string">"parquet"</span>).<span class="function"><span class="title">save</span><span class="params">(<span class="string">"namesAndAges.parquet"</span>)</span></span>
+</code></pre><p>使用read方法读取数据源得到DataFrame，还可以使用sql直接查询文件的方式：</p>
+<pre><code>val df = sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"SELECT * FROM parquet.`examples/src/main/resources/users.parquet`"</span>)</span></span>
+</code></pre><p>保存模式：</p>
+<p>保存方法会需要一个可选参数SaveMode，用于处理已经存在的数据。这些保存模式内部不会用到锁的概念，也不是一个原子操作。如果使用了Overwrite这种保存模式，那么写入数据前会清空之前的老数据。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Scala/Java</th>
+<th style="text-align:center">具体值</th>
+<th style="text-align:center">含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">SaveMode.ErrorIfExists (默认值)</td>
+<td style="text-align:center">“error” (默认值)</td>
+<td style="text-align:center">当保存DataFrame到数据源的时候，如果数据源文件已经存在，那么会抛出异常</td>
+</tr>
+<tr>
+<td style="text-align:center">SaveMode.Append</td>
+<td style="text-align:center">“append”</td>
+<td style="text-align:center">如果数据源文件已经存在，append到文件末尾</td>
+</tr>
+<tr>
+<td style="text-align:center">SaveMode.Overwrite</td>
+<td style="text-align:center">“overwrite”</td>
+<td style="text-align:center">如果数据源文件已经存在，清空数据</td>
+</tr>
+<tr>
+<td style="text-align:center">SaveMode.Ignore</td>
+<td style="text-align:center">“ignore”</td>
+<td style="text-align:center">如果数据源文件已经存在，不做任何处理。跟SQL中的 CREATE TABLE IF NOT EXISTS 类似</td>
+</tr>
+</tbody>
+</table>
+<p>持久化表：</p>
+<p>当使用HiveContext的时候，使用saveAsTable方法可以把DataFrame持久化成表。跟registerTempTable方法不一样，saveAsTable方法会把DataFrame持久化成表，并且创建一个数据的指针到HiveMetastore对象中。只要获得了同一个HiveMetastore对象的链接，当Spark程序重启的时候，saveAsTable持久化后的表依然会存在。一个DataFrame持久化成一个table也可以通过SQLContext的table方法，参数就是表的名字。</p>
+<p>默认情况下，saveAsTable方法会创建一个”被管理的表”，被管理的表的意思是说表中数据的位置会被HiveMetastore所控制，如果表被删除了，HiveMetastore中的数据也相当于被删除了。</p>
+<h3 id="Parquet_Files">Parquet Files</h3><p>parquet是一种基于列的存储格式，并且可以被很多框架所支持。Spark SQL支持parquet文件的读和写操作，并且会自动维护原始数据的schema，当写一个parquet文件的时候，所有的列都允许为空。</p>
+<h4 id="加载Parquet文件">加载Parquet文件</h4><pre><code><span class="comment">// sqlContext from the previous example is used in this example.</span>
+<span class="comment">// This is used to implicitly convert an RDD to a DataFrame.</span>
+import sqlContext<span class="class">.implicits</span>._
+
+val people: RDD[Person] = ... <span class="comment">// An RDD of case class objects, from the previous example.</span>
+
+<span class="comment">// The RDD is implicitly converted to a DataFrame by implicits, allowing it to be stored using Parquet.</span>
+people<span class="class">.write</span><span class="class">.parquet</span>(<span class="string">"people.parquet"</span>)
+
+<span class="comment">// Read in the parquet file created above. Parquet files are self-describing so the schema is preserved.</span>
+<span class="comment">// The result of loading a Parquet file is also a DataFrame.</span>
+val parquetFile = sqlContext<span class="class">.read</span><span class="class">.parquet</span>(<span class="string">"people.parquet"</span>)
+
+<span class="comment">//Parquet files can also be registered as tables and then used in SQL statements.</span>
+parquetFile.<span class="function"><span class="title">registerTempTable</span><span class="params">(<span class="string">"parquetFile"</span>)</span></span>
+val teenagers = sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"SELECT name FROM parquetFile WHERE age &gt;= 13 AND age &lt;= 19"</span>)</span></span>
+teenagers.<span class="function"><span class="title">map</span><span class="params">(t =&gt; <span class="string">"Name: "</span> + t(<span class="number">0</span>)</span></span>).<span class="function"><span class="title">collect</span><span class="params">()</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(println)</span></span>
+</code></pre><h4 id="Parquet文件的Partition">Parquet文件的Partition</h4><p>Parquet文件可以根据列自动进行分区，只需要调用DataFrameWriter的partitionBy方法即可，该方法需要的参数是需要进行分区的列。比如需要分区成这样：</p>
+<pre><code>path
+└── <span class="keyword">to</span>
+    └── table
+        ├── gender=male
+        │   ├── <span class="attribute">...</span>
+        │   │
+        │   ├── country=US
+        │   │   └── <span class="built_in">data</span><span class="built_in">.</span>parquet
+        │   ├── country=<span class="literal">CN</span>
+        │   │   └── <span class="built_in">data</span><span class="built_in">.</span>parquet
+        │   └── <span class="attribute">...</span>
+        └── gender=female
+            ├── <span class="attribute">...</span>
+            │
+            ├── country=US
+            │   └── <span class="built_in">data</span><span class="built_in">.</span>parquet
+            ├── country=<span class="literal">CN</span>
+            │   └── <span class="built_in">data</span><span class="built_in">.</span>parquet
+            └── <span class="attribute">...</span>
+</code></pre><p>这个需要DataFrame就需要4列，分别是name，age，gender和country，write的时候如下：</p>
+<pre><code>dataFrame<span class="class">.write</span><span class="class">.partitionBy</span>(<span class="string">"gender"</span>, <span class="string">"country"</span>).<span class="function"><span class="title">parquet</span><span class="params">(<span class="string">"path"</span>)</span></span>
+</code></pre><h4 id="Schema_Merging">Schema Merging</h4><p>像ProtocolBuffer，Avro，Thrift一样，Parquet也支持schema的扩展。</p>
+<p>由于schema的自动扩展是一次昂贵的操作，所以默认情况下不是开启的，可以根据以下设置打开：</p>
+<p>读parquet文件的时候设置参数mergeSchema为true或者设置全局的sql属性spark.sql.parquet.mergeSchema为true：</p>
+<pre><code><span class="comment">// sqlContext from the previous example is used in this example.</span>
+<span class="comment">// This is used to implicitly convert an RDD to a DataFrame.</span>
+import sqlContext<span class="class">.implicits</span>._
+
+<span class="comment">// Create a simple DataFrame, stored into a partition directory</span>
+val df1 = sc.<span class="function"><span class="title">makeRDD</span><span class="params">(<span class="number">1</span> to <span class="number">5</span>)</span></span>.<span class="function"><span class="title">map</span><span class="params">(i =&gt; (i, i * <span class="number">2</span>)</span></span>).<span class="function"><span class="title">toDF</span><span class="params">(<span class="string">"single"</span>, <span class="string">"double"</span>)</span></span>
+df1<span class="class">.write</span><span class="class">.parquet</span>(<span class="string">"data/test_table/key=1"</span>)
+
+<span class="comment">// Create another DataFrame in a new partition directory,</span>
+<span class="comment">// adding a new column and dropping an existing column</span>
+val df2 = sc.<span class="function"><span class="title">makeRDD</span><span class="params">(<span class="number">6</span> to <span class="number">10</span>)</span></span>.<span class="function"><span class="title">map</span><span class="params">(i =&gt; (i, i * <span class="number">3</span>)</span></span>).<span class="function"><span class="title">toDF</span><span class="params">(<span class="string">"single"</span>, <span class="string">"triple"</span>)</span></span>
+df2<span class="class">.write</span><span class="class">.parquet</span>(<span class="string">"data/test_table/key=2"</span>)
+
+<span class="comment">// Read the partitioned table</span>
+val df3 = sqlContext<span class="class">.read</span><span class="class">.option</span>(<span class="string">"mergeSchema"</span>, <span class="string">"true"</span>).<span class="function"><span class="title">parquet</span><span class="params">(<span class="string">"data/test_table"</span>)</span></span>
+df3.<span class="function"><span class="title">printSchema</span><span class="params">()</span></span>
+
+<span class="comment">// The final schema consists of all 3 columns in the Parquet files together</span>
+<span class="comment">// with the partitioning column appeared in the partition directory paths.</span>
+<span class="comment">// root</span>
+<span class="comment">// |-- single: int (nullable = true)</span>
+<span class="comment">// |-- double: int (nullable = true)</span>
+<span class="comment">// |-- triple: int (nullable = true)</span>
+<span class="comment">// |-- key : int (nullable = true)</span>
+</code></pre><h3 id="JSON数据源">JSON数据源</h3><p>本文之前的一个例子就是使用的JSON数据源，使用SQLContext.read.json()读取一个带有String类型的RDD或者一个json文件。</p>
+<p>需要注意的是json文件不是一个典型的json格式的文件，每一行都是一个json对象。</p>
+<pre><code><span class="comment">// sc is an existing SparkContext.</span>
+val sqlContext = new org<span class="class">.apache</span><span class="class">.spark</span><span class="class">.sql</span><span class="class">.SQLContext</span>(sc)
+
+<span class="comment">// A JSON dataset is pointed to by path.</span>
+<span class="comment">// The path can be either a single text file or a directory storing text files.</span>
+val path = <span class="string">"examples/src/main/resources/people.json"</span>
+val people = sqlContext<span class="class">.read</span><span class="class">.json</span>(path)
+
+<span class="comment">// The inferred schema can be visualized using the printSchema() method.</span>
+people.<span class="function"><span class="title">printSchema</span><span class="params">()</span></span>
+<span class="comment">// root</span>
+<span class="comment">//  |-- age: integer (nullable = true)</span>
+<span class="comment">//  |-- name: string (nullable = true)</span>
+
+<span class="comment">// Register this DataFrame as a table.</span>
+people.<span class="function"><span class="title">registerTempTable</span><span class="params">(<span class="string">"people"</span>)</span></span>
+
+<span class="comment">// SQL statements can be run by using the sql methods provided by sqlContext.</span>
+val teenagers = sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"SELECT name FROM people WHERE age &gt;= 13 AND age &lt;= 19"</span>)</span></span>
+
+<span class="comment">// Alternatively, a DataFrame can be created for a JSON dataset represented by</span>
+<span class="comment">// an RDD[String] storing one JSON object per string.</span>
+val anotherPeopleRDD = sc.parallelize(
+  <span class="string">""</span><span class="string">"{"</span>name<span class="string">":"</span>Yin<span class="string">","</span>address<span class="string">":{"</span>city<span class="string">":"</span>Columbus<span class="string">","</span>state<span class="string">":"</span>Ohio<span class="string">"}}"</span><span class="string">""</span> :: Nil)
+val anotherPeople = sqlContext<span class="class">.read</span><span class="class">.json</span>(anotherPeopleRDD)
+</code></pre><h3 id="Hive表">Hive表</h3><p>需要使用HiveContext。</p>
+<pre><code><span class="comment">// sc is an existing SparkContext.</span>
+val sqlContext = new org<span class="class">.apache</span><span class="class">.spark</span><span class="class">.sql</span><span class="class">.hive</span><span class="class">.HiveContext</span>(sc)
+
+sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"CREATE TABLE IF NOT EXISTS src (key INT, value STRING)"</span>)</span></span>
+sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"LOAD DATA LOCAL INPATH 'examples/src/main/resources/kv1.txt' INTO TABLE src"</span>)</span></span>
+
+<span class="comment">// Queries are expressed in HiveQL</span>
+sqlContext.<span class="function"><span class="title">sql</span><span class="params">(<span class="string">"FROM src SELECT key, value"</span>)</span></span>.<span class="function"><span class="title">collect</span><span class="params">()</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(println)</span></span>
+</code></pre><h3 id="JDBC">JDBC</h3><p>直接使用load方法加载：</p>
+<pre><code>sqlContext<span class="built_in">.</span>load(<span class="string">"jdbc"</span>, <span class="built_in">Map</span>(<span class="string">"url"</span> <span class="subst">-&gt; </span><span class="string">"jdbc:mysql://localhost:3306/your_database?user=your_user&amp;password=your_password"</span>, <span class="string">"dbtable"</span> <span class="subst">-&gt; </span><span class="string">"your_table"</span>))
+</code></pre></span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/big-data/" rel="tag">#big data</a>
+          
+            <a href="/tags/spark/" rel="tag">#spark</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/02/10/sparkstreaming-programming-guide/" rel="next" title="Spark Streaming编程指南笔记">
+                <i class="fa fa-chevron-left"></i> Spark Streaming编程指南笔记
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+        </div>
+
+        
+
+
+        
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      </div>
+    
+  </div>
+
+
+      </div>
+
+      
+        
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <p class="site-author-name" itemprop="name">Format</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">65</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            <a href="/categories">
+              <span class="site-state-item-count">19</span>
+              <span class="site-state-item-name">分类</span>
+              </a>
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            <a href="/tags">
+              <span class="site-state-item-count">54</span>
+              <span class="site-state-item-name">标签</span>
+              </a>
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i> Twitter
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i> Weibo
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+              <a href="http://xtutu.me/" target="_blank">永哥</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://blog.zlf.me" target="_blank">Felix</a>
+              </span>
+            
+              <span class="links-of-author-item">
+              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#DataFrame是什么"><span class="nav-number">1.</span> <span class="nav-text">DataFrame是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DataFrame的创建"><span class="nav-number">2.</span> <span class="nav-text">DataFrame的创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DataFrame的操作"><span class="nav-number">3.</span> <span class="nav-text">DataFrame的操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用反射推断出Schema"><span class="nav-number">4.</span> <span class="nav-text">使用反射推断出Schema</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用编程指定Schema"><span class="nav-number">5.</span> <span class="nav-text">使用编程指定Schema</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据源"><span class="nav-number">6.</span> <span class="nav-text">数据源</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Parquet_Files"><span class="nav-number">6.1.</span> <span class="nav-text">Parquet Files</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#加载Parquet文件"><span class="nav-number">6.1.1.</span> <span class="nav-text">加载Parquet文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Parquet文件的Partition"><span class="nav-number">6.1.2.</span> <span class="nav-text">Parquet文件的Partition</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Schema_Merging"><span class="nav-number">6.1.3.</span> <span class="nav-text">Schema Merging</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JSON数据源"><span class="nav-number">6.2.</span> <span class="nav-text">JSON数据源</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hive表"><span class="nav-number">6.3.</span> <span class="nav-text">Hive表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JDBC"><span class="nav-number">6.4.</span> <span class="nav-text">JDBC</span></a></li></ol></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+      
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+
+  
+    
+    
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2016/02/17/spark-sql/';
+      var disqus_title = 'Spark DataFrame介绍';
+      var disqus_url = 'http://fangjian0423.github.io/2016/02/17/spark-sql/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+  
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
+
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    motionMiddleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+      if (CONFIG.sidebar === 'post') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  <script type="text/javascript" src="/js/bootstrap.js"></script>
+
+  
+  
+
+  
+  
+
+</body>
+</html>

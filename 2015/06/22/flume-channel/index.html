@@ -61,7 +61,7 @@
 <meta property="og:url" content="http://fangjian0423.github.io/2015/06/22/flume-channel/index.html">
 <meta property="og:site_name" content="Format's Notes">
 <meta property="og:description" content="Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等 ...">
-<meta property="og:updated_time" content="2015-12-20T17:08:47.000Z">
+<meta property="og:updated_time" content="2016-02-26T11:07:33.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Flume Channel组件分析">
 <meta name="twitter:description" content="Flume内置了很多Channel，比如Memory Channel, JDBC Channel, Kafka Channel, File Channel等 ...">
@@ -92,6 +92,15 @@
 <![endif]-->
   
 
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-74587201-1', 'auto');
+  ga('send', 'pageview');
+</script>
 
 
   <script type="text/javascript">
@@ -502,7 +511,7 @@ a1<span class="class">.channels</span><span class="class">.c1</span><span class=
 <p>take操作：先取出MemoryChannel中阻塞队列里的事件数据，然后放入MemoryTransaction里的takeList列表中，当需要回滚的时候会将takeList列表中的事件数据回滚到MemoryChannel中的阻塞队列里。commit操作不需要任何处理，因为事件已经从MemoryChannel中的阻塞队列里取出。</p>
 <p>MemoryChannel有2个队列容量配置，分别是capacity和transactionCapacity。capacity是MemoryChannel里的阻塞队列的容量，transactionCapacity是MemoryTransaction里的putList和takeList列表容量。</p>
 <h2 id="Channel总结">Channel总结</h2><p>Channel是Flume中的桥梁，连接着Source和Sink,重要性不言而喻。Flume内置也有很多的Channel。同样地，并不是所有的Channel都能符合需求。</p>
-<p>比如MemoryChannel在内存中处理，速度很快，但是却不能持久化，当服务器挂了，Channel中的数据会丢失，这时就需要用FileChannel或JDBCChannel，但这2种Channel速度慢。因此可以实现一个自定义的Channel，美团的<a href="http://tech.meituan.com/mt-log-system-optimization.html地址上就说明了一些Flume可以改进和优化的地方。" target="_blank" rel="external">http://tech.meituan.com/mt-log-system-optimization.html地址上就说明了一些Flume可以改进和优化的地方。</a></p>
+<p>比如MemoryChannel在内存中处理，速度很快，但是却不能持久化，当服务器挂了，Channel中的数据会丢失，这时就需要用FileChannel或JDBCChannel，但这2种Channel速度慢。因此可以实现一个自定义的Channel，美团的 <a href="http://tech.meituan.com/mt-log-system-optimization.html" target="_blank" rel="external">http://tech.meituan.com/mt-log-system-optimization.html</a> 地址上就说明了一些Flume可以改进和优化的地方。</p>
 </span>
       
     </div>

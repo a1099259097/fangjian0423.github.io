@@ -1399,15 +1399,15 @@ val vecAccum = sc.accumulator(new Vector(...))(VectorAccumulatorParam)
   </entry>
   
   <entry>
-    <title><![CDATA[记录Flume Channel队列满了之后发生的怪异问题]]></title>
+    <title><![CDATA[记录Flume使用KafkaSource的时候Channel队列满了之后发生的怪异问题]]></title>
     <link href="http://fangjian0423.github.io/2016/01/19/flume-channel-full-exception/"/>
     <id>http://fangjian0423.github.io/2016/01/19/flume-channel-full-exception/</id>
     <published>2016-01-19T12:07:35.000Z</published>
-    <updated>2016-01-19T12:11:10.000Z</updated>
+    <updated>2016-03-04T17:54:42.000Z</updated>
     <content type="html"><![CDATA[<p>Flume的这个问题纠结了2个月，因为之前实在太忙了，没有时间来研究这个问题产生的原理，今天终于研究出来了，找出了这个问题所在。</p>
 <p>先来描述一下这个问题的现象：</p>
-<p>Flume的Sink用的是Custom Sink，由于这个Custom Sink写的有一点小问题，比如batchSize是5000次，第4000条就会发生exception，这样每次都会写入4000条数据。Sink处理的时候都会发生异常，每次都会rollback，rollback方面的知识可以参考<a href="http://fangjian0423.github.io/2016/01/03/flume-transaction/">Flume Transaction介绍</a>。</p>
-<p>这样造成的后果有2个：</p>
+<p>Flume的Source用的是KafkaSource，Sink用的是Custom Sink，由于这个Custom Sink写的有一点小问题，比如batchSize是5000次，第4000条就会发生exception，这样每次都会写入4000条数据。Sink处理的时候都会发生异常，每次都会rollback，rollback方面的知识可以参考<a href="http://fangjian0423.github.io/2016/01/03/flume-transaction/">Flume Transaction介绍</a>。</p>
+<p>这样造成的后果有3个：</p>
 <p>1.Channel中的数据满了。会发生以下异常：</p>
 <pre><code>Caused by: org.apache.flume.ChannelFullException: Space <span class="keyword">for</span> commit <span class="keyword">to</span> queue couldn<span class="attribute">'t</span> be acquired. Sinks are likely <span class="keyword">not</span> keeping up <span class="keyword">with</span> sources, <span class="keyword">or</span> the <span class="keyword">buffer</span> size <span class="keyword">is</span> too tight
 </code></pre><p>2.Sink会一直写数据，造成数据量暴增。</p>
@@ -1433,7 +1433,7 @@ val vecAccum = sc.accumulator(new Vector(...))(VectorAccumulatorParam)
 }
 </code></pre><p>当Channel中的队列已经满了以后，上述代码会打印出convert json data error，而且jsonStr的内容居然是转换后的数据，这一点一开始让我十分费解，误以为transaction rollback之后会修改source中的数据。后来debug源码发现错误在Source中。</p>
 <p>后来发现并不是这样的。</p>
-<p>以KafkaSource为例，KafkaSource中有一个属性eventList，是个ArrayList。用来接收kafka consume的message。</p>
+<p>KafkaSource中有一个属性eventList，是个ArrayList。用来接收kafka consume的message。</p>
 <p>直接说明KafkaSource的process方法源码：</p>
 <pre><code><span class="keyword">public</span> Status process() <span class="keyword">throws</span> EventDeliveryException {
 
@@ -1513,7 +1513,7 @@ val vecAccum = sc.accumulator(new Vector(...))(VectorAccumulatorParam)
 <p>要避免本文所说的这一系列情况，最好的做法就是sink必须要加上很好的异常处理机制，不是任何情况都可以rollback的，要根据需求做对应的处理。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[记录Flume Channel队列满了之后发生的怪异问题。数据量暴增，Channel队列爆满 ...]]>
+    <![CDATA[记录Flume使用KafkaSource的时候Channel队列满了之后发生的怪异问题。数据量暴增，Channel队列爆满 ...]]>
     
     </summary>
     

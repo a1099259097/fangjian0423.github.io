@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-03-12T09:40:54.000Z</updated>
+  <updated>2016-03-12T09:45:05.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -16,10 +16,10 @@
   
   <entry>
     <title><![CDATA[Java根类Object的方法说明]]></title>
-    <link href="http://fangjian0423.github.io/2016/12/21/java-Object-method/"/>
-    <id>http://fangjian0423.github.io/2016/12/21/java-Object-method/</id>
-    <published>2016-12-21T14:32:35.000Z</published>
-    <updated>2016-03-12T09:40:54.000Z</updated>
+    <link href="http://fangjian0423.github.io/2016/03/12/java-Object-method/"/>
+    <id>http://fangjian0423.github.io/2016/03/12/java-Object-method/</id>
+    <published>2016-03-12T09:44:59.000Z</published>
+    <updated>2016-03-12T09:45:05.000Z</updated>
     <content type="html"><![CDATA[<p>Java中的Object类是所有类的父类，它提供了以下11个方法：</p>
 <ol>
 <li>public final native Class&lt;?&gt; getClass()</li>

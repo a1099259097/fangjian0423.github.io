@@ -61,7 +61,7 @@
 <meta property="og:url" content="http://fangjian0423.github.io/2015/07/24/java-poolthread/index.html">
 <meta property="og:site_name" content="Format's Notes">
 <meta property="og:description" content="写这篇博客的时候又刚好想起了当时自己实习的时候遇到的一个问题。1000个爬虫任务使用了多线程的处理方式，比如开5个线程处理这1000个任务 ...">
-<meta property="og:updated_time" content="2015-12-20T17:10:06.000Z">
+<meta property="og:updated_time" content="2016-03-13T13:44:49.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="java内置的线程池笔记">
 <meta name="twitter:description" content="写这篇博客的时候又刚好想起了当时自己实习的时候遇到的一个问题。1000个爬虫任务使用了多线程的处理方式，比如开5个线程处理这1000个任务 ...">
@@ -276,8 +276,8 @@
               &nbsp; | &nbsp; 分类于
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/jvm/" itemprop="url" rel="index">
-                    <span itemprop="name">jvm</span>
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
                   </a>
                 </span>
 
@@ -314,7 +314,10 @@
       
         <span itemprop="articleBody"><p>目前的工作是接触大数据相关的内容，自己也缺少高并发的知识，刚好前几天看了flume的源码，里面也用到了各种线程池内容，刚好学习一下，做个笔记。</p>
 <p>写这篇博客的时候又刚好想起了当时自己实习的时候遇到的一个问题。1000个爬虫任务使用了多线程的处理方式，比如开5个线程处理这1000个任务，每个线程分200个任务，然后各个线程处理那200个爬虫任务→_→，太笨了。其实更合理的方法是使用阻塞队列+线程池的方法。</p>
-<h2 id="ExecutorService">ExecutorService</h2><p>ExecutorService就是线程池的概念，ExecutorService的初始化可以使用Executors类的静态方法。</p>
+<h2 id="线程池的使用">线程池的使用</h2><p>Java把线程的调用封装成了一个Executor接口，Executor接口中定义了一个execute方法，用来提交线程的执行。</p>
+<p>而ExecutorService接口是Executor接口的子接口，用来管理线程的执行。</p>
+<p>ExecutorService的初始化可以使用Executors类的静态方法。</p>
+<p>Executors类是Java提供的一个专门用于创建线程池的类。</p>
 <p>Executors提供了很多方法用来初始化ExecutorService，可以初始化指定数目个线程的线城市或者单个线程的线程池。</p>
 <p>比如构造一个10个线程的线程池，使用了guava的ThreadFactoryBuilder，guava的ThreadFactoryBuilder可以传入一个namFormat参数用户来表示线程的name，它内部会使用数字增量表示%d，比如一下的nameFormat，10个线程，名字分别是thread-call-runner-1，thread-call-runner-2 … thread-call-runner-10:</p>
 <pre><code>Executors.newFixedThreadPool(<span class="number">10</span>, <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"thread-call-runner-%d"</span>).build());
@@ -428,7 +431,7 @@ cancel方法用来取消线程的继续执行，它有个boolean类型的返回�
 !<span class="type">Thread</span>.currentThread().isInterrupted()
 
 如果去掉了这个条件，那么还是会打印出<span class="number">5000</span>条处理数据。cancel方法底层会去interrupted对应的线程，所以才需要加上这个条件的判断。
-</code></pre><h2 id="ScheduledExecutorService">ScheduledExecutorService</h2><p>ScheduledExecutorService接口是ExecutorService接口的子类。</p>
+</code></pre><h2 id="调度线程池的使用">调度线程池的使用</h2><p>ScheduledExecutorService接口是ExecutorService接口的子类。</p>
 <p>看名字也知道，ScheduledExecutorService是基于调度的线程池。</p>
 <p>1.ScheduledExecutorService的schedule方法例子：</p>
 <pre><code>@<span class="type">Test</span>
@@ -526,7 +529,114 @@ scheduleWithFixedDelay有<span class="number">4</span>个参数，第一个参�
 }
 </code></pre><p>打印：</p>
 <pre><code>执行了<span class="number">4</span>次exec，第一次在<span class="number">0</span>秒执行，第二次在<span class="number">5</span>秒，第三次是<span class="number">10</span>秒，第四次在<span class="number">15</span>秒执行
-</code></pre></span>
+</code></pre><h2 id="线程池的参数解释">线程池的参数解释</h2><p>Executors类的静态方法中大致有这么几种创建不同类型的线程池：</p>
+<ol>
+<li>newFixedThreadPool</li>
+<li>newSingleThreadExecutor</li>
+<li>newCachedThreadPool</li>
+<li>newScheduledThreadPool</li>
+<li>newSingleThreadScheduledExecutor</li>
+</ol>
+<p>在分析这些方法之前，先解释一下线程池中所使用的一些配置参数。</p>
+<p>比如实例化一个单线程的线程池。源码如下：</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newSingleThreadExecutor</span><span class="params">()</span> </span>{
+    <span class="keyword">return</span> <span class="keyword">new</span> FinalizableDelegatedExecutorService
+        (<span class="keyword">new</span> ThreadPoolExecutor(<span class="number">1</span>, <span class="number">1</span>,
+                                <span class="number">0L</span>, TimeUnit.MILLISECONDS,
+                                <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;()));
+}
+</code></pre><p>ThreadPoolExecutor是线程池的具体实现类。它的构造函数接受以下这几个重要的参数：</p>
+<ol>
+<li>corePoolSize：线程池基本数量</li>
+<li>workQueue：用于保存等待执行的任务的阻塞队列。阻塞队列的类型可自己选择，阻塞有这几种类型，ArrayBlockingQueue(基于数组的有界阻塞队列，按FIFO进出任务)，LinkedBlockingQueue(基于链表的阻塞队列，FIFO方式)，SynchronousQueue(不存储元素的阻塞队列。每个插入操作必须等到另一个线程调用移除操作，否则插入操作一直处于阻塞状态，吞吐量要高于LinkedBlockingQueue，是一个无限阻塞队列)，PriorityBlockingQueue(具有优先级的无限阻塞队列)</li>
+<li>maximunPoolSize：线程池最大数量，也就是线程池允许创建的最大线程数。这个参数跟阻塞队列的关系是这样的：如果阻塞队列满了，这个时候又来了一个任务，那么这个时候如果当前线程数小于最大数量，那么就会直接创建新的线程执行任务。当然，如果工作队列是无界的，那么这个参数就没有意义了，因为队列无界，任务都会在队列中存储着</li>
+<li>ThreadFactory：创建线程的工厂</li>
+<li>RejectedExecutionHandler：饱和策略，也就是当队列和线程数目都满了以后，采取的策略。有AbortPolicy(直接抛出异常)，CallerRunsPolicy(只用调用者所在线程来运行任务)，DiscardOldestPolicy(丢弃队列里最近的一个任务，并执行当前任务)，DiscardPolicy(不处理，直接丢弃)。当然，还可以自定义策略</li>
+<li>keeyAliveTime：存活时间。如果当前线程池中的线程数量比基本数量要多，并且是闲置状态的话，这些闲置的线程能存活的最大时间</li>
+<li>TimeUnit，跟第6个参数一起使用，表示存活时间的时间单位</li>
+</ol>
+<p>这些参数中，有3个参数跟线程池大小有关，分别是基本数量，最大数量和阻塞队列。</p>
+<p>线程池的处理流程是这样的：</p>
+<ol>
+<li>首先判断线程池的基本大小，如果基本大小还没满，那么直接创建新的线程执行任务，否则进行下一步</li>
+<li>判断线程池中的阻塞队列是是否已满，没满的话存到阻塞队列里等待执行，否则执行下一步(所以如果是个无界的阻塞队列，那么这一步永远都成立)</li>
+<li>判断线程池最大大小是否已满，没满的话直接创建线程执行任务，否则交给饱和策略处理</li>
+</ol>
+<p>以1个例子来说明：</p>
+<pre><code>ThreadPoolExecutor threadPoolExecutor = <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">1</span>, <span class="number">20</span>, <span class="number">10</span>, TimeUnit.SECONDS,<span class="keyword">new</span> LinkedBlockingQueue(<span class="number">10</span>));
+
+<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">15</span>; i ++) {
+    threadPoolExecutor.submit(<span class="keyword">new</span> MyThread(i + <span class="number">1</span>));
+}
+
+<span class="keyword">static</span> <span class="keyword">class</span> MyThread implements Runnable {
+    <span class="keyword">private</span> <span class="keyword">int</span> index;
+    <span class="function"><span class="keyword">public</span> <span class="title">MyThread</span><span class="params">(<span class="keyword">int</span> index)</span> </span>{
+        <span class="keyword">this</span>.index = index;
+    }
+    @<span class="function">Override
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+        System.out.println(<span class="keyword">this</span>.index);
+        <span class="keyword">try</span> {
+            Thread.sleep(<span class="number">3000</span>);
+        } <span class="keyword">catch</span> (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre><p>输出：</p>
+<pre><code><span class="number">1</span>
+<span class="number">12</span>
+<span class="number">13</span>
+<span class="number">14</span>
+<span class="number">15</span>
+<span class="number">2</span>
+<span class="number">3</span>
+<span class="number">4</span>
+<span class="number">5</span>
+<span class="number">6</span>
+<span class="number">7</span>
+<span class="number">8</span>
+<span class="number">9</span>
+<span class="number">10</span>
+<span class="number">11</span>
+</code></pre><p>很明显地看到，线程池基本大小只有1个，所以先输出10，接下来阻塞队列有最多有10个线程等待需要执行，但是多出了12，13，14，15这4个线程，由于最大线程数是20个，所以这4个线程就直接被创建开始执行了。</p>
+<p>下面就分析Executors的静态方法：</p>
+<p>newFixedThreadPool方法:</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newFixedThreadPool</span><span class="params">(<span class="keyword">int</span> nThreads)</span> </span>{
+    <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(nThreads, nThreads,
+                                  <span class="number">0L</span>, TimeUnit.MILLISECONDS,
+                                  <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;());
+}
+</code></pre><p>创建一个基本大小和最大大小都为nThreads，阻塞队列长度为Integer.MAX_VALUE的线程池。</p>
+<p>newSingleThreadExecutor方法：</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newSingleThreadExecutor</span><span class="params">()</span> </span>{
+    <span class="keyword">return</span> <span class="keyword">new</span> FinalizableDelegatedExecutorService
+        (<span class="keyword">new</span> ThreadPoolExecutor(<span class="number">1</span>, <span class="number">1</span>,
+                                <span class="number">0L</span>, TimeUnit.MILLISECONDS,
+                                <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;()));
+}
+</code></pre><p>创建一个基本大小和最大大小都为1，阻塞队列长度为Integer.MAX_VALUE的线程池。</p>
+<p>newCachedThreadPool方法：</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newCachedThreadPool</span><span class="params">()</span> </span>{
+    <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">0</span>, Integer.MAX_VALUE,
+                                  <span class="number">60L</span>, TimeUnit.SECONDS,
+                                  <span class="keyword">new</span> SynchronousQueue&lt;Runnable&gt;());
+}
+</code></pre><p>创建一个基本大小为0，最大大小都为Integer.MAX_VALUE，阻塞队列为无界队列的线程池。</p>
+<p>newScheduledThreadPool方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">static</span> <span class="function">ScheduledExecutorService <span class="title">newScheduledThreadPool</span><span class="params">(<span class="keyword">int</span> corePoolSize)</span> </span>{
+    <span class="keyword">return</span> <span class="keyword">new</span> ScheduledThreadPoolExecutor(corePoolSize);
+}
+</code></pre><p>创建一个基本大小为corePoolSize，最大大小都为Integer.MAX_VALUE，阻塞队列为DelayedWorkQueue的线程池。</p>
+<p>newSingleThreadScheduledExecutor方法：</p>
+<p>创建一个基本大小为corePoolSize，最大大小都为Integer.MAX_VALUE，阻塞队列为DelayedWorkQueue的线程池。</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ScheduledExecutorService <span class="title">newSingleThreadScheduledExecutor</span><span class="params">()</span> </span>{
+    <span class="keyword">return</span> <span class="keyword">new</span> DelegatedScheduledExecutorService
+        (<span class="keyword">new</span> ScheduledThreadPoolExecutor(<span class="number">1</span>));    
+}
+</code></pre><p>创建一个基本大小为1，最大大小都为Integer.MAX_VALUE，阻塞队列为DelayedWorkQueue的线程池。</p>
+</span>
       
     </div>
 
@@ -634,7 +744,7 @@ scheduleWithFixedDelay有<span class="number">4</span>个参数，第一个参�
 
           <div class="site-state-item site-state-categories">
             <a href="/categories">
-              <span class="site-state-item-count">21</span>
+              <span class="site-state-item-count">22</span>
               <span class="site-state-item-name">分类</span>
               </a>
           </div>
@@ -719,7 +829,7 @@ scheduleWithFixedDelay有<span class="number">4</span>个参数，第一个参�
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ExecutorService"><span class="nav-number">1.</span> <span class="nav-text">ExecutorService</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ScheduledExecutorService"><span class="nav-number">2.</span> <span class="nav-text">ScheduledExecutorService</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#线程池的使用"><span class="nav-number">1.</span> <span class="nav-text">线程池的使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#调度线程池的使用"><span class="nav-number">2.</span> <span class="nav-text">调度线程池的使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#线程池的参数解释"><span class="nav-number">3.</span> <span class="nav-text">线程池的参数解释</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator"></div>

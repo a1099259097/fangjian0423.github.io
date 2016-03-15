@@ -321,7 +321,7 @@ i will be destroyed
     <link href="http://fangjian0423.github.io/2016/02/21/avro-intro/"/>
     <id>http://fangjian0423.github.io/2016/02/21/avro-intro/</id>
     <published>2016-02-20T17:23:22.000Z</published>
-    <updated>2016-02-20T17:31:01.000Z</updated>
+    <updated>2016-03-15T10:17:16.000Z</updated>
     <content type="html"><![CDATA[<h2 id="Avro介绍">Avro介绍</h2><p>Apache Avro是一个数据序列化系统。</p>
 <p>Avro所提供的属性：</p>
 <p>1.丰富的数据结构<br>2.使用快速的压缩二进制数据格式<br>3.提供容器文件用于持久化数据<br>4.远程过程调用RPC<br>5.简单的动态语言结合功能，Avro 和动态语言结合后，读写数据文件和使用 RPC 协议都不需要生成代码，而代码生成作为一种可选的优化只值得在静态类型语言中实现。</p>
@@ -571,6 +571,36 @@ val rdd = sc<span class="class">.hadoopFile</span>[AvroWrapper[GenericRecord], N
 val nameRdd = rdd.<span class="function"><span class="title">map</span><span class="params">(s =&gt; s._1.datum()</span></span>.<span class="function"><span class="title">get</span><span class="params">(<span class="string">"name"</span>)</span></span>.toString)
 
 nameRdd.<span class="function"><span class="title">collect</span><span class="params">()</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(println)</span></span>
+</code></pre><h2 id="使用Avro需要注意的地方">使用Avro需要注意的地方</h2><p>笔者使用Avro的时候暂时遇到了下面2个坑。先记录一下，以后遇到新的坑会更新这篇文章。</p>
+<p>1.如果定义了unions类型的字段，而且unions中有null选项的schema，比如如下schema：</p>
+<pre><code>{
+"<span class="attribute">namespace</span>": <span class="value"><span class="string">"example.avro"</span></span>,
+ "<span class="attribute">type</span>": <span class="value"><span class="string">"record"</span></span>,
+ "<span class="attribute">name</span>": <span class="value"><span class="string">"User2"</span></span>,
+ "<span class="attribute">fields</span>": <span class="value">[
+     {"<span class="attribute">name</span>": <span class="value"><span class="string">"name"</span></span>, "<span class="attribute">type</span>": <span class="value"><span class="string">"string"</span></span>},
+     {"<span class="attribute">name</span>": <span class="value"><span class="string">"favorite_number"</span></span>,  "<span class="attribute">type</span>": <span class="value">[<span class="string">"null"</span>,<span class="string">"int"</span>]</span>},
+     {"<span class="attribute">name</span>": <span class="value"><span class="string">"favorite_color"</span></span>, "<span class="attribute">type</span>": <span class="value">[<span class="string">"null"</span>,<span class="string">"string"</span>]</span>}
+ ]
+</span>}
+</code></pre><p>这样的schema，如果不使用Avro自动生成的model代码进行insert，并且insert中的model数据有null数据的话。然后用spark读avro文件的话，会报org.apache.avro.AvroTypeException: Found null, expecting int … 这样的错误。</p>
+<p>这一点很奇怪，但是使用Avro生成的Model进行insert的话，sprak读取就没有任何问题。 很困惑。</p>
+<p>2.如果使用了Map类型的字段，avro生成的model中的Map的Key默认类型为CharSequence。这种model我们insert数据的话，用String是没有问题的。但是spark读取之后要根据Key拿这个Map数据的时候，永远得到的是null。</p>
+<p>stackoverflow上有一个页面说到了这个问题。<a href="http://stackoverflow.com/questions/19728853/apache-avro-map-uses-charsequence-as-key" target="_blank" rel="external">http://stackoverflow.com/questions/19728853/apache-avro-map-uses-charsequence-as-key
+</a></p>
+<p>只需要在map类型的字段里加上”avro.java.string”: “String”这个选项即可。</p>
+<p>比如以下这个schema：</p>
+<pre><code>{
+"<span class="attribute">namespace</span>": <span class="value"><span class="string">"example.avro"</span></span>,
+ "<span class="attribute">type</span>": <span class="value"><span class="string">"record"</span></span>,
+ "<span class="attribute">name</span>": <span class="value"><span class="string">"User3"</span></span>,
+ "<span class="attribute">fields</span>": <span class="value">[
+     {"<span class="attribute">name</span>": <span class="value"><span class="string">"name"</span></span>, "<span class="attribute">type</span>": <span class="value"><span class="string">"string"</span></span>},
+     {"<span class="attribute">name</span>": <span class="value"><span class="string">"favorite_number"</span></span>,  "<span class="attribute">type</span>": <span class="value">[<span class="string">"null"</span>,<span class="string">"int"</span>]</span>},
+     {"<span class="attribute">name</span>": <span class="value"><span class="string">"favorite_color"</span></span>, "<span class="attribute">type</span>": <span class="value">[<span class="string">"null"</span>,<span class="string">"string"</span>]</span>},
+     {"<span class="attribute">name</span>": <span class="value"><span class="string">"scores"</span></span>, "<span class="attribute">type</span>": <span class="value">[<span class="string">"null"</span>, {"<span class="attribute">type</span>": <span class="value"><span class="string">"map"</span></span>, "<span class="attribute">values</span>": <span class="value"><span class="string">"string"</span></span>, "<span class="attribute">avro.java.string</span>": <span class="value"><span class="string">"String"</span></span>}]</span>}
+ ]
+</span>}
 </code></pre>]]></content>
     <summary type="html">
     <![CDATA[Apache Avro是一个数据序列化系统, 提供丰富的数据结构，使用快速的压缩二进制数据格式，提供容器文件用于持久化数据 ...]]>

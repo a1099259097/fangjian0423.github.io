@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-03-12T09:45:05.000Z</updated>
+  <updated>2016-03-19T06:59:23.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -13,6 +13,261 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[Java可重入锁ReentrantLock分析]]></title>
+    <link href="http://fangjian0423.github.io/2016/03/19/java-ReentrantLock-analysis/"/>
+    <id>http://fangjian0423.github.io/2016/03/19/java-ReentrantLock-analysis/</id>
+    <published>2016-03-19T06:31:58.000Z</published>
+    <updated>2016-03-19T06:59:23.000Z</updated>
+    <content type="html"><![CDATA[<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/ReentrantLock.png" alt=""><br>Java中的可重入锁ReentrantLock很常见，可以用它来代替内置锁synchronized，ReentrantLock是语法级别的锁，所以比内置锁更加灵活。</p>
+<a id="more"></a>
+<p>下面这段代码是ReentrantLock的一个例子：</p>
+<pre><code><span class="keyword">class</span> <span class="title">Context</span> {
+    <span class="keyword">private</span> ReentrantLock <span class="keyword">lock</span> = <span class="keyword">new</span> ReentrantLock();
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">method</span>(<span class="params"></span>) </span>{
+        <span class="keyword">lock</span>.<span class="keyword">lock</span>();
+        System.<span class="keyword">out</span>.println(<span class="string">"do atomic operation"</span>);
+        <span class="keyword">try</span> {
+            Thread.sleep(<span class="number">3000</span>l);
+        } <span class="keyword">catch</span> (InterruptedException e) {
+            e.printStackTrace();
+        } <span class="keyword">finally</span> {
+            <span class="keyword">lock</span>.unlock();
+        }
+    }
+}
+
+<span class="keyword">class</span> <span class="title">MyThread</span> <span class="title">implements</span> <span class="title">Runnable</span> {
+    <span class="keyword">private</span> Context context;
+    <span class="function"><span class="keyword">public</span> <span class="title">MyThread</span>(<span class="params">Context context</span>) </span>{
+        <span class="keyword">this</span>.context = context;
+    }
+    @<span class="function">Override
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+        context.method();
+    }
+}
+</code></pre><p>main方法：</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+    Context context = <span class="keyword">new</span> Context();
+    ExecutorService executorService = Executors.newFixedThreadPool(<span class="number">5</span>);
+    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i ++ ) {
+        executorService.submit(<span class="keyword">new</span> MyThread(context));
+    }
+}
+</code></pre><p>输出结果，每隔3秒输出：</p>
+<pre><code><span class="keyword">do</span> atomic operation   
+</code></pre><p>如果没有使用可重入锁的话，那么一次性输出5条 do atomic operation。</p>
+<p>ReentrantLock中有3个内部类，分别是Sync、FairSync和NonfairSync。</p>
+<p>Sync是一个继承AQS的抽象类，使用独占锁，复写了tryRelease方法。tryAcquire方法由它的两个FairSync(公平锁)和NonfairSync(非公平锁)实现。</p>
+<p>AQS相关的内容可以参考文章末尾的参考资料，这篇文章写得非常棒。</p>
+<p>ReentrantLock的lock方法使用sync的lock方法，Sync的lock方法是个抽象方法，由公平锁和非公平锁去实现。unlock方法直接使用AQS的release方法。所以说公平锁和非公平锁的释放锁过程是一样的，不一样的是获取锁过程。</p>
+<p>先来看一下unlock方法，unlock方法调用的AQS的release方法，也就是调用了tryRelease方法，tryRelease方法调完之后恢复第一个挂起的线程：</p>
+<pre><code><span class="keyword">protected</span> <span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">tryRelease</span><span class="params">(<span class="keyword">int</span> releases)</span> </span>{
+    <span class="keyword">int</span> c = getState() - releases; <span class="comment">// 释放</span>
+    <span class="keyword">if</span> (Thread.currentThread() != getExclusiveOwnerThread()) <span class="comment">// 如果当前线程不是独占线程，直接抛出异常</span>
+        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalMonitorStateException();
+    <span class="keyword">boolean</span> free = <span class="keyword">false</span>;
+    <span class="keyword">if</span> (c == <span class="number">0</span>) { <span class="comment">// 由于是可重入锁，需要判断是否全部释放了</span>
+        free = <span class="keyword">true</span>;
+        setExclusiveOwnerThread(<span class="keyword">null</span>); <span class="comment">// 全部释放的话直接把独占线程设置为null</span>
+    }
+    setState(c);
+    <span class="keyword">return</span> free;
+}
+
+<span class="comment">// 恢复线程</span>
+<span class="keyword">public</span> <span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">release</span><span class="params">(<span class="keyword">int</span> arg)</span> </span>{
+    <span class="keyword">if</span> (tryRelease(arg)) {
+        Node h = head;  <span class="comment">// 恢复第一个挂起的线程</span>
+        <span class="keyword">if</span> (h != <span class="keyword">null</span> &amp;&amp; h.waitStatus != <span class="number">0</span>)
+            unparkSuccessor(h);
+        <span class="keyword">return</span> <span class="keyword">true</span>;
+    }
+    <span class="keyword">return</span> <span class="keyword">false</span>;
+}
+</code></pre><p>ReentrantLock的lock方法就是获取锁的方法，AQS中线程对锁的的竞争结果只有两种，要么获取到了锁；要么没有获取到锁，没有获取的锁线程被挂起等待被唤醒。</p>
+<p>公平锁FairSync的lock方法：</p>
+<pre><code><span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">lock</span><span class="params">()</span> </span>{
+    <span class="comment">// acquire方法内部调用tryAcquire方法</span>
+    <span class="comment">// 公平锁的获取锁方法，对于没有获取到的线程，会按照队列的方式挂起线程</span>
+    acquire(<span class="number">1</span>);
+}
+
+<span class="keyword">protected</span> <span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">tryAcquire</span><span class="params">(<span class="keyword">int</span> acquires)</span> </span>{
+    <span class="keyword">final</span> Thread current = Thread.currentThread();
+    <span class="keyword">int</span> c = getState();
+    <span class="keyword">if</span> (c == <span class="number">0</span>) {
+        <span class="comment">// 公平锁这里多了一个!hasQueuedPredecessors()判断，表示是否有线程在队列里等待的时间比当前线程要长，如果有等待时间更长的线程，那么放弃获取锁</span>
+        <span class="keyword">if</span> (!hasQueuedPredecessors() &amp;&amp;
+            compareAndSetState(<span class="number">0</span>, acquires)) {
+            setExclusiveOwnerThread(current);
+            <span class="keyword">return</span> <span class="keyword">true</span>;
+        }
+    }
+    <span class="keyword">else</span> <span class="keyword">if</span> (current == getExclusiveOwnerThread()) {
+        <span class="keyword">int</span> nextc = c + acquires;
+        <span class="keyword">if</span> (nextc &lt; <span class="number">0</span>)
+            <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Maximum lock count exceeded"</span>);
+        setState(nextc);
+        <span class="keyword">return</span> <span class="keyword">true</span>;
+    }
+    <span class="keyword">return</span> <span class="keyword">false</span>;
+}
+</code></pre><p>非公平锁NonfairSync的lock方法：</p>
+<pre><code><span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">lock</span><span class="params">()</span> </span>{
+    <span class="comment">// 非公平锁的获取锁</span>
+    <span class="comment">// 跟公平锁的区别就在这里。直接对状态位state进行cas操作，成功就获取锁，这是一种抢占式的方式。不成功跟公平锁一样进入队列挂起线程</span>
+    <span class="keyword">if</span> (compareAndSetState(<span class="number">0</span>, <span class="number">1</span>))
+        setExclusiveOwnerThread(Thread.currentThread());
+    <span class="keyword">else</span>
+        acquire(<span class="number">1</span>);
+}
+
+<span class="comment">// 调用Sync的nonfairTryAcquire方法</span>
+<span class="keyword">protected</span> <span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">tryAcquire</span><span class="params">(<span class="keyword">int</span> acquires)</span> </span>{
+    <span class="function"><span class="keyword">return</span> <span class="title">nonfairTryAcquire</span><span class="params">(acquires)</span></span>;
+}
+
+<span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">nonfairTryAcquire</span><span class="params">(<span class="keyword">int</span> acquires)</span> </span>{
+    <span class="keyword">final</span> Thread current = Thread.currentThread();
+    <span class="keyword">int</span> c = getState();
+    <span class="keyword">if</span> (c == <span class="number">0</span>) {
+        <span class="keyword">if</span> (compareAndSetState(<span class="number">0</span>, acquires)) {
+            setExclusiveOwnerThread(current);
+            <span class="keyword">return</span> <span class="keyword">true</span>;
+        }
+    }
+    <span class="keyword">else</span> <span class="keyword">if</span> (current == getExclusiveOwnerThread()) {
+        <span class="keyword">int</span> nextc = c + acquires;
+        <span class="keyword">if</span> (nextc &lt; <span class="number">0</span>) <span class="comment">// overflow</span>
+            <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Maximum lock count exceeded"</span>);
+        setState(nextc);
+        <span class="keyword">return</span> <span class="keyword">true</span>;
+    }
+    <span class="keyword">return</span> <span class="keyword">false</span>;
+}
+</code></pre><p>如上述源码和注释所说，公平锁和非公平锁的最主要区别就是获取锁的方式不一样。</p>
+<p>公平锁获取锁的时候，首先先读取状态位state，然后再做判断，之后使用cas设置状态位。能获取锁的线程就获取锁，不能获取锁的线程被挂起进入队列。之后再来的线程的等待时间没有已经在队列里的线程等待时间长，所以会一直进入等待队列。 公平锁类似于排队买火车票一样，后面来的人没有前面来的人等待时间长，会一直在队尾被加入到队列里。</p>
+<p>非公平锁获取锁的时候，立马就使用cas判断设置状态位，是一种抢占式的方式。同时非公平锁也没有等待时间长的线程会优先获取锁这个概念。非公平锁类似吃饭排队，但是总会有那么几个人试图插队。</p>
+<p>公平锁和非公平锁的还有另外一个差别，前面已经分析过了。就是公平锁获取锁多了一个判断条件，当前线程的等待时间没有队列里的线程等待时间长的话，不能获取锁；而非公平锁没有这个条件。</p>
+<p>ReentrantLock的默认构造函数使用的是NonfairSync，如果想使用FairSync，使用带有boolean参数的构造函数，传入true表示FairSync，否则是NonfairSync。</p>
+<p>ReentrantLock内部还提供了一些有用的方法：</p>
+<p>hasQueuedThreads： 查询是否有线程在等待队列里<br>hasQueuedThread(Thread thread)：查询线程是否在等待队列里<br>isHeldByCurrentThread：当前线程是否持有锁<br>getQueueLength：队列中的挂起线程个数</p>
+<p>等等还有其他的一些有用方法。</p>
+<p>总结：</p>
+<p>ReentrantLock可重入锁内部有3个类，Sync、FairSync和NonfairSync。</p>
+<p>Sync是一个继承AQS的抽象类，并发的控制就是通过Sync实现的(当然是使用AQS实现的，AQS是Java并发包的一个同步基础类)，它复写了tryRelease方法，它有2个子类FairSync和NonfairSync，也就是公平锁和非公平锁。</p>
+<p>由于Sync复写了tryRelease方法，它的2个子类公平锁和非公平锁没有再次复写这个方法，所以公平锁和非公平锁的释放锁操作是一样的，释放锁也就是唤醒等待队列中的第一个被挂起的线程。</p>
+<p>虽然公平锁和非公平锁的释放锁方式一样，但是它们的获取锁方式不一样，公平锁获取锁的时候，如果1个线程获取到了锁，其他线程都会被挂起并且进入等待队列，后面来的线程的等待时间没有队列里的线程等待时间长的话，那么就放弃获取锁，进入等待队列。非公平锁获取锁的方式是一种抢占式的方式，不考虑等待时间的问题，无论哪个线程获取到了锁，其他线程就进入等待队列。</p>
+<p>参考资料：</p>
+<p><a href="http://ifeve.com/jdk1-8-abstractqueuedsynchronizer/" target="_blank" rel="external">http://ifeve.com/jdk1-8-abstractqueuedsynchronizer/</a></p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/ReentrantLock.png" alt=""><br>Java中的可重入锁ReentrantLock很常见，可以用它来代替内置锁synchronized，ReentrantLock是语法级别的锁，所以比内置锁更加灵活。</p>]]>
+    
+    </summary>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="thread" scheme="http://fangjian0423.github.io/tags/thread/"/>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Java AtomicInteger原理分析]]></title>
+    <link href="http://fangjian0423.github.io/2016/03/16/java-AtomicInteger-analysis/"/>
+    <id>http://fangjian0423.github.io/2016/03/16/java-AtomicInteger-analysis/</id>
+    <published>2016-03-16T12:32:35.000Z</published>
+    <updated>2016-03-19T07:36:38.000Z</updated>
+    <content type="html"><![CDATA[<p>Java中的AtomicInteger大家应该很熟悉，它是为了解决多线程访问Integer变量导致结果不正确所设计的一个基于多线程并且支持原子操作的Integer类。</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/java-AtomicInteger-analysis.jpeg" alt=""></p>
+<a id="more"></a>
+<p>它的使用也非常简单：</p>
+<pre><code>AtomicInteger ai = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);
+ai.addAndGet(<span class="number">5</span>); <span class="comment">// 5</span>
+ai.getAndAdd(<span class="number">1</span>); <span class="comment">// 5</span>
+ai.get(); <span class="comment">// 6</span>
+</code></pre><p>AtomicInteger内部有一个变量UnSafe：</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Unsafe</span> <span class="keyword">unsafe</span> = <span class="keyword">Unsafe</span>.getUnsafe();
+</code></pre><p>Unsafe类是一个可以执行不安全、容易犯错的操作的一个特殊类。虽然Unsafe类中所有方法都是public的，但是这个类只能在一些被信任的代码中使用。Unsafe的源码可以在这里看 -&gt; <a href="http://www.docjar.com/html/api/sun/misc/Unsafe.java.html" target="_blank" rel="external">UnSafe源码</a>。</p>
+<p>Unsafe类可以执行以下几种操作：</p>
+<ol>
+<li>分配内存，释放内存：在方法allocateMemory，reallocateMemory，freeMemory中，有点类似c中的malloc，free方法</li>
+<li>可以定位对象的属性在内存中的位置，可以修改对象的属性值。使用objectFieldOffset方法</li>
+<li>挂起和恢复线程，被封装在LockSupport类中供使用</li>
+<li>CAS操作(CompareAndSwap，比较并交换，是一个原子操作)</li>
+</ol>
+<p>AtomicInteger中用的就是Unsafe的CAS操作。</p>
+<p>Unsafe中的int类型的CAS操作方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">native</span> <span class="function"><span class="keyword">boolean</span> <span class="title">compareAndSwapInt</span><span class="params">(Object o, <span class="keyword">long</span> offset,
+                                                <span class="keyword">int</span> expected,
+                                                <span class="keyword">int</span> x)</span></span>;
+</code></pre><p>参数o就是要进行cas操作的对象，offset参数是内存位置，expected参数就是期望的值，x参数是需要更新到的值。</p>
+<p>也就是说，如果我把1这个数字属性更新到2的话，需要这样调用：</p>
+<pre><code>compareAndSwapInt(<span class="keyword">this</span>, valueOffset, <span class="number">1</span>, <span class="number">2</span>)
+</code></pre><p>valueOffset字段表示内存位置，可以在AtomicInteger对象中使用unsafe得到：</p>
+<pre><code><span class="keyword">static</span> {
+  <span class="keyword">try</span> {
+    valueOffset = unsafe.objectFieldOffset
+        (AtomicInteger.<span class="keyword">class</span>.getDeclaredField(<span class="string">"value"</span>));
+  } <span class="keyword">catch</span> (Exception ex) { <span class="keyword">throw</span> <span class="keyword">new</span> Error(ex); }
+}
+</code></pre><p>AtomicInteger内部使用变量value表示当前的整型值，这个整型变量还是volatile的，表示内存可见性，一个线程修改value之后保证对其他线程的可见性：</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> <span class="keyword">value</span>;
+</code></pre><p>AtomicInteger内部还封装了一下CAS，定义了一个compareAndSet方法，只需要2个参数：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">compareAndSet</span><span class="params">(<span class="keyword">int</span> expect, <span class="keyword">int</span> update)</span> </span>{
+    <span class="function"><span class="keyword">return</span> unsafe.<span class="title">compareAndSwapInt</span><span class="params">(<span class="keyword">this</span>, valueOffset, expect, update)</span></span>;
+}
+</code></pre><p>addAndGet方法，addAndGet方法内部使用一个死循环，先得到当前的值value，然后再把当前的值加一，加完之后使用cas原子操作让当前值加一处理正确。当然cas原子操作不一定是成功的，所以做了一个死循环，当cas操作成功的时候返回数据。这里由于使用了cas原子操作，所以不会出现多线程处理错误的问题。比如线程A得到current为1，线程B也得到current为1；线程A的next值为2，进行cas操作并且成功的时候，将value修改成了2；这个时候线程B也得到next值为2，当进行cas操作的时候由于expected值已经是2，而不是1了；所以cas操作会失败，下一次循环的时候得到的current就变成了2；也就不会出现多线程处理问题了：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> addAndGet(<span class="keyword">int</span> delta) {
+    <span class="keyword">for</span> (;;) {
+        <span class="keyword">int</span> current = get();
+        <span class="keyword">int</span> <span class="keyword">next</span> = current + delta;
+        <span class="keyword">if</span> (compareAndSet(current, <span class="keyword">next</span>))
+            <span class="keyword">return</span> <span class="keyword">next</span>;
+    }
+}
+</code></pre><p>incrementAndGet方法，跟addAndGet方法类似，只不过next值变成了current+1：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> incrementAndGet() {
+    <span class="keyword">for</span> (;;) {
+        <span class="keyword">int</span> current = get();
+        <span class="keyword">int</span> <span class="keyword">next</span> = current + <span class="number">1</span>;
+        <span class="keyword">if</span> (compareAndSet(current, <span class="keyword">next</span>))
+            <span class="keyword">return</span> <span class="keyword">next</span>;
+    }
+}
+</code></pre><p>getAndAdd方法，跟addAndGet方法一样，返回值变成了current：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> getAndAdd(<span class="keyword">int</span> delta) {
+    <span class="keyword">for</span> (;;) {
+        <span class="keyword">int</span> current = get();
+        <span class="keyword">int</span> <span class="keyword">next</span> = current + delta;
+        <span class="keyword">if</span> (compareAndSet(current, <span class="keyword">next</span>))
+            <span class="keyword">return</span> current;
+    }
+}
+</code></pre><p>缺点：</p>
+<p>虽然AtomicInteger中的cas操作可以实现非阻塞的原子操作，但是会产生ABA问题，</p>
+<p>参考资料：</p>
+<p><a href="http://blog.csdn.net/ghsau/article/details/38471987" target="_blank" rel="external">http://blog.csdn.net/ghsau/article/details/38471987</a></p>
+<p><a href="http://blog.csdn.net/aesop_wubo/article/details/7537278" target="_blank" rel="external">http://blog.csdn.net/aesop_wubo/article/details/7537278</a></p>
+<p><a href="http://ifeve.com/sun-misc-unsafe/" target="_blank" rel="external">http://ifeve.com/sun-misc-unsafe/</a></p>
+<p><a href="http://ifeve.com/java-atomic/" target="_blank" rel="external">http://ifeve.com/java-atomic/</a></p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>Java中的AtomicInteger大家应该很熟悉，它是为了解决多线程访问Integer变量导致结果不正确所设计的一个基于多线程并且支持原子操作的Integer类。</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/java-AtomicInteger-analysis.jpeg" alt=""></p>]]>
+    
+    </summary>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[Java根类Object的方法说明]]></title>
@@ -321,7 +576,7 @@ i will be destroyed
     <link href="http://fangjian0423.github.io/2016/02/21/avro-intro/"/>
     <id>http://fangjian0423.github.io/2016/02/21/avro-intro/</id>
     <published>2016-02-20T17:23:22.000Z</published>
-    <updated>2016-03-15T10:17:16.000Z</updated>
+    <updated>2016-03-16T06:55:43.000Z</updated>
     <content type="html"><![CDATA[<h2 id="Avro介绍">Avro介绍</h2><p>Apache Avro是一个数据序列化系统。</p>
 <p>Avro所提供的属性：</p>
 <p>1.丰富的数据结构<br>2.使用快速的压缩二进制数据格式<br>3.提供容器文件用于持久化数据<br>4.远程过程调用RPC<br>5.简单的动态语言结合功能，Avro 和动态语言结合后，读写数据文件和使用 RPC 协议都不需要生成代码，而代码生成作为一种可选的优化只值得在静态类型语言中实现。</p>
@@ -588,7 +843,7 @@ nameRdd.<span class="function"><span class="title">collect</span><span class="pa
 <p>2.如果使用了Map类型的字段，avro生成的model中的Map的Key默认类型为CharSequence。这种model我们insert数据的话，用String是没有问题的。但是spark读取之后要根据Key拿这个Map数据的时候，永远得到的是null。</p>
 <p>stackoverflow上有一个页面说到了这个问题。<a href="http://stackoverflow.com/questions/19728853/apache-avro-map-uses-charsequence-as-key" target="_blank" rel="external">http://stackoverflow.com/questions/19728853/apache-avro-map-uses-charsequence-as-key
 </a></p>
-<p>只需要在map类型的字段里加上”avro.java.string”: “String”这个选项即可。</p>
+<p>需要在map类型的字段里加上”avro.java.string”: “String”这个选项, 然后compile的时候使用-string参数即可。</p>
 <p>比如以下这个schema：</p>
 <pre><code>{
 "<span class="attribute">namespace</span>": <span class="value"><span class="string">"example.avro"</span></span>,
@@ -3648,383 +3903,6 @@ secondFuture.onSuccess {
       <category term="scala" scheme="http://fangjian0423.github.io/tags/scala/"/>
     
       <category term="scala" scheme="http://fangjian0423.github.io/categories/scala/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[HBase介绍]]></title>
-    <link href="http://fangjian0423.github.io/2015/08/07/hbase-intro/"/>
-    <id>http://fangjian0423.github.io/2015/08/07/hbase-intro/</id>
-    <published>2015-08-06T16:22:33.000Z</published>
-    <updated>2015-12-20T17:02:23.000Z</updated>
-    <content type="html"><![CDATA[<h2 id="前言">前言</h2><p>HBase在公司已经用过一段时间，在Flume中添加一个HBase sink将一些数据存储到HBase里。</p>
-<p>当时HBase也没学，看了看几个例子，了解了它是基于列的表设计之后，就马上上手了，而且也把东西做出来了。 现在记录一下HBase的一些学习笔记。</p>
-<h2 id="HBase简介">HBase简介</h2><p>HBase是什么？</p>
-<p>HBase是运行在hadoop上的数据库，是一个分布式的，扩展性高的，存储大数据的数据库。</p>
-<p>HBase也是开源的，非关系型数据库。基于Google的Bigtable设计。</p>
-<p>什么时候需要使用HBase？</p>
-<p>需要实时地读写大数据。HBase的目的就是管理亿级的数据。</p>
-<h2 id="HBase基本概念">HBase基本概念</h2><p>HBase是基于列设计的，那什么是基于列呢？</p>
-<p>首先看下关系型数据库的表结构，第一行是table的所有列，第二行开始就是各个列对应的值：</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">id</th>
-<th style="text-align:center">name</th>
-<th style="text-align:center">age</th>
-<th style="text-align:center">birth_date</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">1</td>
-<td style="text-align:center">format1</td>
-<td style="text-align:center">11</td>
-<td style="text-align:center">1980-01-01</td>
-</tr>
-<tr>
-<td style="text-align:center">2</td>
-<td style="text-align:center">format2</td>
-<td style="text-align:center">22</td>
-<td style="text-align:center">1985-01-01</td>
-</tr>
-<tr>
-<td style="text-align:center">3</td>
-<td style="text-align:center">format3</td>
-<td style="text-align:center">33</td>
-<td style="text-align:center">1990-01-01</td>
-</tr>
-</tbody>
-</table>
-<p>HBase的表结构是这样的：</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">Row Key</th>
-<th style="text-align:center">Time Stamp</th>
-<th style="text-align:center">ColumnFamily contents</th>
-<th style="text-align:center">ColumnFamily names</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">‘me.format.hbase’</td>
-<td style="text-align:center">t1</td>
-<td style="text-align:center">contents:format = “format1”</td>
-<td style="text-align:center"></td>
-</tr>
-<tr>
-<td style="text-align:center">‘me.format.hbase’</td>
-<td style="text-align:center">t2</td>
-<td style="text-align:center">contents:title = “title1”</td>
-<td style="text-align:center"></td>
-</tr>
-<tr>
-<td style="text-align:center">‘me.format.hbase’</td>
-<td style="text-align:center">t3</td>
-<td style="text-align:center"></td>
-<td style="text-align:center">names:gogogo = “data1”</td>
-</tr>
-</tbody>
-</table>
-<p>从上面这个HBase表的例子来说明HBase的存储结构。</p>
-<p>Row Key：行的键值，其实就相当于这一行的标识符。上面的数据其实只有1行，因为他们的标识符是一样的。</p>
-<p>TimeStamp：时间戳，创建数据的时间戳，hbase默认会自动生成</p>
-<p>ColumnFamily：列的前缀，一列可以存储多条数据，具体存储什么类型的数据还需要另外一个标示符qualify，上面那个例子中，contents和names就是两个Column Family</p>
-<p>ColumnFamily qualify：列前缀后的标识符，一个ColumnFamily可以有多个qualify。上面那个例子中format和title就是contents这个ColumnFamily的qualify。gogogo是names这个ColumnFamily的qualify</p>
-<h2 id="HBase的启动">HBase的启动</h2><p>HBase下载完之后解压，解压后使用以下命令启动hbase：</p>
-<pre><code>$ ./bin/<span class="literal">start</span>-hbase.sh
-</code></pre><p>启动之前注意，机器要装好jdk，并且启动hadoop。因为hbase底层数据是存储在hdfs上的。</p>
-<h2 id="HBase的基本操作">HBase的基本操作</h2><h3 id="表的创建">表的创建</h3><p>创建一个表名位tableName，ColumnFamily有contents和names的表，qualify不需要声明，每次添加数据随意指定qualify即可：</p>
-<pre><code><span class="built_in">create</span> <span class="string">'tableName'</span>,[<span class="string">'contents'</span>, <span class="string">'names'</span>]
-</code></pre><h3 id="表的删除">表的删除</h3><p>删除表的所有数据：</p>
-<pre><code>truncate <span class="built_in">table</span> <span class="built_in">table</span>Name
-</code></pre><p>删除表，删除之前需要先disable表，然后才可删除：</p>
-<pre><code><span class="built_in">disable</span> <span class="string">'tableName'</span>
-drop <span class="string">'tableName'</span>
-</code></pre><h3 id="数据查询">数据查询</h3><p>查询tableName表数据：</p>
-<pre><code><span class="built_in">scan</span> tableName
-</code></pre><p>返回：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me.<span class="keyword">format</span>.hbase                            column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438875060466</span>, <span class="keyword">value</span>=format1
-</code></pre><h3 id="数据删除">数据删除</h3><p>比如，表tableName里有如下数据：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875566613</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=names:gogogo, timestamp=<span class="number">1438875597592</span>, value=data1
-</code></pre><p>进行删除操作，删除ColumnFamily qulify为contents:format的数据：</p>
-<pre><code>delete <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:format'
-</code></pre><h3 id="数据修改">数据修改</h3><p>HBase没有直接的update操作，只有put操作，put操作如果对应的地方有值，会覆盖：</p>
-<pre><code>put <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:format', <span class="symbol">'format111'</span>
-</code></pre><h3 id="添加数据">添加数据</h3><p>在tableName表里插入一个Row Key为me.format.hbase, ColumnFamily为contents，qualify为format，值的format1的数据：</p>
-<pre><code>put <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:format', <span class="symbol">'format1'</span>
-</code></pre><h3 id="计数器">计数器</h3><p>HBase提供了一种计数器的概念，每次可以对某个值进行incr操作：</p>
-<pre><code>incr <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">1</span>
-</code></pre><p>查询数据：</p>
-<pre><code>me.format.hbase                            column=contents:num, timestamp=1438875837362, value=<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>01
-</code></pre><p>可以使用get_counter命令获得计数器的值：</p>
-<pre><code>get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">0</span>
-</code></pre><p>返回：</p>
-<pre><code>COUNTER VALUE = <span class="number">1</span>
-</code></pre><p>再次修改：</p>
-<pre><code>incr <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">100</span>
-
-get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">0</span>
-
-<span class="type">COUNTER</span> <span class="type">VALUE</span> = <span class="number">101</span>
-
-incr <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', -<span class="number">102</span>
-
-get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">0</span>
-
-<span class="type">COUNTER</span> <span class="type">VALUE</span> = -<span class="number">1</span>
-</code></pre><h3 id="带条件的数据查询">带条件的数据查询</h3><p>scan查询可以带几个参数。</p>
-<p>COLUMNS： ColumnFamily和qualify的值<br>LIMIT：展示的个数<br>FILTER：过滤条件</p>
-<p>比如有以下数据：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875707700</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:num, timestamp=<span class="number">1438876106259</span>, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=names:gogogo, timestamp=<span class="number">1438875597592</span>, value=data1
- me<span class="class">.format</span><span class="class">.hbase1</span>                           column=contents:format, timestamp=<span class="number">1438877417358</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase2</span>                           column=contents:format, timestamp=<span class="number">1438877422756</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase3</span>                           column=contents:format, timestamp=<span class="number">1438877427312</span>, value=format1
-</code></pre><p>查询ColumnFamily，qualify为contents:format的数据：</p>
-<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents:format"</span>, LIMIT =&gt; <span class="number">10</span> }
-</code></pre><p>结果：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me.<span class="keyword">format</span>.hbase                            column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438875707700</span>, <span class="keyword">value</span>=format1
- me.<span class="keyword">format</span>.hbase1                           column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438877417358</span>, <span class="keyword">value</span>=format1
- me.<span class="keyword">format</span>.hbase2                           column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438877422756</span>, <span class="keyword">value</span>=format1
- me.<span class="keyword">format</span>.hbase3                           column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438877427312</span>, <span class="keyword">value</span>=format1
-</code></pre><p>查询ColumnFamily未contents的数据：</p>
-<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents"</span>, LIMIT =&gt; <span class="number">10</span> }
-</code></pre><p>结果：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875707700</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:num, timestamp=<span class="number">1438876106259</span>, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
- me<span class="class">.format</span><span class="class">.hbase1</span>                           column=contents:format, timestamp=<span class="number">1438877417358</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase2</span>                           column=contents:format, timestamp=<span class="number">1438877422756</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase3</span>                           column=contents:format, timestamp=<span class="number">1438877427312</span>, value=format1
-</code></pre><p>查询ColumnFamily未contents的数据，并只展示2行数据：</p>
-<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents"</span>, LIMIT =&gt; <span class="number">2</span> }
-</code></pre><p>结果：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875707700</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:num, timestamp=<span class="number">1438876106259</span>, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
- me<span class="class">.format</span><span class="class">.hbase1</span>                           column=contents:format, timestamp=<span class="number">1438877417358</span>, value=format1
-</code></pre><p>查询ColumnFamily未contents的数据，并只展示2行数据：</p>
-<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents"</span>, FILTER =&gt; <span class="string">"ValueFilter( =, 'binaryprefix:title' )"</span> }
-</code></pre><p>结果：</p>
-<pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
-</code></pre><p>scan命令具体其他的参数就不一一列举了，可查询文档解决。</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[HBase在公司已经用过一段时间，在Flume中添加一个HBase sink将一些数据存储到HBase里 ...]]>
-    
-    </summary>
-    
-      <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
-    
-      <category term="hbase" scheme="http://fangjian0423.github.io/tags/hbase/"/>
-    
-      <category term="hbase" scheme="http://fangjian0423.github.io/categories/hbase/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Hive介绍]]></title>
-    <link href="http://fangjian0423.github.io/2015/07/31/hive-intro/"/>
-    <id>http://fangjian0423.github.io/2015/07/31/hive-intro/</id>
-    <published>2015-07-31T05:32:33.000Z</published>
-    <updated>2015-12-20T17:04:55.000Z</updated>
-    <content type="html"><![CDATA[<p>Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集。</p>
-<p>Hive提供了一种叫做HiveQL的类似SQL查询语言用来查询数据，HiveQL也允许熟悉MapReduce开发者开发自定义的mapper和reducer来处理内建的mapper和reducer无法完成的复杂的分析工作。</p>
-<p>Hive的工作模式是提交一个任务，等到任务结束时被通知，而不是实时查询。</p>
-<h2 id="Hive安装">Hive安装</h2><p>直接去<a href="https://hive.apache.org/" target="_blank" rel="external">Hive官网</a>下载最新的文件，解压。</p>
-<p>运行bin目录里的hive文件，运行之前先启动hadoop，运行的时候可能会出现：</p>
-<pre><code>Missing Hive <span class="keyword">CLI</span> Jar ....
-</code></pre><p>将hive解压出来的lib目录里的jline<em>.jar拷贝到$HADOOP/share/hadoop/yarn/lib里，同时将$HADOOP/share/hadoop/yarn/lib里的jline</em>.jar删除，重启hadoop。</p>
-<p>再次运行，可能还会出现</p>
-<pre><code>The reported blocks <span class="number">2662</span> has reached <span class="operator">the</span> threshold <span class="number">0.9990</span> <span class="operator">of</span> total blocks <span class="number">2662.</span> The <span class="built_in">number</span> <span class="operator">of</span> live datanodes <span class="number">1</span> has reached <span class="operator">the</span> minimum <span class="built_in">number</span> <span class="number">0.</span> In safe mode extension. Safe mode will be turned off automatically <span class="operator">in</span> <span class="number">0</span> <span class="built_in">seconds</span>. ...
-</code></pre><p>类似的问题，关闭hdfs的安全模式即可：</p>
-<pre><code><span class="title">hadoop</span> dfsadmin -safemode leave
-</code></pre><h2 id="基本命令">基本命令</h2><p>HiveQL就是模仿sql而创建的，以SQL的角度来介绍HiveQL。</p>
-<h3 id="DDL操作">DDL操作</h3><p>创建表：</p>
-<pre><code>hive&gt; create table users(age <span class="built_in">INT</span>, name <span class="built_in">STRING</span>)<span class="comment">;</span>
-</code></pre><p>查看所有的表：</p>
-<pre><code>hive&gt; <span class="built_in">show</span> <span class="built_in">tables</span>;
-</code></pre><p>查看以CLIENT开头的表：</p>
-<pre><code>hive&gt; <span class="built_in">show</span> <span class="built_in">tables</span> 'CLIENT.*';
-</code></pre><p>表加列：</p>
-<pre><code>hive&gt; alter table users add columns<span class="list">(<span class="keyword">gender</span> BOOLEAN)</span><span class="comment">;</span>
-</code></pre><p>改表名字：</p>
-<pre><code>hive&gt; alter <span class="built_in">table</span> users rename <span class="keyword">to</span> <span class="keyword">user</span>;
-</code></pre><p>删除表：</p>
-<pre><code>hive&gt; drop <span class="built_in">table</span> <span class="keyword">user</span>;
-</code></pre><p>查看表的具体信息：</p>
-<pre><code>hive&gt; descibe user<span class="comment">;</span>
-hive&gt; desc user<span class="comment">;</span>
-</code></pre><h3 id="DML操作">DML操作</h3><p>hive创建表的时候可以指定分隔符，由于hive操作的是hdfs，数据最终会存储在hdfs上，所以hdfs上的内容肯定是以某种分隔符分开各个列的。 hive默认的列分隔符是 <strong>^A</strong> 。 我们可以自定义自己的分隔符，在创建表的时候指定分隔符即可。</p>
-<p>本地导入数据到hive：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table users;
-</code></pre><p>users表的结构只有2列，name和age，而且使用默认的分隔符。</p>
-<p>比如本地文件的内容是这样的：</p>
-<pre><code><span class="xml">format1</span><span class="keyword">^A11</span><span class="xml">
-format2</span><span class="keyword">^A22</span><span class="xml"></span>
-</code></pre><p>导入之后进行查询：</p>
-<pre><code>hive&gt; <span class="keyword">select</span> * <span class="keyword">from</span> users;
-</code></pre><p>显示结果：</p>
-<pre><code>OK
-format1    <span class="number">11</span>
-format2    <span class="number">22</span>
-Time taken: <span class="number">0.362</span> seconds, Fetched: <span class="number">2</span> row(s)
-</code></pre><p>在创建表的时候可以指定列分隔符和数组分隔符：</p>
-<pre><code>hive&gt; create table users(name <span class="built_in">string</span>, age int)
- &gt; ROW FORMAT DELIMITED
- &gt; FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">'\t'</span>
- &gt; COLLECTION ITEMS TERMINATED <span class="keyword">BY</span> <span class="string">','</span>;
-</code></pre><p>导入数据还有几个参数：</p>
-<p>local参数意味着从本地加载文件，如果没有local参数，那表示从hdfs加载文件。</p>
-<p>关键字overwrite意味着当前表中已经存在的数据将会被删除掉，没有overwrite关键字，表示数据是追加，追加到原先数据集里面。</p>
-<p>插入数据，插入数据后会起一个map reduce job去跑插入的数据：</p>
-<pre><code>hive&gt; <span class="function">insert <span class="keyword">into</span> table users <span class="title">values</span>(<span class="params"><span class="string">'formatgogo'</span>, <span class="number">222</span></span>)</span>;
-</code></pre><p>带条件的查询数据：</p>
-<pre><code>hive&gt; <span class="keyword">select</span> * <span class="keyword">from</span> users <span class="keyword">where</span> age = <span class="number">11</span>;
-</code></pre><p>group by查询：</p>
-<pre><code>hive&gt; <span class="keyword">select</span> age, <span class="built_in">count</span>(<span class="number">1</span>) <span class="keyword">from</span> users <span class="built_in">group</span> <span class="keyword">by</span> age;
-</code></pre><p>partition的使用，以部门表为例，用type进行partition：</p>
-<pre><code>hive&gt; create table dept<span class="list">(<span class="keyword">name</span> STRING)</span> partitioned by <span class="list">(<span class="keyword">type</span> INT)</span><span class="comment">;</span>
-</code></pre><p>以2个文件为例，dept1.txt：</p>
-<pre><code><span class="label">dept1</span>^<span class="literal">A1</span>
-<span class="label">dept11</span>^<span class="literal">A1</span>
-<span class="label">dept111</span>^<span class="literal">A1</span>
-<span class="label">dept1111</span>^<span class="literal">A1</span>
-<span class="label">dept11111</span>^<span class="literal">A1</span>
-<span class="label">dept111111</span>^<span class="literal">A1</span>
-</code></pre><p>dept2.txt</p>
-<pre><code><span class="label">dept2</span>^<span class="literal">A2</span>
-<span class="label">dept22</span>^<span class="literal">A2</span>
-<span class="label">dept222</span>^<span class="literal">A2</span>
-<span class="label">dept2222</span>^<span class="literal">A2</span>
-<span class="label">dept22222</span>^<span class="literal">A2</span>
-<span class="label">dept222222</span>^<span class="literal">A2</span>
-</code></pre><p>使用partition之后，导入数据的时候需要指定对应的partition：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'$PATH/dept1.txt'</span> overwrite <span class="keyword">into</span> table dept partition(<span class="keyword">type</span>=<span class="number">1</span>);
-hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'$PATH/dept2.txt'</span> overwrite <span class="keyword">into</span> table dept partition(<span class="keyword">type</span>=<span class="number">2</span>);
-
-hive&gt; <span class="keyword">select</span> * from dept;
-</code></pre><p>结果：</p>
-<pre><code>OK
-dept1    <span class="number">1</span>
-dept11    <span class="number">1</span>
-dept111    <span class="number">1</span>
-dept1111    <span class="number">1</span>
-dept11111    <span class="number">1</span>
-dept111111    <span class="number">1</span>
-dept2    <span class="number">2</span>
-dept22    <span class="number">2</span>
-dept222    <span class="number">2</span>
-dept2222    <span class="number">2</span>
-dept22222    <span class="number">2</span>
-dept222222    <span class="number">2</span>
-Time taken: <span class="number">0.114</span> seconds, Fetched: <span class="number">12</span> row(s)
-</code></pre><p>insert可以将数据导出到指定目录，将users表导入到本地文件。 去掉local关键字表示导出到hdfs目录：</p>
-<pre><code>hive&gt; insert overwrite <span class="keyword">local</span> directory <span class="string">'localFileName'</span> <span class="keyword">select</span> * from users<span class="comment">;</span>
-</code></pre><h3 id="hive存储在hdfs的位置">hive存储在hdfs的位置</h3><p>进入hive控制台之后，可以使用：</p>
-<pre><code><span class="tag">hive</span>&gt; <span class="tag">set</span> <span class="tag">hive</span><span class="class">.metastore</span><span class="class">.warehouse</span><span class="class">.dir</span>;
-</code></pre><p>查看hive存储在hdfs的位置，默认是存在 /user/hive/warehouse 目录。</p>
-<p>之前的users表，会存储在/user/hive/warehouse/user目录里。</p>
-<p>有partition的表会存在的不同位置，比如之前的dept表的type为1和2的分别存储在 /user/hive/warehouse/dept/type=1 和 /user/hive/warehouse/dept/type=2。</p>
-<h2 id="数据类型">数据类型</h2><p>hive中的数据类型分2种，简单类型和复杂类型。</p>
-<p>简单类型有以下几种：TINYINT, SMALLINT, INT, BIGINT, BOOLEAN, FLOAT, DOUBLE, STRING。</p>
-<p>复杂类型有以下几种：Structs(结构体，学过C都知道)，MAPS(key-value键值对)，Arrays(数组类型，数组内的元素类型都必须一致)</p>
-<p>简单类型就不分析了，来看一下复杂类型的使用：</p>
-<h3 id="Structs">Structs</h3><pre><code><span class="label">hive</span>&gt; create table employee(id INT, <span class="preprocessor">info</span> <span class="keyword">struct&lt;name:STRING, </span>age:INT&gt;)
-      &gt; ROW FORMAT DELIMITED FIELDS TERMINATED <span class="keyword">BY </span><span class="string">','</span> 
-      &gt; COLLECTION <span class="keyword">ITEMS </span>TERMINATED <span class="keyword">BY </span><span class="string">':'</span><span class="comment">; </span>
-</code></pre><p>要导入的数据：</p>
-<pre><code><span class="number">1</span>,format:<span class="number">11</span>
-<span class="number">2</span>,fj:<span class="number">22</span>
-<span class="number">3</span>,formatfj:<span class="number">33</span>
-</code></pre><p>导入数据：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table employee;
-</code></pre><p>查询：</p>
-<pre><code>select * from employee;
-
-OK
-<span class="number">1</span>    {<span class="string">"name"</span>:<span class="string">"format"</span>,<span class="string">"age"</span>:<span class="number">11</span>}
-<span class="number">2</span>    {<span class="string">"name"</span>:<span class="string">"fj"</span>,<span class="string">"age"</span>:<span class="number">22</span>}
-<span class="number">3</span>    {<span class="string">"name"</span>:<span class="string">"formatfj"</span>,<span class="string">"age"</span>:<span class="number">33</span>}
-Time taken: <span class="number">0.042</span> seconds, Fetched: <span class="number">3</span> row(s)
-
-hive&gt; select info.name from employee;
-
-OK
-format
-fj
-formatfj
-Time taken: <span class="number">0.061</span> seconds, Fetched: <span class="number">3</span> row(s)
-</code></pre><h3 id="Maps">Maps</h3><pre><code>hive&gt; create table lessons(id <span class="built_in">string</span>, score <span class="built_in">map</span>&lt;<span class="built_in">string</span>, int&gt;)
-    &gt; ROW FORMAT DELIMITED
-    &gt; FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">'\t'</span>
-    &gt; COLLECTION ITEMS TERMINATED <span class="keyword">BY</span> <span class="string">','</span>
-    &gt; <span class="built_in">MAP</span> KEYS TERMINATED <span class="keyword">BY</span> <span class="string">':'</span>;
-</code></pre><p>要导入的数据：</p>
-<pre><code><span class="number">1</span>       chinese:<span class="number">80</span>,english:<span class="number">60</span>,math:<span class="number">70</span>  
-<span class="number">2</span>       computer:<span class="number">60</span>,chemistry:<span class="number">80</span>   
-</code></pre><p>导入数据：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table lessons;
-</code></pre><p>查询：</p>
-<pre><code>hive&gt; <span class="keyword">select</span> score[<span class="string">'chinese'</span>] <span class="keyword">from</span> lessions;
-
-OK
-<span class="number">80</span>
-NULL
-Time taken: <span class="number">0.05</span> seconds, Fetched: <span class="number">2</span> row(s)
-
-hive&gt; <span class="keyword">select</span> * <span class="keyword">from</span> lessons;
-OK
-<span class="number">1</span>    {<span class="string">"chinese"</span>:<span class="number">80</span>,<span class="string">"english"</span>:<span class="number">60</span>,<span class="string">"math"</span>:<span class="number">70</span>}
-<span class="number">2</span>    {<span class="string">"computer"</span>:<span class="number">60</span>,<span class="string">"chemistry"</span>:<span class="number">80</span>}
-Time taken: <span class="number">0.032</span> seconds, Fetched: <span class="number">2</span> row(s)
-</code></pre><h3 id="Arrays">Arrays</h3><pre><code>hive&gt; create table student(name <span class="built_in">string</span>, hobby_list <span class="built_in">array</span>&lt;<span class="built_in">STRING</span>&gt;)
-    &gt; ROW FORMAT DELIMITED
-    &gt; FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">','</span>
-    &gt; COLLECTION ITEMS TERMINATED <span class="keyword">BY</span> <span class="string">':'</span>;
-</code></pre><p>要导入的数据：</p>
-<pre><code><span class="tag">format</span>,<span class="tag">basketball</span><span class="pseudo">:football</span><span class="pseudo">:swimming</span>
-<span class="tag">fj</span>,<span class="tag">coding</span><span class="pseudo">:running</span>
-</code></pre><p>导入数据：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table student;
-</code></pre><p>查询(数组下标没对应的值的话返回NULL)：</p>
-<pre><code>hive&gt; select * from student;
-
-OK
-format    [<span class="string">"basketball"</span>,<span class="string">"football"</span>,<span class="string">"swimming"</span>]
-fj    [<span class="string">"coding"</span>,<span class="string">"running"</span>]
-Time taken: <span class="number">0.041</span> seconds, Fetched: <span class="number">2</span> row(s)
-
-hive&gt; select hobby_list[<span class="number">2</span>] from student;
-
-OK
-swimming
-<span class="literal">NULL</span>
-Time taken: <span class="number">0.07</span> seconds, Fetched: <span class="number">2</span> row(s)
-</code></pre>]]></content>
-    <summary type="html">
-    <![CDATA[Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集 ...]]>
-    
-    </summary>
-    
-      <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
-    
-      <category term="hive" scheme="http://fangjian0423.github.io/tags/hive/"/>
-    
-      <category term="hive" scheme="http://fangjian0423.github.io/categories/hive/"/>
     
   </entry>
   

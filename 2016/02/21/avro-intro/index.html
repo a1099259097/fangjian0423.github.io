@@ -61,7 +61,7 @@
 <meta property="og:url" content="http://fangjian0423.github.io/2016/02/21/avro-intro/index.html">
 <meta property="og:site_name" content="Format's Notes">
 <meta property="og:description" content="Apache Avro是一个数据序列化系统, 提供丰富的数据结构，使用快速的压缩二进制数据格式，提供容器文件用于持久化数据 ...">
-<meta property="og:updated_time" content="2016-03-15T10:17:16.000Z">
+<meta property="og:updated_time" content="2016-03-16T06:55:43.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Avro介绍">
 <meta name="twitter:description" content="Apache Avro是一个数据序列化系统, 提供丰富的数据结构，使用快速的压缩二进制数据格式，提供容器文件用于持久化数据 ...">
@@ -578,7 +578,7 @@ nameRdd.<span class="function"><span class="title">collect</span><span class="pa
 <p>2.如果使用了Map类型的字段，avro生成的model中的Map的Key默认类型为CharSequence。这种model我们insert数据的话，用String是没有问题的。但是spark读取之后要根据Key拿这个Map数据的时候，永远得到的是null。</p>
 <p>stackoverflow上有一个页面说到了这个问题。<a href="http://stackoverflow.com/questions/19728853/apache-avro-map-uses-charsequence-as-key" target="_blank" rel="external">http://stackoverflow.com/questions/19728853/apache-avro-map-uses-charsequence-as-key
 </a></p>
-<p>只需要在map类型的字段里加上”avro.java.string”: “String”这个选项即可。</p>
+<p>需要在map类型的字段里加上”avro.java.string”: “String”这个选项, 然后compile的时候使用-string参数即可。</p>
 <p>比如以下这个schema：</p>
 <pre><code>{
 "<span class="attribute">namespace</span>": <span class="value"><span class="string">"example.avro"</span></span>,
@@ -692,7 +692,7 @@ nameRdd.<span class="function"><span class="title">collect</span><span class="pa
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">67</span>
+              <span class="site-state-item-count">69</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

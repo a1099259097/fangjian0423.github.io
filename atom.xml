@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-03-29T16:35:05.000Z</updated>
+  <updated>2016-03-29T16:46:28.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -16,10 +16,10 @@
   
   <entry>
     <title><![CDATA[jdk HashSet, LinkedHashSet工作原理分析]]></title>
-    <link href="http://fangjian0423.github.io/2016/03/29/jdk_hashset_linkedhashset/"/>
-    <id>http://fangjian0423.github.io/2016/03/29/jdk_hashset_linkedhashset/</id>
-    <published>2016-03-29T15:46:33.000Z</published>
-    <updated>2016-03-29T16:35:05.000Z</updated>
+    <link href="http://fangjian0423.github.io/2016/03/30/jdk_hashset_linkedhashset/"/>
+    <id>http://fangjian0423.github.io/2016/03/30/jdk_hashset_linkedhashset/</id>
+    <published>2016-03-29T16:46:33.000Z</published>
+    <updated>2016-03-29T16:46:28.000Z</updated>
     <content type="html"><![CDATA[<p>Set是一个没有包括重复数据的集合，跟List一样，他们都继承自Collection。</p>
 <p>Java中的Set接口最主要的实现类就是HashSet和LinkedHashSet。</p>
 <a id="more"></a>

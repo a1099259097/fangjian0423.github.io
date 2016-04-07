@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-04-06T16:55:32.000Z</updated>
+  <updated>2016-04-07T16:20:26.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -13,6 +13,89 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[jdk TreeSet工作原理分析]]></title>
+    <link href="http://fangjian0423.github.io/2016/04/08/jdk_treeset/"/>
+    <id>http://fangjian0423.github.io/2016/04/08/jdk_treeset/</id>
+    <published>2016-04-07T16:20:23.000Z</published>
+    <updated>2016-04-07T16:20:26.000Z</updated>
+    <content type="html"><![CDATA[<p>TreeSet跟HashSet，LinkedHashSet一样，都是Set接口的实现类。</p>
+<p>HashSet内部使用的HashMap，LinkedHashSet继承HashSet，内部使用的是LinkedHashMap。</p>
+<p>TreeSet实现的是NavigableSet接口，而不是HashSet和LinkedHashSet实现的Set接口。</p>
+<p>NavigableSet接口继承自SortedSet接口，SortedSet接口继承自Set接口。</p>
+<p>NavigableSet接口比Set更方便，可以使用firstKey[最小关键字]，lastKey[最大关键字]，pollFirstEntry[最小键值对]，pollLastEntry[最大键值对]，higherEntry[比参数关键字要大的键值对]，lowerEntry[比参数关键字要小的键值对]等等方便方法，可以使用这些方法方便地获取期望位置上的键值对。</p>
+<a id="more"></a>
+<h2 id="TreeSet原理分析">TreeSet原理分析</h2><p>TreeSet跟HashSet一样，内部都使用Map，HashSet内部使用的是HashMap，但是TreeSet使用的是NavigableMap。</p>
+<p>TreeSet的几个构造方法会构造NavigableMap，如果使用没有参数的构造函数，NavigableMap是TreeMap：</p>
+<pre><code>TreeSet(NavigableMap&lt;E,Object&gt; m) {
+    <span class="keyword">this</span>.m = m;
+}
+
+<span class="function"><span class="keyword">public</span> <span class="title">TreeSet</span><span class="params">()</span> </span>{
+    <span class="keyword">this</span>(<span class="keyword">new</span> TreeMap&lt;E,Object&gt;());
+}
+
+<span class="function"><span class="keyword">public</span> <span class="title">TreeSet</span><span class="params">(Comparator&lt;? <span class="keyword">super</span> E&gt; comparator)</span> </span>{
+    <span class="keyword">this</span>(<span class="keyword">new</span> TreeMap&lt;&gt;(comparator));
+}
+</code></pre><p>add方法调用Map的put方法：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span> </span>{
+    <span class="keyword">return</span> m.put(e, PRESENT)==<span class="keyword">null</span>;
+}
+</code></pre><p>remove方法调用Map的remove方法：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">remove</span><span class="params">(Object o)</span> </span>{
+    <span class="keyword">return</span> m.remove(o)==PRESENT;
+}
+</code></pre><p>原理基本跟HashSet一样。</p>
+<pre><code><span class="comment">// 最小的关键字</span>
+public <span class="keyword">E</span> first() {
+    <span class="keyword">return</span> <span class="keyword">m</span>.firstKey();
+}
+
+<span class="comment">// 最大的关键字</span>
+public <span class="keyword">E</span> last() {
+    <span class="keyword">return</span> <span class="keyword">m</span>.lastKey();
+}
+
+<span class="comment">// 比参数小的关键字</span>
+public <span class="keyword">E</span> <span class="literal">lower</span>(<span class="keyword">E</span> <span class="keyword">e</span>) {
+    <span class="keyword">return</span> <span class="keyword">m</span>.lowerKey(<span class="keyword">e</span>);
+}
+</code></pre><h2 id="一个TreeSet例子">一个TreeSet例子</h2><p>使用没有参数的TreeMap构造函数，内部的Map使用TreeMap红黑树：</p>
+<pre><code>TreeSet&lt;<span class="keyword">String</span>&gt; <span class="built_in">set</span> = <span class="keyword">new</span> TreeSet&lt;<span class="keyword">String</span>&gt;();
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"1:语文"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"2:数学"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"3:英语"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"4:政治"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"5:物理"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"6:化学"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"7:生物"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"8:体育"</span>);
+</code></pre><p>内部红黑树结构如下：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/treeset01.jpg" alt=""></p>
+<p>还可以调用TreeSet的其他方法：</p>
+<pre><code><span class="built_in">set</span>.<span class="keyword">first</span>();<span class="comment"> // 1:语文</span>
+<span class="built_in">set</span>.<span class="keyword">last</span>();<span class="comment"> // 8:体育</span>
+<span class="built_in">set</span>.higher(<span class="string">"5:物理"</span>);<span class="comment"> // 6:化学</span>
+<span class="built_in">set</span>.<span class="built_in">lower</span>(<span class="string">"5:物理"</span>);<span class="comment"> // 4:政治</span>
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<p>TreeSet跟HashSet，LinkedHashSet一样，都是Set接口的实现类。</p>
+<p>HashSet内部使用的HashMap，LinkedHashSet继承HashSet，内部使用的是LinkedHashMap。</p>
+<p>TreeSet实现的是NavigableSet接口，而不是HashSet和LinkedHashSet实现的Set接口。</p>
+<p>NavigableSet接口继承自SortedSet接口，SortedSet接口继承自Set接口。</p>
+<p>NavigableSet接口比Set更方便，可以使用firstKey[最小关键字]，lastKey[最大关键字]，pollFirstEntry[最小键值对]，pollLastEntry[最大键值对]，higherEntry[比参数关键字要大的键值对]，lowerEntry[比参数关键字要小的键值对]等等方便方法，可以使用这些方法方便地获取期望位置上的键值对。</p>]]>
+    
+    </summary>
+    
+      <category term="jdk" scheme="http://fangjian0423.github.io/tags/jdk/"/>
+    
+      <category term="set" scheme="http://fangjian0423.github.io/tags/set/"/>
+    
+      <category term="jdk" scheme="http://fangjian0423.github.io/categories/jdk/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[jdk TreeMap工作原理分析]]></title>
@@ -4356,289 +4439,6 @@ val vecAccum = sc.accumulator(new Vector(...))(VectorAccumulatorParam)
       <category term="杂事" scheme="http://fangjian0423.github.io/tags/%E6%9D%82%E4%BA%8B/"/>
     
       <category term="总结" scheme="http://fangjian0423.github.io/categories/%E6%80%BB%E7%BB%93/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[spray-json源码分析]]></title>
-    <link href="http://fangjian0423.github.io/2015/12/23/scala-spray-json/"/>
-    <id>http://fangjian0423.github.io/2015/12/23/scala-spray-json/</id>
-    <published>2015-12-22T17:47:35.000Z</published>
-    <updated>2016-03-12T10:19:50.000Z</updated>
-    <content type="html"><![CDATA[<h2 id="spray-json介绍以及内部结构">spray-json介绍以及内部结构</h2><p><a href="https://github.com/spray/spray-json" target="_blank" rel="external">spray-json</a>是scala的一个轻量的，简洁的，简单的关于JSON实现。</p>
-<p>同时也是<a href="http://spray.io/" target="_blank" rel="external">spray</a>项目的json模块。</p>
-<p>本文分析spray-json的源码。</p>
-<p>在分析spray-json的源码之前，我们先介绍一下spray-json的使用方法以及里面的几个概念。</p>
-<p>首先是spray-json的一个使用例子，里面有各种黑魔法：</p>
-<pre><code><span class="keyword">val</span> str = <span class="string">"""{
-    "name": "Ed",
-    "age": 24
-}"""</span>
-
-<span class="comment">// 黑魔法。不是String的parseJson方法，而是使用了隐式转换，隐式转换成PimpedString类。PimpedString里有parseJson方法，转换成JsValue对象</span>
-<span class="keyword">val</span> jsonVal = str.parseJson <span class="comment">// jsonVal是个JsObject对象的实例</span>
-
-<span class="comment">// jsonVal是个JsObject对象，也是个JsValue实例。JsValue对象都有compactPrint和prettyPrint方法</span>
-println(jsonVal.compactPrint) <span class="comment">// 压缩打印</span>
-println(jsonVal.prettyPrint) <span class="comment">// 格式化打印</span>
-
-<span class="comment">// 手动构建一个JsObject</span>
-<span class="keyword">val</span> jsonObj = <span class="type">JsObject</span>(
-    (<span class="string">"name"</span>, <span class="type">JsString</span>(<span class="string">"format"</span>)), (<span class="string">"age"</span>, <span class="type">JsNumber</span>(<span class="number">99</span>))
-)
-
-println(jsonObj.compactPrint)
-println(jsonObj.prettyPrint)
-
-<span class="comment">// 黑方法，不是List的toJson方法，而是使用了隐式转换，隐式转换成PimpedAny类，PimpedAny类里有toList方法，转换成对应的类型</span>
-<span class="keyword">val</span> jsonList = <span class="type">List</span>(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>).toJson
-
-<span class="comment">// JsValue的toString方法引用了compactPrint方法</span>
-println(jsonList)
-</code></pre><p>然后是spray-json里的几个概念介绍：</p>
-<p>1.JsValue: 抽象类。对原生json中的各种数据类型的抽象。它的实现类JsArray对应json里的数组；JsBoolean对应json里的布尔值；JsNumber对应json里的数值 …</p>
-<p>2.JsonFormat: 一个trait，是json序列化和反序列话的抽象。继承JsonReader(JsValue转换成对象的抽象)和JsonWriter(对象转换成JsValue的抽象)。BasicFormats和CollectionFormats、AdditionalFormats等这些trait里都有各种JsonFormat的隐式转换。</p>
-<p>3.RootJsonFormat。json文档的抽象，跟JsonFormat一样，只不过RootJsonFormat只支持JsArray和JsObject。因为这是一个json文档对象，只有一个json对象或者一个json数组才能称得上是一个json文档对象。</p>
-<p>4.JsonPrinter: 一个trait。json打印成字符串的抽象。具体的实现特质有CompactPrinter(压缩后的字符串)和PrettyPrinter(格式化后的字符串)</p>
-<p>5.DefaultJsonProtocol: 继承BasicFormats，混入StandardFormats、CollectionFormats、ProductFormats、AdditionalFormats的特质。我们需要转换一些基础类型或者集合类型的时候需要import这个trait。</p>
-<h2 id="json_package对象">json package对象</h2><p>json package对象里定义了一些隐式转换方法和一些实用方法。</p>
-<pre><code>package object json {
-
-  // JsField。 一个二元元组，代表json中的一个项(key为String，<span class="keyword">value</span>为任意json类型)
-  <span class="keyword">type</span> JsField = (String, JsValue)
-
-  // 反序列化异常
-  def deserializationError(msg: String, cause: Throwable = null, fieldNames: List[String] = Nil) = throw new DeserializationException(msg, cause, fieldNames)
-  // 序列化异常
-  def serializationError(msg: String) = throw new SerializationException(msg)
-  // jsonReader方法，是个泛型。使用了隐式参数，返回值是这个隐式参数的引用。也就是说只要调用了jsonReader方法，那么就会自动去找对应泛型类型的实现
-  def jsonReader[T](<span class="type">implicit</span> reader: JsonReader[T]) = reader
-  // 跟jsonReader方法一个道理。只要调用了jsonWriter方法，那么就会自动去找对应泛型类型的实现
-  def jsonWriter[T](<span class="type">implicit</span> writer: JsonWriter[T]) = writer 
-
-  // 隐式转换方法。上面例子的toList使用了这个隐式转换
-  <span class="type">implicit</span> def pimpAny[T](<span class="built_in">any</span>: T) = new PimpedAny(<span class="built_in">any</span>)
-  // 隐式方法。上面例子的parseJson使用了这个隐式转换
-  <span class="type">implicit</span> def pimpString(string: String) = new PimpedString(string)
-}
-
-package json {
-
-  // 反序列异常类的定义，上面的deserializationError方法实例化了这个类
-  <span class="keyword">case</span> <span class="keyword">class</span> DeserializationException(msg: String, cause: Throwable = null, fieldNames: List[String] = Nil) <span class="keyword">extends</span> RuntimeException(msg, cause)
-  // 序列异常类的定义，上面的serializationError方法实例化了这个类
-  <span class="keyword">class</span> SerializationException(msg: String) <span class="keyword">extends</span> RuntimeException(msg)
-
-  // 上面的隐式方法pimpAny实例化了这个类。黑魔法toJson方法，不是List的toJson方法，而是List隐式转换成PimpedAny，然后调用PimpedAny的toJson方法。toJson方法的参数是个隐式参数，跟上面代码里的jsonWriter方法一样，会找对应泛型类型的JsonWriter实现类，然后调用JsonWriter的<span class="built_in">write</span>方法
-  <span class="keyword">private</span>[json] <span class="keyword">class</span> PimpedAny[T](<span class="built_in">any</span>: T) {
-    def toJson(<span class="type">implicit</span> writer: JsonWriter[T]): JsValue = writer.<span class="built_in">write</span>(<span class="built_in">any</span>)
-  }
-
-  // 上面的隐式方法pimpString实例化了这个类。黑魔法parseJson方法，不是String的parseJson方法，而是String隐式转换成PimpedString，然后调用PimpedString的parseJson方法
-  <span class="keyword">private</span>[json] <span class="keyword">class</span> PimpedString(string: String) {
-    @deprecated(<span class="string">"deprecated in favor of parseJson"</span>, <span class="string">"1.2.6"</span>)
-    def asJson: JsValue = parseJson
-    def parseJson: JsValue = JsonParser(string)
-  }
-}
-</code></pre><h2 id="JsValue(原生json中的各种数据类型的抽象)">JsValue(原生json中的各种数据类型的抽象)</h2><p>JsValue是原生json中各种数据类型的抽象，是个抽象类，直接看JsValue的定义:</p>
-<pre><code><span class="keyword">sealed</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">JsValue</span> {</span>
-     <span class="comment">// 重载的toString方法引用了compactPrint方法，会打印出json的压缩格式</span>
-  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">toString</span> =</span> compactPrint
-  <span class="function"><span class="keyword">def</span> <span class="title">toString</span>(</span>printer: (<span class="type">JsValue</span> =&gt; <span class="type">String</span>)) = printer(<span class="keyword">this</span>)
-  <span class="comment">// 压缩打印，使用了CompactPrinter。CompactPrinter是一个JsonPrinter的子类</span>
-  <span class="function"><span class="keyword">def</span> <span class="title">compactPrint</span> =</span> <span class="type">CompactPrinter</span>(<span class="keyword">this</span>)
-  <span class="comment">// 格式化打印，PrettyPrinter。PrettyPrinter也是一个JsonPrinter的子类</span>
-  <span class="function"><span class="keyword">def</span> <span class="title">prettyPrint</span> =</span> <span class="type">PrettyPrinter</span>(<span class="keyword">this</span>)
-  <span class="comment">// 转换成对应的类。jsonReader方法在json package里定义，已经分析过。会找对应那个的JsonReader实现类。然后调用read方法</span>
-  <span class="function"><span class="keyword">def</span> <span class="title">convertTo</span>[</span><span class="type">T</span> :<span class="type">JsonReader</span>]: <span class="type">T</span> = jsonReader[<span class="type">T</span>].read(<span class="keyword">this</span>)
-
-  <span class="comment">// 转换成JsObject对象，除了JsObject对象重写了这个，返回了自身。其他类型的JsValue都会抛出DeserializationException异常</span>
-  <span class="function"><span class="keyword">def</span> <span class="title">asJsObject</span>(</span>errorMsg: <span class="type">String</span> = <span class="string">"JSON object expected"</span>): <span class="type">JsObject</span> = deserializationError(errorMsg)
-
-  <span class="function"><span class="keyword">def</span> <span class="title">asJsObject</span>:</span> <span class="type">JsObject</span> = asJsObject()
-
-  <span class="annotation">@deprecated</span>(<span class="string">"Superceded by 'convertTo'"</span>, <span class="string">"1.1.0"</span>)
-  <span class="function"><span class="keyword">def</span> <span class="title">fromJson</span>[</span><span class="type">T</span> :<span class="type">JsonReader</span>]: <span class="type">T</span> = convertTo
-}
-</code></pre><p>JsNumber是数值类型的抽象：</p>
-<pre><code><span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">JsNumber</span>(</span>value: <span class="type">BigDecimal</span>) <span class="keyword">extends</span> <span class="type">JsValue</span>
-
-<span class="comment">// JsNumber中定义了几个方便的构造方法</span>
-<span class="class"><span class="keyword">object</span> <span class="title">JsNumber</span> {</span>
-  <span class="keyword">val</span> zero: <span class="type">JsNumber</span> = apply(<span class="number">0</span>)
-  <span class="function"><span class="keyword">def</span> <span class="title">apply</span>(</span>n: <span class="type">Int</span>) = <span class="keyword">new</span> <span class="type">JsNumber</span>(<span class="type">BigDecimal</span>(n))
-  <span class="function"><span class="keyword">def</span> <span class="title">apply</span>(</span>n: <span class="type">Long</span>) = <span class="keyword">new</span> <span class="type">JsNumber</span>(<span class="type">BigDecimal</span>(n))
-  <span class="function"><span class="keyword">def</span> <span class="title">apply</span>(</span>n: <span class="type">Double</span>) = n <span class="keyword">match</span> {
-    <span class="keyword">case</span> n <span class="keyword">if</span> n.isNaN      =&gt; <span class="type">JsNull</span>
-    <span class="keyword">case</span> n <span class="keyword">if</span> n.isInfinity =&gt; <span class="type">JsNull</span>
-    <span class="keyword">case</span> _                 =&gt; <span class="keyword">new</span> <span class="type">JsNumber</span>(<span class="type">BigDecimal</span>(n))
-  }
-  <span class="function"><span class="keyword">def</span> <span class="title">apply</span>(</span>n: <span class="type">BigInt</span>) = <span class="keyword">new</span> <span class="type">JsNumber</span>(<span class="type">BigDecimal</span>(n))
-  <span class="function"><span class="keyword">def</span> <span class="title">apply</span>(</span>n: <span class="type">String</span>) = <span class="keyword">new</span> <span class="type">JsNumber</span>(<span class="type">BigDecimal</span>(n))
-  <span class="function"><span class="keyword">def</span> <span class="title">apply</span>(</span>n: <span class="type">Array</span>[<span class="type">Char</span>]) = <span class="keyword">new</span> <span class="type">JsNumber</span>(<span class="type">BigDecimal</span>(n))
-}
-</code></pre><p>JsString是字符串类型的抽象：</p>
-<pre><code><span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">JsString</span>(</span>value: <span class="type">String</span>) <span class="keyword">extends</span> <span class="type">JsValue</span>
-
-<span class="comment">// JsString中定义了几个方便的方法</span>
-<span class="class"><span class="keyword">object</span> <span class="title">JsString</span> {</span>
-    <span class="keyword">val</span> empty = <span class="type">JsString</span>(<span class="string">""</span>)
-    <span class="function"><span class="keyword">def</span> <span class="title">apply</span>(</span>value: <span class="type">Symbol</span>) = <span class="keyword">new</span> <span class="type">JsString</span>(value.name)
-}
-</code></pre><p>JsObject是对象类型的抽象：</p>
-<pre><code><span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">JsObject</span>(</span>fields: <span class="type">Map</span>[<span class="type">String</span>, <span class="type">JsValue</span>]) <span class="keyword">extends</span> <span class="type">JsValue</span> {
-  <span class="comment">// 重写了asJsObject方法</span>
-  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">asJsObject</span>(</span>errorMsg: <span class="type">String</span>) = <span class="keyword">this</span>
-  <span class="comment">// 根据字段名获得对应的JsValue</span>
-  <span class="function"><span class="keyword">def</span> <span class="title">getFields</span>(</span>fieldNames: <span class="type">String</span>*): immutable.<span class="type">Seq</span>[<span class="type">JsValue</span>] = fieldNames.flatMap(fields.get)(collection.breakOut)
-}
-
-<span class="class"><span class="keyword">object</span> <span class="title">JsObject</span> {</span>
-  <span class="keyword">val</span> empty = <span class="type">JsObject</span>(<span class="type">Map</span>.empty[<span class="type">String</span>, <span class="type">JsValue</span>])
-  <span class="comment">// 使用多个JsField构造JsObject。这里的JsField就是代表一个(String, JsValue)</span>
-  <span class="function"><span class="keyword">def</span> <span class="title">apply</span>(</span>members: <span class="type">JsField</span>*) = <span class="keyword">new</span> <span class="type">JsObject</span>(<span class="type">Map</span>(members: _*))
-  <span class="annotation">@deprecated</span>(<span class="string">"Use JsObject(JsValue*) instead"</span>, <span class="string">"1.3.0"</span>)
-  <span class="function"><span class="keyword">def</span> <span class="title">apply</span>(</span>members: <span class="type">List</span>[<span class="type">JsField</span>]) = <span class="keyword">new</span> <span class="type">JsObject</span>(<span class="type">Map</span>(members: _*))
-}
-</code></pre><h2 id="JsonFormat(JsonWriter和JsonReader的子类)">JsonFormat(JsonWriter和JsonReader的子类)</h2><p>一个trait，是json序列化和反序列话的抽象。继承JsonReader(JsValue转换成对象的抽象)和JsonWriter(对象转换成JsValue的抽象)。</p>
-<p>JsonReader的定义，把一个JsValue转换成对应的类型：</p>
-<pre><code>trait JsonReader[T] {
-  <span class="function"><span class="keyword">def</span> <span class="title">read</span><span class="params">(json: JsValue)</span>:</span> T
-}
-</code></pre><p>JsonWriter的定义，把一个类型转换成JsValue：</p>
-<pre><code>trait JsonWriter[T] {
-  <span class="function"><span class="keyword">def</span> <span class="title">write</span><span class="params">(obj: T)</span>:</span> JsValue
-}
-</code></pre><p>json package对象里的jsonReader和jsonWriter方法有个隐式参数，我们也分析过：只要调用了jsonReader(JsonWriter)方法，那么就会自动去找对应泛型类型的实现。</p>
-<p>AdditionalFormats、BasicFormats、CollectionFormats、StandardFormats等都定义了各种JsonFormat。</p>
-<p>比如Int类型就找IntJsonFormat，String类型就找StringJsonFormat …  这些基础类型的JsonFormat都定义在BasicFormats这个trait中。</p>
-<p>我们就分析几个BasicFormats中定义的基础类型JsonFormat：</p>
-<p>Int基本类型的JsonFormat：</p>
-<pre><code><span class="keyword">implicit</span> <span class="class"><span class="keyword">object</span> <span class="title">IntJsonFormat</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">JsonFormat</span>[</span><span class="type">Int</span>] {
-    <span class="comment">// write方法继承自JsonWriter。 直接实例化一个JsNumber对象</span>
-    <span class="function"><span class="keyword">def</span> <span class="title">write</span>(</span>x: <span class="type">Int</span>) = <span class="type">JsNumber</span>(x)
-    <span class="comment">// read方法继承自JsonReader。读取JsNumber中对应的值</span>
-    <span class="function"><span class="keyword">def</span> <span class="title">read</span>(</span>value: <span class="type">JsValue</span>) = value <span class="keyword">match</span> {
-      <span class="keyword">case</span> <span class="type">JsNumber</span>(x) =&gt; x.intValue
-      <span class="keyword">case</span> x =&gt; deserializationError(<span class="string">"Expected Int as JsNumber, but got "</span> + x)
-    }
-}
-</code></pre><p>String基本类型的JsonFormat：</p>
-<pre><code><span class="keyword">implicit</span> <span class="class"><span class="keyword">object</span> <span class="title">StringJsonFormat</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">JsonFormat</span>[</span><span class="type">String</span>] {
-    <span class="comment">// write方法实例化一个JsString</span>
-    <span class="function"><span class="keyword">def</span> <span class="title">write</span>(</span>x: <span class="type">String</span>) = {
-      require(x ne <span class="literal">null</span>)
-      <span class="type">JsString</span>(x)
-    }
-    <span class="comment">// read方法读取JsString中对应的字符串</span>
-    <span class="function"><span class="keyword">def</span> <span class="title">read</span>(</span>value: <span class="type">JsValue</span>) = value <span class="keyword">match</span> {
-      <span class="keyword">case</span> <span class="type">JsString</span>(x) =&gt; x
-      <span class="keyword">case</span> x =&gt; deserializationError(<span class="string">"Expected String as JsString, but got "</span> + x)
-    }
-}
-</code></pre><p>…..</p>
-<p>CollectionFormats中定义了几个集合类的JsonFormat:</p>
-<p>List类型的JsonFormat：</p>
-<pre><code><span class="type">implicit</span> def listFormat[T :JsonFormat] = new RootJsonFormat[List[T]] {
-    // 将List转换成JsArray对象。遍历list中的各个元素，对每个元素调用toJson方法。最后JsArray里的每个元素都是JsValue
-    def <span class="built_in">write</span>(list: List[T]) = JsArray(list.map(_.toJson).toVector)
-    // JsArray转换成List。对JsArray里的各个JsValue调用convertTo转换成对应的类型
-    def read(<span class="keyword">value</span>: JsValue): List[T] = <span class="keyword">value</span> match {
-      <span class="keyword">case</span> JsArray(elements) =&gt; elements.map(_.convertTo[T])(collection.breakOut)
-      <span class="keyword">case</span> x =&gt; deserializationError(<span class="string">"Expected List as JsArray, but got "</span> + x)
-    }
-}
-</code></pre><p>Map类型的JsonFormat：</p>
-<pre><code><span class="keyword">implicit</span> <span class="function"><span class="keyword">def</span> <span class="title">mapFormat</span>[</span><span class="type">K</span> :<span class="type">JsonFormat</span>, <span class="type">V</span> :<span class="type">JsonFormat</span>] = <span class="keyword">new</span> <span class="type">RootJsonFormat</span>[<span class="type">Map</span>[<span class="type">K</span>, <span class="type">V</span>]] {
-    <span class="comment">// 遍历Map中的每一个二元元组。如果元组的第一项不是String，直接抛出SerializationException异常。否则构造key为元组第一项字符串，value为元组第二项的JsVaue对象。</span>
-    <span class="function"><span class="keyword">def</span> <span class="title">write</span>(</span>m: <span class="type">Map</span>[<span class="type">K</span>, <span class="type">V</span>]) = <span class="type">JsObject</span> {
-      m.map { field =&gt;
-        field._1.toJson <span class="keyword">match</span> {
-          <span class="keyword">case</span> <span class="type">JsString</span>(x) =&gt; x -&gt; field._2.toJson
-          <span class="keyword">case</span> x =&gt; <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">SerializationException</span>(<span class="string">"Map key must be formatted as JsString, not '"</span> + x + <span class="string">"'"</span>)
-        }
-      }
-    }
-    <span class="function"><span class="keyword">def</span> <span class="title">read</span>(</span>value: <span class="type">JsValue</span>) = value <span class="keyword">match</span> {
-      <span class="keyword">case</span> x: <span class="type">JsObject</span> =&gt; x.fields.map { field =&gt;
-        (<span class="type">JsString</span>(field._1).convertTo[<span class="type">K</span>], field._2.convertTo[<span class="type">V</span>])
-      } (collection.breakOut)
-      <span class="keyword">case</span> x =&gt; deserializationError(<span class="string">"Expected Map as JsObject, but got "</span> + x)
-    }
-}
-</code></pre><p>AdditionalFormats中定义了一些helper和额外的JsonFormat：</p>
-<pre><code><span class="comment">// JsValue的JsonFormat，JsValue调用convertTo或者toJson返回的就是自身</span>
-<span class="keyword">implicit</span> <span class="class"><span class="keyword">object</span> <span class="title">JsValueFormat</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">JsonFormat</span>[</span><span class="type">JsValue</span>] {
-  <span class="function"><span class="keyword">def</span> <span class="title">write</span>(</span>value: <span class="type">JsValue</span>) = value
-  <span class="function"><span class="keyword">def</span> <span class="title">read</span>(</span>value: <span class="type">JsValue</span>) = value
-}
-
-
-<span class="keyword">implicit</span> <span class="class"><span class="keyword">object</span> <span class="title">RootJsObjectFormat</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">RootJsonFormat</span>[</span><span class="type">JsObject</span>] {
-  <span class="function"><span class="keyword">def</span> <span class="title">write</span>(</span>value: <span class="type">JsObject</span>) = value
-  <span class="function"><span class="keyword">def</span> <span class="title">read</span>(</span>value: <span class="type">JsValue</span>) = value.asJsObject
-}
-</code></pre><p>StandardFormats中定义了Option、Either的JsonFormat，1元-7元元组的JsonFormat。</p>
-<pre><code><span class="type">implicit</span> def tuple1Format[A :JF] = new JF[Tuple1[A]] {
-  def <span class="built_in">write</span>(t: Tuple1[A]) = t._1.toJson
-  def read(<span class="keyword">value</span>: JsValue) = Tuple1(<span class="keyword">value</span>.convertTo[A])
-}
-
-<span class="type">implicit</span> def tuple2Format[A :JF, B :JF] = new RootJsonFormat[(A, B)] {
-  def <span class="built_in">write</span>(t: (A, B)) = JsArray(t._1.toJson, t._2.toJson)
-  def read(<span class="keyword">value</span>: JsValue) = <span class="keyword">value</span> match {
-    <span class="keyword">case</span> JsArray(Seq(a, b)) =&gt; (a.convertTo[A], b.convertTo[B])
-    <span class="keyword">case</span> x =&gt; deserializationError(<span class="string">"Expected Tuple2 as JsArray, but got "</span> + x)
-  }
-}
-</code></pre><h2 id="JsonPrinter(将JsValue打印成原生json字符串)">JsonPrinter(将JsValue打印成原生json字符串)</h2><p>JsonPrinter继承一个函数对象，这个函数的输入是个JsValue，输出是String：</p>
-<pre><code><span class="class"><span class="keyword">trait</span> <span class="title">JsonPrinter</span> <span class="keyword"><span class="keyword">extends</span></span> (</span><span class="type">JsValue</span> =&gt; <span class="type">String</span>)
-</code></pre><p>内部定义了一个抽象方法：</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">print</span><span class="params">(<span class="symbol">x:</span> <span class="constant">JsValue</span>, <span class="symbol">sb:</span> <span class="constant">JStringBuilder</span>)</span></span>
-</code></pre><p>CompactPrinter继承JsonPrinter，压缩打印：</p>
-<p>实现的print方法：</p>
-<pre><code>def <span class="built_in">print</span>(x: JsValue, sb: StringBuilder) {
-    x match {
-      <span class="keyword">case</span> JsObject(x) =&gt; <span class="built_in">print</span>Object(x, sb)
-      <span class="keyword">case</span> JsArray(x)  =&gt; <span class="built_in">print</span>Array(x, sb)
-      <span class="keyword">case</span> _ =&gt; <span class="built_in">print</span>Leaf(x, sb)
-    }
-}
-</code></pre><p>PrettyPrinter也继承JsonPrinter，格式化打印：</p>
-<p>实现的print方法：</p>
-<pre><code><span class="keyword">def</span> print(<span class="string">x:</span> JsValue, <span class="string">sb:</span> StringBuilder) {
-  print(x, sb, <span class="number">0</span>)
-}
-
-  <span class="comment">// indent参数是格式化打印的关键</span>
-<span class="keyword">protected</span> <span class="keyword">def</span> print(<span class="string">x:</span> JsValue, <span class="string">sb:</span> StringBuilder, <span class="string">indent:</span> Int) {
-  x match {
-    <span class="keyword">case</span> JsObject(x) =&gt; printObject(x, sb, indent)
-    <span class="keyword">case</span> JsArray(x)  =&gt; printArray(x, sb, indent)
-    <span class="keyword">case</span> _ =&gt; printLeaf(x, sb)
-  }
-}
-</code></pre><h2 id="DefaultJsonProtocol(整合了多个JsonFormat)">DefaultJsonProtocol(整合了多个JsonFormat)</h2><p>直接看源码：</p>
-<pre><code><span class="class"><span class="keyword">trait</span> <span class="title">DefaultJsonProtocol</span>
-</span>    <span class="keyword">extends</span> <span class="type">BasicFormats</span>
-    <span class="keyword">with</span> <span class="type">StandardFormats</span>
-    <span class="keyword">with</span> <span class="type">CollectionFormats</span>
-    <span class="keyword">with</span> <span class="type">ProductFormats</span>
-    <span class="keyword">with</span> <span class="type">AdditionalFormats</span>
-
-<span class="class"><span class="keyword">object</span> <span class="title">DefaultJsonProtocol</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">DefaultJsonProtocol</span></span>
-</code></pre>]]></content>
-    <summary type="html">
-    <![CDATA[spray-json是scala的一个轻量的，简洁的，简单的关于JSON实现。同时也是spray项目的json模块，本文分析spray-json的源码 ...]]>
-    
-    </summary>
-    
-      <category term="jvm" scheme="http://fangjian0423.github.io/tags/jvm/"/>
-    
-      <category term="scala" scheme="http://fangjian0423.github.io/tags/scala/"/>
-    
-      <category term="scala" scheme="http://fangjian0423.github.io/categories/scala/"/>
     
   </entry>
   

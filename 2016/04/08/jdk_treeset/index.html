@@ -37,7 +37,7 @@
 <link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="jvm,scala," />
+  <meta name="keywords" content="jdk,set," />
 
 
 
@@ -55,16 +55,26 @@
 
 
 
-<meta name="description" content="Scala的偏函数支持2个泛型类型，分别是输入类型和输出类型 ...">
+<meta name="description" content="TreeSet跟HashSet，LinkedHashSet一样，都是Set接口的实现类。
+HashSet内部使用的HashMap，LinkedHashSet继承HashSet，内部使用的是LinkedHashMap。
+TreeSet实现的是NavigableSet接口，而不是HashSet和LinkedHashSet实现的Set接口。
+NavigableSet接口继承自SortedSet接口，So">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Scala偏函数(Partial Function)和部分应用(Partial application)">
-<meta property="og:url" content="http://fangjian0423.github.io/2015/06/14/scala-partial/index.html">
+<meta property="og:title" content="jdk TreeSet工作原理分析">
+<meta property="og:url" content="http://fangjian0423.github.io/2016/04/08/jdk_treeset/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="Scala的偏函数支持2个泛型类型，分别是输入类型和输出类型 ...">
-<meta property="og:updated_time" content="2016-03-12T10:18:28.000Z">
+<meta property="og:description" content="TreeSet跟HashSet，LinkedHashSet一样，都是Set接口的实现类。
+HashSet内部使用的HashMap，LinkedHashSet继承HashSet，内部使用的是LinkedHashMap。
+TreeSet实现的是NavigableSet接口，而不是HashSet和LinkedHashSet实现的Set接口。
+NavigableSet接口继承自SortedSet接口，So">
+<meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/treeset01.jpg">
+<meta property="og:updated_time" content="2016-04-07T16:20:26.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Scala偏函数(Partial Function)和部分应用(Partial application)">
-<meta name="twitter:description" content="Scala的偏函数支持2个泛型类型，分别是输入类型和输出类型 ...">
+<meta name="twitter:title" content="jdk TreeSet工作原理分析">
+<meta name="twitter:description" content="TreeSet跟HashSet，LinkedHashSet一样，都是Set接口的实现类。
+HashSet内部使用的HashMap，LinkedHashSet继承HashSet，内部使用的是LinkedHashMap。
+TreeSet实现的是NavigableSet接口，而不是HashSet和LinkedHashSet实现的Set接口。
+NavigableSet接口继承自SortedSet接口，So">
 
 
 
@@ -76,7 +86,7 @@
   };
 </script>
 
-  <title> Scala偏函数(Partial Function)和部分应用(Partial application) | Format's Notes </title>
+  <title> jdk TreeSet工作原理分析 | Format's Notes </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -257,7 +267,7 @@
             
             
               
-                Scala偏函数(Partial Function)和部分应用(Partial application)
+                jdk TreeSet工作原理分析
               
             
           </h1>
@@ -266,8 +276,8 @@
         <div class="post-meta">
           <span class="post-time">
             发表于
-            <time itemprop="dateCreated" datetime="2015-06-14T22:37:38+08:00" content="2015-06-14">
-              2015-06-14
+            <time itemprop="dateCreated" datetime="2016-04-08T00:20:23+08:00" content="2016-04-08">
+              2016-04-08
             </time>
           </span>
 
@@ -276,8 +286,8 @@
               &nbsp; | &nbsp; 分类于
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/scala/" itemprop="url" rel="index">
-                    <span itemprop="name">scala</span>
+                  <a href="/categories/jdk/" itemprop="url" rel="index">
+                    <span itemprop="name">jdk</span>
                   </a>
                 </span>
 
@@ -292,8 +302,8 @@
             
               <span class="post-comments-count">
               &nbsp; | &nbsp;
-              <a href="/2015/06/14/scala-partial/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/06/14/scala-partial/" itemprop="commentsCount"></span>
+              <a href="/2016/04/08/jdk_treeset/#comments" itemprop="discussionUrl">
+                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/08/jdk_treeset/" itemprop="commentsCount"></span>
               </a>
             </span>
             
@@ -312,72 +322,66 @@
       
 
       
-        <span itemprop="articleBody"><h2 id="偏函数(Partial_Function)的定义">偏函数(Partial Function)的定义</h2><p>普通函数的定义中，有指定的输入类型，所以可以接受任意该类型下的值。比如一个(Int) =&gt; String的函数可以接收任意Int值，并返回一个字符串。</p>
-<p>偏函数的定义中，也有指定的输入类型，但是偏函数不接受所有该类型下的值。比诶如(Int) =&gt; String的偏函数不能接收所有Int值为输入。</p>
-<p>Scala的偏函数支持2个泛型类型，分别是输入类型和输出类型。</p>
-<p>Scala中的偏函数数据类型为<strong>PartialFunction</strong>。</p>
-<h2 id="偏函数例子">偏函数例子</h2><p>输入类型为Int，输出类型为String的偏函数例子:</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">one</span>:</span>PartialFunction[Int, String] = {
-    case <span class="number">1</span> =&gt; <span class="string">"one"</span>
+        <span itemprop="articleBody"><p>TreeSet跟HashSet，LinkedHashSet一样，都是Set接口的实现类。</p>
+<p>HashSet内部使用的HashMap，LinkedHashSet继承HashSet，内部使用的是LinkedHashMap。</p>
+<p>TreeSet实现的是NavigableSet接口，而不是HashSet和LinkedHashSet实现的Set接口。</p>
+<p>NavigableSet接口继承自SortedSet接口，SortedSet接口继承自Set接口。</p>
+<p>NavigableSet接口比Set更方便，可以使用firstKey[最小关键字]，lastKey[最大关键字]，pollFirstEntry[最小键值对]，pollLastEntry[最大键值对]，higherEntry[比参数关键字要大的键值对]，lowerEntry[比参数关键字要小的键值对]等等方便方法，可以使用这些方法方便地获取期望位置上的键值对。</p>
+<a id="more"></a>
+<h2 id="TreeSet原理分析">TreeSet原理分析</h2><p>TreeSet跟HashSet一样，内部都使用Map，HashSet内部使用的是HashMap，但是TreeSet使用的是NavigableMap。</p>
+<p>TreeSet的几个构造方法会构造NavigableMap，如果使用没有参数的构造函数，NavigableMap是TreeMap：</p>
+<pre><code>TreeSet(NavigableMap&lt;E,Object&gt; m) {
+    <span class="keyword">this</span>.m = m;
 }
 
-one(<span class="number">1</span>) // <span class="string">"one"</span>
-one(<span class="number">2</span>) // 报错
-
-<span class="function"><span class="keyword">def</span> <span class="title">two</span>:</span> PartialFunction[Int, String] = {
-    case <span class="number">2</span> =&gt; <span class="string">"two"</span>
+<span class="function"><span class="keyword">public</span> <span class="title">TreeSet</span><span class="params">()</span> </span>{
+    <span class="keyword">this</span>(<span class="keyword">new</span> TreeMap&lt;E,Object&gt;());
 }
 
-two(<span class="number">1</span>) // 报错
-two(<span class="number">2</span>) // <span class="string">"two"</span>
-
-<span class="function"><span class="keyword">def</span> <span class="title">wildcard</span>:</span> PartialFunction[Int, String] = {
-    case _ =&gt; <span class="string">"something else"</span>
+<span class="function"><span class="keyword">public</span> <span class="title">TreeSet</span><span class="params">(Comparator&lt;? <span class="keyword">super</span> E&gt; comparator)</span> </span>{
+    <span class="keyword">this</span>(<span class="keyword">new</span> TreeMap&lt;&gt;(comparator));
+}
+</code></pre><p>add方法调用Map的put方法：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span> </span>{
+    <span class="keyword">return</span> m.put(e, PRESENT)==<span class="keyword">null</span>;
+}
+</code></pre><p>remove方法调用Map的remove方法：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">remove</span><span class="params">(Object o)</span> </span>{
+    <span class="keyword">return</span> m.remove(o)==PRESENT;
+}
+</code></pre><p>原理基本跟HashSet一样。</p>
+<pre><code><span class="comment">// 最小的关键字</span>
+public <span class="keyword">E</span> first() {
+    <span class="keyword">return</span> <span class="keyword">m</span>.firstKey();
 }
 
-wildcard(<span class="number">1</span>) // <span class="string">"something else"</span>
-wildcard(<span class="number">2</span>) // <span class="string">"something else"</span>
-</code></pre><p>由于偏函数只会接收部分参数，所以可以使用 “orElse” 方法进行组合：</p>
-<pre><code>val partial = one orElse two orElse wildcard
-
-<span class="function"><span class="title">partial</span><span class="params">(<span class="number">1</span>)</span></span> <span class="comment">// "one"</span>
-<span class="function"><span class="title">partial</span><span class="params">(<span class="number">2</span>)</span></span> <span class="comment">// "two"</span>
-<span class="function"><span class="title">partial</span><span class="params">(<span class="number">3</span>)</span></span> <span class="comment">// "something else"</span>
-</code></pre><h2 id="偏函数原理">偏函数原理</h2><p>PartialFunction是一个trait，继承了scala.Function1这个trait。</p>
-<p>orElse就是PartialFunction内部的1个方法，PartialFunction还有其他一些方法，比如isDefinedAt， andThen，applyOrElse等方法。</p>
-<p>isDefinedAt：判断偏函数是否对参数中的参数有效</p>
-<pre><code>one.<span class="function"><span class="title">isDefinedAt</span><span class="params">(<span class="number">1</span>)</span></span> <span class="comment">// true</span>
-one.<span class="function"><span class="title">isDefinedAt</span><span class="params">(<span class="number">2</span>)</span></span> <span class="comment">// false</span>
-</code></pre><p>andThen：相当于方法的连续调用，比如g(f(x))</p>
-<p>orElse: 本文已经分析过</p>
-<p>applyOrElse：接收2个参数，第一个是调用的参数，第二个是个回调函数。如果第一个调用的参数匹配，返回匹配的值，否则调用回调函数</p>
-<pre><code>one.<span class="function"><span class="title">applyOrElse</span><span class="params">(<span class="number">2</span>, { num:Int =&gt; <span class="string">"two"</span> })</span></span> <span class="comment">// "two"</span>
-</code></pre><p>当我们使用PartialFunction类型定义一个偏函数的时候，scala会被自动转换：</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">int2Char</span>:</span> PartialFunction[Int, Char] = {
-    case <span class="number">1</span> =&gt; <span class="string">'a'</span>
-    case <span class="number">3</span> =&gt; <span class="string">'c'</span>
+<span class="comment">// 最大的关键字</span>
+public <span class="keyword">E</span> last() {
+    <span class="keyword">return</span> <span class="keyword">m</span>.lastKey();
 }
-</code></pre><p>会被scala转换为：</p>
-<pre><code>val int2Char = <span class="keyword">new</span> PartialFunction[<span class="keyword">Int</span>, <span class="keyword">Char</span>] {
-    def apply(i: <span class="keyword">Int</span>) = {
-        <span class="keyword">case</span> <span class="number">1</span> =&gt; <span class="string">'a'</span>
-        <span class="keyword">case</span> <span class="number">3</span> =&gt; <span class="string">'c'</span>
-    }
-    def isDefinedAt(i: <span class="keyword">Int</span>): <span class="keyword">Boolean</span> = i match {
-        <span class="keyword">case</span> <span class="number">1</span> =&gt; <span class="keyword">true</span>
-        <span class="keyword">case</span> <span class="number">3</span> =&gt; <span class="keyword">true</span>
-        <span class="keyword">case</span> _ =&gt; <span class="keyword">false</span>
-    }
+
+<span class="comment">// 比参数小的关键字</span>
+public <span class="keyword">E</span> <span class="literal">lower</span>(<span class="keyword">E</span> <span class="keyword">e</span>) {
+    <span class="keyword">return</span> <span class="keyword">m</span>.lowerKey(<span class="keyword">e</span>);
 }
-</code></pre><h2 id="部分应用(Partial_application)">部分应用(Partial application)</h2><p>部分应用表示一个函数的调用并不需要全部的参数，可以使用 “_” 这个特殊符号代表一个参数，使用部分应用之后函数的返回值是函数，而不是具体的值。</p>
-<pre><code>def <span class="function"><span class="title">add</span><span class="params">(x: Int, y: Int)</span></span> = x + y
-
-val addOne = <span class="function"><span class="title">add</span><span class="params">(<span class="number">1</span>, _: Int)</span></span>
-
-<span class="function"><span class="title">addOne</span><span class="params">(<span class="number">4</span>)</span></span> <span class="comment">// 5</span>
-<span class="function"><span class="title">addOne</span><span class="params">(<span class="number">6</span>)</span></span> <span class="comment">// 7</span>
-</code></pre><p>部分应用的参数可以应用到参数中的任意参数。</p>
-</span>
+</code></pre><h2 id="一个TreeSet例子">一个TreeSet例子</h2><p>使用没有参数的TreeMap构造函数，内部的Map使用TreeMap红黑树：</p>
+<pre><code>TreeSet&lt;<span class="keyword">String</span>&gt; <span class="built_in">set</span> = <span class="keyword">new</span> TreeSet&lt;<span class="keyword">String</span>&gt;();
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"1:语文"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"2:数学"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"3:英语"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"4:政治"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"5:物理"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"6:化学"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"7:生物"</span>);
+<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"8:体育"</span>);
+</code></pre><p>内部红黑树结构如下：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/treeset01.jpg" alt=""></p>
+<p>还可以调用TreeSet的其他方法：</p>
+<pre><code><span class="built_in">set</span>.<span class="keyword">first</span>();<span class="comment"> // 1:语文</span>
+<span class="built_in">set</span>.<span class="keyword">last</span>();<span class="comment"> // 8:体育</span>
+<span class="built_in">set</span>.higher(<span class="string">"5:物理"</span>);<span class="comment"> // 6:化学</span>
+<span class="built_in">set</span>.<span class="built_in">lower</span>(<span class="string">"5:物理"</span>);<span class="comment"> // 4:政治</span>
+</code></pre></span>
       
     </div>
 
@@ -385,9 +389,9 @@ val addOne = <span class="function"><span class="title">add</span><span class="p
       
         <div class="post-tags">
           
-            <a href="/tags/jvm/" rel="tag">#jvm</a>
+            <a href="/tags/jdk/" rel="tag">#jdk</a>
           
-            <a href="/tags/scala/" rel="tag">#scala</a>
+            <a href="/tags/set/" rel="tag">#set</a>
           
         </div>
       
@@ -396,17 +400,13 @@ val addOne = <span class="function"><span class="title">add</span><span class="p
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2015/06/12/scala-func-program/" rel="next" title="Scala函数式编程">
-                <i class="fa fa-chevron-left"></i> Scala函数式编程
+              <a href="/2016/04/07/jdk_treemap/" rel="next" title="jdk TreeMap工作原理分析">
+                <i class="fa fa-chevron-left"></i> jdk TreeMap工作原理分析
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2015/06/20/scala-collection/" rel="prev" title="Scala集合相关知识">
-                Scala集合相关知识 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -570,7 +570,7 @@ val addOne = <span class="function"><span class="title">add</span><span class="p
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#偏函数(Partial_Function)的定义"><span class="nav-number">1.</span> <span class="nav-text">偏函数(Partial Function)的定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#偏函数例子"><span class="nav-number">2.</span> <span class="nav-text">偏函数例子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#偏函数原理"><span class="nav-number">3.</span> <span class="nav-text">偏函数原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#部分应用(Partial_application)"><span class="nav-number">4.</span> <span class="nav-text">部分应用(Partial application)</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#TreeSet原理分析"><span class="nav-number">1.</span> <span class="nav-text">TreeSet原理分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一个TreeSet例子"><span class="nav-number">2.</span> <span class="nav-text">一个TreeSet例子</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator"></div>
@@ -618,9 +618,9 @@ val addOne = <span class="function"><span class="title">add</span><span class="p
 
     <script type="text/javascript">
       var disqus_shortname = 'fangjian0423';
-      var disqus_identifier = '2015/06/14/scala-partial/';
-      var disqus_title = 'Scala偏函数(Partial Function)和部分应用(Partial application)';
-      var disqus_url = 'http://fangjian0423.github.io/2015/06/14/scala-partial/';
+      var disqus_identifier = '2016/04/08/jdk_treeset/';
+      var disqus_title = 'jdk TreeSet工作原理分析';
+      var disqus_url = 'http://fangjian0423.github.io/2016/04/08/jdk_treeset/';
 
       function run_disqus_script(disqus_script){
         var dsq = document.createElement('script');

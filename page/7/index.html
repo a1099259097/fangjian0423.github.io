@@ -1,5 +1,11 @@
 <!doctype html>
-<html class="theme-next   use-motion ">
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
 <head>
   <meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
@@ -27,14 +33,35 @@
 
 
   
-    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
   
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
 
 
 
 <link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
 
-<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
   <meta name="keywords" content="java,scala,big data,javascript" />
@@ -48,7 +75,7 @@
 
 
 
-  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
 
 
 
@@ -68,10 +95,16 @@
 
 
 <script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
   var CONFIG = {
-    scheme: '',
-    sidebar: 'always',
-    motion: true
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"always"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
   };
 </script>
 
@@ -80,15 +113,6 @@
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 
-  <!--[if lte IE 8]>
-  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
-    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
-      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
-           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
-           style='margin-left:auto;margin-right:auto;display: block;'/>
-    </a>
-  </div>
-<![endif]-->
   
 
 
@@ -115,9 +139,18 @@
 
 
 
-  <div class="container one-column 
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left 
    page-home 
-">
+ ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -146,7 +179,7 @@
   
 
   
-    <ul id="menu" class="menu menu-left">
+    <ul id="menu" class="menu">
       
         
         <li class="menu-item menu-item-home">
@@ -200,11 +233,12 @@
       
 
       
-      
         <li class="menu-item menu-item-search">
-          <a href="#" class="st-search-show-outputs">
+          
+            <a href="#" class="st-search-show-outputs">
+          
             
-              <i class="menu-item-icon fa fa-search icon-next-search"></i> <br />
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
             
             搜索
           </a>
@@ -216,7 +250,9 @@
   
     <div class="site-search">
       
-  
+  <form class="site-search-form">
+  <input type="text" id="st-search-input" class="st-search-input st-default-search-input" />
+</form>
 
 <script type="text/javascript">
   (function(w,d,t,u,n,s,e){w['SwiftypeObject']=n;w[n]=w[n]||function(){
@@ -238,12 +274,17 @@
 
     <main id="main" class="main">
       <div class="main-inner">
-        <div id="content" class="content">
-          
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
   <section id="posts" class="posts-expand">
     
       
 
+  
+  
+
+  
   
   
 
@@ -258,6 +299,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2014/12/31/2014_end/" itemprop="url">
                   2014总结
                 </a>
@@ -268,7 +310,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2014-12-31T23:43:05+08:00" content="2014-12-31">
               2014-12-31
             </time>
@@ -276,7 +321,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/总结/" itemprop="url" rel="index">
@@ -294,35 +343,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2014/12/31/2014_end/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/12/31/2014_end/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2014/12/31/2014_end/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/12/31/2014_end/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">2014年，经历了很多事，总结一下今年的经历以及一些收获...</span>
+          2014年，经历了很多事，总结一下今年的经历以及一些收获...
           <div class="post-more-link text-center">
             <a class="btn" href="/2014/12/31/2014_end/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -345,6 +406,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -356,6 +421,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2014/12/21/2014-12-21/" itemprop="url">
                   2014-12-21 小记
                 </a>
@@ -366,7 +432,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2014-12-21T22:32:35+08:00" content="2014-12-21">
               2014-12-21
             </time>
@@ -374,7 +443,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/杂事/" itemprop="url" rel="index">
@@ -392,35 +465,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2014/12/21/2014-12-21/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/12/21/2014-12-21/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2014/12/21/2014-12-21/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/12/21/2014-12-21/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">今天晚上我陪大学好基友玩了几个小时的炉石，玩的有点high，有点累...</span>
+          今天晚上我陪大学好基友玩了几个小时的炉石，玩的有点high，有点累...
           <div class="post-more-link text-center">
             <a class="btn" href="/2014/12/21/2014-12-21/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -443,6 +528,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -454,6 +543,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2014/12/15/mybatis_interceptor/" itemprop="url">
                   MyBatis拦截器原理探究
                 </a>
@@ -464,7 +554,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2014-12-15T22:43:05+08:00" content="2014-12-15">
               2014-12-15
             </time>
@@ -472,7 +565,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/mybatis/" itemprop="url" rel="index">
@@ -490,35 +587,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2014/12/15/mybatis_interceptor/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/12/15/mybatis_interceptor/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2014/12/15/mybatis_interceptor/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/12/15/mybatis_interceptor/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">MyBatis提供了一种插件(plugin)的功能，虽然叫做插件，但其实这是拦截器功能。那么拦截器拦截MyBatis中的哪些内容呢 ...</span>
+          MyBatis提供了一种插件(plugin)的功能，虽然叫做插件，但其实这是拦截器功能。那么拦截器拦截MyBatis中的哪些内容呢 ...
           <div class="post-more-link text-center">
             <a class="btn" href="/2014/12/15/mybatis_interceptor/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -541,6 +650,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -552,6 +665,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2014/12/10/mybatis_cache/" itemprop="url">
                   通过源码分析MyBatis的缓存
                 </a>
@@ -562,7 +676,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2014-12-10T14:34:05+08:00" content="2014-12-10">
               2014-12-10
             </time>
@@ -570,7 +687,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/mybatis/" itemprop="url" rel="index">
@@ -588,35 +709,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2014/12/10/mybatis_cache/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/12/10/mybatis_cache/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2014/12/10/mybatis_cache/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/12/10/mybatis_cache/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">MyBatis支持声明式数据缓存（declarative data caching）。当一条SQL语句被标记为“可缓存”后，首次执行它时从数据库获取的所有数据会被存储在一段高速缓存中 ...</span>
+          MyBatis支持声明式数据缓存（declarative data caching）。当一条SQL语句被标记为“可缓存”后，首次执行它时从数据库获取的所有数据会被存储在一段高速缓存中 ...
           <div class="post-more-link text-center">
             <a class="btn" href="/2014/12/10/mybatis_cache/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -639,6 +772,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -650,6 +787,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2014/11/22/java_threadlocal/" itemprop="url">
                   ThreadLocal原理及其实际应用
                 </a>
@@ -660,7 +798,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2014-11-22T20:35:21+08:00" content="2014-11-22">
               2014-11-22
             </time>
@@ -668,7 +809,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/java/" itemprop="url" rel="index">
@@ -686,35 +831,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2014/11/22/java_threadlocal/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/11/22/java_threadlocal/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2014/11/22/java_threadlocal/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/11/22/java_threadlocal/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">java猿在面试中，经常会被问到1个问题：java实现同步有哪几种方式？ ...</span>
+          java猿在面试中，经常会被问到1个问题：java实现同步有哪几种方式？ ...
           <div class="post-more-link text-center">
             <a class="btn" href="/2014/11/22/java_threadlocal/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -737,6 +894,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -748,6 +909,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2014/11/01/logstash_build/" itemprop="url">
                   logstash搭建日志追踪系统
                 </a>
@@ -758,7 +920,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2014-11-01T22:40:05+08:00" content="2014-11-01">
               2014-11-01
             </time>
@@ -766,7 +931,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/elasticsearch/" itemprop="url" rel="index">
@@ -784,35 +953,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2014/11/01/logstash_build/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/11/01/logstash_build/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2014/11/01/logstash_build/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/11/01/logstash_build/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">logstash是一个用来管理事件和日志的工具，它的作用是收集日志，解析日志，存储日志为以后使用 ...</span>
+          logstash是一个用来管理事件和日志的工具，它的作用是收集日志，解析日志，存储日志为以后使用 ...
           <div class="post-more-link text-center">
             <a class="btn" href="/2014/11/01/logstash_build/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -835,6 +1016,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -846,6 +1031,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2014/10/31/intellij_idea_uml/" itemprop="url">
                   Intellij Idea中一个非常牛逼的UML图功能
                 </a>
@@ -856,7 +1042,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2014-10-31T10:40:05+08:00" content="2014-10-31">
               2014-10-31
             </time>
@@ -867,35 +1056,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2014/10/31/intellij_idea_uml/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/10/31/intellij_idea_uml/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2014/10/31/intellij_idea_uml/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/10/31/intellij_idea_uml/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">Intellij Idea中一个非常牛逼的UML图功能，看开源框架架构的时候非常有用~</span>
+          Intellij Idea中一个非常牛逼的UML图功能，看开源框架架构的时候非常有用~
           <div class="post-more-link text-center">
             <a class="btn" href="/2014/10/31/intellij_idea_uml/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -918,6 +1119,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -929,6 +1134,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2014/09/26/mybatis-dynamic-sql /" itemprop="url">
                   MyBatis动态SQL底层原理分析
                 </a>
@@ -939,7 +1145,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2014-09-26T15:49:50+08:00" content="2014-09-26">
               2014-09-26
             </time>
@@ -947,7 +1156,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/mybatis/" itemprop="url" rel="index">
@@ -965,35 +1178,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2014/09/26/mybatis-dynamic-sql /#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/26/mybatis-dynamic-sql /" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2014/09/26/mybatis-dynamic-sql /#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/26/mybatis-dynamic-sql /" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">MyBatis动态SQL底层原理分析</span>
+          MyBatis动态SQL底层原理分析
           <div class="post-more-link text-center">
             <a class="btn" href="/2014/09/26/mybatis-dynamic-sql /">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -1016,6 +1241,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -1027,6 +1256,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2014/09/21/dom-parse-xml-html/" itemprop="url">
                   简单谈谈dom解析xml和html
                 </a>
@@ -1037,7 +1267,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2014-09-21T09:49:50+08:00" content="2014-09-21">
               2014-09-21
             </time>
@@ -1045,7 +1278,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/java/" itemprop="url" rel="index">
@@ -1063,35 +1300,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2014/09/21/dom-parse-xml-html/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/21/dom-parse-xml-html/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2014/09/21/dom-parse-xml-html/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/21/dom-parse-xml-html/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">文件对象模型是W3C组织推荐的处理可扩展标志语言的标准编程接口 ...</span>
+          文件对象模型是W3C组织推荐的处理可扩展标志语言的标准编程接口 ...
           <div class="post-more-link text-center">
             <a class="btn" href="/2014/09/21/dom-parse-xml-html/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -1114,6 +1363,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -1125,6 +1378,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2014/09/06/MapperScannerConfigurer-analysis/" itemprop="url">
                   Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析
                 </a>
@@ -1135,7 +1389,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2014-09-06T21:55:12+08:00" content="2014-09-06">
               2014-09-06
             </time>
@@ -1143,7 +1400,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/mybatis/" itemprop="url" rel="index">
@@ -1161,35 +1422,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2014/09/06/MapperScannerConfigurer-analysis/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/06/MapperScannerConfigurer-analysis/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2014/09/06/MapperScannerConfigurer-analysis/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/06/MapperScannerConfigurer-analysis/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理 ...</span>
+          本文将分析mybatis与spring整合的MapperScannerConfigurer的底层原理 ...
           <div class="post-more-link text-center">
             <a class="btn" href="/2014/09/06/MapperScannerConfigurer-analysis/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -1216,17 +1489,15 @@
 
 
 
+          </div>
+          
+
+
+          
+
         </div>
-
         
-
-
-        
-
-      </div>
-
-      
-        
+          
   
   <div class="sidebar-toggle">
     <div class="sidebar-toggle-line-wrap">
@@ -1245,10 +1516,12 @@
 
       <section class="site-overview sidebar-panel  sidebar-panel-active ">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <img class="site-author-image" itemprop="image"
+               src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg"
+               alt="Format" />
           <p class="site-author-name" itemprop="name">Format</p>
+          <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
         </div>
-        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
@@ -1257,19 +1530,23 @@
             </a>
           </div>
 
-          <div class="site-state-item site-state-categories">
-            <a href="/categories">
-              <span class="site-state-item-count">21</span>
-              <span class="site-state-item-name">分类</span>
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
               </a>
-          </div>
+            </div>
+          
 
-          <div class="site-state-item site-state-tags">
-            <a href="/tags">
-              <span class="site-state-item-count">57</span>
-              <span class="site-state-item-name">标签</span>
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">57</span>
+                <span class="site-state-item-name">标签</span>
               </a>
-          </div>
+            </div>
+          
 
         </nav>
 
@@ -1288,24 +1565,27 @@
               <span class="links-of-author-item">
                 <a href="https://github.com/fangjian0423" target="_blank">
                   
-                    <i class="fa fa-github"></i> GitHub
+                    <i class="fa fa-github"></i>
                   
+                  GitHub
                 </a>
               </span>
             
               <span class="links-of-author-item">
                 <a href="https://twitter.com/fangjian0423" target="_blank">
                   
-                    <i class="fa fa-twitter"></i> Twitter
+                    <i class="fa fa-twitter"></i>
                   
+                  Twitter
                 </a>
               </span>
             
               <span class="links-of-author-item">
                 <a href="http://weibo.com/u/2952387973" target="_blank">
                   
-                    <i class="fa fa-weibo"></i> Weibo
+                    <i class="fa fa-weibo"></i>
                   
+                  Weibo
                 </a>
               </span>
             
@@ -1315,22 +1595,25 @@
         
         
 
-        <div class="links-of-author motion-element">
+        
+        <div class="links-of-blogroll motion-element">
           
-            <p class="site-author-name">友情链接</p>
-            
-              <span class="links-of-author-item">
-              <a href="http://xtutu.me/" target="_blank">永哥</a>
-              </span>
-            
-              <span class="links-of-author-item">
-              <a href="http://blog.zlf.me" target="_blank">Felix</a>
-              </span>
-            
-              <span class="links-of-author-item">
-              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
-              </span>
-            
+            <div class="links-of-blogroll-title">友情链接</div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://xtutu.me/" target="_blank">xtutu</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.zlf.me" target="_blank">Felix</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+                </li>
+              
+            </ul>
           
         </div>
 
@@ -1342,7 +1625,8 @@
   </aside>
 
 
-      
+        
+      </div>
     </main>
 
     <footer id="footer" class="footer">
@@ -1352,28 +1636,103 @@
   &copy; 
   <span itemprop="copyrightYear">2016</span>
   <span class="with-love">
-    <i class="icon-next-heart fa fa-heart"></i>
+    <i class="fa fa-heart"></i>
   </span>
   <span class="author" itemprop="copyrightHolder">Format</span>
 </div>
 
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
 
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
 
+        
 
+        
       </div>
     </footer>
 
-    <div class="back-to-top"></div>
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
   </div>
 
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
   <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
 
   
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
   
 
   
-    
-    
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
 
   
 
@@ -1397,31 +1756,13 @@
   
 
 
-  
 
   
-  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
-  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
-
-
-  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
-  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
-<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
-
-<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
-
-
-  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-
-  
-
-  <script type="text/javascript" src="/js/bootstrap.js"></script>
-
   
   
 
   
+
   
 
 </body>

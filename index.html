@@ -1,5 +1,11 @@
 <!doctype html>
-<html class="theme-next   use-motion ">
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
 <head>
   <meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
@@ -27,14 +33,35 @@
 
 
   
-    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
   
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
 
 
 
 <link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
 
-<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
   <meta name="keywords" content="java,scala,big data,javascript" />
@@ -48,7 +75,7 @@
 
 
 
-  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
 
 
 
@@ -68,10 +95,16 @@
 
 
 <script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
   var CONFIG = {
-    scheme: '',
-    sidebar: 'always',
-    motion: true
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"always"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
   };
 </script>
 
@@ -80,15 +113,6 @@
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 
-  <!--[if lte IE 8]>
-  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
-    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
-      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
-           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
-           style='margin-left:auto;margin-right:auto;display: block;'/>
-    </a>
-  </div>
-<![endif]-->
   
 
 
@@ -115,9 +139,18 @@
 
 
 
-  <div class="container one-column 
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left 
    page-home 
-">
+ ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -146,7 +179,7 @@
   
 
   
-    <ul id="menu" class="menu menu-left">
+    <ul id="menu" class="menu">
       
         
         <li class="menu-item menu-item-home">
@@ -200,11 +233,12 @@
       
 
       
-      
         <li class="menu-item menu-item-search">
-          <a href="#" class="st-search-show-outputs">
+          
+            <a href="#" class="st-search-show-outputs">
+          
             
-              <i class="menu-item-icon fa fa-search icon-next-search"></i> <br />
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
             
             搜索
           </a>
@@ -216,7 +250,9 @@
   
     <div class="site-search">
       
-  
+  <form class="site-search-form">
+  <input type="text" id="st-search-input" class="st-search-input st-default-search-input" />
+</form>
 
 <script type="text/javascript">
   (function(w,d,t,u,n,s,e){w['SwiftypeObject']=n;w[n]=w[n]||function(){
@@ -238,12 +274,17 @@
 
     <main id="main" class="main">
       <div class="main-inner">
-        <div id="content" class="content">
-          
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
   <section id="posts" class="posts-expand">
     
       
 
+  
+  
+
+  
   
   
 
@@ -258,6 +299,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2016/04/10/jdk_priorityqueue/" itemprop="url">
                   jdk PriorityQueue优先队列工作原理分析
                 </a>
@@ -268,7 +310,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2016-04-10T21:36:08+08:00" content="2016-04-10">
               2016-04-10
             </time>
@@ -276,7 +321,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/jdk/" itemprop="url" rel="index">
@@ -294,22 +343,26 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/04/10/jdk_priorityqueue/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/10/jdk_priorityqueue/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/04/10/jdk_priorityqueue/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/10/jdk_priorityqueue/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
@@ -325,6 +378,14 @@
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -347,6 +408,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -358,6 +423,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2016/04/09/heap-heapsort/" itemprop="url">
                   堆、二叉堆、堆排序
                 </a>
@@ -368,7 +434,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2016-04-09T17:42:18+08:00" content="2016-04-09">
               2016-04-09
             </time>
@@ -376,7 +445,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/algorithm/" itemprop="url" rel="index">
@@ -394,22 +467,26 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/04/09/heap-heapsort/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/09/heap-heapsort/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/04/09/heap-heapsort/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/09/heap-heapsort/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
@@ -432,106 +509,12 @@
         
       
     </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
     
+    <div>
       
+    </div>
 
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                <a class="post-title-link" href="/2016/04/08/jdk_treeset/" itemprop="url">
-                  jdk TreeSet工作原理分析
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2016-04-08T00:20:23+08:00" content="2016-04-08">
-              2016-04-08
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/jdk/" itemprop="url" rel="index">
-                    <span itemprop="name">jdk</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/04/08/jdk_treeset/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/08/jdk_treeset/" itemprop="commentsCount"></span>
-              </a>
-            </span>
-            
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body">
-
-      
-      
-
-      
-        
-          <p>TreeSet跟HashSet，LinkedHashSet一样，都是Set接口的实现类。</p>
-<p>HashSet内部使用的HashMap，LinkedHashSet继承HashSet，内部使用的是LinkedHashMap。</p>
-<p>TreeSet实现的是NavigableSet接口，而不是HashSet和LinkedHashSet实现的Set接口。</p>
-<p>NavigableSet接口继承自SortedSet接口，SortedSet接口继承自Set接口。</p>
-<p>NavigableSet接口比Set更方便，可以使用firstKey[最小关键字]，lastKey[最大关键字]，pollFirstEntry[最小键值对]，pollLastEntry[最大键值对]，higherEntry[比参数关键字要大的键值对]，lowerEntry[比参数关键字要小的键值对]等等方便方法，可以使用这些方法方便地获取期望位置上的键值对。</p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/04/08/jdk_treeset/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
+    <div>
       
     </div>
 
@@ -554,6 +537,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -565,8 +552,9 @@
             
             
               
-                <a class="post-title-link" href="/2016/04/07/jdk_treemap/" itemprop="url">
-                  jdk TreeMap工作原理分析
+                
+                <a class="post-title-link" href="/2016/04/08/jdk_treeset/" itemprop="url">
+                  jdk TreeSet工作原理分析
                 </a>
               
             
@@ -575,15 +563,22 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2016-04-07T00:55:31+08:00" content="2016-04-07">
-              2016-04-07
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-04-08T00:20:23+08:00" content="2016-04-08">
+              2016-04-08
             </time>
           </span>
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/jdk/" itemprop="url" rel="index">
@@ -601,22 +596,152 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/04/07/jdk_treemap/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/07/jdk_treemap/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/04/08/jdk_treeset/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/08/jdk_treeset/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>TreeSet跟HashSet，LinkedHashSet一样，都是Set接口的实现类。</p>
+<p>HashSet内部使用的HashMap，LinkedHashSet继承HashSet，内部使用的是LinkedHashMap。</p>
+<p>TreeSet实现的是NavigableSet接口，而不是HashSet和LinkedHashSet实现的Set接口。</p>
+<p>NavigableSet接口继承自SortedSet接口，SortedSet接口继承自Set接口。</p>
+<p>NavigableSet接口比Set更方便，可以使用firstKey[最小关键字]，lastKey[最大关键字]，pollFirstEntry[最小键值对]，pollLastEntry[最大键值对]，higherEntry[比参数关键字要大的键值对]，lowerEntry[比参数关键字要小的键值对]等等方便方法，可以使用这些方法方便地获取期望位置上的键值对。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/04/08/jdk_treeset/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/04/07/jdk_treemap/" itemprop="url">
+                  jdk TreeMap工作原理分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-04-07T00:55:31+08:00" content="2016-04-07">
+              2016-04-07
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jdk/" itemprop="url" rel="index">
+                    <span itemprop="name">jdk</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/04/07/jdk_treemap/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/07/jdk_treemap/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
 
       
       
@@ -642,6 +767,14 @@
         
       
     </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
 
     <footer class="post-footer">
       
@@ -662,6 +795,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -673,6 +810,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2016/04/03/jdk_arraydeque/" itemprop="url">
                   jdk ArrayDeque工作原理分析
                 </a>
@@ -683,7 +821,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2016-04-03T00:43:59+08:00" content="2016-04-03">
               2016-04-03
             </time>
@@ -691,7 +832,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/jdk/" itemprop="url" rel="index">
@@ -709,22 +854,26 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/04/03/jdk_arraydeque/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/03/jdk_arraydeque/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/04/03/jdk_arraydeque/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/03/jdk_arraydeque/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
@@ -742,6 +891,14 @@
         
       
     </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
 
     <footer class="post-footer">
       
@@ -762,6 +919,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -773,6 +934,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2016/03/30/jdk_hashset_linkedhashset/" itemprop="url">
                   jdk HashSet, LinkedHashSet工作原理分析
                 </a>
@@ -783,7 +945,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2016-03-30T00:46:33+08:00" content="2016-03-30">
               2016-03-30
             </time>
@@ -791,7 +956,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/jdk/" itemprop="url" rel="index">
@@ -809,22 +978,26 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/03/30/jdk_hashset_linkedhashset/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/30/jdk_hashset_linkedhashset/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/03/30/jdk_hashset_linkedhashset/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/30/jdk_hashset_linkedhashset/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
@@ -841,102 +1014,12 @@
         
       
     </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
     
+    <div>
       
+    </div>
 
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                <a class="post-title-link" href="/2016/03/29/jdk_linkedhashmap/" itemprop="url">
-                  jdk LinkedHashMap工作原理分析
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2016-03-29T19:23:23+08:00" content="2016-03-29">
-              2016-03-29
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/jdk/" itemprop="url" rel="index">
-                    <span itemprop="name">jdk</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/03/29/jdk_linkedhashmap/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/29/jdk_linkedhashmap/" itemprop="commentsCount"></span>
-              </a>
-            </span>
-            
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body">
-
-      
-      
-
-      
-        
-          <p>LinkedHashMap是一种会记录插入顺序的Map，内部维护着一个accessOrder属性，用于表示map数据的迭代顺序是基于访问顺序还是插入顺序。</p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/03/29/jdk_linkedhashmap/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
+    <div>
       
     </div>
 
@@ -959,6 +1042,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -970,8 +1057,9 @@
             
             
               
-                <a class="post-title-link" href="/2016/03/29/jdk_hashmap/" itemprop="url">
-                  jdk HashMap工作原理分析
+                
+                <a class="post-title-link" href="/2016/03/29/jdk_linkedhashmap/" itemprop="url">
+                  jdk LinkedHashMap工作原理分析
                 </a>
               
             
@@ -980,15 +1068,22 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2016-03-29T01:49:58+08:00" content="2016-03-29">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-03-29T19:23:23+08:00" content="2016-03-29">
               2016-03-29
             </time>
           </span>
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/jdk/" itemprop="url" rel="index">
@@ -1006,22 +1101,148 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/03/29/jdk_hashmap/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/29/jdk_hashmap/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/03/29/jdk_linkedhashmap/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/29/jdk_linkedhashmap/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>LinkedHashMap是一种会记录插入顺序的Map，内部维护着一个accessOrder属性，用于表示map数据的迭代顺序是基于访问顺序还是插入顺序。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/03/29/jdk_linkedhashmap/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/03/29/jdk_hashmap/" itemprop="url">
+                  jdk HashMap工作原理分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-03-29T01:49:58+08:00" content="2016-03-29">
+              2016-03-29
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jdk/" itemprop="url" rel="index">
+                    <span itemprop="name">jdk</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/03/29/jdk_hashmap/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/29/jdk_hashmap/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
 
       
       
@@ -1042,104 +1263,12 @@
         
       
     </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
     
+    <div>
       
+    </div>
 
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                <a class="post-title-link" href="/2016/03/27/jdk_linkedlist/" itemprop="url">
-                  jdk LinkedList工作原理分析
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2016-03-27T17:35:27+08:00" content="2016-03-27">
-              2016-03-27
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/jdk/" itemprop="url" rel="index">
-                    <span itemprop="name">jdk</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/03/27/jdk_linkedlist/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/27/jdk_linkedlist/" itemprop="commentsCount"></span>
-              </a>
-            </span>
-            
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body">
-
-      
-      
-
-      
-        
-          <p>List接口的实现类之一ArrayList的内部实现是一个数组，而另外一个实现LinkedList内部实现是使用双向链表。</p>
-<p>LinkedList在内部定义了一个叫做Node类型的内部类，这个Node就是一个节点，链表中的节点，这个节点有3个属性，分别是元素item(当前节点要表示的值), 前节点prev(当前节点之前位置上的一个节点)，后节点next(当前节点后面位置的一个节点)。 </p>
-<p>LinkedList关于数据的插入，删除操作都会处理这些节点的前后关系。而不像ArrayList那样只需要移动元素的位置即可。</p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/03/27/jdk_linkedlist/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
+    <div>
       
     </div>
 
@@ -1162,6 +1291,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -1173,8 +1306,9 @@
             
             
               
-                <a class="post-title-link" href="/2016/03/27/jdk_arraylist/" itemprop="url">
-                  jdk ArrayList工作原理分析
+                
+                <a class="post-title-link" href="/2016/03/27/jdk_linkedlist/" itemprop="url">
+                  jdk LinkedList工作原理分析
                 </a>
               
             
@@ -1183,15 +1317,22 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2016-03-27T13:33:17+08:00" content="2016-03-27">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-03-27T17:35:27+08:00" content="2016-03-27">
               2016-03-27
             </time>
           </span>
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/jdk/" itemprop="url" rel="index">
@@ -1209,22 +1350,150 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/03/27/jdk_arraylist/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/27/jdk_arraylist/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/03/27/jdk_linkedlist/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/27/jdk_linkedlist/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>List接口的实现类之一ArrayList的内部实现是一个数组，而另外一个实现LinkedList内部实现是使用双向链表。</p>
+<p>LinkedList在内部定义了一个叫做Node类型的内部类，这个Node就是一个节点，链表中的节点，这个节点有3个属性，分别是元素item(当前节点要表示的值), 前节点prev(当前节点之前位置上的一个节点)，后节点next(当前节点后面位置的一个节点)。 </p>
+<p>LinkedList关于数据的插入，删除操作都会处理这些节点的前后关系。而不像ArrayList那样只需要移动元素的位置即可。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/03/27/jdk_linkedlist/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/03/27/jdk_arraylist/" itemprop="url">
+                  jdk ArrayList工作原理分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-03-27T13:33:17+08:00" content="2016-03-27">
+              2016-03-27
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jdk/" itemprop="url" rel="index">
+                    <span itemprop="name">jdk</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/03/27/jdk_arraylist/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/27/jdk_arraylist/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
 
       
       
@@ -1240,6 +1509,14 @@
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -1266,17 +1543,15 @@
 
 
 
+          </div>
+          
+
+
+          
+
         </div>
-
         
-
-
-        
-
-      </div>
-
-      
-        
+          
   
   <div class="sidebar-toggle">
     <div class="sidebar-toggle-line-wrap">
@@ -1295,10 +1570,12 @@
 
       <section class="site-overview sidebar-panel  sidebar-panel-active ">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <img class="site-author-image" itemprop="image"
+               src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg"
+               alt="Format" />
           <p class="site-author-name" itemprop="name">Format</p>
+          <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
         </div>
-        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
@@ -1307,19 +1584,23 @@
             </a>
           </div>
 
-          <div class="site-state-item site-state-categories">
-            <a href="/categories">
-              <span class="site-state-item-count">21</span>
-              <span class="site-state-item-name">分类</span>
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
               </a>
-          </div>
+            </div>
+          
 
-          <div class="site-state-item site-state-tags">
-            <a href="/tags">
-              <span class="site-state-item-count">57</span>
-              <span class="site-state-item-name">标签</span>
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">57</span>
+                <span class="site-state-item-name">标签</span>
               </a>
-          </div>
+            </div>
+          
 
         </nav>
 
@@ -1338,24 +1619,27 @@
               <span class="links-of-author-item">
                 <a href="https://github.com/fangjian0423" target="_blank">
                   
-                    <i class="fa fa-github"></i> GitHub
+                    <i class="fa fa-github"></i>
                   
+                  GitHub
                 </a>
               </span>
             
               <span class="links-of-author-item">
                 <a href="https://twitter.com/fangjian0423" target="_blank">
                   
-                    <i class="fa fa-twitter"></i> Twitter
+                    <i class="fa fa-twitter"></i>
                   
+                  Twitter
                 </a>
               </span>
             
               <span class="links-of-author-item">
                 <a href="http://weibo.com/u/2952387973" target="_blank">
                   
-                    <i class="fa fa-weibo"></i> Weibo
+                    <i class="fa fa-weibo"></i>
                   
+                  Weibo
                 </a>
               </span>
             
@@ -1365,22 +1649,25 @@
         
         
 
-        <div class="links-of-author motion-element">
+        
+        <div class="links-of-blogroll motion-element">
           
-            <p class="site-author-name">友情链接</p>
-            
-              <span class="links-of-author-item">
-              <a href="http://xtutu.me/" target="_blank">永哥</a>
-              </span>
-            
-              <span class="links-of-author-item">
-              <a href="http://blog.zlf.me" target="_blank">Felix</a>
-              </span>
-            
-              <span class="links-of-author-item">
-              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
-              </span>
-            
+            <div class="links-of-blogroll-title">友情链接</div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://xtutu.me/" target="_blank">xtutu</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.zlf.me" target="_blank">Felix</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+                </li>
+              
+            </ul>
           
         </div>
 
@@ -1392,7 +1679,8 @@
   </aside>
 
 
-      
+        
+      </div>
     </main>
 
     <footer id="footer" class="footer">
@@ -1402,28 +1690,103 @@
   &copy; 
   <span itemprop="copyrightYear">2016</span>
   <span class="with-love">
-    <i class="icon-next-heart fa fa-heart"></i>
+    <i class="fa fa-heart"></i>
   </span>
   <span class="author" itemprop="copyrightHolder">Format</span>
 </div>
 
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
 
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
 
+        
 
+        
       </div>
     </footer>
 
-    <div class="back-to-top"></div>
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
   </div>
 
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
   <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
 
   
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
   
 
   
-    
-    
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
 
   
 
@@ -1447,31 +1810,13 @@
   
 
 
-  
 
   
-  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
-  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
-
-
-  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
-  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
-<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
-
-<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
-
-
-  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-
-  
-
-  <script type="text/javascript" src="/js/bootstrap.js"></script>
-
   
   
 
   
+
   
 
 </body>

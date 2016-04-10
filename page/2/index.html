@@ -1,5 +1,11 @@
 <!doctype html>
-<html class="theme-next   use-motion ">
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
 <head>
   <meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
@@ -27,14 +33,35 @@
 
 
   
-    <link href='//fonts.lug.ustc.edu.cn/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
   
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
 
 
 
 <link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
 
-<link href="/css/main.css?v=0.4.5.2" rel="stylesheet" type="text/css" />
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
   <meta name="keywords" content="java,scala,big data,javascript" />
@@ -48,7 +75,7 @@
 
 
 
-  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.4.5.2" />
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
 
 
 
@@ -68,10 +95,16 @@
 
 
 <script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
   var CONFIG = {
-    scheme: '',
-    sidebar: 'always',
-    motion: true
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"always"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
   };
 </script>
 
@@ -80,15 +113,6 @@
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 
-  <!--[if lte IE 8]>
-  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
-    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
-      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
-           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
-           style='margin-left:auto;margin-right:auto;display: block;'/>
-    </a>
-  </div>
-<![endif]-->
   
 
 
@@ -115,9 +139,18 @@
 
 
 
-  <div class="container one-column 
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left 
    page-home 
-">
+ ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -146,7 +179,7 @@
   
 
   
-    <ul id="menu" class="menu menu-left">
+    <ul id="menu" class="menu">
       
         
         <li class="menu-item menu-item-home">
@@ -200,11 +233,12 @@
       
 
       
-      
         <li class="menu-item menu-item-search">
-          <a href="#" class="st-search-show-outputs">
+          
+            <a href="#" class="st-search-show-outputs">
+          
             
-              <i class="menu-item-icon fa fa-search icon-next-search"></i> <br />
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
             
             搜索
           </a>
@@ -216,7 +250,9 @@
   
     <div class="site-search">
       
-  
+  <form class="site-search-form">
+  <input type="text" id="st-search-input" class="st-search-input st-default-search-input" />
+</form>
 
 <script type="text/javascript">
   (function(w,d,t,u,n,s,e){w['SwiftypeObject']=n;w[n]=w[n]||function(){
@@ -238,12 +274,17 @@
 
     <main id="main" class="main">
       <div class="main-inner">
-        <div id="content" class="content">
-          
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
   <section id="posts" class="posts-expand">
     
       
 
+  
+  
+
+  
   
   
 
@@ -258,6 +299,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2016/03/22/java-threadpool-analysis/" itemprop="url">
                   Java线程池ThreadPoolExecutor源码分析
                 </a>
@@ -268,7 +310,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2016-03-22T20:56:11+08:00" content="2016-03-22">
               2016-03-22
             </time>
@@ -276,7 +321,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/java/" itemprop="url" rel="index">
@@ -294,22 +343,26 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/03/22/java-threadpool-analysis/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/22/java-threadpool-analysis/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/03/22/java-threadpool-analysis/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/22/java-threadpool-analysis/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
@@ -326,102 +379,12 @@
         
       
     </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
     
+    <div>
       
+    </div>
 
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                <a class="post-title-link" href="/2016/03/19/java-ReentrantLock-analysis/" itemprop="url">
-                  Java可重入锁ReentrantLock分析
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2016-03-19T14:31:58+08:00" content="2016-03-19">
-              2016-03-19
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/java/" itemprop="url" rel="index">
-                    <span itemprop="name">java</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/03/19/java-ReentrantLock-analysis/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/19/java-ReentrantLock-analysis/" itemprop="commentsCount"></span>
-              </a>
-            </span>
-            
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body">
-
-      
-      
-
-      
-        
-          <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/ReentrantLock.png" alt=""><br>Java中的可重入锁ReentrantLock很常见，可以用它来代替内置锁synchronized，ReentrantLock是语法级别的锁，所以比内置锁更加灵活。</p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/03/19/java-ReentrantLock-analysis/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
+    <div>
       
     </div>
 
@@ -444,6 +407,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -455,8 +422,9 @@
             
             
               
-                <a class="post-title-link" href="/2016/03/16/java-AtomicInteger-analysis/" itemprop="url">
-                  Java AtomicInteger原理分析
+                
+                <a class="post-title-link" href="/2016/03/19/java-ReentrantLock-analysis/" itemprop="url">
+                  Java可重入锁ReentrantLock分析
                 </a>
               
             
@@ -465,15 +433,22 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2016-03-16T20:32:35+08:00" content="2016-03-16">
-              2016-03-16
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-03-19T14:31:58+08:00" content="2016-03-19">
+              2016-03-19
             </time>
           </span>
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/java/" itemprop="url" rel="index">
@@ -491,22 +466,148 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/03/16/java-AtomicInteger-analysis/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/16/java-AtomicInteger-analysis/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/03/19/java-ReentrantLock-analysis/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/19/java-ReentrantLock-analysis/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/ReentrantLock.png" alt=""><br>Java中的可重入锁ReentrantLock很常见，可以用它来代替内置锁synchronized，ReentrantLock是语法级别的锁，所以比内置锁更加灵活。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/03/19/java-ReentrantLock-analysis/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/03/16/java-AtomicInteger-analysis/" itemprop="url">
+                  Java AtomicInteger原理分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-03-16T20:32:35+08:00" content="2016-03-16">
+              2016-03-16
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/03/16/java-AtomicInteger-analysis/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/16/java-AtomicInteger-analysis/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
 
       
       
@@ -523,102 +624,12 @@
         
       
     </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
     
+    <div>
       
+    </div>
 
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                <a class="post-title-link" href="/2016/03/12/java-Object-method/" itemprop="url">
-                  Java根类Object的方法说明
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            发表于
-            <time itemprop="dateCreated" datetime="2016-03-12T17:44:59+08:00" content="2016-03-12">
-              2016-03-12
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/java/" itemprop="url" rel="index">
-                    <span itemprop="name">java</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/03/12/java-Object-method/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/12/java-Object-method/" itemprop="commentsCount"></span>
-              </a>
-            </span>
-            
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body">
-
-      
-      
-
-      
-        
-          <span itemprop="description">Java中的Object类是所有类的父类，它提供了11个方法，分别是getClass，hashCode，clone，toString，notify，notifyAll，wait，finalze等方法 ...</span>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/03/12/java-Object-method/">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
+    <div>
       
     </div>
 
@@ -641,6 +652,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -652,6 +667,129 @@
             
             
               
+                
+                <a class="post-title-link" href="/2016/03/12/java-Object-method/" itemprop="url">
+                  Java根类Object的方法说明
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-03-12T17:44:59+08:00" content="2016-03-12">
+              2016-03-12
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/03/12/java-Object-method/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/12/java-Object-method/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          Java中的Object类是所有类的父类，它提供了11个方法，分别是getClass，hashCode，clone，toString，notify，notifyAll，wait，finalze等方法 ...
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/03/12/java-Object-method/">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/02/21/avro-intro/" itemprop="url">
                   Avro介绍
                 </a>
@@ -662,7 +800,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2016-02-21T01:23:22+08:00" content="2016-02-21">
               2016-02-21
             </time>
@@ -670,7 +811,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/avro/" itemprop="url" rel="index">
@@ -688,35 +833,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/02/21/avro-intro/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/02/21/avro-intro/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/02/21/avro-intro/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/02/21/avro-intro/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">Apache Avro是一个数据序列化系统, 提供丰富的数据结构，使用快速的压缩二进制数据格式，提供容器文件用于持久化数据 ...</span>
+          Apache Avro是一个数据序列化系统, 提供丰富的数据结构，使用快速的压缩二进制数据格式，提供容器文件用于持久化数据 ...
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/02/21/avro-intro/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -739,6 +896,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -750,6 +911,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2016/02/17/spark-sql/" itemprop="url">
                   Spark DataFrame介绍
                 </a>
@@ -760,7 +922,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2016-02-17T09:22:22+08:00" content="2016-02-17">
               2016-02-17
             </time>
@@ -768,7 +933,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/spark/" itemprop="url" rel="index">
@@ -786,35 +955,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/02/17/spark-sql/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/02/17/spark-sql/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/02/17/spark-sql/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/02/17/spark-sql/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">DataFrame是一个以命名列方式组织的分布式数据集。在概念上，它跟关系型数据库中的一张表或者1个Python(或者R)中的data frame一样，但是比他们更优化。DataFrame可以根据结构化的数据文件、hive表、外部数据库或者已经存在的RDD构造 ...</span>
+          DataFrame是一个以命名列方式组织的分布式数据集。在概念上，它跟关系型数据库中的一张表或者1个Python(或者R)中的data frame一样，但是比他们更优化。DataFrame可以根据结构化的数据文件、hive表、外部数据库或者已经存在的RDD构造 ...
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/02/17/spark-sql/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -837,6 +1018,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -848,6 +1033,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2016/02/10/sparkstreaming-programming-guide/" itemprop="url">
                   Spark Streaming编程指南笔记
                 </a>
@@ -858,7 +1044,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2016-02-10T01:36:17+08:00" content="2016-02-10">
               2016-02-10
             </time>
@@ -866,7 +1055,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/spark/" itemprop="url" rel="index">
@@ -884,35 +1077,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/02/10/sparkstreaming-programming-guide/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/02/10/sparkstreaming-programming-guide/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/02/10/sparkstreaming-programming-guide/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/02/10/sparkstreaming-programming-guide/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">Spark Streaming是Spark核心API的扩展，用于处理实时数据流。Spark Streaming处理的数据源可以是Kafka，Flume，Twitter，ZeroMQ，Kinesis或者Tcp Sockets ...</span>
+          Spark Streaming是Spark核心API的扩展，用于处理实时数据流。Spark Streaming处理的数据源可以是Kafka，Flume，Twitter，ZeroMQ，Kinesis或者Tcp Sockets ...
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/02/10/sparkstreaming-programming-guide/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -935,6 +1140,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -946,6 +1155,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2016/01/27/spark-programming-guide/" itemprop="url">
                   Spark编程指南笔记
                 </a>
@@ -956,7 +1166,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2016-01-27T00:22:21+08:00" content="2016-01-27">
               2016-01-27
             </time>
@@ -964,7 +1177,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/spark/" itemprop="url" rel="index">
@@ -982,35 +1199,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/01/27/spark-programming-guide/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/01/27/spark-programming-guide/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/01/27/spark-programming-guide/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/01/27/spark-programming-guide/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">Spark编程指南笔记，参考官方文档的编程指南，翻译再加上一些自己写的代码 ...</span>
+          Spark编程指南笔记，参考官方文档的编程指南，翻译再加上一些自己写的代码 ...
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/01/27/spark-programming-guide/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -1033,6 +1262,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -1044,6 +1277,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2016/01/19/flume-channel-full-exception/" itemprop="url">
                   记录Flume使用KafkaSource的时候Channel队列满了之后发生的怪异问题
                 </a>
@@ -1054,7 +1288,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2016-01-19T20:07:35+08:00" content="2016-01-19">
               2016-01-19
             </time>
@@ -1062,7 +1299,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/flume/" itemprop="url" rel="index">
@@ -1080,35 +1321,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/01/19/flume-channel-full-exception/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/01/19/flume-channel-full-exception/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/01/19/flume-channel-full-exception/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/01/19/flume-channel-full-exception/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">记录Flume使用KafkaSource的时候Channel队列满了之后发生的怪异问题。数据量暴增，Channel队列爆满 ...</span>
+          记录Flume使用KafkaSource的时候Channel队列满了之后发生的怪异问题。数据量暴增，Channel队列爆满 ...
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/01/19/flume-channel-full-exception/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -1131,6 +1384,10 @@
   
   
 
+  
+  
+  
+
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
@@ -1142,6 +1399,7 @@
             
             
               
+                
                 <a class="post-title-link" href="/2016/01/13/kafka-intro/" itemprop="url">
                   Kafka介绍
                 </a>
@@ -1152,7 +1410,10 @@
 
         <div class="post-meta">
           <span class="post-time">
-            发表于
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
             <time itemprop="dateCreated" datetime="2016-01-13T23:54:51+08:00" content="2016-01-13">
               2016-01-13
             </time>
@@ -1160,7 +1421,11 @@
 
           
             <span class="post-category" >
-              &nbsp; | &nbsp; 分类于
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
                   <a href="/categories/kafka/" itemprop="url" rel="index">
@@ -1178,35 +1443,47 @@
           
             
               <span class="post-comments-count">
-              &nbsp; | &nbsp;
-              <a href="/2016/01/13/kafka-intro/#comments" itemprop="discussionUrl">
-                <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/01/13/kafka-intro/" itemprop="commentsCount"></span>
-              </a>
-            </span>
+                &nbsp; | &nbsp;
+                <a href="/2016/01/13/kafka-intro/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/01/13/kafka-intro/" itemprop="commentsCount"></span>
+                </a>
+              </span>
             
           
 
           
 
+          
+          
+
+          
         </div>
       </header>
     
 
 
-    <div class="post-body">
+    <div class="post-body" itemprop="articleBody">
 
       
       
 
       
         
-          <span itemprop="description">Kafka是一个分布式的发布-订阅消息系统(Producer-Consumer)，是一种快速、可扩展的、分区的和可复制的日志服务。Kafka中有几个概念，分别是Topic，Broker，Producer，Consumer等 ...</span>
+          Kafka是一个分布式的发布-订阅消息系统(Producer-Consumer)，是一种快速、可扩展的、分区的和可复制的日志服务。Kafka中有几个概念，分别是Topic，Broker，Producer，Consumer等 ...
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/01/13/kafka-intro/">
               阅读全文 &raquo;
             </a>
           </div>
         
+      
+    </div>
+    
+    <div>
+      
+    </div>
+
+    <div>
       
     </div>
 
@@ -1233,17 +1510,15 @@
 
 
 
+          </div>
+          
+
+
+          
+
         </div>
-
         
-
-
-        
-
-      </div>
-
-      
-        
+          
   
   <div class="sidebar-toggle">
     <div class="sidebar-toggle-line-wrap">
@@ -1262,10 +1537,12 @@
 
       <section class="site-overview sidebar-panel  sidebar-panel-active ">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg" alt="Format" itemprop="image"/>
+          <img class="site-author-image" itemprop="image"
+               src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg"
+               alt="Format" />
           <p class="site-author-name" itemprop="name">Format</p>
+          <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
         </div>
-        <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
@@ -1274,19 +1551,23 @@
             </a>
           </div>
 
-          <div class="site-state-item site-state-categories">
-            <a href="/categories">
-              <span class="site-state-item-count">21</span>
-              <span class="site-state-item-name">分类</span>
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
               </a>
-          </div>
+            </div>
+          
 
-          <div class="site-state-item site-state-tags">
-            <a href="/tags">
-              <span class="site-state-item-count">57</span>
-              <span class="site-state-item-name">标签</span>
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">57</span>
+                <span class="site-state-item-name">标签</span>
               </a>
-          </div>
+            </div>
+          
 
         </nav>
 
@@ -1305,24 +1586,27 @@
               <span class="links-of-author-item">
                 <a href="https://github.com/fangjian0423" target="_blank">
                   
-                    <i class="fa fa-github"></i> GitHub
+                    <i class="fa fa-github"></i>
                   
+                  GitHub
                 </a>
               </span>
             
               <span class="links-of-author-item">
                 <a href="https://twitter.com/fangjian0423" target="_blank">
                   
-                    <i class="fa fa-twitter"></i> Twitter
+                    <i class="fa fa-twitter"></i>
                   
+                  Twitter
                 </a>
               </span>
             
               <span class="links-of-author-item">
                 <a href="http://weibo.com/u/2952387973" target="_blank">
                   
-                    <i class="fa fa-weibo"></i> Weibo
+                    <i class="fa fa-weibo"></i>
                   
+                  Weibo
                 </a>
               </span>
             
@@ -1332,22 +1616,25 @@
         
         
 
-        <div class="links-of-author motion-element">
+        
+        <div class="links-of-blogroll motion-element">
           
-            <p class="site-author-name">友情链接</p>
-            
-              <span class="links-of-author-item">
-              <a href="http://xtutu.me/" target="_blank">永哥</a>
-              </span>
-            
-              <span class="links-of-author-item">
-              <a href="http://blog.zlf.me" target="_blank">Felix</a>
-              </span>
-            
-              <span class="links-of-author-item">
-              <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
-              </span>
-            
+            <div class="links-of-blogroll-title">友情链接</div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://xtutu.me/" target="_blank">xtutu</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.zlf.me" target="_blank">Felix</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+                </li>
+              
+            </ul>
           
         </div>
 
@@ -1359,7 +1646,8 @@
   </aside>
 
 
-      
+        
+      </div>
     </main>
 
     <footer id="footer" class="footer">
@@ -1369,28 +1657,103 @@
   &copy; 
   <span itemprop="copyrightYear">2016</span>
   <span class="with-love">
-    <i class="icon-next-heart fa fa-heart"></i>
+    <i class="fa fa-heart"></i>
   </span>
   <span class="author" itemprop="copyrightHolder">Format</span>
 </div>
 
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
 
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
 
+        
 
+        
       </div>
     </footer>
 
-    <div class="back-to-top"></div>
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
   </div>
 
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
   <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
 
   
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
   
 
   
-    
-    
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
 
   
 
@@ -1414,31 +1777,13 @@
   
 
 
-  
 
   
-  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
-  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
-
-
-  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
-  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
-<script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
-
-<script type="text/javascript" src="/js/motion.js?v=0.4.5.2" id="motion.global"></script>
-
-
-  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-
-  
-
-  <script type="text/javascript" src="/js/bootstrap.js"></script>
-
   
   
 
   
+
   
 
 </body>

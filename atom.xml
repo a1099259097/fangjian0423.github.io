@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-04-10T13:36:11.000Z</updated>
+  <updated>2016-04-12T13:21:45.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -13,6 +13,160 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[jdk ConcurrentSkipListMap工作原理分析]]></title>
+    <link href="http://fangjian0423.github.io/2016/04/12/jdk-concurrentskiplistmap/"/>
+    <id>http://fangjian0423.github.io/2016/04/12/jdk-concurrentskiplistmap/</id>
+    <published>2016-04-12T11:49:11.000Z</published>
+    <updated>2016-04-12T13:21:45.000Z</updated>
+    <content type="html"><![CDATA[<p>ConcurrentSkipListMap是一个内部使用跳表，并且支持排序和并发的一个Map。</p>
+<p>跳表的介绍：</p>
+<p>跳表是一种允许在一个有顺序的序列中进行快速查询的数据结构。</p>
+<p>如果在普通的顺序链表中查询一个元素，需要从链表头部开始一个一个节点进行遍历，然后找到节点，如下图所示，要查找234元素的话需要从5元素节点开始一个一个节点进行遍历，这样的效率是非常低的。</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
+<p>跳表可以解决这种查询时间过长的问题：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist02.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
+<p>从上图可以看到，跳表具有以下几种特性：</p>
+<ol>
+<li>由很多层组成，level越高的层节点越少，最后一层level用有所有的节点数据</li>
+<li>每一层的节点数据也都是有顺序的</li>
+<li>上面层的节点肯定会在下面层中出现</li>
+<li>每个节点都有两个指针，分别是同一层的下一个节点指针和下一层节点的指针</li>
+</ol>
+<p>使用跳表查询元素的时间复杂度是O(log n)，跟红黑树一样。查询效率还是不错的，</p>
+<p>但是跳表的存储容量变大了，本来一共只有7个节点的数据，使用跳表之后变成了14个节点。</p>
+<p>所以跳表是一种使用”空间换时间”的概念用来提高查询效率的链表，开源软件Redis、LevelDB都使用到了跳表。跳表相比B树，红黑树，AVL树时间复杂度一样，但是耗费更多存储空间，但是跳表的优势就是它相比树，实现简单，不需要考虑树的一些rebalance问题。</p>
+<a id="more"></a>
+<p>下图是一个级别更高的跳表：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist03.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
+<h2 id="跳表的查询">跳表的查询</h2><p>比如要在下面这个跳表中查找93元素，过程如下：</p>
+<ol>
+<li>从head节点(最上层的第一个节点)开始找，发现5比93小，继续同一层(Level3)的下一个节点150进行比较</li>
+<li>发现105比93大，往下一层(Level2)走，然后找Level2的5元素的下一个节点67，发现67比93小，继续同一层(Level2)的下一个节点150进行比较</li>
+<li>发现105比93大，往下一层(Level1)走，然后找Level1的67元素的下一个节点93，找到，返回</li>
+</ol>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist04.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
+<h2 id="跳表新增元素">跳表新增元素</h2><p>跳表中新增元素的话首先会确定Level层，在这个Level以及这个Level以下的层中都加入新的元素，具体的Level层数是通过一个通过一种随机算法获取的，比如之前这个跳表在Level2和Level1中插入666元素：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist05.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
+<p>如果Level大于目前跳表的层数，那么会添加新的一层。</p>
+<h2 id="跳表删除元素">跳表删除元素</h2><p>在各个层中找到对应的元素并删除即可。</p>
+<h2 id="ConcurrentSkipListMap分析">ConcurrentSkipListMap分析</h2><p>ConcurrentSkipListMap对跳表中的几个概念做了一层封装，如下：</p>
+<pre><code><span class="comment">// 每个节点的封装，跟层数没有关系</span>
+static <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Node&lt;K</span>,<span class="title">V&gt;</span> {</span>
+    <span class="keyword">final</span> <span class="type">K</span> key; <span class="comment">// 节点的关键字</span>
+    volatile <span class="type">Object</span> value; <span class="comment">// 节点的值</span>
+    volatile <span class="type">Node</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; next; <span class="comment">// 节点的next节点引用</span>
+    ...
+}
+
+<span class="comment">// 每一层节点的封装，叫做索引</span>
+static <span class="class"><span class="keyword">class</span> <span class="title">Index&lt;K</span>,<span class="title">V&gt;</span> {</span>
+    <span class="keyword">final</span> <span class="type">Node</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; node; <span class="comment">// 对应的节点</span>
+    <span class="keyword">final</span> <span class="type">Index</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; down; <span class="comment">// 下一层索引</span>
+    volatile <span class="type">Index</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; right; <span class="comment">// 同一层的下一个索引</span>
+    ...
+}
+
+<span class="comment">// 每一层的头索引</span>
+static <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">HeadIndex&lt;K</span>,<span class="title">V&gt;</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Index&lt;K</span>,<span class="title">V&gt;</span> {</span>
+    <span class="keyword">final</span> int level; <span class="comment">// Level 级别</span>
+    <span class="type">HeadIndex</span>(<span class="type">Node</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; node, <span class="type">Index</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; down, <span class="type">Index</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; right, int level) {
+        <span class="keyword">super</span>(node, down, right);
+        <span class="keyword">this</span>.level = level;
+    }
+    ...
+}
+</code></pre><p>简单分析下ConcurrentSkipListMap的get方法：</p>
+<pre><code><span class="keyword">private</span> V doGet(<span class="keyword">Object</span> <span class="variable">key</span>) {
+    <span class="keyword">if</span> (<span class="variable">key</span> == <span class="keyword">null</span>)
+        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();
+    Comparator&lt;? <span class="keyword">super</span> K&gt; cmp = comparator;
+    outer: <span class="keyword">for</span> (;;) {
+        <span class="comment">// findPredecessor方法表示找到最接近要查找节点的节点，并且这个节点在最下面那一层，这样就保证会遍历所有节点</span>
+        <span class="keyword">for</span> (Node&lt;K,V&gt; b = findPredecessor(<span class="variable">key</span>, cmp), n = b.next;;) {
+            <span class="keyword">Object</span> v; <span class="built_in">int</span> c;
+            <span class="keyword">if</span> (n == <span class="keyword">null</span>) <span class="comment">// 已经遍历节点到最后还是没有找到，break，返回null</span>
+                <span class="keyword">break</span> outer;
+            Node&lt;K,V&gt; f = n.next;
+            <span class="keyword">if</span> (n != b.next) <span class="comment">// 判断比较下一个节点是否发生了变化，如果发生变化break重新开始死循环</span>
+                <span class="keyword">break</span>;
+            <span class="keyword">if</span> ((v = n.value) == <span class="keyword">null</span>) {    <span class="comment">// 如果下一个节点已经被删除了</span>
+                n.helpDelete(b, f);
+                <span class="keyword">break</span>;
+            }
+            <span class="keyword">if</span> (b.value == <span class="keyword">null</span> || v == n)  <span class="comment">// b is deleted</span>
+                <span class="keyword">break</span>;
+            <span class="keyword">if</span> ((c = cpr(cmp, <span class="variable">key</span>, n.<span class="variable">key</span>)) == <span class="number">0</span>) {  <span class="comment">// 比较并且找到了，直接返回</span>
+                @SuppressWarnings(<span class="string">"unchecked"</span>) V vv = (V)v;
+                <span class="keyword">return</span> vv;
+            }
+            <span class="keyword">if</span> (c &lt; <span class="number">0</span>) <span class="comment">// 找过头了，说明没有对应节点了，跳出循环，返回null</span>
+                <span class="keyword">break</span> outer;
+            b = n; <span class="comment">// 继续遍历</span>
+            n = f; <span class="comment">// 继续遍历</span>
+        }
+    }
+    <span class="keyword">return</span> <span class="keyword">null</span>;
+}
+
+<span class="keyword">private</span> Node&lt;K,V&gt; findPredecessor(<span class="keyword">Object</span> <span class="variable">key</span>, Comparator&lt;? <span class="keyword">super</span> K&gt; cmp) {
+    <span class="keyword">if</span> (<span class="variable">key</span> == <span class="keyword">null</span>)
+        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException(); <span class="comment">// don't postpone errors</span>
+    <span class="keyword">for</span> (;;) { <span class="comment">// 一个死循环内部套着另外一个循环</span>
+        <span class="keyword">for</span> (Index&lt;K,V&gt; q = head, r = q.right, d;;) { <span class="comment">// head表示最顶层的第一个索引，从这个索引开始找</span>
+            <span class="keyword">if</span> (r != <span class="keyword">null</span>) { <span class="comment">// 如果索引的同一层下一个索引不为null</span>
+                Node&lt;K,V&gt; n = r.node;
+                K k = n.<span class="variable">key</span>;
+                <span class="keyword">if</span> (n.value == <span class="keyword">null</span>) { <span class="comment">// 如果是个已删除节点</span>
+                    <span class="keyword">if</span> (!q.unlink(r)) <span class="comment">// 使用cas把已删除节点从跳表上删除掉</span>
+                        <span class="keyword">break</span>;           <span class="comment">// 已删除节点从跳表上删除失败，跳出重新循环</span>
+                    r = q.right;         <span class="comment">// 继续遍历</span>
+                    <span class="keyword">continue</span>;
+                }
+                <span class="keyword">if</span> (cpr(cmp, <span class="variable">key</span>, k) &gt; <span class="number">0</span>) { <span class="comment">// 使用cas比较要找的关键字和索引内节点的关键字，如果满足比较条件</span>
+                    q = r; <span class="comment">// 当前所在索引变成同一层下一个索引</span>
+                    r = r.right;  <span class="comment">// 当前所在索引的下一个索引变成下下个索引，继续遍历</span>
+                    <span class="keyword">continue</span>;
+                }
+            }
+            <span class="comment">// 直到找出上一层满足不了条件的那个索引</span>
+            <span class="keyword">if</span> ((d = q.down) == <span class="keyword">null</span>) <span class="comment">// 找到下一层的索引</span>
+                <span class="keyword">return</span> q.node; <span class="comment">// 如果下一层没有索引了，返回找到的最接近的节点</span>
+            q = d; <span class="comment">// 下一层开始做相同的操作</span>
+            r = d.right; <span class="comment">// 下一层开始做相同的操作</span>
+        }
+    }
+}
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<p>ConcurrentSkipListMap是一个内部使用跳表，并且支持排序和并发的一个Map。</p>
+<p>跳表的介绍：</p>
+<p>跳表是一种允许在一个有顺序的序列中进行快速查询的数据结构。</p>
+<p>如果在普通的顺序链表中查询一个元素，需要从链表头部开始一个一个节点进行遍历，然后找到节点，如下图所示，要查找234元素的话需要从5元素节点开始一个一个节点进行遍历，这样的效率是非常低的。</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
+<p>跳表可以解决这种查询时间过长的问题：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist02.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
+<p>从上图可以看到，跳表具有以下几种特性：</p>
+<ol>
+<li>由很多层组成，level越高的层节点越少，最后一层level用有所有的节点数据</li>
+<li>每一层的节点数据也都是有顺序的</li>
+<li>上面层的节点肯定会在下面层中出现</li>
+<li>每个节点都有两个指针，分别是同一层的下一个节点指针和下一层节点的指针</li>
+</ol>
+<p>使用跳表查询元素的时间复杂度是O(log n)，跟红黑树一样。查询效率还是不错的，</p>
+<p>但是跳表的存储容量变大了，本来一共只有7个节点的数据，使用跳表之后变成了14个节点。</p>
+<p>所以跳表是一种使用”空间换时间”的概念用来提高查询效率的链表，开源软件Redis、LevelDB都使用到了跳表。跳表相比B树，红黑树，AVL树时间复杂度一样，但是耗费更多存储空间，但是跳表的优势就是它相比树，实现简单，不需要考虑树的一些rebalance问题。</p>]]>
+    
+    </summary>
+    
+      <category term="jdk" scheme="http://fangjian0423.github.io/tags/jdk/"/>
+    
+      <category term="map" scheme="http://fangjian0423.github.io/tags/map/"/>
+    
+      <category term="jdk" scheme="http://fangjian0423.github.io/categories/jdk/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[jdk PriorityQueue优先队列工作原理分析]]></title>
@@ -4409,81 +4563,6 @@ val vecAccum = sc.accumulator(new Vector(...))(VectorAccumulatorParam)
       <category term="flume" scheme="http://fangjian0423.github.io/tags/flume/"/>
     
       <category term="flume" scheme="http://fangjian0423.github.io/categories/flume/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Kafka介绍]]></title>
-    <link href="http://fangjian0423.github.io/2016/01/13/kafka-intro/"/>
-    <id>http://fangjian0423.github.io/2016/01/13/kafka-intro/</id>
-    <published>2016-01-13T15:54:51.000Z</published>
-    <updated>2016-01-13T15:55:05.000Z</updated>
-    <content type="html"><![CDATA[<h2 id="Kafka介绍">Kafka介绍</h2><p>Kafka是一个分布式的发布-订阅消息系统(Producer-Consumer)，是一种快速、可扩展的、分区的和可复制的日志服务。</p>
-<p>kafka中的几个概念：</p>
-<p>Topic：用来区别各种message。比如A系统的所有message的Topic为A，B系统的所有message的Topic为B。</p>
-<p>Broker：已发布的消息保存在一组服务器中，这组服务器就被称为Broker或Kafka集群。</p>
-<p>Producer：生产者，用于发布消息，发布消息到kafka broker。</p>
-<p>Consumer：消费者，订阅消息，订阅kafka broker中的已经被发布的消息。</p>
-<p>下图是几个概念的说明：</p>
-<p>producer发布消息到kafka cluster(也就是kafka broker)，然后发布后的这些消息被consumer订阅。</p>
-<p>从图中也可以看出来，kafka支持多个producer和多个consumer。</p>
-<p><img src="http://kafka.apache.org/images/producer_consumer.png" alt=""></p>
-<h2 id="Kafka存储机制">Kafka存储机制</h2><p>Partition：Kafka中每个Topic都会有一个或多个Partition，由于kafka将数据直接写到硬盘里，这里的Partition对应一个文件夹，文件夹下存储这个Partition的所有消息和索引。如果有2个Topic，分别有3个和4个Partition。那么总共有7个文件夹。Kafka内部会根据一个算法，根据消息得出一个值，然后根据这个值放入对应的partition目录中的段文件里。</p>
-<p>比如在一台机器上创建partition为3，topic为test01和partition为4，topic为test02的2个topic。</p>
-<p>创建完之后 /tmp/kafka-logs中就会有7个文件夹，分别是 </p>
-<p>test01-0<br>test01-1<br>test01-2<br>test02-0<br>test02-1<br>test02-2<br>test02-3</p>
-<p>Segment：组成Partiton的组件。一个Partition代表一个文件夹，而Segment则是这个文件夹下的各个文件。每个Segmenet文件有大小限制，在配置文件中用log.segment.bytes配置。</p>
-<pre><code><span class="built_in">log</span>.<span class="keyword">segment</span>.<span class="keyword">bytes</span>=<span class="number">1073741824</span>
-</code></pre><p>当文件的大小超过1073741824字节的时候，会创建第一个段文件。需要注意的是这里每个段文件中的消息数量不一定相等，因为虽然他们的字节数一样，但是每个消息的字节数是不一样的，所以每个段文件中的消息数量不一定相等。</p>
-<p>每个段文件由2部分组成，分别是index file和log file，表示索引文件和日志(数据)文件。这2个文件一一对应。</p>
-<p>第一个segment文件从0开始，后续每个segment文件名是上一个segment文件的最后一条message的offset值，数值最大为64位long大小，19位数字字符长度，没有数字用0填充。</p>
-<p>下面是做的一个例子，partition和replication-factor都为1，每个segmenet文件的大小是5M。有500000条message，一共生成了4对文件，这里00000000000000137200.log文件表示是00000000000000000000.log中存储了137199个message，这个文件开始存储第137200个message。</p>
-<p>00000000000000000000.index<br>00000000000000000000.log</p>
-<p>00000000000000137200.index<br>00000000000000137200.log</p>
-<p>00000000000000271600.index<br>00000000000000271600.log</p>
-<p>00000000000000406000.index<br>00000000000000406000.log</p>
-<p>offset：用来标识message在partition中的下标，用来定位message。</p>
-<p>Kafka内部存储结构可以参考<a href="http://tech.meituan.com/kafka-fs-design-theory.html" target="_blank" rel="external">Kafka文件存储机制那些事</a>文章里的讲解。</p>
-<p>一个kafka producer例子：</p>
-<pre><code><span class="keyword">import</span> java.util.<span class="type">Properties</span>
-<span class="keyword">import</span> kafka.producer.{<span class="type">KeyedMessage</span>, <span class="type">Producer</span>, <span class="type">ProducerConfig</span>}
-
-<span class="class"><span class="keyword">object</span> <span class="title">TestProducer</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">App</span> {</span>
-
-  <span class="keyword">val</span> events = <span class="number">500000</span>
-  <span class="keyword">val</span> props = <span class="keyword">new</span> <span class="type">Properties</span>()
-  <span class="keyword">val</span> brokers = <span class="string">"localhost:9092"</span>
-  props.put(<span class="string">"metadata.broker.list"</span>, brokers)
-  props.put(<span class="string">"serializer.class"</span>, <span class="string">"kafka.serializer.StringEncoder"</span>)
-  props.put(<span class="string">"producer.type"</span>, <span class="string">"async"</span>)
-
-  <span class="keyword">val</span> config = <span class="keyword">new</span> <span class="type">ProducerConfig</span>(props)
-
-  <span class="keyword">val</span> topic = <span class="string">"format03"</span>
-
-  <span class="keyword">val</span> producer = <span class="keyword">new</span> <span class="type">Producer</span>[<span class="type">String</span>, <span class="type">String</span>](config)
-
-  <span class="keyword">for</span>(nEvents &lt;- <span class="type">Range</span>(<span class="number">0</span>, events)) {
-    <span class="keyword">val</span> msg = <span class="string">"Message"</span> + nEvents
-    <span class="keyword">val</span> data = <span class="keyword">new</span> <span class="type">KeyedMessage</span>[<span class="type">String</span>, <span class="type">String</span>](topic, msg)
-    producer.send(data)
-  }
-
-  producer.close()
-
-}
-</code></pre><h2 id="参考资料">参考资料</h2><p><a href="http://tech.meituan.com/kafka-fs-design-theory.html" target="_blank" rel="external">Kafka文件存储机制那些事</a><br><a href="http://www.infoq.com/cn/articles/kafka-analysis-part-1/" target="_blank" rel="external">Kafka剖析（一）：Kafka背景及架构介绍</a><br><a href="http://www.infoq.com/cn/articles/kafka-analysis-part-2/" target="_blank" rel="external">Kafka设计解析（二）：Kafka High Availability （上）</a><br><a href="http://www.infoq.com/cn/articles/kafka-analysis-part-3/" target="_blank" rel="external">Kafka设计解析（三）：Kafka High Availability （下）</a></p>
-]]></content>
-    <summary type="html">
-    <![CDATA[Kafka是一个分布式的发布-订阅消息系统(Producer-Consumer)，是一种快速、可扩展的、分区的和可复制的日志服务。Kafka中有几个概念，分别是Topic，Broker，Producer，Consumer等 ...]]>
-    
-    </summary>
-    
-      <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
-    
-      <category term="log" scheme="http://fangjian0423.github.io/tags/log/"/>
-    
-      <category term="kafka" scheme="http://fangjian0423.github.io/categories/kafka/"/>
     
   </entry>
   

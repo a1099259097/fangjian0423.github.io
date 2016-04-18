@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-04-12T13:21:45.000Z</updated>
+  <updated>2016-04-18T13:04:18.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -13,6 +13,446 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[Java实现同步的几种方式]]></title>
+    <link href="http://fangjian0423.github.io/2016/04/18/java-synchronize-way/"/>
+    <id>http://fangjian0423.github.io/2016/04/18/java-synchronize-way/</id>
+    <published>2016-04-18T12:57:57.000Z</published>
+    <updated>2016-04-18T13:04:18.000Z</updated>
+    <content type="html"><![CDATA[<p>Java提供了很多同步操作，比如synchronized关键字、wait/notifyAll、ReentrantLock、Condition、一些并发包下的工具类、Semaphore，ThreadLocal、AbstractQueuedSynchronizer等。</p>
+<p>本文简单说明一下这几种方式的使用。</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/synchronize-way.jpeg" alt=""></p>
+<a id="more"></a>
+<h2 id="ReentrantLock可重入锁">ReentrantLock可重入锁</h2><p>ReentrantLock可重入锁是jdk内置的一个锁对象，可以用来实现同步，基本使用方法如下：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ReentrantLockTest</span> {
+
+    <span class="keyword">private</span> ReentrantLock <span class="keyword">lock</span> = <span class="keyword">new</span> ReentrantLock();
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span>(<span class="params"></span>) </span>{
+        <span class="keyword">lock</span>.<span class="keyword">lock</span>();
+        <span class="keyword">try</span> {
+            System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" do something synchronize"</span>);
+            <span class="keyword">try</span> {
+                Thread.sleep(<span class="number">5000</span>l);
+            } <span class="keyword">catch</span> (InterruptedException e) {
+                System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+                Thread.currentThread().interrupt();
+            }
+        } <span class="keyword">finally</span> {
+            <span class="keyword">lock</span>.unlock();
+        }
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+        ReentrantLockTest reentrantLockTest = <span class="keyword">new</span> ReentrantLockTest();
+        Thread thread1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+            @<span class="function">Override
+            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+                reentrantLockTest.execute();
+            }
+        });
+        Thread thread2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+            @<span class="function">Override
+            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+                reentrantLockTest.execute();
+            }
+        });
+        thread1.start();
+        thread2.start();
+    }
+
+}
+</code></pre><p>输出：</p>
+<pre><code>Thread-<span class="number">0</span> <span class="keyword">do</span> something synchronize
+<span class="comment">// 隔了5秒钟 输入下面</span>
+Thread-<span class="number">1</span> <span class="keyword">do</span> something synchronize
+</code></pre><p>这个例子表示同一时间段只能有1个线程执行execute方法。</p>
+<p>可重入锁中可重入表示的意义在于<strong>对于同一个线程，可以继续调用加锁的方法，而不会被挂起</strong>。可重入锁内部维护一个计数器，对于同一个线程调用lock方法，计数器+1，调用unlock方法，计数器-1。</p>
+<p>举个例子再次说明一下可重入的意思，在一个加锁方法execute中调用另外一个加锁方法anotherLock并不会被挂起，可以直接调用(调用execute方法时计数器+1，然后内部又调用了anotherLock方法，计数器+1，变成了2)：</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span>(<span class="params"></span>) </span>{
+    <span class="keyword">lock</span>.<span class="keyword">lock</span>();
+    <span class="keyword">try</span> {
+        System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" do something synchronize"</span>);
+        <span class="keyword">try</span> {
+            anotherLock();
+            Thread.sleep(<span class="number">5000</span>l);
+        } <span class="keyword">catch</span> (InterruptedException e) {
+            System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+            Thread.currentThread().interrupt();
+        }
+    } <span class="keyword">finally</span> {
+        <span class="keyword">lock</span>.unlock();
+    }
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">anotherLock</span>(<span class="params"></span>) </span>{
+    <span class="keyword">lock</span>.<span class="keyword">lock</span>();
+    <span class="keyword">try</span> {
+        System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" invoke anotherLock"</span>);
+    } <span class="keyword">finally</span> {
+        <span class="keyword">lock</span>.unlock();
+    }
+}
+</code></pre><p>输出：</p>
+<pre><code>Thread-0 do something synchronize
+Thread-0<span class="instruction"> invoke </span>anotherLock
+// 隔了5秒钟 输入下面
+Thread-1 do something synchronize
+Thread-1<span class="instruction"> invoke </span>anotherLock
+</code></pre><h2 id="synchronized关键字">synchronized关键字</h2><p>synchronized关键跟ReentrantLock一样，也支持可重入锁。但是它是一个关键字，是一种语法级别的同步方式，称为内置锁：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SynchronizedKeyWordTest</span> </span>{
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">()</span> </span>{
+            System.out.println(Thread.currentThread().getName() + <span class="string">" do something synchronize"</span>);
+        <span class="keyword">try</span> {
+            anotherLock();
+            Thread.sleep(<span class="number">5000l</span>);
+        } <span class="keyword">catch</span> (InterruptedException e) {
+            System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">anotherLock</span><span class="params">()</span> </span>{
+        System.out.println(Thread.currentThread().getName() + <span class="string">" invoke anotherLock"</span>);
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+        SynchronizedKeyWordTest reentrantLockTest = <span class="keyword">new</span> SynchronizedKeyWordTest();
+        Thread thread1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+            <span class="annotation">@Override</span>
+            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+                reentrantLockTest.execute();
+            }
+        });
+        Thread thread2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+            <span class="annotation">@Override</span>
+            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+                reentrantLockTest.execute();
+            }
+        });
+        thread1.start();
+        thread2.start();
+    }
+
+}
+</code></pre><p>输出结果跟ReentrantLock一样，这个例子说明内置锁可以作用在方法上。它还可以作用到变量，静态方法上。</p>
+<p>synchronized跟ReentrantLock相比，有几点局限性：</p>
+<ol>
+<li>加锁的时候不能设置超时。ReentrantLock有提供tryLock方法，可以设置超时时间，如果超过了这个时间并且没有获取到锁，就会放弃，而synchronized却没有这种功能</li>
+<li>ReentrantLock可以使用多个Condition，而synchronized却只能有1个</li>
+<li>不能中断一个试图获得锁的线程</li>
+<li>ReentrantLock可以选择公平锁和非公平锁</li>
+<li>ReentrantLock可以获得正在等待线程的个数，计数器等</li>
+</ol>
+<h2 id="Condition条件对象">Condition条件对象</h2><p>条件对象的意义在于对于一个已经获取锁的线程，如果还需要等待其他条件才能继续执行的情况下，才会使用Condition条件对象。</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ConditionTest</span> {
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+        ReentrantLock <span class="keyword">lock</span> = <span class="keyword">new</span> ReentrantLock();
+        Condition condition = <span class="keyword">lock</span>.newCondition();
+        Thread thread1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+            @<span class="function">Override
+            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+                <span class="keyword">lock</span>.<span class="keyword">lock</span>();
+                <span class="keyword">try</span> {
+                    System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" run"</span>);
+                    System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" wait for condition"</span>);
+                    <span class="keyword">try</span> {
+                        condition.await();
+                        System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" continue"</span>);
+                    } <span class="keyword">catch</span> (InterruptedException e) {
+                        System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+                        Thread.currentThread().interrupt();
+                    }
+                } <span class="keyword">finally</span> {
+                    <span class="keyword">lock</span>.unlock();
+                }
+            }
+        });
+        Thread thread2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+            @<span class="function">Override
+            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+                <span class="keyword">lock</span>.<span class="keyword">lock</span>();
+                <span class="keyword">try</span> {
+                    System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" run"</span>);
+                    System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" sleep 5 secs"</span>);
+                    <span class="keyword">try</span> {
+                        Thread.sleep(<span class="number">5000</span>l);
+                    } <span class="keyword">catch</span> (InterruptedException e) {
+                        System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+                        Thread.currentThread().interrupt();
+                    }
+                    condition.signalAll();
+                } <span class="keyword">finally</span> {
+                    <span class="keyword">lock</span>.unlock();
+                }
+            }
+        });
+        thread1.start();
+        thread2.start();
+    }
+
+}
+</code></pre><p>这个例子中thread1执行到condition.await()时，当前线程会被挂起，直到thread2调用了condition.signalAll()方法之后，thread1才会重新被激活执行。</p>
+<p>这里需要注意的是thread1调用Condition的await方法之后，thread1线程释放锁，然后马上加入到Condition的等待队列，由于thread1释放了锁，thread2获得锁并执行，thread2执行signalAll方法之后，Condition中的等待队列thread1被取出并加入到AQS中，接下来thread2执行完毕之后释放锁，由于thread1已经在AQS的等待队列中，所以thread1被唤醒，继续执行。</p>
+<h2 id="wait/notifyAll_方式">wait/notifyAll 方式</h2><p>wait/notifyAll方式跟ReentrantLock/Condition方式的原理是一样的。</p>
+<p>Java中每个对象都拥有一个内置锁，在内置锁中调用wait，notify方法相当于调用锁的Condition条件对象的await和signalAll方法。</p>
+<p>使用wait/notifyAll实现上面的那个Condition例子：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">WaitNotifyAllTest</span> {
+
+    <span class="function"><span class="keyword">public</span> synchronized <span class="keyword">void</span> <span class="title">doWait</span>(<span class="params"></span>) </span>{
+        System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" run"</span>);
+        System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" wait for condition"</span>);
+        <span class="keyword">try</span> {
+            <span class="keyword">this</span>.wait();
+            System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" continue"</span>);
+        } <span class="keyword">catch</span> (InterruptedException e) {
+            System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    <span class="function"><span class="keyword">public</span> synchronized <span class="keyword">void</span> <span class="title">doNotify</span>(<span class="params"></span>) </span>{
+        <span class="keyword">try</span> {
+            System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" run"</span>);
+            System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" sleep 5 secs"</span>);
+            Thread.sleep(<span class="number">5000</span>l);
+            <span class="keyword">this</span>.notifyAll();
+        } <span class="keyword">catch</span> (InterruptedException e) {
+            System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+        WaitNotifyAllTest waitNotifyAllTest = <span class="keyword">new</span> WaitNotifyAllTest();
+        Thread thread1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+            @<span class="function">Override
+            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+                waitNotifyAllTest.doWait();
+            }
+        });
+        Thread thread2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+            @<span class="function">Override
+            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+                waitNotifyAllTest.doNotify();
+            }
+        });
+        thread1.start();
+        thread2.start();
+    }
+
+}
+</code></pre><p>这里需要注意的是由于Condition是由锁创建的，所以调用wait/notifyAll方法的时候需要获得当前线程的锁，否则会发生IllegalMonitorStateException异常。</p>
+<h2 id="ThreadLocal">ThreadLocal</h2><p>ThreadLocal是一种把变量放到线程本地的方式来实现线程同步的。</p>
+<p>比如SimpleDateFormat不是一个线程安全的类，可以使用ThreadLocal实现同步。</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ThreadLocalTest</span> {
+
+    <span class="keyword">private</span> <span class="keyword">static</span> ThreadLocal&lt;SimpleDateFormat&gt; dateFormatThreadLocal = <span class="keyword">new</span> ThreadLocal&lt;SimpleDateFormat&gt;() {
+        @<span class="function">Override
+        <span class="keyword">protected</span> SimpleDateFormat <span class="title">initialValue</span>(<span class="params"></span>) </span>{
+            <span class="keyword">return</span> <span class="keyword">new</span> SimpleDateFormat(<span class="string">"yyyy-MM-dd HH:mm:ss"</span>);
+        }
+    };
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+        Thread thread1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+            @<span class="function">Override
+            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+                Date date = <span class="keyword">new</span> Date();
+                System.<span class="keyword">out</span>.println(dateFormatThreadLocal.<span class="keyword">get</span>().format(date));
+            }
+        });
+        Thread thread2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+            @<span class="function">Override
+            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+                Date date = <span class="keyword">new</span> Date();
+                System.<span class="keyword">out</span>.println(dateFormatThreadLocal.<span class="keyword">get</span>().format(date));
+            }
+        });
+        thread1.start();
+        thread2.start();
+    }
+
+}
+</code></pre><h2 id="Semaphore信号量">Semaphore信号量</h2><p>Semaphore信号量被用于控制特定资源在同一个时间被访问的个数。类似连接池的概念，保证资源可以被合理的使用。可以使用构造器初始化资源个数：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> SemaphoreTest {
+
+    <span class="keyword">private</span> <span class="keyword">static</span> Semaphore semaphore = <span class="keyword">new</span> Semaphore(<span class="number">2</span>);
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i ++) {
+            <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+                @<span class="function">Override
+                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+                    <span class="keyword">try</span> {
+                        semaphore.acquire();
+                        System.out.println(Thread.currentThread().getName() + <span class="string">" "</span> + <span class="keyword">new</span> Date());
+                        Thread.sleep(<span class="number">5000l</span>);
+                        semaphore.release();
+                    } <span class="keyword">catch</span> (InterruptedException e) {
+                        System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+                    }
+                }
+            }).start();
+        }
+    }
+
+}
+</code></pre><p>输出：</p>
+<pre><code>Thread-<span class="number">1</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">03</span>:<span class="number">46</span> CST <span class="number">2016</span>
+Thread-<span class="number">0</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">03</span>:<span class="number">46</span> CST <span class="number">2016</span>
+Thread-<span class="number">3</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">03</span>:<span class="number">51</span> CST <span class="number">2016</span>
+Thread-<span class="number">2</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">03</span>:<span class="number">51</span> CST <span class="number">2016</span>
+Thread-<span class="number">4</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">03</span>:<span class="number">56</span> CST <span class="number">2016</span>
+</code></pre><h2 id="并发包下的工具类">并发包下的工具类</h2><p>一般情况下，我们不会使用wait/notifyAll或者ReentrantLock这种比较底层的类，而是使用并发包下提供的一些工具类。</p>
+<h3 id="CountDownLatch">CountDownLatch</h3><p>CountDownLatch是一个计数器，它的构造方法中需要设置一个数值，用来设定计数的次数。每次调用countDown()方法之后，这个计数器都会减去1，CountDownLatch会一直阻塞着调用await()方法的线程，直到计数器的值变为0。</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CountDownLatchTest {
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+        CountDownLatch countDownLatch = <span class="keyword">new</span> CountDownLatch(<span class="number">5</span>);
+        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i ++) {
+            <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+                @<span class="function">Override
+                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+                    System.out.println(Thread.currentThread().getName() + <span class="string">" "</span> + <span class="keyword">new</span> Date() + <span class="string">" run"</span>);
+                    <span class="keyword">try</span> {
+                        Thread.sleep(<span class="number">5000l</span>);
+                    } <span class="keyword">catch</span> (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    countDownLatch.countDown();
+                }
+            }).start();
+        }
+        <span class="keyword">try</span> {
+            countDownLatch.await();
+        } <span class="keyword">catch</span> (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(<span class="string">"all thread over"</span>);
+    }
+
+}
+</code></pre><p>输出：</p>
+<pre><code>Thread-<span class="number">2</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">18</span>:<span class="number">30</span> CST <span class="number">2016</span> run
+Thread-<span class="number">3</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">18</span>:<span class="number">30</span> CST <span class="number">2016</span> run
+Thread-<span class="number">4</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">18</span>:<span class="number">30</span> CST <span class="number">2016</span> run
+Thread-<span class="number">0</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">18</span>:<span class="number">30</span> CST <span class="number">2016</span> run
+Thread-<span class="number">1</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">18</span>:<span class="number">30</span> CST <span class="number">2016</span> run
+all thread over
+</code></pre><h3 id="CyclicBarrier">CyclicBarrier</h3><p>CyclicBarrier阻塞调用的线程，直到条件满足时，阻塞的线程同时被打开。</p>
+<p>调用await()方法的时候，这个线程就会被阻塞，当调用await()的线程数量到达屏障数的时候，主线程就会取消所有被阻塞线程的状态。</p>
+<p>在CyclicBarrier的构造方法中，还可以设置一个barrierAction。</p>
+<p>在所有的屏障都到达之后，会启动一个线程来运行这里面的代码。</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CyclicBarrierTest {
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+        Random random = <span class="keyword">new</span> Random();
+        CyclicBarrier cyclicBarrier = <span class="keyword">new</span> CyclicBarrier(<span class="number">5</span>);
+        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i ++) {
+            <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+                @<span class="function">Override
+                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+                    <span class="keyword">int</span> secs = random.nextInt(<span class="number">5</span>);
+                    System.out.println(Thread.currentThread().getName() + <span class="string">" "</span> + <span class="keyword">new</span> Date() + <span class="string">" run, sleep "</span> + secs + <span class="string">" secs"</span>);
+                    <span class="keyword">try</span> {
+                        Thread.sleep(secs * <span class="number">1000</span>);
+                        cyclicBarrier.await();
+                    } <span class="keyword">catch</span> (InterruptedException e) {
+                        e.printStackTrace();
+                    } <span class="keyword">catch</span> (BrokenBarrierException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println(Thread.currentThread().getName() + <span class="string">" "</span> + <span class="keyword">new</span> Date() + <span class="string">" runs over"</span>);
+                }
+            }).start();
+        }
+    }
+
+}
+</code></pre><p>相比CountDownLatch，CyclicBarrier是可以被循环使用的，而且遇到线程中断等情况时，还可以利用reset()方法，重置计数器，从这些方面来说，CyclicBarrier会比CountDownLatch更加灵活一些。        </p>
+<h2 id="AbstractQueuedSynchronizer">AbstractQueuedSynchronizer</h2><p>AQS是很多同步工具类的基础，比如ReentrentLock里的公平锁和非公平锁，Semaphore里的公平锁和非公平锁，CountDownLatch里的锁等他们的底层都是使用AbstractQueuedSynchronizer完成的。</p>
+<p>基于AbstractQueuedSynchronizer自定义实现一个独占锁：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MySynchronizer</span> <span class="keyword">extends</span> <span class="title">AbstractQueuedSynchronizer</span> </span>{
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">tryAcquire</span><span class="params">(<span class="keyword">int</span> arg)</span> </span>{
+        <span class="keyword">if</span>(compareAndSetState(<span class="number">0</span>, <span class="number">1</span>)) {
+            setExclusiveOwnerThread(Thread.currentThread());
+            <span class="keyword">return</span> <span class="keyword">true</span>;
+        }
+        <span class="keyword">return</span> <span class="keyword">false</span>;
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">tryRelease</span><span class="params">(<span class="keyword">int</span> arg)</span> </span>{
+        setState(<span class="number">0</span>);
+        setExclusiveOwnerThread(<span class="keyword">null</span>);
+        <span class="keyword">return</span> <span class="keyword">true</span>;
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lock</span><span class="params">()</span> </span>{
+        acquire(<span class="number">1</span>);
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span><span class="params">()</span> </span>{
+        release(<span class="number">1</span>);
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+        MySynchronizer mySynchronizer = <span class="keyword">new</span> MySynchronizer();
+        Thread thread1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+            <span class="annotation">@Override</span>
+            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+                mySynchronizer.lock();
+                <span class="keyword">try</span> {
+                    System.out.println(Thread.currentThread().getName() + <span class="string">" run"</span>);
+                    System.out.println(Thread.currentThread().getName() + <span class="string">" will sleep 5 secs"</span>);
+                    <span class="keyword">try</span> {
+                        Thread.sleep(<span class="number">5000l</span>);
+                        System.out.println(Thread.currentThread().getName() + <span class="string">" continue"</span>);
+                    } <span class="keyword">catch</span> (InterruptedException e) {
+                        System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+                        Thread.currentThread().interrupt();
+                    }
+                } <span class="keyword">finally</span> {
+                    mySynchronizer.unlock();
+                }
+            }
+        });
+        Thread thread2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+            <span class="annotation">@Override</span>
+            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+                mySynchronizer.lock();
+                <span class="keyword">try</span> {
+                    System.out.println(Thread.currentThread().getName() + <span class="string">" run"</span>);
+                } <span class="keyword">finally</span> {
+                    mySynchronizer.unlock();
+                }
+            }
+        });
+        thread1.start();
+        thread2.start();
+    }
+
+}
+</code></pre><p>MySynchronizer并没有实现可重入功能，只是简单的一个独占锁。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>Java提供了很多同步操作，比如synchronized关键字、wait/notifyAll、ReentrantLock、Condition、一些并发包下的工具类、Semaphore，ThreadLocal、AbstractQueuedSynchronizer等。</p>
+<p>本文简单说明一下这几种方式的使用。</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/synchronize-way.jpeg" alt=""></p>]]>
+    
+    </summary>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[jdk ConcurrentSkipListMap工作原理分析]]></title>
@@ -4436,133 +4876,6 @@ val vecAccum = sc.accumulator(new Vector(...))(VectorAccumulatorParam)
       <category term="spark" scheme="http://fangjian0423.github.io/tags/spark/"/>
     
       <category term="spark" scheme="http://fangjian0423.github.io/categories/spark/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[记录Flume使用KafkaSource的时候Channel队列满了之后发生的怪异问题]]></title>
-    <link href="http://fangjian0423.github.io/2016/01/19/flume-channel-full-exception/"/>
-    <id>http://fangjian0423.github.io/2016/01/19/flume-channel-full-exception/</id>
-    <published>2016-01-19T12:07:35.000Z</published>
-    <updated>2016-03-04T17:54:42.000Z</updated>
-    <content type="html"><![CDATA[<p>Flume的这个问题纠结了2个月，因为之前实在太忙了，没有时间来研究这个问题产生的原理，今天终于研究出来了，找出了这个问题所在。</p>
-<p>先来描述一下这个问题的现象：</p>
-<p>Flume的Source用的是KafkaSource，Sink用的是Custom Sink，由于这个Custom Sink写的有一点小问题，比如batchSize是5000次，第4000条就会发生exception，这样每次都会写入4000条数据。Sink处理的时候都会发生异常，每次都会rollback，rollback方面的知识可以参考<a href="http://fangjian0423.github.io/2016/01/03/flume-transaction/">Flume Transaction介绍</a>。</p>
-<p>这样造成的后果有3个：</p>
-<p>1.Channel中的数据满了。会发生以下异常：</p>
-<pre><code>Caused by: org.apache.flume.ChannelFullException: Space <span class="keyword">for</span> commit <span class="keyword">to</span> queue couldn<span class="attribute">'t</span> be acquired. Sinks are likely <span class="keyword">not</span> keeping up <span class="keyword">with</span> sources, <span class="keyword">or</span> the <span class="keyword">buffer</span> size <span class="keyword">is</span> too tight
-</code></pre><p>2.Sink会一直写数据，造成数据量暴增。</p>
-<p>3.如果用了interceptor，且修改了event中的数据，那么会重复处理这些修改完后的event数据。</p>
-<p>前面2个很容易理解，Sink发生异常，transaction rollback，导致channel中的队列满了。</p>
-<p>关键是第三点，很让人费解。</p>
-<p>以一段伪需求和伪代码为例，TestInterceptor的intercept方法：</p>
-<p>比如处理一段json：</p>
-<pre><code>{"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">languages</span>": <span class="value">[<span class="string">"java"</span>, <span class="string">"scala"</span>, <span class="string">"javascript"</span>]</span>}
-</code></pre><p>使用interceptor处理成:</p>
-<pre><code>[{"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">language</span>": <span class="value"><span class="string">"java"</span></span>}, {"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">language</span>": <span class="value"><span class="string">"scala"</span></span>}, {"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">language</span>": <span class="value"><span class="string">"javascript"</span></span>}]
-</code></pre><p>interceptor代码如下：</p>
-<pre><code><span class="function"><span class="keyword">public</span> Event <span class="title">intercept</span>(<span class="params">Event <span class="keyword">event</span></span>) </span>{
-    Model model = <span class="keyword">null</span>;
-    String jsonStr = <span class="keyword">new</span> String(<span class="keyword">event</span>.getBody(), <span class="string">"UTF-8"</span>);
-    <span class="keyword">try</span> {
-        model = parseJsonStr(jsonStr);
-    } <span class="keyword">catch</span> (Exception e) {
-        log.error(<span class="string">"convert json data error"</span>);
-    }
-    <span class="keyword">event</span>.setBody(model.getJsonString().getBytes());
-    <span class="keyword">return</span> <span class="keyword">event</span>;
-}
-</code></pre><p>当Channel中的队列已经满了以后，上述代码会打印出convert json data error，而且jsonStr的内容居然是转换后的数据，这一点一开始让我十分费解，误以为transaction rollback之后会修改source中的数据。后来debug源码发现错误在Source中。</p>
-<p>后来发现并不是这样的。</p>
-<p>KafkaSource中有一个属性eventList，是个ArrayList。用来接收kafka consume的message。</p>
-<p>直接说明KafkaSource的process方法源码：</p>
-<pre><code><span class="keyword">public</span> Status process() <span class="keyword">throws</span> EventDeliveryException {
-
-  <span class="built_in">byte</span>[] kafkaMessage;
-  <span class="built_in">byte</span>[] kafkaKey;
-  Event event;
-  Map&lt;<span class="keyword">String</span>, <span class="keyword">String</span>&gt; headers;
-  <span class="keyword">long</span> batchStartTime = System.currentTimeMillis();
-  <span class="keyword">long</span> batchEndTime = System.currentTimeMillis() + timeUpperLimit;
-  <span class="keyword">try</span> {
-
-    <span class="comment">/** 这里读取kafka中的message **/</span>
-    <span class="built_in">boolean</span> iterStatus = <span class="keyword">false</span>;
-    <span class="keyword">while</span> (eventList.<span class="built_in">size</span>() &lt; batchUpperLimit &amp;&amp;
-            System.currentTimeMillis() &lt; batchEndTime) {
-      iterStatus = hasNext();
-      <span class="keyword">if</span> (iterStatus) {
-        <span class="comment">// get next message</span>
-        MessageAndMetadata&lt;<span class="built_in">byte</span>[], <span class="built_in">byte</span>[]&gt; messageAndMetadata = it.next();
-        kafkaMessage = messageAndMetadata.message();
-        kafkaKey = messageAndMetadata.<span class="variable">key</span>();
-
-        <span class="comment">// Add headers to event (topic, timestamp, and key)</span>
-        headers = <span class="keyword">new</span> <span class="keyword">HashMap</span>&lt;<span class="keyword">String</span>, <span class="keyword">String</span>&gt;();
-        headers.put(KafkaSourceConstants.TIMESTAMP,
-                <span class="keyword">String</span>.valueOf(System.currentTimeMillis()));
-        headers.put(KafkaSourceConstants.TOPIC, topic);
-        headers.put(KafkaSourceConstants.KEY, <span class="keyword">new</span> <span class="keyword">String</span>(kafkaKey));
-        <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
-          <span class="built_in">log</span>.debug(<span class="string">"Message: {}"</span>, <span class="keyword">new</span> <span class="keyword">String</span>(kafkaMessage));
-        }
-        event = EventBuilder.withBody(kafkaMessage, headers);
-        eventList.<span class="built_in">add</span>(event);
-      }
-      <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
-        <span class="built_in">log</span>.debug(<span class="string">"Waited: {} "</span>, System.currentTimeMillis() - batchStartTime);
-        <span class="built_in">log</span>.debug(<span class="string">"Event #: {}"</span>, eventList.<span class="built_in">size</span>());
-      }
-    }
-    <span class="comment">/** 这里读取kafka中的message **/</span>
-
-    <span class="comment">// If we have events, send events to channel</span>
-    <span class="comment">// clear the event list</span>
-    <span class="comment">// and commit if Kafka doesn't auto-commit</span>
-    <span class="keyword">if</span> (eventList.<span class="built_in">size</span>() &gt; <span class="number">0</span>) {
-      <span class="comment">// 使用ChannelProcess将Source中读取的数据给各个Channel</span>
-      <span class="comment">// 如果getChannelProcessor().processEventBatch(eventList);发生了异常，eventList不会被清空，而且processEventBatch方法会调用Interceptor处理event中的数据，event中的数据已经被转换。所以下一次会将转换后的event数据再次传给Interceptor。</span>
-      getChannelProcessor().processEventBatch(eventList);
-      eventList.<span class="built_in">clear</span>();
-      <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
-        <span class="built_in">log</span>.debug(<span class="string">"Wrote {} events to channel"</span>, eventList.<span class="built_in">size</span>());
-      }
-      <span class="keyword">if</span> (!kafkaAutoCommitEnabled) {
-        <span class="comment">// commit the read transactions to Kafka to avoid duplicates</span>
-        consumer.commitOffsets();
-      }
-    }
-    <span class="keyword">if</span> (!iterStatus) {
-      <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
-        <span class="built_in">log</span>.debug(<span class="string">"Returning with backoff. No more data to read"</span>);
-      }
-      <span class="keyword">return</span> Status.BACKOFF;
-    }
-    <span class="keyword">return</span> Status.READY;
-  } <span class="keyword">catch</span> (Exception e) {
-    <span class="built_in">log</span>.error(<span class="string">"KafkaSource EXCEPTION, {}"</span>, e);
-    <span class="keyword">return</span> Status.BACKOFF;
-  }
-}
-</code></pre><p>上述代码已经加了备注，再重申一下：ChannelProcess的processEventBatch方法会调用Interceptor处理event中的数据。所以如果Channel中的队列满了，那么processEventBatch方法会发生异常，发生异常之后eventList中的没有进入channel的数据已经被Interceptor修改，且不会被清空。因此下次还是会使用这些数据，所以会发生convert json data error错误。</p>
-<p>画了一个序列图如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/flume-channel-full01.png" alt=""></p>
-<p>第6步添加event到channel中的时候，队列已满，所以会抛出异常。最终异常被KafkaSource捕捉，但是eventList内部的部分数据已经被interceptor修改过。</p>
-<p>多个channel的影响：</p>
-<p>如果有多个channel，这个问题也会影响。比如有2个channel，c1和c2。c1的sink没有问题，一直稳定执行，c2对应的sink是一个CustomSink，会有问题。这样c2中的队列迟早会爆满，爆满之后，ChannelProcess批量处理event的时候，由于c2的队列满了，所以Source中的eventList永远不会被清空，eventList永远不会被清空的话，所有的channel都会被影响到，这就好比水源被污染之后，所有的用水都会受到影响。</p>
-<p>举个例子：source为s1，c1对应的sink是k1，c2对应的sink是k2。k1和k2的batchSize都是5000，k2处理第4000条数据的时候总会发生异常，进行回滚。k1很稳定。这样c2迟早会爆满，爆满之后s1的eventList一直不能clear，这样也会导致c1一直在处理，所以k1的数据量跟k2一样也会暴增。</p>
-<p>要避免本文所说的这一系列情况，最好的做法就是sink必须要加上很好的异常处理机制，不是任何情况都可以rollback的，要根据需求做对应的处理。</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[记录Flume使用KafkaSource的时候Channel队列满了之后发生的怪异问题。数据量暴增，Channel队列爆满 ...]]>
-    
-    </summary>
-    
-      <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
-    
-      <category term="flume" scheme="http://fangjian0423.github.io/tags/flume/"/>
-    
-      <category term="flume" scheme="http://fangjian0423.github.io/categories/flume/"/>
     
   </entry>
   

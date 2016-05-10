@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-04-30T17:59:40.000Z</updated>
+  <updated>2016-05-10T14:59:25.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -15,11 +15,352 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title><![CDATA[Java阻塞队列ArrayBlockingQueue和LinkedBlockingQueue实现原理分析]]></title>
+    <link href="http://fangjian0423.github.io/2016/05/10/java-arrayblockingqueue-linkedblockingqueue-analysis/"/>
+    <id>http://fangjian0423.github.io/2016/05/10/java-arrayblockingqueue-linkedblockingqueue-analysis/</id>
+    <published>2016-05-10T12:30:57.000Z</published>
+    <updated>2016-05-10T14:59:25.000Z</updated>
+    <content type="html"><![CDATA[<p>Java中的阻塞队列接口BlockingQueue继承自Queue接口。</p>
+<p>BlockingQueue接口提供了3个添加元素方法。</p>
+<ol>
+<li>add：添加元素到队列里，添加成功返回true，由于容量满了添加失败会抛出IllegalStateException异常</li>
+<li>offer：添加元素到队列里，添加成功返回true，添加失败返回false</li>
+<li>put：添加元素到队列里，如果容量满了会阻塞直到容量不满</li>
+</ol>
+<p>3个删除方法。</p>
+<ol>
+<li>poll：删除队列头部元素，如果队列为空，返回null。否则返回元素。</li>
+<li>remove：基于对象找到对应的元素，并删除。删除成功返回true，否则返回false</li>
+<li>take：删除队列头部元素，如果队列为空，一直阻塞到队列有元素并删除</li>
+</ol>
+<p>常用的阻塞队列具体类有ArrayBlockingQueue、LinkedBlockingQueue、PriorityBlockingQueue、LinkedBlockingDeque等。</p>
+<p>本文以ArrayBlockingQueue和LinkedBlockingQueue为例，分析它们的实现原理。</p>
+<a id="more"></a>
+<h2 id="ArrayBlockingQueue">ArrayBlockingQueue</h2><p>ArrayBlockingQueue的原理就是使用一个可重入锁和这个锁生成的两个条件对象进行并发控制(classic two-condition algorithm)。</p>
+<p>ArrayBlockingQueue是一个带有长度的阻塞队列，初始化的时候必须要指定队列长度，且指定长度之后不允许进行修改。</p>
+<p>它带有的属性如下：</p>
+<pre><code><span class="comment">// 存储队列元素的数组，是个循环数组</span>
+<span class="keyword">final</span> Object[] items;
+
+<span class="comment">// 拿数据的索引，用于take，poll，peek，remove方法</span>
+<span class="keyword">int</span> takeIndex;
+
+<span class="comment">// 放数据的索引，用于put，offer，add方法</span>
+<span class="keyword">int</span> putIndex;
+
+<span class="comment">// 元素个数</span>
+<span class="keyword">int</span> <span class="keyword">count</span>;
+
+<span class="comment">// 可重入锁</span>
+<span class="keyword">final</span> ReentrantLock lock;
+<span class="comment">// notEmpty条件对象，由lock创建</span>
+<span class="keyword">private</span> <span class="keyword">final</span> Condition notEmpty;
+<span class="comment">// notFull条件对象，由lock创建</span>
+<span class="keyword">private</span> <span class="keyword">final</span> Condition notFull;
+</code></pre><h3 id="数据的添加">数据的添加</h3><p>ArrayBlockingQueue有不同的几个数据添加方法，add、offer、put方法。</p>
+<p>add方法：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span> </span>{
+    <span class="keyword">if</span> (offer(e))
+        <span class="keyword">return</span> <span class="keyword">true</span>;
+    <span class="keyword">else</span>
+        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Queue full"</span>);
+}
+</code></pre><p>add方法内部调用offer方法如下：</p>
+<pre><code><span class="function"><span class="keyword">public</span> boolean <span class="title">offer</span>(<span class="params">E e</span>) </span>{
+    checkNotNull(e); <span class="comment">// 不允许元素为空</span>
+    final ReentrantLock <span class="keyword">lock</span> = <span class="keyword">this</span>.<span class="keyword">lock</span>;
+    <span class="keyword">lock</span>.<span class="keyword">lock</span>(); <span class="comment">// 加锁，保证调用offer方法的时候只有1个线程</span>
+    <span class="keyword">try</span> {
+        <span class="keyword">if</span> (count == items.length) <span class="comment">// 如果队列已满</span>
+            <span class="keyword">return</span> <span class="keyword">false</span>; <span class="comment">// 直接返回false，添加失败</span>
+        <span class="keyword">else</span> {
+            insert(e); <span class="comment">// 数组没满的话调用insert方法</span>
+            <span class="keyword">return</span> <span class="keyword">true</span>; <span class="comment">// 返回true，添加成功</span>
+        }
+    } <span class="keyword">finally</span> {
+        <span class="keyword">lock</span>.unlock(); <span class="comment">// 释放锁，让其他线程可以调用offer方法</span>
+    }
+}
+</code></pre><p>insert方法如下：</p>
+<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">insert</span><span class="params">(E x)</span> </span>{
+    items[putIndex] = x; <span class="comment">// 元素添加到数组里</span>
+    putIndex = inc(putIndex); <span class="comment">// 放数据索引+1，当索引满了变成0</span>
+    ++count; <span class="comment">// 元素个数+1</span>
+    notEmpty.signal(); <span class="comment">// 使用条件对象notEmpty通知，比如使用take方法的时候队列里没有数据，被阻塞。这个时候队列insert了一条数据，需要调用signal进行通知</span>
+}
+</code></pre><p>put方法：</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span>(<span class="params">E e</span>) throws InterruptedException </span>{
+    checkNotNull(e); <span class="comment">// 不允许元素为空</span>
+    final ReentrantLock <span class="keyword">lock</span> = <span class="keyword">this</span>.<span class="keyword">lock</span>;
+    <span class="keyword">lock</span>.lockInterruptibly(); <span class="comment">// 加锁，保证调用put方法的时候只有1个线程</span>
+    <span class="keyword">try</span> {
+        <span class="keyword">while</span> (count == items.length) <span class="comment">// 如果队列满了，阻塞当前线程，并加入到条件对象notFull的等待队列里</span>
+            notFull.await(); <span class="comment">// 线程阻塞并被挂起，同时释放锁</span>
+        insert(e); <span class="comment">// 调用insert方法</span>
+    } <span class="keyword">finally</span> {
+        <span class="keyword">lock</span>.unlock(); <span class="comment">// 释放锁，让其他线程可以调用put方法</span>
+    }
+}
+</code></pre><p>ArrayBlockingQueue的添加数据方法有add，put，offer这3个方法，总结如下：</p>
+<p>add方法内部调用offer方法，如果队列满了，抛出IllegalStateException异常，否则返回true</p>
+<p>offer方法如果队列满了，返回false，否则返回true</p>
+<p>add方法和offer方法不会阻塞线程，put方法如果队列满了会阻塞线程，直到有线程消费了队列里的数据才有可能被唤醒。</p>
+<p>这3个方法内部都会使用可重入锁保证原子性。</p>
+<h3 id="数据的删除">数据的删除</h3><p>ArrayBlockingQueue有不同的几个数据删除方法，poll、take、remove方法。</p>
+<p>poll方法：</p>
+<pre><code><span class="function"><span class="keyword">public</span> E <span class="title">poll</span>(<span class="params"></span>) </span>{
+    final ReentrantLock <span class="keyword">lock</span> = <span class="keyword">this</span>.<span class="keyword">lock</span>;
+    <span class="keyword">lock</span>.<span class="keyword">lock</span>(); <span class="comment">// 加锁，保证调用poll方法的时候只有1个线程</span>
+    <span class="keyword">try</span> {
+        <span class="keyword">return</span> (count == <span class="number">0</span>) ? <span class="keyword">null</span> : extract(); <span class="comment">// 如果队列里没元素了，返回null，否则调用extract方法</span>
+    } <span class="keyword">finally</span> {
+        <span class="keyword">lock</span>.unlock(); <span class="comment">// 释放锁，让其他线程可以调用poll方法</span>
+    }
+}
+</code></pre><p>poll方法内部调用extract方法：</p>
+<pre><code><span class="keyword">private</span> <span class="function">E <span class="title">extract</span><span class="params">()</span> </span>{
+    <span class="keyword">final</span> Object[] items = <span class="keyword">this</span>.items;
+    E x = <span class="keyword">this</span>.&lt;E&gt;cast(items[takeIndex]); <span class="comment">// 得到取索引位置上的元素</span>
+    items[takeIndex] = <span class="keyword">null</span>; <span class="comment">// 对应取索引上的数据清空</span>
+    takeIndex = inc(takeIndex); <span class="comment">// 取数据索引+1，当索引满了变成0</span>
+    --count; <span class="comment">// 元素个数-1</span>
+    notFull.signal(); <span class="comment">// 使用条件对象notFull通知，比如使用put方法放数据的时候队列已满，被阻塞。这个时候消费了一条数据，队列没满了，就需要调用signal进行通知</span>
+    <span class="keyword">return</span> x; <span class="comment">// 返回元素</span>
+}
+</code></pre><p>take方法：</p>
+<pre><code><span class="function"><span class="keyword">public</span> E <span class="title">take</span>(<span class="params"></span>) throws InterruptedException </span>{
+    final ReentrantLock <span class="keyword">lock</span> = <span class="keyword">this</span>.<span class="keyword">lock</span>;
+    <span class="keyword">lock</span>.lockInterruptibly(); <span class="comment">// 加锁，保证调用take方法的时候只有1个线程</span>
+    <span class="keyword">try</span> {
+        <span class="keyword">while</span> (count == <span class="number">0</span>) <span class="comment">// 如果队列空，阻塞当前线程，并加入到条件对象notEmpty的等待队列里</span>
+            notEmpty.await(); <span class="comment">// 线程阻塞并被挂起，同时释放锁</span>
+        <span class="keyword">return</span> extract(); <span class="comment">// 调用extract方法</span>
+    } <span class="keyword">finally</span> {
+        <span class="keyword">lock</span>.unlock(); <span class="comment">// 释放锁，让其他线程可以调用take方法</span>
+    }
+}
+</code></pre><p>remove方法：</p>
+<pre><code><span class="function"><span class="keyword">public</span> boolean <span class="title">remove</span>(<span class="params">Object o</span>) </span>{
+    <span class="keyword">if</span> (o == <span class="keyword">null</span>) <span class="keyword">return</span> <span class="keyword">false</span>;
+    final Object[] items = <span class="keyword">this</span>.items;
+    final ReentrantLock <span class="keyword">lock</span> = <span class="keyword">this</span>.<span class="keyword">lock</span>;
+    <span class="keyword">lock</span>.<span class="keyword">lock</span>(); <span class="comment">// 加锁，保证调用remove方法的时候只有1个线程</span>
+    <span class="keyword">try</span> {
+        <span class="keyword">for</span> (<span class="keyword">int</span> i = takeIndex, k = count; k &gt; <span class="number">0</span>; i = inc(i), k--) { <span class="comment">// 遍历元素</span>
+            <span class="keyword">if</span> (o.equals(items[i])) { <span class="comment">// 两个对象相等的话</span>
+                removeAt(i); <span class="comment">// 调用removeAt方法</span>
+                <span class="keyword">return</span> <span class="keyword">true</span>; <span class="comment">// 删除成功，返回true</span>
+            }
+        }
+        <span class="keyword">return</span> <span class="keyword">false</span>; <span class="comment">// 删除成功，返回false</span>
+    } <span class="keyword">finally</span> {
+        <span class="keyword">lock</span>.unlock(); <span class="comment">// 释放锁，让其他线程可以调用remove方法</span>
+    }
+}
+</code></pre><p>removeAt方法：</p>
+<pre><code><span class="function"><span class="keyword">void</span> <span class="title">removeAt</span><span class="params">(<span class="keyword">int</span> i)</span> </span>{
+    <span class="keyword">final</span> Object[] items = <span class="keyword">this</span>.items;
+    <span class="keyword">if</span> (i == takeIndex) { <span class="comment">// 如果要删除数据的索引是取索引位置，直接删除取索引位置上的数据，然后取索引+1即可</span>
+        items[takeIndex] = <span class="keyword">null</span>;
+        takeIndex = inc(takeIndex);
+    } <span class="keyword">else</span> { <span class="comment">// 如果要删除数据的索引不是取索引位置，移动元素元素，更新取索引和放索引的值</span>
+        <span class="keyword">for</span> (;;) {
+            <span class="keyword">int</span> nexti = inc(i);
+            <span class="keyword">if</span> (nexti != putIndex) {
+                items[i] = items[nexti];
+                i = nexti;
+            } <span class="keyword">else</span> {
+                items[i] = <span class="keyword">null</span>;
+                putIndex = i;
+                <span class="keyword">break</span>;
+            }
+        }
+    }
+    --count; <span class="comment">// 元素个数-1</span>
+    notFull.signal(); <span class="comment">// 使用条件对象notFull通知，比如使用put方法放数据的时候队列已满，被阻塞。这个时候消费了一条数据，队列没满了，就需要调用signal进行通知 </span>
+}
+</code></pre><p>ArrayBlockingQueue的删除数据方法有poll，take，remove这3个方法，总结如下：</p>
+<p>poll方法对于队列为空的情况，返回null，否则返回队列头部元素。</p>
+<p>remove方法取的元素是基于对象的下标值，删除成功返回true，否则返回false。</p>
+<p>poll方法和remove方法不会阻塞线程。</p>
+<p>take方法对于队列为空的情况，会阻塞并挂起当前线程，直到有数据加入到队列中。</p>
+<p>这3个方法内部都会调用notFull.signal方法通知正在等待队列满情况下的阻塞线程。</p>
+<h2 id="LinkedBlockingQueue">LinkedBlockingQueue</h2><p>LinkedBlockingQueue是一个使用链表完成队列操作的阻塞队列。链表是单向链表，而不是双向链表。</p>
+<p>内部使用放锁和拿锁，这两个锁实现阻塞(“two lock queue” algorithm)。</p>
+<p>它带有的属性如下：</p>
+<pre><code><span class="comment">// 容量大小</span>
+<span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> capacity;
+
+<span class="comment">// 元素个数，因为有2个锁，存在竞态条件，使用AtomicInteger</span>
+<span class="keyword">private</span> <span class="keyword">final</span> AtomicInteger <span class="keyword">count</span> = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);
+
+<span class="comment">// 头结点</span>
+<span class="keyword">private</span> <span class="keyword">transient</span> Node&lt;E&gt; head;
+
+<span class="comment">// 尾节点</span>
+<span class="keyword">private</span> <span class="keyword">transient</span> Node&lt;E&gt; last;
+
+<span class="comment">// 拿锁</span>
+<span class="keyword">private</span> <span class="keyword">final</span> ReentrantLock takeLock = <span class="keyword">new</span> ReentrantLock();
+
+<span class="comment">// 拿锁的条件对象</span>
+<span class="keyword">private</span> <span class="keyword">final</span> Condition notEmpty = takeLock.newCondition();
+
+<span class="comment">// 放锁</span>
+<span class="keyword">private</span> <span class="keyword">final</span> ReentrantLock putLock = <span class="keyword">new</span> ReentrantLock();
+
+<span class="comment">// 放锁的条件对象</span>
+<span class="keyword">private</span> <span class="keyword">final</span> Condition notFull = putLock.newCondition();
+</code></pre><p>ArrayBlockingQueue只有1个锁，添加数据和删除数据的时候只能有1个被执行，不允许并行执行。</p>
+<p>而LinkedBlockingQueue有2个锁，放锁和拿锁，添加数据和删除数据是可以并行进行的，当然添加数据和删除数据的时候只能有1个线程各自执行。</p>
+<h3 id="数据的添加-1">数据的添加</h3><p>LinkedBlockingQueue有不同的几个数据添加方法，add、offer、put方法。</p>
+<p>add方法内部调用offer方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">boolean</span> offer(E e) {
+    <span class="keyword">if</span> (e == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException(); <span class="comment">// 不允许空元素</span>
+    <span class="keyword">final</span> AtomicInteger <span class="keyword">count</span> = <span class="keyword">this</span>.<span class="keyword">count</span>;
+    <span class="keyword">if</span> (<span class="keyword">count</span>.get() == capacity) <span class="comment">// 如果容量满了，返回false</span>
+        <span class="keyword">return</span> <span class="keyword">false</span>;
+    <span class="keyword">int</span> c = -<span class="number">1</span>;
+    Node&lt;E&gt; node = <span class="keyword">new</span> Node(e); <span class="comment">// 容量没满，以新元素构造节点</span>
+    <span class="keyword">final</span> ReentrantLock putLock = <span class="keyword">this</span>.putLock;
+    putLock.lock(); <span class="comment">// 放锁加锁，保证调用offer方法的时候只有1个线程</span>
+    <span class="keyword">try</span> {
+        <span class="keyword">if</span> (<span class="keyword">count</span>.get() &lt; capacity) { <span class="comment">// 再次判断容量是否已满，因为可能拿锁在进行消费数据，没满的话继续执行</span>
+            enqueue(node); <span class="comment">// 节点添加到链表尾部</span>
+            c = <span class="keyword">count</span>.getAndIncrement(); <span class="comment">// 元素个数+1</span>
+            <span class="keyword">if</span> (c + <span class="number">1</span> &lt; capacity) <span class="comment">// 如果容量还没满</span>
+                notFull.signal(); <span class="comment">// 在放锁的条件对象notFull上唤醒正在等待的线程，表示可以再次往队列里面加数据了，队列还没满</span>
+        }
+    } <span class="keyword">finally</span> {
+        putLock.unlock(); <span class="comment">// 释放放锁，让其他线程可以调用offer方法</span>
+    }
+    <span class="keyword">if</span> (c == <span class="number">0</span>) <span class="comment">// 由于存在放锁和拿锁，这里可能拿锁一直在消费数据，count会变化。这里的if条件表示如果队列中还有1条数据</span>
+        signalNotEmpty(); <span class="comment">// 在拿锁的条件对象notEmpty上唤醒正在等待的1个线程，表示队列里还有1条数据，可以进行消费</span>
+    <span class="keyword">return</span> c &gt;= <span class="number">0</span>; <span class="comment">// 添加成功返回true，否则返回false</span>
+}
+</code></pre><p>put方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">void</span> put(E e) <span class="keyword">throws</span> InterruptedException {
+    <span class="keyword">if</span> (e == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException(); <span class="comment">// 不允许空元素</span>
+    <span class="keyword">int</span> c = -<span class="number">1</span>;
+    Node&lt;E&gt; node = <span class="keyword">new</span> Node(e); <span class="comment">// 以新元素构造节点</span>
+    <span class="keyword">final</span> ReentrantLock putLock = <span class="keyword">this</span>.putLock;
+    <span class="keyword">final</span> AtomicInteger <span class="keyword">count</span> = <span class="keyword">this</span>.<span class="keyword">count</span>;
+    putLock.lockInterruptibly(); <span class="comment">// 放锁加锁，保证调用put方法的时候只有1个线程</span>
+    <span class="keyword">try</span> {
+        <span class="keyword">while</span> (<span class="keyword">count</span>.get() == capacity) { <span class="comment">// 如果容量满了</span>
+            notFull.await(); <span class="comment">// 阻塞并挂起当前线程</span>
+        }
+        enqueue(node); <span class="comment">// 节点添加到链表尾部</span>
+        c = <span class="keyword">count</span>.getAndIncrement(); <span class="comment">// 元素个数+1</span>
+        <span class="keyword">if</span> (c + <span class="number">1</span> &lt; capacity) <span class="comment">// 如果容量还没满</span>
+            notFull.signal(); <span class="comment">// 在放锁的条件对象notFull上唤醒正在等待的线程，表示可以再次往队列里面加数据了，队列还没满</span>
+    } <span class="keyword">finally</span> {
+        putLock.unlock(); <span class="comment">// 释放放锁，让其他线程可以调用put方法</span>
+    }
+    <span class="keyword">if</span> (c == <span class="number">0</span>) <span class="comment">// 由于存在放锁和拿锁，这里可能拿锁一直在消费数据，count会变化。这里的if条件表示如果队列中还有1条数据</span>
+        signalNotEmpty(); <span class="comment">// 在拿锁的条件对象notEmpty上唤醒正在等待的1个线程，表示队列里还有1条数据，可以进行消费</span>
+}
+</code></pre><p>LinkedBlockingQueue的添加数据方法add，put，offer跟ArrayBlockingQueue一样，不同的是它们的底层实现不一样。</p>
+<p>ArrayBlockingQueue中放入数据阻塞的时候，需要消费数据才能唤醒。</p>
+<p>而LinkedBlockingQueue中放入数据阻塞的时候，因为它内部有2个锁，可以并行执行放入数据和消费数据，不仅在消费数据的时候进行唤醒插入阻塞的线程，同时在插入的时候如果容量还没满，也会唤醒插入阻塞的线程。</p>
+<h3 id="数据的删除-1">数据的删除</h3><p>LinkedBlockingQueue有不同的几个数据删除方法，poll、take、remove方法。</p>
+<p>poll方法：</p>
+<pre><code><span class="keyword">public</span> E poll() {
+    <span class="keyword">final</span> AtomicInteger <span class="keyword">count</span> = <span class="keyword">this</span>.<span class="keyword">count</span>;
+    <span class="keyword">if</span> (<span class="keyword">count</span>.get() == <span class="number">0</span>) <span class="comment">// 如果元素个数为0</span>
+        <span class="keyword">return</span> <span class="keyword">null</span>; <span class="comment">// 返回null</span>
+    E x = <span class="keyword">null</span>;
+    <span class="keyword">int</span> c = -<span class="number">1</span>;
+    <span class="keyword">final</span> ReentrantLock takeLock = <span class="keyword">this</span>.takeLock;
+    takeLock.lock(); <span class="comment">// 拿锁加锁，保证调用poll方法的时候只有1个线程</span>
+    <span class="keyword">try</span> {
+        <span class="keyword">if</span> (<span class="keyword">count</span>.get() &gt; <span class="number">0</span>) { <span class="comment">// 判断队列里是否还有数据</span>
+            x = dequeue(); <span class="comment">// 删除头结点</span>
+            c = <span class="keyword">count</span>.getAndDecrement(); <span class="comment">// 元素个数-1</span>
+            <span class="keyword">if</span> (c &gt; <span class="number">1</span>) <span class="comment">// 如果队列里还有元素</span>
+                notEmpty.signal(); <span class="comment">// 在拿锁的条件对象notEmpty上唤醒正在等待的线程，表示队列里还有数据，可以再次消费</span>
+        }
+    } <span class="keyword">finally</span> {
+        takeLock.unlock(); <span class="comment">// 释放拿锁，让其他线程可以调用poll方法</span>
+    }
+    <span class="keyword">if</span> (c == capacity) <span class="comment">// 由于存在放锁和拿锁，这里可能放锁一直在添加数据，count会变化。这里的if条件表示如果队列中还可以再插入数据</span>
+        signalNotFull(); <span class="comment">// 在放锁的条件对象notFull上唤醒正在等待的1个线程，表示队列里还能再次添加数据</span>
+                <span class="keyword">return</span> x;
+}
+</code></pre><p>take方法：</p>
+<pre><code><span class="keyword">public</span> <span class="type">E</span> take() <span class="keyword">throws</span> <span class="type">InterruptedException</span> {
+    <span class="type">E</span> x;
+    int <span class="built_in">c</span> = -<span class="number">1</span>;
+    <span class="keyword">final</span> <span class="type">AtomicInteger</span> <span class="built_in">count</span> = this.<span class="built_in">count</span>;
+    <span class="keyword">final</span> <span class="type">ReentrantLock</span> takeLock = this.takeLock;
+    takeLock.lockInterruptibly(); <span class="comment">// 拿锁加锁，保证调用take方法的时候只有1个线程</span>
+    <span class="keyword">try</span> {
+        <span class="keyword">while</span> (<span class="built_in">count</span>.<span class="keyword">get</span>() == <span class="number">0</span>) { <span class="comment">// 如果队列里已经没有元素了</span>
+            notEmpty.await(); <span class="comment">// 阻塞并挂起当前线程</span>
+        }
+        x = dequeue(); <span class="comment">// 删除头结点</span>
+        <span class="built_in">c</span> = <span class="built_in">count</span>.getAndDecrement(); <span class="comment">// 元素个数-1</span>
+        <span class="keyword">if</span> (<span class="built_in">c</span> &gt; <span class="number">1</span>) <span class="comment">// 如果队列里还有元素</span>
+            notEmpty.signal(); <span class="comment">// 在拿锁的条件对象notEmpty上唤醒正在等待的线程，表示队列里还有数据，可以再次消费</span>
+    } finally {
+        takeLock.unlock(); <span class="comment">// 释放拿锁，让其他线程可以调用take方法</span>
+    }
+    <span class="keyword">if</span> (<span class="built_in">c</span> == capacity) <span class="comment">// 由于存在放锁和拿锁，这里可能放锁一直在添加数据，count会变化。这里的if条件表示如果队列中还可以再插入数据</span>
+        signalNotFull(); <span class="comment">// 在放锁的条件对象notFull上唤醒正在等待的1个线程，表示队列里还能再次添加数据</span>
+    <span class="keyword">return</span> x;
+}
+</code></pre><p>remove方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">boolean</span> remove(Object o) {
+    <span class="keyword">if</span> (o == <span class="keyword">null</span>) <span class="keyword">return</span> <span class="keyword">false</span>;
+    fullyLock(); <span class="comment">// remove操作要移动的位置不固定，2个锁都需要加锁</span>
+    <span class="keyword">try</span> {
+        <span class="keyword">for</span> (Node&lt;E&gt; trail = head, p = trail.<span class="keyword">next</span>; <span class="comment">// 从链表头结点开始遍历</span>
+             p != <span class="keyword">null</span>;
+             trail = p, p = p.<span class="keyword">next</span>) {
+            <span class="keyword">if</span> (o.equals(p.item)) { <span class="comment">// 判断是否找到对象</span>
+                unlink(p, trail); <span class="comment">// 修改节点的链接信息，同时调用notFull的signal方法</span>
+                <span class="keyword">return</span> <span class="keyword">true</span>;
+            }
+        }
+        <span class="keyword">return</span> <span class="keyword">false</span>;
+    } <span class="keyword">finally</span> {
+        fullyUnlock(); <span class="comment">// 2个锁解锁</span>
+    }
+}
+</code></pre><p>LinkedBlockingQueue的take方法对于没数据的情况下会阻塞，poll方法删除链表头结点，remove方法删除指定的对象。</p>
+<p>需要注意的是remove方法由于要删除的数据的位置不确定，需要2个锁同时加锁。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>Java中的阻塞队列接口BlockingQueue继承自Queue接口。</p>
+<p>BlockingQueue接口提供了3个添加元素方法。</p>
+<ol>
+<li>add：添加元素到队列里，添加成功返回true，由于容量满了添加失败会抛出IllegalStateException异常</li>
+<li>offer：添加元素到队列里，添加成功返回true，添加失败返回false</li>
+<li>put：添加元素到队列里，如果容量满了会阻塞直到容量不满</li>
+</ol>
+<p>3个删除方法。</p>
+<ol>
+<li>poll：删除队列头部元素，如果队列为空，返回null。否则返回元素。</li>
+<li>remove：基于对象找到对应的元素，并删除。删除成功返回true，否则返回false</li>
+<li>take：删除队列头部元素，如果队列为空，一直阻塞到队列有元素并删除</li>
+</ol>
+<p>常用的阻塞队列具体类有ArrayBlockingQueue、LinkedBlockingQueue、PriorityBlockingQueue、LinkedBlockingDeque等。</p>
+<p>本文以ArrayBlockingQueue和LinkedBlockingQueue为例，分析它们的实现原理。</p>]]>
+    
+    </summary>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[CountDownLatch和CyclicBarrier的区别]]></title>
     <link href="http://fangjian0423.github.io/2016/05/01/countdownlatch-cyclicbarrier-difference/"/>
     <id>http://fangjian0423.github.io/2016/05/01/countdownlatch-cyclicbarrier-difference/</id>
     <published>2016-04-30T17:59:39.000Z</published>
-    <updated>2016-04-30T17:59:40.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>CountDownLatch和CyclicBarrier都是java并发包下的工具类。</p>
 <p>CountDownLatch用于处理一个或多个线程等待其他所有线程完毕之后再继续进行操作。</p>
 <p>比如要处理一个非常耗时的任务，处理完之后需要更新这个任务的状态，需要开多线程去分批次处理任务中的各个子任务，当所有的子任务全部执行完毕之后，就可以更新任务状态了。这个时候就需要使用CountDownLatch。</p>
@@ -318,7 +659,7 @@ Thread-<span class="number">4</span> 用户开始抽奖，持续<span class="num
     <link href="http://fangjian0423.github.io/2016/04/18/java-synchronize-way/"/>
     <id>http://fangjian0423.github.io/2016/04/18/java-synchronize-way/</id>
     <published>2016-04-18T12:57:57.000Z</published>
-    <updated>2016-04-18T13:04:18.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>Java提供了很多同步操作，比如synchronized关键字、wait/notifyAll、ReentrantLock、Condition、一些并发包下的工具类、Semaphore，ThreadLocal、AbstractQueuedSynchronizer等。</p>
 <p>本文简单说明一下这几种方式的使用。</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/synchronize-way.jpeg" alt=""></p>
@@ -758,7 +1099,7 @@ all thread over
     <link href="http://fangjian0423.github.io/2016/04/12/jdk-concurrentskiplistmap/"/>
     <id>http://fangjian0423.github.io/2016/04/12/jdk-concurrentskiplistmap/</id>
     <published>2016-04-12T11:49:11.000Z</published>
-    <updated>2016-04-12T13:21:45.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>ConcurrentSkipListMap是一个内部使用跳表，并且支持排序和并发的一个Map。</p>
 <p>跳表的介绍：</p>
 <p>跳表是一种允许在一个有顺序的序列中进行快速查询的数据结构。</p>
@@ -912,7 +1253,7 @@ static <span class="keyword">final</span> <span class="class"><span class="keywo
     <link href="http://fangjian0423.github.io/2016/04/10/jdk_priorityqueue/"/>
     <id>http://fangjian0423.github.io/2016/04/10/jdk_priorityqueue/</id>
     <published>2016-04-10T13:36:08.000Z</published>
-    <updated>2016-04-10T13:36:11.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>优先队列跟普通的队列不一样，普通队列是一种遵循FIFO规则的队列，拿数据的时候按照加入队列的顺序拿取。   而优先队列每次拿数据的时候都会拿出优先级最高的数据。</p>
 <p>优先队列内部维护着一个堆，每次取数据的时候都从堆顶拿数据，这就是优先队列的原理。</p>
 <p>jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优先级规则。</p>
@@ -1135,7 +1476,7 @@ static <span class="keyword">final</span> <span class="class"><span class="keywo
     <link href="http://fangjian0423.github.io/2016/04/09/heap-heapsort/"/>
     <id>http://fangjian0423.github.io/2016/04/09/heap-heapsort/</id>
     <published>2016-04-09T09:42:18.000Z</published>
-    <updated>2016-04-09T09:52:48.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>堆的概念：</p>
 <p>n个元素序列 { k1, k2, k3, k4, k5, k6 …. kn } 当且仅当满足以下关系时才会被称为堆：</p>
 <pre><code>ki &lt;= k2i,ki &lt;= k2i+<span class="number">1</span> 或者 ki &gt;= k2i,ki &gt;= k2i+<span class="number">1</span> (i = <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span> .. n/<span class="number">2</span>)
@@ -1248,7 +1589,7 @@ static <span class="keyword">final</span> <span class="class"><span class="keywo
     <link href="http://fangjian0423.github.io/2016/04/08/jdk_treeset/"/>
     <id>http://fangjian0423.github.io/2016/04/08/jdk_treeset/</id>
     <published>2016-04-07T16:20:23.000Z</published>
-    <updated>2016-04-07T16:20:26.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>TreeSet跟HashSet，LinkedHashSet一样，都是Set接口的实现类。</p>
 <p>HashSet内部使用的HashMap，LinkedHashSet继承HashSet，内部使用的是LinkedHashMap。</p>
 <p>TreeSet实现的是NavigableSet接口，而不是HashSet和LinkedHashSet实现的Set接口。</p>
@@ -1331,7 +1672,7 @@ public <span class="keyword">E</span> <span class="literal">lower</span>(<span c
     <link href="http://fangjian0423.github.io/2016/04/07/jdk_treemap/"/>
     <id>http://fangjian0423.github.io/2016/04/07/jdk_treemap/</id>
     <published>2016-04-06T16:55:31.000Z</published>
-    <updated>2016-04-06T16:55:32.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>TreeMap是jdk中基于红黑树的一种map实现。HashMap底层是使用链表法解决冲突的哈希表，LinkedHashMap继承自HashMap，内部同样也是使用链表法解决冲突的哈希表，但是额外添加了一个双向链表用于处理元素的插入顺序或访问访问。</p>
 <p>既然TreeMap底层使用的是红黑树，首先先来简单了解一下红黑树的定义。</p>
 <p>红黑树是一棵平衡二叉查找树，同时还需要满足以下5个规则：</p>
@@ -1697,7 +2038,7 @@ treeMap.put(<span class="number">8</span>, <span class="string">"体育"</span>)
     <link href="http://fangjian0423.github.io/2016/04/03/jdk_arraydeque/"/>
     <id>http://fangjian0423.github.io/2016/04/03/jdk_arraydeque/</id>
     <published>2016-04-02T16:43:59.000Z</published>
-    <updated>2016-04-02T16:44:58.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>ArrayDeque双向队列是jdk中列表的一种实现，支持元素在头和尾这两端进行插入和删除操作。</p>
 <p>Deque接口(双向队列)的两个主要实现类是ArrayDeque和LinkedList。</p>
 <p>其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链接实现，之前在<a href="http://fangjian0423.github.io/2016/03/27/jdk_linkedlist/">jdk LinkedList工作原理分析</a>这篇文章中，已经分析过了LinkedList的实现原理，本文分析ArrayDeque的实现原理。</p>
@@ -1824,7 +2165,7 @@ public E pollLast() {
     <link href="http://fangjian0423.github.io/2016/03/30/jdk_hashset_linkedhashset/"/>
     <id>http://fangjian0423.github.io/2016/03/30/jdk_hashset_linkedhashset/</id>
     <published>2016-03-29T16:46:33.000Z</published>
-    <updated>2016-03-29T16:46:28.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>Set是一个没有包括重复数据的集合，跟List一样，他们都继承自Collection。</p>
 <p>Java中的Set接口最主要的实现类就是HashSet和LinkedHashSet。</p>
 <a id="more"></a>
@@ -1904,7 +2245,7 @@ HashSet(<span class="keyword">int</span> initialCapacity, <span class="keyword">
     <link href="http://fangjian0423.github.io/2016/03/29/jdk_linkedhashmap/"/>
     <id>http://fangjian0423.github.io/2016/03/29/jdk_linkedhashmap/</id>
     <published>2016-03-29T11:23:23.000Z</published>
-    <updated>2016-03-29T16:35:14.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>LinkedHashMap是一种会记录插入顺序的Map，内部维护着一个accessOrder属性，用于表示map数据的迭代顺序是基于访问顺序还是插入顺序。</p>
 <a id="more"></a>
 <h2 id="LinkedHashMap原理分析">LinkedHashMap原理分析</h2><p>首先是LinkedHashMap的定义：</p>
@@ -2068,7 +2409,7 @@ System.out.println(<span class="built_in">map</span>.get(<span class="string">"r
     <link href="http://fangjian0423.github.io/2016/03/29/jdk_hashmap/"/>
     <id>http://fangjian0423.github.io/2016/03/29/jdk_hashmap/</id>
     <published>2016-03-28T17:49:58.000Z</published>
-    <updated>2016-03-29T16:34:57.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>Map是一个映射键和值的对象。类似于Python中的字典。</p>
 <p>HashMap为什么会出现呢?</p>
 <p>因为数组这种数据结构，虽然遍历简单，但是插入和删除操作复杂，需要移动数组内部的元素；链表这种数据结构，插入和删除操作简单，但是查找复杂，只能一个一个地遍历。</p>
@@ -2346,7 +2687,7 @@ static final int tableSizeFor(int <span class="keyword">cap</span>) {
     <link href="http://fangjian0423.github.io/2016/03/27/jdk_linkedlist/"/>
     <id>http://fangjian0423.github.io/2016/03/27/jdk_linkedlist/</id>
     <published>2016-03-27T09:35:27.000Z</published>
-    <updated>2016-03-29T16:34:48.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>List接口的实现类之一ArrayList的内部实现是一个数组，而另外一个实现LinkedList内部实现是使用双向链表。</p>
 <p>LinkedList在内部定义了一个叫做Node类型的内部类，这个Node就是一个节点，链表中的节点，这个节点有3个属性，分别是元素item(当前节点要表示的值), 前节点prev(当前节点之前位置上的一个节点)，后节点next(当前节点后面位置的一个节点)。 </p>
 <p>LinkedList关于数据的插入，删除操作都会处理这些节点的前后关系。而不像ArrayList那样只需要移动元素的位置即可。</p>
@@ -2490,7 +2831,7 @@ E unlink(Node&lt;E&gt; x) {
     <link href="http://fangjian0423.github.io/2016/03/27/jdk_arraylist/"/>
     <id>http://fangjian0423.github.io/2016/03/27/jdk_arraylist/</id>
     <published>2016-03-27T05:33:17.000Z</published>
-    <updated>2016-03-29T16:34:38.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>list是一种有序的集合(an ordered collection), 通常也会被称为序列(sequence)，使用list可以精确地控制每个元素的插入，可以通过索引值找到对应list中的各个项，也可以在list中查询元素。</p>
 <p>以前的几段话摘自jdk文档的说明。</p>
 <p>其实list就相当于一个动态的数组，也就是链表，普通的数组长度大小都是固定的，而list是一个动态的数组，当list的长度满了，再次插入数据到list当中的时候，list会自动地扩展它的长度。</p>
@@ -2692,7 +3033,7 @@ ArrayList&lt;Integer&gt; <span class="built_in">list</span> = <span class="keywo
     <link href="http://fangjian0423.github.io/2016/03/22/java-threadpool-analysis/"/>
     <id>http://fangjian0423.github.io/2016/03/22/java-threadpool-analysis/</id>
     <published>2016-03-22T12:56:11.000Z</published>
-    <updated>2016-03-22T12:56:15.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>ThreadPoolExecutor是jdk内置线程池的一个实现，基本上大部分情况都会使用这个线程池完成各项操作。</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/thread-pool.jpeg" alt=""></p>
 <a id="more"></a>
@@ -3212,7 +3553,7 @@ ArrayList&lt;Integer&gt; <span class="built_in">list</span> = <span class="keywo
     <link href="http://fangjian0423.github.io/2016/03/19/java-ReentrantLock-analysis/"/>
     <id>http://fangjian0423.github.io/2016/03/19/java-ReentrantLock-analysis/</id>
     <published>2016-03-19T06:31:58.000Z</published>
-    <updated>2016-03-19T06:59:23.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/ReentrantLock.png" alt=""><br>Java中的可重入锁ReentrantLock很常见，可以用它来代替内置锁synchronized，ReentrantLock是语法级别的锁，所以比内置锁更加灵活。</p>
 <a id="more"></a>
 <p>下面这段代码是ReentrantLock的一个例子：</p>
@@ -3375,7 +3716,7 @@ ArrayList&lt;Integer&gt; <span class="built_in">list</span> = <span class="keywo
     <link href="http://fangjian0423.github.io/2016/03/16/java-AtomicInteger-analysis/"/>
     <id>http://fangjian0423.github.io/2016/03/16/java-AtomicInteger-analysis/</id>
     <published>2016-03-16T12:32:35.000Z</published>
-    <updated>2016-03-19T07:36:38.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>Java中的AtomicInteger大家应该很熟悉，它是为了解决多线程访问Integer变量导致结果不正确所设计的一个基于多线程并且支持原子操作的Integer类。</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/java-AtomicInteger-analysis.jpeg" alt=""></p>
 <a id="more"></a>
@@ -3467,7 +3808,7 @@ ai.get(); <span class="comment">// 6</span>
     <link href="http://fangjian0423.github.io/2016/03/12/java-Object-method/"/>
     <id>http://fangjian0423.github.io/2016/03/12/java-Object-method/</id>
     <published>2016-03-12T09:44:59.000Z</published>
-    <updated>2016-03-12T09:45:05.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<p>Java中的Object类是所有类的父类，它提供了以下11个方法：</p>
 <ol>
 <li>public final native Class&lt;?&gt; getClass()</li>
@@ -3769,7 +4110,7 @@ i will be destroyed
     <link href="http://fangjian0423.github.io/2016/02/21/avro-intro/"/>
     <id>http://fangjian0423.github.io/2016/02/21/avro-intro/</id>
     <published>2016-02-20T17:23:22.000Z</published>
-    <updated>2016-03-16T06:55:43.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<h2 id="Avro介绍">Avro介绍</h2><p>Apache Avro是一个数据序列化系统。</p>
 <p>Avro所提供的属性：</p>
 <p>1.丰富的数据结构<br>2.使用快速的压缩二进制数据格式<br>3.提供容器文件用于持久化数据<br>4.远程过程调用RPC<br>5.简单的动态语言结合功能，Avro 和动态语言结合后，读写数据文件和使用 RPC 协议都不需要生成代码，而代码生成作为一种可选的优化只值得在静态类型语言中实现。</p>
@@ -4068,7 +4409,7 @@ nameRdd.<span class="function"><span class="title">collect</span><span class="pa
     <link href="http://fangjian0423.github.io/2016/02/17/spark-sql/"/>
     <id>http://fangjian0423.github.io/2016/02/17/spark-sql/</id>
     <published>2016-02-17T01:22:22.000Z</published>
-    <updated>2016-02-17T03:25:25.000Z</updated>
+    <updated>2016-05-10T14:59:25.000Z</updated>
     <content type="html"><![CDATA[<h2 id="DataFrame是什么">DataFrame是什么</h2><p>DataFrame是一个以命名列方式组织的分布式数据集。在概念上，它跟关系型数据库中的一张表或者1个Python(或者R)中的data frame一样，但是比他们更优化。DataFrame可以根据结构化的数据文件、hive表、外部数据库或者已经存在的RDD构造。</p>
 <h2 id="DataFrame的创建">DataFrame的创建</h2><p>Spark DataFrame可以从一个已经存在的RDD、hive表或者数据源中创建。</p>
 <p>以下一个例子就表示一个DataFrame基于一个json文件创建：</p>
@@ -4371,411 +4712,6 @@ sqlContext.<span class="function"><span class="title">sql</span><span class="par
 </code></pre>]]></content>
     <summary type="html">
     <![CDATA[DataFrame是一个以命名列方式组织的分布式数据集。在概念上，它跟关系型数据库中的一张表或者1个Python(或者R)中的data frame一样，但是比他们更优化。DataFrame可以根据结构化的数据文件、hive表、外部数据库或者已经存在的RDD构造 ...]]>
-    
-    </summary>
-    
-      <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
-    
-      <category term="spark" scheme="http://fangjian0423.github.io/tags/spark/"/>
-    
-      <category term="spark" scheme="http://fangjian0423.github.io/categories/spark/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Spark Streaming编程指南笔记]]></title>
-    <link href="http://fangjian0423.github.io/2016/02/10/sparkstreaming-programming-guide/"/>
-    <id>http://fangjian0423.github.io/2016/02/10/sparkstreaming-programming-guide/</id>
-    <published>2016-02-09T17:36:17.000Z</published>
-    <updated>2016-02-09T17:46:12.000Z</updated>
-    <content type="html"><![CDATA[<h2 id="概述">概述</h2><p>Spark Streaming是Spark核心API的扩展，用于处理实时数据流。Spark Streaming处理的数据源可以是Kafka，Flume，Twitter，ZeroMQ，Kinesis或者Tcp Sockets，这些数据可以使用map，reduce，join，window方法进行处转换，还可以直接使用Spark内置的机器学习算法，图算法包来处理数据。</p>
-<p><img src="http://spark.apache.org/docs/latest/img/streaming-arch.png" alt=""></p>
-<p>最终处理后的数据可以存入文件系统，数据库。</p>
-<p>Spark Streaming内部接收到实时数据之后，会把数据分成几个批次，这些批次数据会被Spark引擎处理并生成各个批次的结果。</p>
-<p><img src="http://spark.apache.org/docs/latest/img/streaming-flow.png" alt=""></p>
-<p>Spark Streaming提供了一个叫做<strong>discretized stream 或者 DStream</strong>的抽象概念，表示一段连续的数据流。DStream会在数据源中的数据流中创建，或者在别的DStream中使用类似map，join方法创建。一个DStream表示一个RDD序列。</p>
-<h2 id="一个快速例子">一个快速例子</h2><p>以一个TCP Socket监听接收数据，并计算单词的个数为例子讲解。</p>
-<p>首先，需要import Spark Streaming中的一些类和StreamingContext中的一些隐式转换。我们会创建一个带有2个线程，1秒一个批次的StreamingContext。</p>
-<pre><code><span class="keyword">import</span> org.apache.spark.<span class="type">SparkConf</span>
-<span class="keyword">import</span> org.apache.spark.streaming.{<span class="type">Seconds</span>, <span class="type">StreamingContext</span>}
-
-<span class="class"><span class="keyword">object</span> <span class="title">SparkStreamTest</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">App</span> {</span>
-
-  <span class="keyword">val</span> conf = <span class="keyword">new</span> <span class="type">SparkConf</span>().setMaster(<span class="string">"local[2]"</span>).setAppName(<span class="string">"NetworkWordCount"</span>)
-
-  <span class="comment">// 创建一个StreamingContext，每1秒钟处理一次计算程序</span>
-  <span class="keyword">val</span> ssc = <span class="keyword">new</span> <span class="type">StreamingContext</span>(conf, <span class="type">Seconds</span>(<span class="number">1</span>))
-
-  <span class="comment">// 使用StreamingContext创建DStream，DStream表示TCP源中的流数据. lines这个DStream表示接收到的服务器数据，每一行都是文本</span>
-  <span class="keyword">val</span> lines = ssc.socketTextStream(<span class="string">"localhost"</span>, <span class="number">9999</span>)
-
-  <span class="comment">// 使用flatMap将每一行中的文本转换成每个单词，并产生一个新的DStream。</span>
-  <span class="keyword">val</span> words = lines.flatMap(_.split(<span class="string">" "</span>))
-
-  <span class="comment">// 使用map方法将每个单词转换成tuple</span>
-  <span class="keyword">val</span> pairs = words.map(word =&gt; (word, <span class="number">1</span>))
-
-  <span class="comment">// 使用reduceByKey计算出每个单词的出现次数</span>
-  <span class="keyword">val</span> wordCounts = pairs.reduceByKey(_ + _)
-
-  wordCounts.print()
-
-  ssc.start() <span class="comment">// 开始计算</span>
-  ssc.awaitTermination() <span class="comment">// 等待计算结束</span>
-}
-</code></pre><p>在运行这段代码之前，首先先起一个netcat服务：</p>
-<pre><code>nc -lk <span class="number">9999</span>
-</code></pre><p>之后比如输入hello world之后，控制台会打印出如下数据：</p>
-<pre><code><span class="code">-------------------------------------------
-Time: 1454684570000 ms
--------------------------------------------</span>
-(hello,1)
-(world,1)
-</code></pre><h2 id="基础概念">基础概念</h2><h3 id="Linking(SparkStreaming的连接)">Linking(SparkStreaming的连接)</h3><p>写Spark Streaming程序需要一些依赖。使用maven的话加入以下依赖：</p>
-<pre><code><span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.apache.spark<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spark-streaming_2.10<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">version</span>&gt;</span>1.6.0<span class="tag">&lt;/<span class="title">version</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
-</code></pre><p>使用sbt的话，加入以下依赖：</p>
-<pre><code><span class="title">libraryDependencies</span> += <span class="string">"org.apache.spark"</span> % <span class="string">"spark-streaming_2.10"</span> % <span class="string">"1.6.0"</span>
-</code></pre><p>SparkStreaming核心不提供一些数据源的依赖，需要手动添加，一些数据源对应的Artifact如下：</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">数据源</th>
-<th style="text-align:center">Artifact</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">Kafka</td>
-<td style="text-align:center">spark-streaming-kafka_2.10</td>
-</tr>
-<tr>
-<td style="text-align:center">Flume</td>
-<td style="text-align:center">spark-streaming-flume_2.10</td>
-</tr>
-<tr>
-<td style="text-align:center">Kinesis</td>
-<td style="text-align:center">spark-streaming-kinesis-asl_2.10 [Amazon Software License]</td>
-</tr>
-<tr>
-<td style="text-align:center">Twitter</td>
-<td style="text-align:center">spark-streaming-twitter_2.10</td>
-</tr>
-<tr>
-<td style="text-align:center">ZeroMQ</td>
-<td style="text-align:center">spark-streaming-zeromq_2.10</td>
-</tr>
-<tr>
-<td style="text-align:center">MQTT</td>
-<td style="text-align:center">spark-streaming-mqtt_2.10</td>
-</tr>
-</tbody>
-</table>
-<h3 id="StreamingContext的初始化">StreamingContext的初始化</h3><p>StreamingContext的创建是Spark Streaming程序中最重要的一环。</p>
-<p>可以根据SparkConf对象创建出StreamingContext对象：</p>
-<pre><code>import org<span class="class">.apache</span><span class="class">.spark</span>._
-import org<span class="class">.apache</span><span class="class">.spark</span><span class="class">.streaming</span>._
-
-val conf = new <span class="function"><span class="title">SparkConf</span><span class="params">()</span></span>.<span class="function"><span class="title">setAppName</span><span class="params">(appName)</span></span>.<span class="function"><span class="title">setMaster</span><span class="params">(master)</span></span>
-val ssc = new <span class="function"><span class="title">StreamingContext</span><span class="params">(conf, Seconds(<span class="number">1</span>)</span></span>)
-</code></pre><p>appName参数是应用程序的名字，在cluster UI中显示的就是这个名字。master参数的意义跟spark中master参数的意义是一样的。</p>
-<p>StreamingContext内部会创建SparkContext，可以使用StreamingContext内部的sparkContext获得。</p>
-<pre><code>ssc<span class="class">.sparkContext</span> <span class="comment">// 得到SparkContext</span>
-</code></pre><p>StreamingContext也可以根据SparkContext创建：</p>
-<pre><code>import org<span class="class">.apache</span><span class="class">.spark</span><span class="class">.streaming</span>._
-
-val sc = ...                <span class="comment">// existing SparkContext</span>
-val ssc = new <span class="function"><span class="title">StreamingContext</span><span class="params">(sc, Seconds(<span class="number">1</span>)</span></span>)
-</code></pre><p>StreamingContext创建之后，可以做以下几点：</p>
-<p>1.创建DStreams定义数据源<br>2.使用DStreams的transformation和output operations用于计算<br>3.使用streamingContext的start方法接收数据<br>4.使用streamingContext的awaitTermination方法等待处理结果<br>5.可以使用streamingContext的stop方法停止程序</p>
-<p>一些需要注意的点：</p>
-<p>1.context开始启动之后，一些streaming的计算不允许发生<br>2.context停掉之后不能重启<br>3.一个JVM在同一时刻只能有一个StreamingContext可以激活<br>4.StreamingContext中的stop方法内部也会stop SparkContext。如果只想stop StreamingContext，那么调用stop方法的时候参数设置为false<br>5.一个SparkContext可以用来创建多个StreamingContexts，只要上一个StreamingContext在下一个StreamingContext创建之前停掉</p>
-<h3 id="Discretized_Streams_(DStreams)">Discretized Streams (DStreams)</h3><p>DStreams和Discretized Streams在Spark Streaming中代表相同的意思：</p>
-<p>1.一段连续的数据流<br>2.数据源中接收到的数据流<br>3.使用transforming处理过的流数据</p>
-<p>Spark内部一个DStream表示一段连续的RDD。DStream中每段RDD表示一段时间内的RDD，效果如下：</p>
-<p><img src="http://spark.apache.org/docs/latest/img/streaming-dstream.png" alt=""></p>
-<p>DStream可以使用一些transformation操作将内部的RDD转换成另外一种RDD。比如之前的一个单词统计例子中就将一行文本的DStream转换成每个单词的DStream，过程如下：</p>
-<p><img src="http://spark.apache.org/docs/latest/img/streaming-dstream-ops.png" alt=""></p>
-<h3 id="Input_DStreams_and_Receivers(数据源和接收器)">Input DStreams and Receivers(数据源和接收器)</h3><p>Input DStreams是DStreams从streaming source中接收到的输入流数据。在之前分析的一个单词统计例子中，lines就是个Input DStream，表示接收到的服务器数据，每一行都是文本。</p>
-<p>每一个Input DStream(除了file stream)都会关联一个Receiver对象，这个Receiver对象的作用是接收数据源中的数据并存储在内存中。</p>
-<p>Spark Streaming提供了两种类型的内置数据源：</p>
-<p>1.基础数据源。可以直接使用StreamingContext的API，比如文件系统，socket连接，Akka。<br>2.高级数据源。比如Flume，Kafka，Kinesis，Twitter等可以使用工具类的数据源。使用这些数据源需要对应的依赖，在Linking章节中已经介绍过。</p>
-<p>如果想在streaming程序中并行地接收多个数据源，需要创建多个Input DStream，有个多个Input DStream的话那就会对应地有多个Receiver。但是需要记住的是，Spark的worker/executor模式是一个相当耗时的任务，因此服务器的配置需要够好才能支撑多个Input DStream。</p>
-<p>一些注意点：</p>
-<p>1.当本地跑Spark Streaming程序的时候，不要使用”local”或者”local[1]”设置master URL。因为这两种master URL只会使用1个线程。当使用比如Flume，Kafka，socket这些数据源的时候，因为只有一个线程跑receiver接收数据，那么没有其他线程去处理接收后的数据了。所以，当在本地跑Spark Streaming程序的时候，需要将master URL设置为local[n]，n需要大于receiver的个数。<br>2.服务器的核数需要大于receiver的个数。否则程序只会接收数据，而不会处理数据。</p>
-<h4 id="Basic_Sources(基础数据源)">Basic Sources(基础数据源)</h4><p>基础数据源刚刚分析过，StreamingContext的API可以使用如文件系统，socket连接，Akka作为输入源。socket连接本文以开始的例子中已经使用过了。</p>
-<p>文件系统的输入源会读取文件或任何支持HDFS API(比如HDFS，S3，NFS)的文件系统的数据：</p>
-<pre><code>streamingContext.fileStream[<span class="link_label">KeyClass, ValueClass, InputFormatClass</span>](<span class="link_url">dataDirectory</span>)
-</code></pre><p>Spark Streaming会监测dataDirectory目录并且会处理这个目录中新创建的文件(老文件写新数据的话不会被支持)。使用文件数据源还需要这几点：</p>
-<p>1.所有文件的数据格式必须相同<br>2.dataDirectory目录中的文件必须是新创建的，也可以是从别的目录move进来的<br>3.文件内部的数据更改之后，新更改的数据不会被处理</p>
-<p>对于简单的文件，可以使用streamingContext的textFileStream方法处理。</p>
-<h4 id="Advanced_Sources(高级数据源)">Advanced Sources(高级数据源)</h4><p>高级数据源需要一些非Spark依赖。Spark Streaming把创建DStream的API移到了各自的API里。如果想创建一个使用Twitter的数据源，需要做以下三步：</p>
-<p>1.添加对应的Twitter依赖spark-streaming-twitter_2.10到项目里<br>2.import这个类TwitterUtils，使用TwitterUtils.createStream创建DStream<br>3.部署</p>
-<h4 id="Custom_Sources(自定义数据源)">Custom Sources(自定义数据源)</h4><p>要实现一个自定义的数据源，需要实现一个自定义的receiver</p>
-<h4 id="Receiver_Reliability(接收器的可靠性)">Receiver Reliability(接收器的可靠性)</h4><p>基于可靠性的数据源分为两种。</p>
-<p>1.可靠的接收器(Reliable Receiver)：一个可靠的接收器接收到数据之后会给数据源发送消息表示自己已经接收到数据<br>2.不可靠的接收器(Unreliable Receiver)：一个不可靠的接收器不会发送消息给数据源。</p>
-<p>想写出一个可靠的接收器可以参考 <a href="http://spark.apache.org/docs/latest/streaming-custom-receivers.html" target="_blank" rel="external">http://spark.apache.org/docs/latest/streaming-custom-receivers.html</a></p>
-<h3 id="DStreams的Transformations操作">DStreams的Transformations操作</h3><p>DStream的Transformations操作跟RDD的Transformations操作类似，</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">Transformation</th>
-<th style="text-align:center">含义</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">map(func)</td>
-<td style="text-align:center">根据func函数生成一个新的DStream</td>
-</tr>
-<tr>
-<td style="text-align:center">flatMap(func)</td>
-<td style="text-align:center">跟map方法类似，但是每一项可以返回多个值。func函数的返回值是一个集合</td>
-</tr>
-<tr>
-<td style="text-align:center">filter(func)</td>
-<td style="text-align:center">根据func函数返回true的数据集</td>
-</tr>
-<tr>
-<td style="text-align:center">repartition(numPartitions)</td>
-<td style="text-align:center">重新给 DStream 分区</td>
-</tr>
-<tr>
-<td style="text-align:center">union(otherStream)</td>
-<td style="text-align:center">取2个DStream的并集，得到一个新的DStream</td>
-</tr>
-<tr>
-<td style="text-align:center">count()</td>
-<td style="text-align:center">返回一个新的只有一个元素的DStream，这个元素就是DStream中的所有RDD的个数</td>
-</tr>
-<tr>
-<td style="text-align:center">reduce(func)</td>
-<td style="text-align:center">返回一个新的只有一个元素的DStream，这个元素就是DStream中的所有RDD通过func函数聚合得到的结果</td>
-</tr>
-<tr>
-<td style="text-align:center">countByValue()</td>
-<td style="text-align:center">如果DStream的类型为K，那么返回一个新的DStream，这个新的DStream中的元素类型是(K, Long)，K是原先DStream的值，Long表示这个Key有多少次</td>
-</tr>
-<tr>
-<td style="text-align:center">reduceByKey(func, [numTasks])</td>
-<td style="text-align:center">本文的例子使用过这个方法，对于是键值对(K,V)的DStream，返回一个新的DStream以K为键，各个value使用func函数操作得到的聚合结果为value</td>
-</tr>
-<tr>
-<td style="text-align:center">join(otherStream, [numTasks])</td>
-<td style="text-align:center">基于(K, V)键值对的DStream，如果对(K, W)的键值对DStream使用join操作，可以产生(K, (V, W))键值对的DStream</td>
-</tr>
-<tr>
-<td style="text-align:center">cogroup(otherStream, [numTasks])</td>
-<td style="text-align:center">跟join方法类似，不过是基于(K, V)的DStream，cogroup基于(K, W)的DStream，产生(K, (Seq[V], Seq[W]))的DStream</td>
-</tr>
-<tr>
-<td style="text-align:center">transform(func)</td>
-<td style="text-align:center">基于DStream中的每个RDD调用func函数，func函数的参数是个RDD，返回值也是个RDD</td>
-</tr>
-<tr>
-<td style="text-align:center">updateStateByKey(func)</td>
-<td style="text-align:center">对于每个key都会调用func函数处理先前的状态和所有新的状态。比如就可以用来做累加，这个方法跟reduceByKey类似，但比它更加灵活</td>
-</tr>
-</tbody>
-</table>
-<h4 id="UpdateStateByKey操作">UpdateStateByKey操作</h4><p>使用UpdateStateByKey方法需要做以下两步：</p>
-<p>1.定义状态：状态可以是任意的数据类型<br>2.定义状态更新函数：这个函数需要根据输入流把先前的状态和所有新的状态</p>
-<p>不管有没有新数据进来，在每个批次中，Spark都会对所有存在的key调用func方法，如果func函数返回None，那么key-value键值对不会被处理。</p>
-<p>以一个例子来讲解updateStateByKey方法，这个例子会统计每个单词的个数在一个文本输入流里：</p>
-<p>runningCount是一个状态并且是Int类型，所以这个状态的类型是Int，runningCount是先前的状态，newValues是所有新的状态，是一个集合，函数如下：</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">updateFunction</span><span class="params">(newValues: Seq[Int], runningCount: Option[Int])</span>:</span> Option[Int] = {
-    val newCount = ...  // add the new values <span class="keyword">with</span> the previous running count to get the new count
-    Some(newCount)
-}
-</code></pre><p>updateStateByKey方法的调用：</p>
-<pre><code>val runningCounts = pairs.updateStateByKey[<span class="link_label">Int</span>](<span class="link_url">updateFunction _</span>)
-</code></pre><h4 id="Transform操作">Transform操作</h4><p>Transform操作针对的是RDD-RDD的操作，所以可以用来处理那些没有在DStream API中暴露的处理任意的RDD操作。比如在DStream中的每次批次没有join rdd的API，所以可以使用transform操作：</p>
-<pre><code><span class="variable"><span class="keyword">val</span> spamInfoRDD</span> = ssc.sparkContext.newAPIHadoopRDD(...) <span class="comment">// RDD containing spam information</span>
-
-<span class="variable"><span class="keyword">val</span> cleanedDStream</span> = wordCounts.transform(rdd =&gt; {
-  rdd.join(spamInfoRDD).filter(...) <span class="comment">// join data stream with spam information to do data cleaning</span>
-  ...
-})
-</code></pre><h4 id="Window操作">Window操作</h4><p>window操作效果图如下图所示，把几个批次的DStream合并成一个DStream：</p>
-<p><img src="http://spark.apache.org/docs/latest/img/streaming-dstream-window.png" alt=""></p>
-<p>每个window操作都需要2个参数：</p>
-<p>1.window length。每个window对应的批次数(上图中是3，time1-time3是一个window, time3-time5也是一个window)<br>2.sliding interval。每个window之间的间隔时间，上图下方的window1，window3，window5的间隔。上图这个值为2</p>
-<p>这两个参数必须是批次间隔的倍数。上个批次间隔值为1。</p>
-<p>以1个例子来讲解window操作，基于本文一开始的那个例子，生成最后30秒的数据，每10秒为单位，这里就需要使用reduceByKeyAndWindow方法：</p>
-<pre><code>val windowedWordCounts = pairs.<span class="function"><span class="title">reduceByKeyAndWindow</span><span class="params">((a:Int,b:Int)</span></span> =&gt; (<span class="tag">a</span> + b), <span class="function"><span class="title">Seconds</span><span class="params">(<span class="number">30</span>)</span></span>, <span class="function"><span class="title">Seconds</span><span class="params">(<span class="number">10</span>)</span></span>)
-</code></pre><p>其他的一些window操作：</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">Transformation</th>
-<th style="text-align:center">含义</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">window(windowLength, slideInterval)</td>
-<td style="text-align:center">根据window操作的2个参数得到新的DStream</td>
-</tr>
-<tr>
-<td style="text-align:center">countByWindow(windowLength, slideInterval)</td>
-<td style="text-align:center">基于window操作的count操作</td>
-</tr>
-<tr>
-<td style="text-align:center">reduceByWindow(func, windowLength, slideInterval)</td>
-<td style="text-align:center">基于window操作的reduce操作</td>
-</tr>
-<tr>
-<td style="text-align:center">reduceByKeyAndWindow(func, windowLength, slideInterval, [numTasks])</td>
-<td style="text-align:center">基于window操作的reduceByKey操作</td>
-</tr>
-<tr>
-<td style="text-align:center">reduceByKeyAndWindow(func, invFunc, windowLength, slideInterval, [numTasks])</td>
-<td style="text-align:center">跟reduceByKeyAndWindow方法类似，更有效率，invFunc方法跟func方法的参数返回值一样，表示从window离开的数据</td>
-</tr>
-<tr>
-<td style="text-align:center">countByValueAndWindow(windowLength, slideInterval, [numTasks])</td>
-<td style="text-align:center">基于window操作的countByValue操作</td>
-</tr>
-</tbody>
-</table>
-<h4 id="Join操作">Join操作</h4><p>DStream可以很容易地join其他DStream：</p>
-<pre><code><span class="label">val</span> <span class="keyword">stream1: </span>DStream[<span class="keyword">String, </span><span class="keyword">String] </span>= ...
-<span class="label">val</span> <span class="keyword">stream2: </span>DStream[<span class="keyword">String, </span><span class="keyword">String] </span>= ...
-<span class="label">val</span> joinedStream = <span class="keyword">stream1.join(stream2)</span>
-</code></pre><p>还可以使用leftOuterJoin，rightOuterJoin，fullOuterJoin等。同样地，也可以在window操作后的DStream中使用join：</p>
-<pre><code>val windowedStream1 = stream1.<span class="function"><span class="title">window</span><span class="params">(Seconds(<span class="number">20</span>)</span></span>)
-val windowedStream2 = stream2.<span class="function"><span class="title">window</span><span class="params">(Minutes(<span class="number">1</span>)</span></span>)
-val joinedStream = windowedStream1.<span class="function"><span class="title">join</span><span class="params">(windowedStream2)</span></span>
-</code></pre><p>基于rdd的join：</p>
-<pre><code><span class="variable"><span class="keyword">val</span> dataset</span>: RDD[String, String] = ...
-<span class="variable"><span class="keyword">val</span> windowedStream</span> = stream.window(Seconds(<span class="number">20</span>))...
-<span class="variable"><span class="keyword">val</span> joinedStream</span> = windowedStream.transform { rdd =&gt; rdd.join(dataset) }
-</code></pre><h3 id="DStream的输出操作">DStream的输出操作</h3><p>输出操作允许DStream中的数据输出到外部系统，比如像数据库、文件系统等。</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">输出操作</th>
-<th style="text-align:center">含义</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">print()</td>
-<td style="text-align:center">打印出DStream中每个批次的前10条数据</td>
-</tr>
-<tr>
-<td style="text-align:center">saveAsTextFiles(prefix, [suffix])</td>
-<td style="text-align:center">把DStream中的数据保存到文本文件里。每次批次的文件名根据参数prefix和suffix生成：”prefix-TIME_IN_MS[.suffix]”</td>
-</tr>
-<tr>
-<td style="text-align:center">saveAsObjectFiles(prefix, [suffix])</td>
-<td style="text-align:center">把DStream中的数据按照Java序列化的方式保存Sequence文件里，文件名规则跟saveAsTextFiles方法一样</td>
-</tr>
-<tr>
-<td style="text-align:center">saveAsHadoopFiles(prefix, [suffix])</td>
-<td style="text-align:center">把DStream中的数据保存到Hadoop文件里，文件名规则跟saveAsTextFiles方法一样</td>
-</tr>
-<tr>
-<td style="text-align:center">foreachRDD(func)</td>
-<td style="text-align:center">遍历DStream中的每段RDD，遍历的过程中可以将RDD中的数据保存到外部系统中</td>
-</tr>
-</tbody>
-</table>
-<h4 id="foreachRDD中的设计模式">foreachRDD中的设计模式</h4><p>foreachRDD方法会遍历DStream中的每段RDD，遍历的过程中可以将RDD中的数据保存到外部系统中。这个方法很实用，所以理解foreachRDD方法显得很重要。</p>
-<p>将数据写到外部系统通常都需要一个connection对象，所以很多时候都会不经意地创建这个connection对象：</p>
-<pre><code>dstream.foreachRDD { rdd =&gt;
-  val connection = createNewConnection()  <span class="comment">// executed at the driver</span>
-  rdd.<span class="keyword">foreach</span> { record =&gt;
-    connection.send(record) <span class="comment">// executed at the worker</span>
-  }
-}
-</code></pre><p>这种写法是不正确的。这里connection需要被序列化并且发送到worker，而且connection对象会跨机器传递，会发生序列化错误(connection对象是不可序列化的)，初始化错误(connection对象需要在worker中初始化)。这个错误的解决方案就是在worker中创建connection对象。</p>
-<p>为每条记录创建connection也是一个很常见的错误：</p>
-<pre><code>dstream.foreachRDD { rdd =&gt;
-  rdd.foreach { record =&gt;
-    <span class="keyword">val</span> connection = createNewConnection<span class="literal">()</span>
-    connection.send(record)
-    connection.close<span class="literal">()</span>
-  }
-}
-</code></pre><p>因为创建connection对象是一种很耗资源，很耗时间的操作。对于每条数据都创建一个connection代驾更大。所有可以使用rdd.foreachPartition方法，这个方法会创建单一的connection并且在一个RDD分区中所有数据都使用这个connection：</p>
-<pre><code>dstream.foreachRDD { rdd =&gt;
-  rdd.foreachPartition { partitionOfRecords =&gt;
-    <span class="keyword">val</span> connection = createNewConnection<span class="literal">()</span>
-    partitionOfRecords.foreach(record =&gt; connection.send(record))
-    connection.close<span class="literal">()</span>
-  }
-}
-</code></pre><p>一种更好的方式就是使用ConnectionPool，ConnectionPool可以重用connection对象在多个批次和RDD中。</p>
-<pre><code>dstream.foreachRDD { rdd =&gt;
-  rdd.foreachPartition { partitionOfRecords =&gt;
-    <span class="comment">// ConnectionPool is a static, lazily initialized pool of connections</span>
-    val connection = ConnectionPool.getConnection()
-    partitionOfRecords.<span class="keyword">foreach</span>(record =&gt; connection.send(record))
-    ConnectionPool.returnConnection(connection)  <span class="comment">// return to the pool for future reuse</span>
-  }
-}
-</code></pre><p>其他需要注意的点：</p>
-<p>1.DStream的输出操作也是延迟执行的，就像RDD的action操作一样。RDD的action操作在DStream的输出操作内部执行的话会强制Spark Streaming执行。如果程序里没有任何输出操作，或者有比如像dstream.foreachRDD操作一样内部没有rdd的action操作的话，这样就不会执行任意操作，会被Spark忽略。<br>2.默认情况下，在一个时间点下，只有一个输出操作被执行。它们是根据程序里的编写顺序执行的。</p>
-<h3 id="DataFrame_and_SQL_Operations">DataFrame and SQL Operations</h3><p>在Spark Streaming中可以使用DataFrames and SQL操作。</p>
-<pre><code><span class="comment">/** DataFrame operations inside your streaming program */</span>
-
-<span class="variable"><span class="keyword">val</span> words</span>: DStream[String] = ...
-
-words.foreachRDD { rdd =&gt;
-
-  <span class="comment">// Get the singleton instance of SQLContext</span>
-  <span class="variable"><span class="keyword">val</span> sqlContext</span> = SQLContext.getOrCreate(rdd.sparkContext)
-  <span class="keyword">import</span> sqlContext.implicits._
-
-  <span class="comment">// Convert RDD[String] to DataFrame</span>
-  <span class="variable"><span class="keyword">val</span> wordsDataFrame</span> = rdd.toDF(<span class="string">"word"</span>)
-
-  <span class="comment">// Register as table</span>
-  wordsDataFrame.registerTempTable(<span class="string">"words"</span>)
-
-  <span class="comment">// Do word count on DataFrame using SQL and print it</span>
-  <span class="variable"><span class="keyword">val</span> wordCountsDataFrame</span> = 
-    sqlContext.sql(<span class="string">"select word, count(*) as total from words group by word"</span>)
-  wordCountsDataFrame.show()
-}
-</code></pre><h3 id="Caching_/_Persistence">Caching / Persistence</h3><p>跟RDD类似，DStream也允许将数据保存到内存中，使用persist方法可以做到这一点。</p>
-<p>但是基于window和state的操作，reduceByWindow,reduceByKeyAndWindow,updateStateByKey它们就是隐式的保存了，系统已经帮它自动保存了。</p>
-<p>从网络接收的数据(比如Kafka, Flume, sockets等)，默认是保存在两个节点来实现容错性，以序列化的方式保存在内存当中。</p>
-<h3 id="Checkpointing">Checkpointing</h3><p>一个Spark Streaming程序必须是全天工作的，所以如果万一系统挂掉了或者JVM挂掉之后是要有容错性的。Spark Streaming需在容错存储系统做checkpoint，这样才能够处理错误信息。有两种类型的数据需要做checkpoint：</p>
-<p>1.metadata checkpointing：元数据检查点。主要包括3个元数据：<br>配置：创建streaming程序的的配置信息<br>DStream操作：streaming程序中DStream的操作集合<br>未完成的批次：在队列中未完成的批次<br>2.data checkpointing：数据检查点。保存已经生成的RDD数据。在一些有状态的transformation操作中，一些RDD数据会依赖之前批次的RDD数据，随时时间的推移，这种依赖情况就会越发严重。为了解决这个问题，需要保存这些有依赖关系的RDD数据到存储系统中(比如HDFS)来剪断这种依赖关系</p>
-<p>什么时候需要启用checkpoint？</p>
-<p>满足以下2个条件中的任意1个即可启用checkpoint:</p>
-<p>1.使用了有状态的transformation。比如使用了updateStateByKey或reduceByKeyAndWindow方法后，就需要启用checkpoint<br>2.恢复挂掉的程序。可以根据metadata数据恢复程序</p>
-<p>一些比较简单的streaming程序没有用到有状态的transformation，并且也可以接受程序挂掉之后丢失部分数据，那么就没有必要启用checkpoint。</p>
-<p>如何配置checkpoint？</p>
-<p>checkpoint的配置需要设置一个目录，使用streamingContext.checkpoint(checkpointDirectory)方法。</p>
-<pre><code>// Function to <span class="operator"><span class="keyword">create</span> <span class="keyword">and</span> setup a <span class="keyword">new</span> StreamingContext
-<span class="keyword">def</span> functionToCreateContext(): StreamingContext = {
-    val ssc = <span class="keyword">new</span> StreamingContext(...)   // <span class="keyword">new</span> <span class="keyword">context</span>
-    val <span class="keyword">lines</span> = ssc.socketTextStream(...) // <span class="keyword">create</span> DStreams
-    ...
-    ssc.checkpoint(checkpointDirectory)   // <span class="keyword">set</span> checkpoint <span class="keyword">directory</span>
-    ssc
-}
-
-// <span class="keyword">Get</span> StreamingContext <span class="keyword">from</span> checkpoint <span class="keyword">data</span> <span class="keyword">or</span> <span class="keyword">create</span> a <span class="keyword">new</span> one
-val <span class="keyword">context</span> = StreamingContext.getOrCreate(checkpointDirectory, functionToCreateContext _)
-
-// <span class="keyword">Do</span> additional setup <span class="keyword">on</span> <span class="keyword">context</span> that needs <span class="keyword">to</span> be done,
-// irrespective <span class="keyword">of</span> whether it <span class="keyword">is</span> being started <span class="keyword">or</span> restarted
-<span class="keyword">context</span>. ...
-
-// <span class="keyword">Start</span> the <span class="keyword">context</span>
-<span class="keyword">context</span>.<span class="keyword">start</span>()
-<span class="keyword">context</span>.awaitTermination()</span>
-</code></pre><p>因为检查操作会导致保存到hdfs上的开销，所以设置这个时间间隔，要很慎重。对于小批次的数据，比如一秒的，检查操作会大大降低吞吐量。但是检查的间隔太长，会导致任务变大。通常来说，5-10秒的检查间隔时间是比较合适的。</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[Spark Streaming是Spark核心API的扩展，用于处理实时数据流。Spark Streaming处理的数据源可以是Kafka，Flume，Twitter，ZeroMQ，Kinesis或者Tcp Sockets ...]]>
     
     </summary>
     

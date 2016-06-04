@@ -1,0 +1,957 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="java," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Format's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="Java线程的生命周期中，存在几种状态。在Thread类里有一个枚举类型State，定义了线程的几种状态，分别有：
+
+NEW: 线程创建之后，但是还没有启动(not yet started)。这时候它的状态就是NEW
+RUNNABLE: 正在Java虚拟机下跑任务的线程的状态。在RUNNABLE状态下的线程可能会处于等待状态， 因为它正在等待一些系统资源的释放，比如IO
+BLOCKED: 阻塞状态">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java线程状态分析">
+<meta property="og:url" content="http://fangjian0423.github.io/2016/06/04/java-thread-state/index.html">
+<meta property="og:site_name" content="Format's Notes">
+<meta property="og:description" content="Java线程的生命周期中，存在几种状态。在Thread类里有一个枚举类型State，定义了线程的几种状态，分别有：
+
+NEW: 线程创建之后，但是还没有启动(not yet started)。这时候它的状态就是NEW
+RUNNABLE: 正在Java虚拟机下跑任务的线程的状态。在RUNNABLE状态下的线程可能会处于等待状态， 因为它正在等待一些系统资源的释放，比如IO
+BLOCKED: 阻塞状态">
+<meta property="og:updated_time" content="2016-06-04T15:53:47.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java线程状态分析">
+<meta name="twitter:description" content="Java线程的生命周期中，存在几种状态。在Thread类里有一个枚举类型State，定义了线程的几种状态，分别有：
+
+NEW: 线程创建之后，但是还没有启动(not yet started)。这时候它的状态就是NEW
+RUNNABLE: 正在Java虚拟机下跑任务的线程的状态。在RUNNABLE状态下的线程可能会处于等待状态， 因为它正在等待一些系统资源的释放，比如IO
+BLOCKED: 阻塞状态">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"always"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> Java线程状态分析 | Format's Notes </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-74587201-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?b4a6a45360609483811f20bc2c62654c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Format's Notes</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">吃饭睡觉撸代码</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-th fa-fw"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="#" class="st-search-show-outputs">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <form class="site-search-form">
+  <input type="text" id="st-search-input" class="st-search-input st-default-search-input" />
+</form>
+
+<script type="text/javascript">
+  (function(w,d,t,u,n,s,e){w['SwiftypeObject']=n;w[n]=w[n]||function(){
+    (w[n].q=w[n].q||[]).push(arguments);};s=d.createElement(t);
+    e=d.getElementsByTagName(t)[0];s.async=1;s.src=u;e.parentNode.insertBefore(s,e);
+  })(window,document,'script','//s.swiftypecdn.com/install/v2/st.js','_st');
+
+  _st('install', 'opcVB8zmpdXSzsKnBELd','2.0.0');
+</script>
+
+
+
+    </div>
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Java线程状态分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-06-04T23:53:35+08:00" content="2016-06-04">
+              2016-06-04
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/06/04/java-thread-state/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/06/04/java-thread-state/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Java线程的生命周期中，存在几种状态。在Thread类里有一个枚举类型State，定义了线程的几种状态，分别有：</p>
+<ol>
+<li>NEW: 线程创建之后，但是还没有启动(not yet started)。这时候它的状态就是NEW</li>
+<li>RUNNABLE: 正在Java虚拟机下跑任务的线程的状态。在RUNNABLE状态下的线程可能会处于等待状态， 因为它正在等待一些系统资源的释放，比如IO</li>
+<li>BLOCKED: 阻塞状态，等待锁的释放，比如线程A进入了一个synchronized方法，线程B也想进入这个方法，但是这个方法的锁已经被线程A获取了，这个时候线程B就处于BLOCKED状态</li>
+<li>WAITING: 等待状态，处于等待状态的线程是由于执行了3个方法中的任意方法。 1. Object的wait方法，并且没有使用timeout参数; 2. Thread的join方法，没有使用timeout参数 3. LockSupport的park方法。  处于waiting状态的线程会等待另外一个线程处理特殊的行为。 再举个例子，如果一个线程调用了一个对象的wait方法，那么这个线程就会处于waiting状态直到另外一个线程调用这个对象的notify或者notifyAll方法后才会解除这个状态</li>
+<li>TIMED_WAITING: 有等待时间的等待状态，比如调用了以下几个方法中的任意方法，并且指定了等待时间，线程就会处于这个状态。 1. Thread.sleep方法 2. Object的wait方法，带有时间 3. Thread.join方法，带有时间 4. LockSupport的parkNanos方法，带有时间 5. LockSupport的parkUntil方法，带有时间</li>
+<li>TERMINATED: 线程中止的状态，这个线程已经完整地执行了它的任务</li>
+</ol>
+<a id="more"></a>
+<p>下面通过几个例子再次说明一下在什么情况下，线程会处于这几种状态：</p>
+<h2 id="NEW状态">NEW状态</h2><p>NEW状态比较简单，实例化一个线程之后，并且这个线程没有开始执行，这个时候的状态就是NEW：</p>
+<pre><code><span class="keyword">Thread</span> <span class="keyword">thread</span> = <span class="literal">new</span> <span class="keyword">Thread</span>();
+System<span class="built_in">.</span>out<span class="built_in">.</span>println(<span class="keyword">thread</span><span class="built_in">.</span>getState()); <span class="comment">// NEW</span>
+</code></pre><h2 id="RUNNABLE状态">RUNNABLE状态</h2><p>正在运行的状态。</p>
+<pre><code><span class="keyword">Thread</span> <span class="keyword">thread</span> = <span class="literal">new</span> <span class="keyword">Thread</span>(<span class="literal">new</span> Runnable() {
+    @Override
+    <span class="keyword">public</span> <span class="literal">void</span> run() {
+        f<span class="subst">or</span>(int i = <span class="number">0</span>; i &lt; <span class="built_in">Integer</span><span class="built_in">.</span>MAX_VALUE; i ++) {
+            System<span class="built_in">.</span>out<span class="built_in">.</span>println(i);
+        }
+    }
+}, <span class="string">"RUNNABLE-Thread"</span>);
+<span class="keyword">thread</span><span class="built_in">.</span>start();
+</code></pre><p>使用jstack查看线程状态：</p>
+<pre><code><span class="string">"RUNNABLE-Thread"</span> #<span class="number">10</span> prio=<span class="number">5</span> os_prio=<span class="number">31</span> tid=<span class="number">0</span>x00007f8e04981000 nid=<span class="number">0</span>x4f03 runnable [<span class="number">0</span>x000070000124c000]
+   java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.State</span>: RUNNABLE
+  at java<span class="class">.io</span><span class="class">.FileOutputStream</span><span class="class">.writeBytes</span>(Native Method)
+  at java<span class="class">.io</span><span class="class">.FileOutputStream</span><span class="class">.write</span>(FileOutputStream<span class="class">.java</span>:<span class="number">315</span>)
+  at java<span class="class">.io</span><span class="class">.BufferedOutputStream</span><span class="class">.flushBuffer</span>(BufferedOutputStream<span class="class">.java</span>:<span class="number">82</span>)
+  at java<span class="class">.io</span><span class="class">.BufferedOutputStream</span><span class="class">.flush</span>(BufferedOutputStream<span class="class">.java</span>:<span class="number">140</span>)
+  - locked &lt;<span class="number">0</span>x000000079764cc50&gt; (<span class="tag">a</span> java<span class="class">.io</span><span class="class">.BufferedOutputStream</span>)
+  at java<span class="class">.io</span><span class="class">.PrintStream</span><span class="class">.write</span>(PrintStream<span class="class">.java</span>:<span class="number">482</span>)
+  - locked &lt;<span class="number">0</span>x0000000797604dc0&gt; (<span class="tag">a</span> java<span class="class">.io</span><span class="class">.PrintStream</span>)
+  at sun<span class="class">.nio</span><span class="class">.cs</span><span class="class">.StreamEncoder</span><span class="class">.writeBytes</span>(StreamEncoder<span class="class">.java</span>:<span class="number">221</span>)
+  at sun<span class="class">.nio</span><span class="class">.cs</span><span class="class">.StreamEncoder</span><span class="class">.implFlushBuffer</span>(StreamEncoder<span class="class">.java</span>:<span class="number">291</span>)
+  at sun<span class="class">.nio</span><span class="class">.cs</span><span class="class">.StreamEncoder</span><span class="class">.flushBuffer</span>(StreamEncoder<span class="class">.java</span>:<span class="number">104</span>)
+  - locked &lt;<span class="number">0</span>x0000000797604d78&gt; (<span class="tag">a</span> java<span class="class">.io</span><span class="class">.OutputStreamWriter</span>)
+  at java<span class="class">.io</span><span class="class">.OutputStreamWriter</span><span class="class">.flushBuffer</span>(OutputStreamWriter<span class="class">.java</span>:<span class="number">185</span>)
+  at java<span class="class">.io</span><span class="class">.PrintStream</span><span class="class">.write</span>(PrintStream<span class="class">.java</span>:<span class="number">527</span>)
+  - eliminated &lt;<span class="number">0</span>x0000000797604dc0&gt; (<span class="tag">a</span> java<span class="class">.io</span><span class="class">.PrintStream</span>)
+  at java<span class="class">.io</span><span class="class">.PrintStream</span><span class="class">.print</span>(PrintStream<span class="class">.java</span>:<span class="number">597</span>)
+  at java<span class="class">.io</span><span class="class">.PrintStream</span><span class="class">.println</span>(PrintStream<span class="class">.java</span>:<span class="number">736</span>)
+  - locked &lt;<span class="number">0</span>x0000000797604dc0&gt; (<span class="tag">a</span> java<span class="class">.io</span><span class="class">.PrintStream</span>)
+  at study<span class="class">.thread</span><span class="class">.ThreadStateTest</span>$<span class="number">1</span>.<span class="function"><span class="title">run</span><span class="params">(ThreadStateTest.java:<span class="number">23</span>)</span></span>
+  at java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.run</span>(Thread<span class="class">.java</span>:<span class="number">745</span>)
+</code></pre><h2 id="BLOCKED状态">BLOCKED状态</h2><p>线程A和线程B都需要持有lock对象的锁才能调用方法。如果线程A持有锁，那么线程B处于BLOCKED状态；如果线程B持有锁，那么线程A处于BLOCKED状态。例子中使用Thread.sleep方法主要是用于调试方便：</p>
+<pre><code><span class="keyword">final</span> Object lock = <span class="keyword">new</span> Object();
+Thread threadA = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+        <span class="keyword">synchronized</span> (lock) {
+            System.out.println(Thread.currentThread().getName() + <span class="string">" invoke"</span>);
+            <span class="keyword">try</span> {
+                Thread.sleep(<span class="number">20000</span>l);
+            } <span class="keyword">catch</span> (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}, <span class="string">"BLOCKED-Thread-A"</span>);
+Thread threadB = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+        <span class="keyword">synchronized</span> (lock) {
+            System.out.println(Thread.currentThread().getName() + <span class="string">" invoke"</span>);
+            <span class="keyword">try</span> {
+                Thread.sleep(<span class="number">20000</span>l);
+            } <span class="keyword">catch</span> (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}, <span class="string">"BLOCKED-Thread-B"</span>);
+threadA.start();
+threadB.start();
+</code></pre><p>使用jstack查看线程状态。由于线程A先执行，线程B后执行，而且线程A执行后调用了Thread.sleep方法，所以线程A会处于TIMED_WAITING状态，线程B处于BLOCKED状态：</p>
+<pre><code><span class="string">"BLOCKED-Thread-B"</span> #<span class="number">11</span> prio=<span class="number">5</span> os_prio=<span class="number">31</span> tid=<span class="number">0</span>x00007fa7db8ff000 nid=<span class="number">0</span>x5103 waiting <span class="keyword">for</span> monitor entry [<span class="number">0</span>x000070000134f000]
+   java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.State</span>: BLOCKED (on <span class="tag">object</span> monitor)
+  at study<span class="class">.thread</span><span class="class">.ThreadStateTest</span>$<span class="number">3</span>.<span class="function"><span class="title">run</span><span class="params">(ThreadStateTest.java:<span class="number">50</span>)</span></span>
+  - waiting to lock &lt;<span class="number">0</span>x0000000795a03bf8&gt; (<span class="tag">a</span> java<span class="class">.lang</span><span class="class">.Object</span>)
+  at java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.run</span>(Thread<span class="class">.java</span>:<span class="number">745</span>)
+
+<span class="string">"BLOCKED-Thread-A"</span> #<span class="number">10</span> prio=<span class="number">5</span> os_prio=<span class="number">31</span> tid=<span class="number">0</span>x00007fa7db15a000 nid=<span class="number">0</span>x4f03 waiting on condition [<span class="number">0</span>x000070000124c000]
+   java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.State</span>: TIMED_WAITING (sleeping)
+  at java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.sleep</span>(Native Method)
+  at study<span class="class">.thread</span><span class="class">.ThreadStateTest</span>$<span class="number">2</span>.<span class="function"><span class="title">run</span><span class="params">(ThreadStateTest.java:<span class="number">39</span>)</span></span>
+  - locked &lt;<span class="number">0</span>x0000000795a03bf8&gt; (<span class="tag">a</span> java<span class="class">.lang</span><span class="class">.Object</span>)
+  at java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.run</span>(Thread<span class="class">.java</span>:<span class="number">745</span>)
+</code></pre><h2 id="WAITING状态">WAITING状态</h2><p>Object的wait方法、Thread的join方法以及Conditon的await方法都会产生WAITING状态。</p>
+<p>1.没有时间参数的Object的wait方法</p>
+<pre><code>final Object <span class="keyword">lock</span> = <span class="keyword">new</span> Object();
+Thread threadA = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+    @<span class="function">Override
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+        synchronized (<span class="keyword">lock</span>) {
+            <span class="keyword">try</span> {
+                <span class="keyword">lock</span>.wait();
+                System.<span class="keyword">out</span>.println(<span class="string">"wait over"</span>);
+            } <span class="keyword">catch</span> (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}, <span class="string">"WAITING-Thread-A"</span>);
+Thread threadB = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+    @<span class="function">Override
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+        synchronized (<span class="keyword">lock</span>) {
+            <span class="keyword">try</span> {
+                Thread.sleep(<span class="number">20000</span>);
+            } <span class="keyword">catch</span> (InterruptedException e) {
+                e.printStackTrace();
+            }
+            <span class="keyword">lock</span>.notifyAll();
+        }
+    }
+}, <span class="string">"WAITING-Thread-B"</span>);
+threadA.start();
+threadB.start();
+</code></pre><p>WAITING-Thread-A调用了lock的wait，处于WAITING状态：</p>
+<pre><code><span class="string">"WAITING-Thread-B"</span> #<span class="number">11</span> prio=<span class="number">5</span> os_prio=<span class="number">31</span> tid=<span class="number">0</span>x00007f8de992d800 nid=<span class="number">0</span>x5103 waiting on condition [<span class="number">0</span>x000070000134f000]
+   java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.State</span>: TIMED_WAITING (sleeping)
+  at java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.sleep</span>(Native Method)
+  at study<span class="class">.thread</span><span class="class">.ThreadStateTest</span>$<span class="number">5</span>.<span class="function"><span class="title">run</span><span class="params">(ThreadStateTest.java:<span class="number">84</span>)</span></span>
+  - locked &lt;<span class="number">0</span>x0000000795a03e40&gt; (<span class="tag">a</span> java<span class="class">.lang</span><span class="class">.Object</span>)
+  at java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.run</span>(Thread<span class="class">.java</span>:<span class="number">745</span>)
+
+<span class="string">"WAITING-Thread-A"</span> #<span class="number">10</span> prio=<span class="number">5</span> os_prio=<span class="number">31</span> tid=<span class="number">0</span>x00007f8dea193000 nid=<span class="number">0</span>x4f03 <span class="keyword">in</span> Object.<span class="function"><span class="title">wait</span><span class="params">()</span></span> [<span class="number">0</span>x000070000124c000]
+   java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.State</span>: WAITING (on <span class="tag">object</span> monitor)
+  at java<span class="class">.lang</span><span class="class">.Object</span><span class="class">.wait</span>(Native Method)
+  - waiting on &lt;<span class="number">0</span>x0000000795a03e40&gt; (<span class="tag">a</span> java<span class="class">.lang</span><span class="class">.Object</span>)
+  at java<span class="class">.lang</span><span class="class">.Object</span><span class="class">.wait</span>(Object<span class="class">.java</span>:<span class="number">502</span>)
+  at study<span class="class">.thread</span><span class="class">.ThreadStateTest</span>$<span class="number">4</span>.<span class="function"><span class="title">run</span><span class="params">(ThreadStateTest.java:<span class="number">71</span>)</span></span>
+  - locked &lt;<span class="number">0</span>x0000000795a03e40&gt; (<span class="tag">a</span> java<span class="class">.lang</span><span class="class">.Object</span>)
+  at java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.run</span>(Thread<span class="class">.java</span>:<span class="number">745</span>)
+</code></pre><p>2.Thread的join方法</p>
+<pre><code>Thread threadA = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+    @<span class="function">Override
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+        <span class="keyword">try</span> {
+            Thread.sleep(<span class="number">20000</span>);
+        } <span class="keyword">catch</span> (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.<span class="keyword">out</span>.println(<span class="string">"Thread-A over"</span>);
+    }
+}, <span class="string">"WAITING-Thread-A"</span>);
+threadA.start();
+<span class="keyword">try</span> {
+    threadA.<span class="keyword">join</span>();
+} <span class="keyword">catch</span> (InterruptedException e) {
+    e.printStackTrace();
+}
+</code></pre><p>主线程main处于WAITING状态：</p>
+<pre><code><span class="string">"WAITING-Thread-A"</span> #<span class="number">10</span> prio=<span class="number">5</span> os_prio=<span class="number">31</span> tid=<span class="number">0</span>x00007fd2d5100000 nid=<span class="number">0</span>x4e03 waiting on condition [<span class="number">0</span>x000070000124c000]
+   java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.State</span>: TIMED_WAITING (sleeping)
+  at java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.sleep</span>(Native Method)
+  at study<span class="class">.thread</span><span class="class">.ThreadStateTest</span>$<span class="number">6</span>.<span class="function"><span class="title">run</span><span class="params">(ThreadStateTest.java:<span class="number">103</span>)</span></span>
+  at java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.run</span>(Thread<span class="class">.java</span>:<span class="number">745</span>)
+<span class="string">"main"</span> #<span class="number">1</span> prio=<span class="number">5</span> os_prio=<span class="number">31</span> tid=<span class="number">0</span>x00007fd2d3815000 nid=<span class="number">0</span>x1003 <span class="keyword">in</span> Object.<span class="function"><span class="title">wait</span><span class="params">()</span></span> [<span class="number">0</span>x0000700000182000]
+   java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.State</span>: WAITING (on <span class="tag">object</span> monitor)
+  at java<span class="class">.lang</span><span class="class">.Object</span><span class="class">.wait</span>(Native Method)
+  - waiting on &lt;<span class="number">0</span>x0000000795a03ec0&gt; (<span class="tag">a</span> java<span class="class">.lang</span><span class="class">.Thread</span>)
+  at java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.join</span>(Thread<span class="class">.java</span>:<span class="number">1245</span>)
+  - locked &lt;<span class="number">0</span>x0000000795a03ec0&gt; (<span class="tag">a</span> java<span class="class">.lang</span><span class="class">.Thread</span>)
+  at java<span class="class">.lang</span><span class="class">.Thread</span><span class="class">.join</span>(Thread<span class="class">.java</span>:<span class="number">1319</span>)
+  at study<span class="class">.thread</span><span class="class">.ThreadStateTest</span><span class="class">.WAITING_join</span>(ThreadStateTest<span class="class">.java</span>:<span class="number">118</span>)
+  at study<span class="class">.thread</span><span class="class">.ThreadStateTest</span><span class="class">.main</span>(ThreadStateTest<span class="class">.java</span>:<span class="number">13</span>)
+  at sun<span class="class">.reflect</span><span class="class">.NativeMethodAccessorImpl</span><span class="class">.invoke0</span>(Native Method)
+  at sun<span class="class">.reflect</span><span class="class">.NativeMethodAccessorImpl</span><span class="class">.invoke</span>(NativeMethodAccessorImpl<span class="class">.java</span>:<span class="number">62</span>)
+  at sun<span class="class">.reflect</span><span class="class">.DelegatingMethodAccessorImpl</span><span class="class">.invoke</span>(DelegatingMethodAccessorImpl<span class="class">.java</span>:<span class="number">43</span>)
+  at java<span class="class">.lang</span><span class="class">.reflect</span><span class="class">.Method</span><span class="class">.invoke</span>(Method<span class="class">.java</span>:<span class="number">483</span>)
+  at com<span class="class">.intellij</span><span class="class">.rt</span><span class="class">.execution</span><span class="class">.application</span><span class="class">.AppMain</span><span class="class">.main</span>(AppMain<span class="class">.java</span>:<span class="number">140</span>)
+</code></pre><p>3.没有时间参数的Condition的await方法</p>
+<p>Condition的await方法跟Obejct的wait方法原理是一样的，故也是WAITING状态</p>
+<h2 id="TIMED_WAITING状态">TIMED_WAITING状态</h2><p>TIMED_WAITING状态跟TIMEING状态类似，是一个有等待时间的等待状态，不会一直等待下去。</p>
+<p>最简单的TIMED_WAITING状态例子就是Thread的sleep方法：</p>
+<pre><code>Thread threadA = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
+    @<span class="function">Override
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+        <span class="keyword">try</span> {
+            Thread.sleep(<span class="number">20000</span>);
+        } <span class="keyword">catch</span> (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(<span class="string">"Thread-A over"</span>);
+    }
+}, <span class="string">"WAITING-Thread-A"</span>);
+threadA.start();
+<span class="keyword">try</span> {
+    Thread.sleep(<span class="number">5000</span>);
+} <span class="keyword">catch</span> (InterruptedException e) {
+    e.printStackTrace();
+}
+System.out.println(threadA.getState()); <span class="comment">// TIMED_WAITING</span>
+</code></pre><p>或者是Object的wait方法带有时间参数、Thread的join方法带有时间参数也会让线程的状态处于TIMED_WAITING状态。</p>
+<h2 id="TERMINATED">TERMINATED</h2><p>线程终止的状态，线程执行完成，结束生命周期。</p>
+<pre><code>Thread threadA = <span class="keyword">new</span> Thread();
+threadA.start();
+<span class="keyword">try</span> {
+    Thread.sleep(<span class="number">5000</span>l);
+} <span class="keyword">catch</span> (InterruptedException e) {
+    e.printStackTrace();
+}
+System.<span class="keyword">out</span>.println(threadA.getState()); <span class="comment">// TERMINATED</span>
+</code></pre><h2 id="总结">总结</h2><p>了解线程的状态可以分析一些问题。</p>
+<p>比如线程处于BLOCKED状态，这个时候可以分析一下是不是lock加锁的时候忘记释放了，或者释放的时机不对。导致另外的线程一直处于BLOCKED状态。</p>
+<p>比如线程处于WAITING状态，这个时候可以分析一下notifyAll或者signalAll方法的调用时机是否不对。</p>
+<p>java自带的jstack工具可以分析查看线程的状态、优先级、描述等具体信息。</p>
+
+      
+    </div>
+    
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/java/" rel="tag">#java</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/05/10/java-arrayblockingqueue-linkedblockingqueue-analysis/" rel="next" title="Java阻塞队列ArrayBlockingQueue和LinkedBlockingQueue实现原理分析">
+                <i class="fa fa-chevron-left"></i> Java阻塞队列ArrayBlockingQueue和LinkedBlockingQueue实现原理分析
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg"
+               alt="Format" />
+          <p class="site-author-name" itemprop="name">Format</p>
+          <p class="site-description motion-element" itemprop="description">吃饭睡觉撸代码</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">80</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">57</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/fangjian0423" target="_blank">
+                  
+                    <i class="fa fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2952387973" target="_blank">
+                  
+                    <i class="fa fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        <div class="links-of-blogroll motion-element">
+          
+            <div class="links-of-blogroll-title">友情链接</div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://xtutu.me/" target="_blank">xtutu</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://blog.zlf.me" target="_blank">Felix</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+                </li>
+              
+            </ul>
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#NEW状态"><span class="nav-number">1.</span> <span class="nav-text">NEW状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RUNNABLE状态"><span class="nav-number">2.</span> <span class="nav-text">RUNNABLE状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BLOCKED状态"><span class="nav-number">3.</span> <span class="nav-text">BLOCKED状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WAITING状态"><span class="nav-number">4.</span> <span class="nav-text">WAITING状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TIMED_WAITING状态"><span class="nav-number">5.</span> <span class="nav-text">TIMED_WAITING状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TERMINATED"><span class="nav-number">6.</span> <span class="nav-text">TERMINATED</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Format</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'fangjian0423';
+      var disqus_identifier = '2016/06/04/java-thread-state/';
+      var disqus_title = 'Java线程状态分析';
+      var disqus_url = 'http://fangjian0423.github.io/2016/06/04/java-thread-state/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

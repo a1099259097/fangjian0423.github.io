@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-06-04T15:53:47.000Z</updated>
+  <updated>2016-06-12T07:27:14.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -13,6 +13,263 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[springboot内部的一些自动化配置原理]]></title>
+    <link href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/"/>
+    <id>http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/</id>
+    <published>2016-06-12T11:30:57.000Z</published>
+    <updated>2016-06-12T07:27:14.000Z</updated>
+    <content type="html"><![CDATA[<p>springboot用来简化Spring框架带来的大量XML配置以及复杂的依赖管理，让开发人员可以更加关注业务逻辑的开发。</p>
+<p>比如不使用springboot而使用SpringMVC作为web框架进行开发的时候，需要配置相关的SpringMVC配置以及对应的依赖，比较繁琐；而使用springboot的话只需要以下短短的几行代码就可以使用SpringMVC，可谓相当地方便：</p>
+<pre><code><span class="annotation">@RestController</span>
+<span class="class"><span class="keyword">class</span> <span class="title">App</span> </span>{
+  <span class="annotation">@RequestMapping</span>(<span class="string">"/"</span>)
+  <span class="built_in">String</span> home() {
+    <span class="string">"hello"</span>
+  }
+}
+</code></pre><p>其中maven配置如下：</p>
+<pre><code><span class="tag">&lt;<span class="title">parent</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-starter-parent<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">version</span>&gt;</span>1.3.5.RELEASE<span class="tag">&lt;/<span class="title">version</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">parent</span>&gt;</span>
+<span class="tag">&lt;<span class="title">dependencies</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
+        <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+        <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-starter-web<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+    <span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">dependencies</span>&gt;</span>
+</code></pre><a id="more"></a>
+<p>我们以使用SpringMVC并且视图使用freemarker为例，分析springboot内部是如何解析freemarker视图的。</p>
+<p>如果要在springboot中使用freemarker视图框架，并且使用maven构建项目的时候，还需要加入以下依赖：</p>
+<pre><code><span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-starter-freemarker<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">version</span>&gt;</span>1.3.5.RELEASE<span class="tag">&lt;/<span class="title">version</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
+</code></pre><p>这个spring-boot-starter-freemarker依赖对应的jar包里的文件如下：</p>
+<pre><code>META-INF
+├── MANIFEST<span class="class">.MF</span>
+├── maven
+│   └── org<span class="class">.springframework</span><span class="class">.boot</span>
+│       └── spring-boot-starter-freemarker
+│           ├── pom<span class="class">.properties</span>
+│           └── pom<span class="class">.xml</span>
+└── spring.provides
+</code></pre><p>内部的pom.xml里需要的依赖如下：</p>
+<pre><code><span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-starter<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
+<span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-starter-web<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
+<span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.freemarker<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>freemarker<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
+<span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-context-support<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
+</code></pre><p>我们可以看到这个spring-boot-starter-freemarker依赖内部并没有freemarker的ViewResolver，而是仅仅加入了freemarker的依赖，还有3个依赖，分别是spring-boot-starter、spring-boot-starter-web和spring-context-support。</p>
+<p>接下来我们来分析一下为什么在springboot中加入了freemarker的依赖spring-boot-starter-freemarker后，SpringMVC自动地构造了一个freemarker的ViewResolver？</p>
+<p>在分析之前，首先我们先看下maven配置，看到了一个parent配置：</p>
+<pre><code><span class="tag">&lt;<span class="title">parent</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-starter-parent<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">version</span>&gt;</span>1.3.5.RELEASE<span class="tag">&lt;/<span class="title">version</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">parent</span>&gt;</span>
+</code></pre><p>这个spring-boot-starter-parent的pom文件在 <a href="http://central.maven.org/maven2/org/springframework/boot/spring-boot-starter-parent/1.3.5.RELEASE/spring-boot-starter-parent-1.3.5.RELEASE.pom" target="_blank" rel="external">http://central.maven.org/maven2/org/springframework/boot/spring-boot-starter-parent/1.3.5.RELEASE/spring-boot-starter-parent-1.3.5.RELEASE.pom</a> 里。</p>
+<p>它内部也有一个parent：</p>
+<pre><code><span class="tag">&lt;<span class="title">parent</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-dependencies<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">version</span>&gt;</span>1.3.5.RELEASE<span class="tag">&lt;/<span class="title">version</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">relativePath</span>&gt;</span>../../spring-boot-dependencies<span class="tag">&lt;/<span class="title">relativePath</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">parent</span>&gt;</span>
+</code></pre><p>这个spring-boot-dependencies的pom文件在<a href="http://central.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.3.5.RELEASE/spring-boot-dependencies-1.3.5.RELEASE.pom，内部有很多依赖。" target="_blank" rel="external">http://central.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.3.5.RELEASE/spring-boot-dependencies-1.3.5.RELEASE.pom，内部有很多依赖。</a></p>
+<p>比如spring-boot-starter-web、spring-boot-starter-websocket、spring-boot-starter-data-solrspring-boot-starter-freemarker等等，基本上所有的依赖都在这个parent里。</p>
+<p>我们的例子中使用了parent依赖里的两个依赖，分别是spring-boot-starter-web和spring-boot-starter-freemarker。</p>
+<p>其中spring-boot-starter-web内部依赖了spring的两个spring web依赖：spring-web和spring-webmvc。</p>
+<p>spring-boot-starter-web内部还依赖spring-boot-starter，这个spring-boot-starter依赖了spring核心依赖spring-core；还依赖了<strong>spring-boot</strong>和<strong>spring-boot-autoconfigure</strong>这两个。</p>
+<p><strong>spring-boot</strong>定义了很多基础功能类，像运行程序的SpringApplication，Logging系统，一些tomcat或者jetty这些EmbeddedServlet容器，配置属性loader等等。</p>
+<p>包括了这些包：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/springboot01.png" alt="image"></p>
+<p><strong>spring-boot-autoconfigure</strong>定义了很多自动配置的类，比如jpa，solr，redis，elasticsearch、mongo、freemarker、velocity，thymeleaf等等自动配置的类。</p>
+<p>以freemarker为例，看一下它的自动化配置类：</p>
+<pre><code><span class="annotation">@Configuration</span> <span class="comment">// 使用Configuration注解，自动构造一些内部定义的bean</span>
+<span class="annotation">@ConditionalOnClass</span>({ freemarker.template.<span class="type">Configuration</span>.<span class="keyword">class</span>,
+        <span class="type">FreeMarkerConfigurationFactory</span>.<span class="keyword">class</span> }) <span class="comment">// 需要freemarker.template.Configuration和FreeMarkerConfigurationFactory这两个类存在在classpath中才会进行自动配置</span>
+<span class="annotation">@AutoConfigureAfter</span>(<span class="type">WebMvcAutoConfiguration</span>.<span class="keyword">class</span>) <span class="comment">// 本次自动配置需要依赖WebMvcAutoConfiguration这个配置类配置之后触发。这个WebMvcAutoConfiguration内部会配置很多Wen基础性的东西，比如RequestMappingHandlerMapping、RequestMappingHandlerAdapter等</span>
+<span class="annotation">@EnableConfigurationProperties</span>(<span class="type">FreeMarkerProperties</span>.<span class="keyword">class</span>) <span class="comment">// 使用FreeMarkerProperties类中的配置</span>
+public <span class="class"><span class="keyword">class</span> <span class="title">FreeMarkerAutoConfiguration</span> {</span>
+
+    <span class="keyword">private</span> static <span class="keyword">final</span> <span class="type">Log</span> logger = <span class="type">LogFactory</span>
+            .getLog(<span class="type">FreeMarkerAutoConfiguration</span>.<span class="keyword">class</span>);
+
+    <span class="annotation">@Autowired</span>
+    <span class="keyword">private</span> <span class="type">ApplicationContext</span> applicationContext;
+
+    <span class="annotation">@Autowired</span>
+    <span class="keyword">private</span> <span class="type">FreeMarkerProperties</span> properties;
+
+    <span class="annotation">@PostConstruct</span> <span class="comment">// 构造之后调用的方法，组要检查模板位置是否存在</span>
+    public void checkTemplateLocationExists() {
+        <span class="keyword">if</span> (<span class="keyword">this</span>.properties.isCheckTemplateLocation()) {
+            <span class="type">TemplateLocation</span> templatePathLocation = <span class="literal">null</span>;
+            <span class="type">List</span>&lt;<span class="type">TemplateLocation</span>&gt; locations = <span class="keyword">new</span> <span class="type">ArrayList</span>&lt;<span class="type">TemplateLocation</span>&gt;();
+            <span class="keyword">for</span> (<span class="type">String</span> templateLoaderPath : <span class="keyword">this</span>.properties.getTemplateLoaderPath()) {
+                <span class="type">TemplateLocation</span> location = <span class="keyword">new</span> <span class="type">TemplateLocation</span>(templateLoaderPath);
+                locations.add(location);
+                <span class="keyword">if</span> (location.exists(<span class="keyword">this</span>.applicationContext)) {
+                    templatePathLocation = location;
+                    <span class="keyword">break</span>;
+                }
+            }
+            <span class="keyword">if</span> (templatePathLocation == <span class="literal">null</span>) {
+                logger.warn(<span class="string">"Cannot find template location(s): "</span> + locations
+                        + <span class="string">" (please add some templates, "</span>
+                        + <span class="string">"check your FreeMarker configuration, or set "</span>
+                        + <span class="string">"spring.freemarker.checkTemplateLocation=false)"</span>);
+            }
+        }
+    }
+
+    <span class="keyword">protected</span> static <span class="class"><span class="keyword">class</span> <span class="title">FreeMarkerConfiguration</span> {</span>
+
+        <span class="annotation">@Autowired</span>
+        <span class="keyword">protected</span> <span class="type">FreeMarkerProperties</span> properties;
+
+        <span class="keyword">protected</span> void applyProperties(<span class="type">FreeMarkerConfigurationFactory</span> factory) {
+            factory.setTemplateLoaderPaths(<span class="keyword">this</span>.properties.getTemplateLoaderPath());
+            factory.setPreferFileSystemAccess(<span class="keyword">this</span>.properties.isPreferFileSystemAccess());
+            factory.setDefaultEncoding(<span class="keyword">this</span>.properties.getCharsetName());
+            <span class="type">Properties</span> settings = <span class="keyword">new</span> <span class="type">Properties</span>();
+            settings.putAll(<span class="keyword">this</span>.properties.getSettings());
+            factory.setFreemarkerSettings(settings);
+        }
+
+    }
+
+    <span class="annotation">@Configuration</span>
+    <span class="annotation">@ConditionalOnNotWebApplication</span> <span class="comment">// 非Web项目的自动配置</span>
+    public static <span class="class"><span class="keyword">class</span> <span class="title">FreeMarkerNonWebConfiguration</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">FreeMarkerConfiguration</span> {</span>
+
+        <span class="annotation">@Bean</span>
+        <span class="annotation">@ConditionalOnMissingBean</span>
+        public <span class="type">FreeMarkerConfigurationFactoryBean</span> freeMarkerConfiguration() {
+            <span class="type">FreeMarkerConfigurationFactoryBean</span> freeMarkerFactoryBean = <span class="keyword">new</span> <span class="type">FreeMarkerConfigurationFactoryBean</span>();
+            applyProperties(freeMarkerFactoryBean);
+            <span class="keyword">return</span> freeMarkerFactoryBean;
+        }
+
+    }
+
+    <span class="annotation">@Configuration</span> <span class="comment">// 自动配置的类</span>
+    <span class="annotation">@ConditionalOnClass</span>(<span class="type">Servlet</span>.<span class="keyword">class</span>) <span class="comment">// 需要运行在Servlet容器下</span>
+    <span class="annotation">@ConditionalOnWebApplication</span> <span class="comment">// 需要在Web项目下</span>
+    public static <span class="class"><span class="keyword">class</span> <span class="title">FreeMarkerWebConfiguration</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">FreeMarkerConfiguration</span> {</span>
+
+        <span class="annotation">@Bean</span>
+        <span class="annotation">@ConditionalOnMissingBean</span>(<span class="type">FreeMarkerConfig</span>.<span class="keyword">class</span>)
+        public <span class="type">FreeMarkerConfigurer</span> freeMarkerConfigurer() {
+            <span class="type">FreeMarkerConfigurer</span> configurer = <span class="keyword">new</span> <span class="type">FreeMarkerConfigurer</span>();
+            applyProperties(configurer);
+            <span class="keyword">return</span> configurer;
+        }
+
+        <span class="annotation">@Bean</span>
+        public freemarker.template.<span class="type">Configuration</span> freeMarkerConfiguration(
+                <span class="type">FreeMarkerConfig</span> configurer) {
+            <span class="keyword">return</span> configurer.getConfiguration();
+        }
+
+        <span class="annotation">@Bean</span>
+        <span class="annotation">@ConditionalOnMissingBean</span>(name = <span class="string">"freeMarkerViewResolver"</span>) <span class="comment">// 没有配置freeMarkerViewResolver这个bean的话，会自动构造一个freeMarkerViewResolver</span>
+        <span class="annotation">@ConditionalOnProperty</span>(name = <span class="string">"spring.freemarker.enabled"</span>, matchIfMissing = <span class="literal">true</span>) <span class="comment">// 配置文件中开关开启的话，才会构造</span>
+        public <span class="type">FreeMarkerViewResolver</span> freeMarkerViewResolver() {
+            <span class="comment">// 构造了freemarker的ViewSolver，这就是一开始我们分析的为什么没有设置ViewResolver，但是最后却还是存在的原因</span>
+            <span class="type">FreeMarkerViewResolver</span> resolver = <span class="keyword">new</span> <span class="type">FreeMarkerViewResolver</span>();
+            <span class="keyword">this</span>.properties.applyToViewResolver(resolver);
+            <span class="keyword">return</span> resolver;
+        }
+
+    }
+}
+</code></pre><p>freemarker对应的配置类：</p>
+<pre><code><span class="annotation">@ConfigurationProperties</span>(prefix = <span class="string">"spring.freemarker"</span>) <span class="comment">// 使用配置文件中以spring.freemarker开头的配置</span>
+public <span class="class"><span class="keyword">class</span> <span class="title">FreeMarkerProperties</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">AbstractTemplateViewResolverProperties</span> {</span>
+    public static <span class="keyword">final</span> <span class="type">String</span> <span class="type">DEFAULT_TEMPLATE_LOADER_PATH</span> = <span class="string">"classpath:/templates/"</span>; <span class="comment">// 默认路径</span>
+
+    public static <span class="keyword">final</span> <span class="type">String</span> <span class="type">DEFAULT_PREFIX</span> = <span class="string">""</span>; <span class="comment">// 默认前缀</span>
+
+    public static <span class="keyword">final</span> <span class="type">String</span> <span class="type">DEFAULT_SUFFIX</span> = <span class="string">".ftl"</span>; <span class="comment">// 默认后缀</span>
+
+    ...
+
+}
+</code></pre><p>下面是官网上的freemarker配置：</p>
+<pre><code># FREEMARKER (FreeMarkerAutoConfiguration)
+spring.freemarker.allow-request-override=false # <span class="operator"><span class="keyword">Set</span> whether HttpServletRequest <span class="keyword">attributes</span> <span class="keyword">are</span> allowed <span class="keyword">to</span> override (hide) controller <span class="keyword">generated</span> <span class="keyword">model</span> <span class="keyword">attributes</span> <span class="keyword">of</span> the same <span class="keyword">name</span>.
+spring.freemarker.<span class="keyword">allow</span>-<span class="keyword">session</span>-override=<span class="literal">false</span> # <span class="keyword">Set</span> whether HttpSession <span class="keyword">attributes</span> <span class="keyword">are</span> allowed <span class="keyword">to</span> override (hide) controller <span class="keyword">generated</span> <span class="keyword">model</span> <span class="keyword">attributes</span> <span class="keyword">of</span> the same <span class="keyword">name</span>.
+spring.freemarker.<span class="keyword">cache</span>=<span class="literal">false</span> # <span class="keyword">Enable</span> <span class="keyword">template</span> <span class="keyword">caching</span>.
+spring.freemarker.<span class="keyword">charset</span>=UTF-<span class="number">8</span> # <span class="keyword">Template</span> <span class="keyword">encoding</span>.
+spring.freemarker.<span class="keyword">check</span>-<span class="keyword">template</span>-location=<span class="literal">true</span> # <span class="keyword">Check</span> that the templates location <span class="keyword">exists</span>.
+spring.freemarker.<span class="keyword">content</span>-<span class="keyword">type</span>=<span class="built_in">text</span>/html # <span class="keyword">Content</span>-<span class="keyword">Type</span> <span class="keyword">value</span>.
+spring.freemarker.enabled=<span class="literal">true</span> # <span class="keyword">Enable</span> MVC <span class="keyword">view</span> resolution <span class="keyword">for</span> this technology.
+spring.freemarker.expose-request-<span class="keyword">attributes</span>=<span class="literal">false</span> # <span class="keyword">Set</span> whether all request <span class="keyword">attributes</span> should be added <span class="keyword">to</span> the <span class="keyword">model</span> <span class="keyword">prior</span> <span class="keyword">to</span> merging <span class="keyword">with</span> the <span class="keyword">template</span>.
+spring.freemarker.expose-<span class="keyword">session</span>-<span class="keyword">attributes</span>=<span class="literal">false</span> # <span class="keyword">Set</span> whether all HttpSession <span class="keyword">attributes</span> should be added <span class="keyword">to</span> the <span class="keyword">model</span> <span class="keyword">prior</span> <span class="keyword">to</span> merging <span class="keyword">with</span> the <span class="keyword">template</span>.
+spring.freemarker.expose-spring-macro-helpers=<span class="literal">true</span> # <span class="keyword">Set</span> whether <span class="keyword">to</span> expose a RequestContext <span class="keyword">for</span> <span class="keyword">use</span> <span class="keyword">by</span> Spring<span class="string">'s macro library, under the name "springMacroRequestContext".
+spring.freemarker.prefer-file-system-access=true # Prefer file system access for template loading. File system access enables hot detection of template changes.
+spring.freemarker.prefix= # Prefix that gets prepended to view names when building a URL.
+spring.freemarker.request-context-attribute= # Name of the RequestContext attribute for all views.
+spring.freemarker.settings.*= # Well-known FreeMarker keys which will be passed to FreeMarker'</span>s Configuration.
+spring.freemarker.suffix= # Suffix that gets appended <span class="keyword">to</span> <span class="keyword">view</span> <span class="keyword">names</span> <span class="keyword">when</span> building a <span class="keyword">URL</span>.
+spring.freemarker.<span class="keyword">template</span>-loader-<span class="keyword">path</span>=classpath:/templates/ # Comma-separated <span class="keyword">list</span> <span class="keyword">of</span> <span class="keyword">template</span> paths.
+spring.freemarker.<span class="keyword">view</span>-<span class="keyword">names</span>= # White <span class="keyword">list</span> <span class="keyword">of</span> <span class="keyword">view</span> <span class="keyword">names</span> that can be resolved.</span>
+</code></pre><p>所以说一开始我们加入了一个spring-boot-starter-freemarker依赖，这个依赖中存在freemarker的lib，满足了FreeMarkerAutoConfiguration中的ConditionalOnClass里写的freemarker.template.Configuration.class这个类存在于classpath中。</p>
+<p>所以就构造了FreeMarkerAutoConfiguration里的ViewResolver，这个ViewResolver被自动加入到SpringMVC中。</p>
+<p>同样地，如果我们要使用velocity模板，springboot内部也有velocity的自动配置类VelocityAutoConfiguration，原理是跟freemarker一样的。</p>
+<p>总结：</p>
+<p>springboot内部提供了很多自动化配置的类，这些类会判断classpath中是否存在自己需要的那个类，如果存在则会自动配置相关的配置，否则就不会自动配置。</p>
+<p>如果我们需要使用一些框架，只需要加入依赖即可，这些依赖内部是没有代码的，只是一些对应框架需要的lib，有了这些lib就会触发自动化配置，于是就能使用框架了。</p>
+<p>这一点跟当时看springmvc的时候对response进行json或xml渲染的原理相同。springmvc中的requestmapping注解加上responsebody注解后会返回xml或者json，如果依赖中加入jackson依赖就会转换成json，如果依赖中加入xstream依赖就会转换成xml。当然，前提是springmvc中有了这两种依赖的HttpMessageConverter代码，这个HttpMessageConverter代码就相当于springboot中的各种AutoConfiguration。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>springboot用来简化Spring框架带来的大量XML配置以及复杂的依赖管理，让开发人员可以更加关注业务逻辑的开发。</p>
+<p>比如不使用springboot而使用SpringMVC作为web框架进行开发的时候，需要配置相关的SpringMVC配置以及对应的依赖，比较繁琐；而使用springboot的话只需要以下短短的几行代码就可以使用SpringMVC，可谓相当地方便：</p>
+<pre><code><span class="annotation">@RestController</span>
+<span class="class"><span class="keyword">class</span> <span class="title">App</span> </span>{
+  <span class="annotation">@RequestMapping</span>(<span class="string">"/"</span>)
+  <span class="built_in">String</span> home() {
+    <span class="string">"hello"</span>
+  }
+}
+</code></pre><p>其中maven配置如下：</p>
+<pre><code><span class="tag">&lt;<span class="title">parent</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-starter-parent<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">version</span>&gt;</span>1.3.5.RELEASE<span class="tag">&lt;/<span class="title">version</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">parent</span>&gt;</span>
+<span class="tag">&lt;<span class="title">dependencies</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
+        <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+        <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-starter-web<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+    <span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">dependencies</span>&gt;</span>
+</code></pre>]]>
+    
+    </summary>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[Java线程状态分析]]></title>
@@ -4338,305 +4595,6 @@ i will be destroyed
       <category term="jdk" scheme="http://fangjian0423.github.io/tags/jdk/"/>
     
       <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Avro介绍]]></title>
-    <link href="http://fangjian0423.github.io/2016/02/21/avro-intro/"/>
-    <id>http://fangjian0423.github.io/2016/02/21/avro-intro/</id>
-    <published>2016-02-20T17:23:22.000Z</published>
-    <updated>2016-05-10T14:59:25.000Z</updated>
-    <content type="html"><![CDATA[<h2 id="Avro介绍">Avro介绍</h2><p>Apache Avro是一个数据序列化系统。</p>
-<p>Avro所提供的属性：</p>
-<p>1.丰富的数据结构<br>2.使用快速的压缩二进制数据格式<br>3.提供容器文件用于持久化数据<br>4.远程过程调用RPC<br>5.简单的动态语言结合功能，Avro 和动态语言结合后，读写数据文件和使用 RPC 协议都不需要生成代码，而代码生成作为一种可选的优化只值得在静态类型语言中实现。</p>
-<h2 id="Avro的Schema">Avro的Schema</h2><p>Avro的Schema用JSON表示。Schema定义了简单数据类型和复杂数据类型。</p>
-<h3 id="基本类型">基本类型</h3><p>其中简单数据类型有以下8种：</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">类型</th>
-<th style="text-align:center">含义</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">null</td>
-<td style="text-align:center">没有值</td>
-</tr>
-<tr>
-<td style="text-align:center">boolean</td>
-<td style="text-align:center">布尔值</td>
-</tr>
-<tr>
-<td style="text-align:center">int</td>
-<td style="text-align:center">32位有符号整数</td>
-</tr>
-<tr>
-<td style="text-align:center">long</td>
-<td style="text-align:center">64位有符号整数</td>
-</tr>
-<tr>
-<td style="text-align:center">float</td>
-<td style="text-align:center">单精度（32位）的IEEE 754浮点数</td>
-</tr>
-<tr>
-<td style="text-align:center">double</td>
-<td style="text-align:center">双精度（64位）的IEEE 754浮点数</td>
-</tr>
-<tr>
-<td style="text-align:center">bytes</td>
-<td style="text-align:center">8位无符号字节序列</td>
-</tr>
-<tr>
-<td style="text-align:center">string</td>
-<td style="text-align:center">字符串</td>
-</tr>
-</tbody>
-</table>
-<p>基本类型没有属性，基本类型的名字也就是类型的名字，比如：</p>
-<pre><code>{"<span class="attribute">type</span>": <span class="value"><span class="string">"string"</span></span>}
-</code></pre><h3 id="复杂类型">复杂类型</h3><p>Avro提供了6种复杂类型。分别是Record，Enum，Array，Map，Union和Fixed。</p>
-<h4 id="Record">Record</h4><p>Record类型使用的类型名字是 “record”，还支持其它属性的设置：</p>
-<p>name：record类型的名字(必填)</p>
-<p>namespace：命名空间(可选)</p>
-<p>doc：这个类型的文档说明(可选)</p>
-<p>aliases：record类型的别名，是个字符串数组(可选)</p>
-<p>fields：record类型中的字段，是个对象数组(必填)。每个字段需要以下属性：</p>
-<ol>
-<li>name：字段名字(必填)</li>
-<li>doc：字段说明文档(可选)</li>
-<li>type：一个schema的json对象或者一个类型名字(必填)</li>
-<li>default：默认值(可选)</li>
-<li>order：排序(可选)，只有3个值ascending(默认)，descending或ignore</li>
-<li>aliases：别名，字符串数组(可选)</li>
-</ol>
-<p>一个Record类型例子，定义一个元素类型是Long的链表：</p>
-<pre><code><span class="collection">{
-  <span class="string">"type"</span>: <span class="string">"record"</span>, 
-  <span class="string">"name"</span>: <span class="string">"LongList"</span>,
-  <span class="string">"aliases"</span>: <span class="collection">[<span class="string">"LinkedLongs"</span>]</span>,                      // old name for this
-  <span class="string">"fields"</span> : <span class="collection">[
-    <span class="collection">{<span class="string">"name"</span>: <span class="string">"value"</span>, <span class="string">"type"</span>: <span class="string">"long"</span>}</span>,             // each element has a long
-    <span class="collection">{<span class="string">"name"</span>: <span class="string">"next"</span>, <span class="string">"type"</span>: <span class="collection">[<span class="string">"null"</span>, <span class="string">"LongList"</span>]</span>}</span> // optional next element
-  ]</span>
-}</span>
-</code></pre><h4 id="Enum">Enum</h4><p>枚举类型的类型名字是”enum”，还支持其它属性的设置：</p>
-<p>name：枚举类型的名字(必填)<br>namespace：命名空间(可选)<br>aliases：字符串数组，别名(可选)<br>doc：说明文档(可选)<br>symbols：字符串数组，所有的枚举值(必填)，不允许重复数据。</p>
-<p>一个枚举类型的例子：</p>
-<pre><code>{ "<span class="attribute">type</span>": <span class="value"><span class="string">"enum"</span></span>,
-  "<span class="attribute">name</span>": <span class="value"><span class="string">"Suit"</span></span>,
-  "<span class="attribute">symbols</span>" : <span class="value">[<span class="string">"SPADES"</span>, <span class="string">"HEARTS"</span>, <span class="string">"DIAMONDS"</span>, <span class="string">"CLUBS"</span>]
-</span>}
-</code></pre><h4 id="Array">Array</h4><p>数组类型的类型名字是”array”并且只支持一个属性：</p>
-<p>items：数组元素的schema</p>
-<p>一个数组例子：</p>
-<pre><code>{"<span class="attribute">type</span>": <span class="value"><span class="string">"array"</span></span>, "<span class="attribute">items</span>": <span class="value"><span class="string">"string"</span></span>}
-</code></pre><h4 id="Map">Map</h4><p>Map类型的类型名字是”map”并且只支持一个属性：</p>
-<p>values：map值的schema</p>
-<p>Map的key必须是字符串。</p>
-<p>一个Map例子：</p>
-<pre><code>{"<span class="attribute">type</span>": <span class="value"><span class="string">"map"</span></span>, "<span class="attribute">values</span>": <span class="value"><span class="string">"long"</span></span>}
-</code></pre><h4 id="Union">Union</h4><p>组合类型，表示各种类型的组合，使用数组进行组合。比如[“null”, “string”]表示类型可以为null或者string。</p>
-<p>组合类型的默认值是看组合类型的第一个元素，因此如果一个组合类型包括null类型，那么null类型一般都会放在第一个位置，这样子的话这个组合类型的默认值就是null。</p>
-<p>组合类型中不允许同一种类型的元素的个数不会超过1个，除了record，fixed和enum。比如组合类中有2个array类型或者2个map类型，这是不允许的。</p>
-<p>组合类型不允许嵌套组合类型。</p>
-<h4 id="Fixed">Fixed</h4><p>混合类型的类型名字是fixed，支持以下属性：</p>
-<p>name：名字(必填)<br>namespace：命名空间(可选)<br>aliases：字符串数组，别名(可选)<br>size：一个整数，表示每个值的字节数(必填)</p>
-<p>比如16个字节数的fixed类型例子如下：</p>
-<pre><code>{"<span class="attribute">type</span>": <span class="value"><span class="string">"fixed"</span></span>, "<span class="attribute">size</span>": <span class="value"><span class="number">16</span></span>, "<span class="attribute">name</span>": <span class="value"><span class="string">"md5"</span></span>}
-</code></pre><h2 id="1个Avro例子">1个Avro例子</h2><p>首先定义一个User的schema：</p>
-<pre><code>{
-"<span class="attribute">namespace</span>": <span class="value"><span class="string">"example.avro"</span></span>,
- "<span class="attribute">type</span>": <span class="value"><span class="string">"record"</span></span>,
- "<span class="attribute">name</span>": <span class="value"><span class="string">"User"</span></span>,
- "<span class="attribute">fields</span>": <span class="value">[
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"name"</span></span>, "<span class="attribute">type</span>": <span class="value"><span class="string">"string"</span></span>},
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"favorite_number"</span></span>,  "<span class="attribute">type</span>": <span class="value"><span class="string">"int"</span></span>},
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"favorite_color"</span></span>, "<span class="attribute">type</span>": <span class="value"><span class="string">"string"</span></span>}
- ]
-</span>}
-</code></pre><p>User有3个属性，分别是name，favorite_number和favorite_color。</p>
-<p>json文件内容：</p>
-<pre><code>{"<span class="attribute">name</span>":<span class="value"><span class="string">"format"</span></span>,"<span class="attribute">favorite_number</span>":<span class="value"><span class="number">1</span></span>,"<span class="attribute">favorite_color</span>":<span class="value"><span class="string">"red"</span></span>}
-{"<span class="attribute">name</span>":<span class="value"><span class="string">"format2"</span></span>,"<span class="attribute">favorite_number</span>":<span class="value"><span class="number">2</span></span>,"<span class="attribute">favorite_color</span>":<span class="value"><span class="string">"black"</span></span>}
-{"<span class="attribute">name</span>":<span class="value"><span class="string">"format3"</span></span>,"<span class="attribute">favorite_number</span>":<span class="value"><span class="number">666</span></span>,"<span class="attribute">favorite_color</span>":<span class="value"><span class="string">"blue"</span></span>}
-</code></pre><p>使用avro工具将json文件转换成avro文件：</p>
-<pre><code><span class="tag">java</span> <span class="tag">-jar</span> <span class="tag">avro-tools-1</span><span class="class">.8</span><span class="class">.0</span><span class="class">.jar</span> <span class="tag">fromjson</span> <span class="tag">--schema-file</span> <span class="tag">user</span><span class="class">.avsc</span> <span class="tag">user</span><span class="class">.json</span> &gt; <span class="tag">user</span><span class="class">.avro</span>
-</code></pre><p>可以设置压缩格式：</p>
-<pre><code><span class="tag">java</span> <span class="tag">-jar</span> <span class="tag">avro-tools-1</span><span class="class">.8</span><span class="class">.0</span><span class="class">.jar</span> <span class="tag">fromjson</span> <span class="tag">--codec</span> <span class="tag">snappy</span> <span class="tag">--schema-file</span> <span class="tag">user</span><span class="class">.avsc</span> <span class="tag">user</span><span class="class">.json</span> &gt; <span class="tag">user2</span><span class="class">.avro</span>
-</code></pre><p>将avro文件反转换成json文件：</p>
-<pre><code><span class="tag">java</span> <span class="tag">-jar</span> <span class="tag">avro-tools-1</span><span class="class">.8</span><span class="class">.0</span><span class="class">.jar</span> <span class="tag">tojson</span> <span class="tag">user</span><span class="class">.avro</span>
-<span class="tag">java</span> <span class="tag">-jar</span> <span class="tag">avro-tools-1</span><span class="class">.8</span><span class="class">.0</span><span class="class">.jar</span> <span class="tag">--pretty</span> <span class="tag">tojson</span> <span class="tag">user</span><span class="class">.avro</span>
-</code></pre><p>得到avro文件的meta：</p>
-<pre><code><span class="tag">java</span> <span class="tag">-jar</span> <span class="tag">avro-tools-1</span><span class="class">.8</span><span class="class">.0</span><span class="class">.jar</span> <span class="tag">getmeta</span> <span class="tag">user</span><span class="class">.avro</span>
-</code></pre><p>输出：</p>
-<pre><code>avro.codec    null
-avro.<span class="keyword">schema</span>    {<span class="string">"type"</span>:<span class="string">"record"</span>,<span class="string">"name"</span>:<span class="string">"User"</span>,<span class="string">"namespace"</span>:<span class="string">"example.avro"</span>,<span class="string">"fields"</span>:[{<span class="string">"name"</span>:<span class="string">"name"</span>,<span class="string">"type"</span>:<span class="string">"string"</span>},{<span class="string">"name"</span>:<span class="string">"favorite_number"</span>,<span class="string">"type"</span>:<span class="string">"int"</span>},{<span class="string">"name"</span>:<span class="string">"favorite_color"</span>,<span class="string">"type"</span>:<span class="string">"string"</span>}]}
-</code></pre><p>得到avro文件的schema：</p>
-<pre><code><span class="tag">java</span> <span class="tag">-jar</span> <span class="tag">avro-tools-1</span><span class="class">.8</span><span class="class">.0</span><span class="class">.jar</span> <span class="tag">getschema</span> <span class="tag">user</span><span class="class">.avro</span>
-</code></pre><p>将文本文件转换成avro文件：</p>
-<pre><code><span class="tag">java</span> <span class="tag">-jar</span> <span class="tag">avro-tools-1</span><span class="class">.8</span><span class="class">.0</span><span class="class">.jar</span> <span class="tag">fromtext</span> <span class="tag">user</span><span class="class">.txt</span> <span class="tag">usertxt</span><span class="class">.avro</span>
-</code></pre><h2 id="Avro使用生成的代码进行序列化和反序列化">Avro使用生成的代码进行序列化和反序列化</h2><p>以上面一个例子的schema为例讲解。</p>
-<p>Avro可以根据schema自动生成对应的类：</p>
-<pre><code>java -jar /path/to/avro-tools-<span class="number">1.8</span>.<span class="number">0</span><span class="class">.jar</span> compile schema user<span class="class">.avsc</span> .
-</code></pre><p>user.avsc的namespace为example.avro，name为User。最终在当前目录生成的example/avro目录下有个User.java文件。</p>
-<pre><code>├── <span class="tag">example</span>
-│   └── <span class="tag">avro</span>
-│       └── <span class="tag">User</span><span class="class">.java</span>
-</code></pre><p><strong>使用Avro生成的代码创建User：</strong></p>
-<pre><code><span class="keyword">User</span> <span class="title">user1</span> = new User();
-user1.setName(<span class="string">"Format"</span>);
-user1.setFavoriteColor(<span class="string">"red"</span>);
-user1.setFavoriteNumber(<span class="number">666</span>);
-
-<span class="keyword">User</span> <span class="title">user2</span> = new User(<span class="string">"Format2"</span>, <span class="number">66</span>, <span class="string">"blue"</span>);
-
-<span class="keyword">User</span> <span class="title">user3</span> = User.newBuilder()
-                .setName(<span class="string">"Format3"</span>)
-                .setFavoriteNumber(<span class="number">6</span>)
-                .setFavoriteColor(<span class="string">"black"</span>).build();
-</code></pre><p>可以使用有参的构造函数和无参的构造函数，也可以使用Builder构造User。</p>
-<p><strong>序列化：</strong></p>
-<p>DatumWrite接口用来把java对象转换成内存中的序列化格式，SpecificDatumWriter用来生成类并且指定生成的类型。</p>
-<p>最后使用DataFileWriter来进行具体的序列化，create方法指定文件和schema信息，append方法用来写数据，最后写完后close文件。</p>
-<pre><code>DatumWriter&lt;User&gt; userDatumWriter = <span class="keyword">new</span> SpecificDatumWriter&lt;User&gt;(User.<span class="keyword">class</span>);
-        DataFileWriter&lt;User&gt; dataFileWriter = <span class="keyword">new</span> DataFileWriter&lt;User&gt;(userDatumWriter);
-dataFileWriter.create(user1.getSchema(), <span class="keyword">new</span> <span class="keyword">File</span>(<span class="string">"users.avro"</span>));
-dataFileWriter.<span class="keyword">append</span>(user1);
-dataFileWriter.<span class="keyword">append</span>(user2);
-dataFileWriter.<span class="keyword">append</span>(user3);
-dataFileWriter.close();
-</code></pre><p><strong>反序列化：</strong></p>
-<p>反序列化跟序列化很像，相应的Writer换成Reader。这里只创建一个User对象是为了性能优化，每次都重用这个User对象，如果文件量很大，对象分配和垃圾收集处理的代价很昂贵。如果不考虑性能，可以使用 for (User user : dataFileReader) 循环遍历对象</p>
-<pre><code><span class="keyword">File</span> <span class="keyword">file</span> = <span class="keyword">new</span> <span class="keyword">File</span>(<span class="string">"users.avro"</span>);
-DatumReader&lt;User&gt; userDatumReader = <span class="keyword">new</span> SpecificDatumReader&lt;User&gt;(User.<span class="keyword">class</span>);
-DataFileReader&lt;User&gt; dataFileReader = <span class="keyword">new</span> DataFileReader&lt;User&gt;(<span class="keyword">file</span>, userDatumReader);
-User user = <span class="keyword">null</span>;
-<span class="keyword">while</span>(dataFileReader.hasNext()) {
-    user = dataFileReader.<span class="keyword">next</span>(user);
-    System.out.<span class="keyword">println</span>(user);
-}
-</code></pre><p>打印出：</p>
-<pre><code>{"<span class="attribute">name</span>": <span class="value"><span class="string">"Format"</span></span>, "<span class="attribute">favorite_number</span>": <span class="value"><span class="number">666</span></span>, "<span class="attribute">favorite_color</span>": <span class="value"><span class="string">"red"</span></span>}
-{"<span class="attribute">name</span>": <span class="value"><span class="string">"Format2"</span></span>, "<span class="attribute">favorite_number</span>": <span class="value"><span class="number">66</span></span>, "<span class="attribute">favorite_color</span>": <span class="value"><span class="string">"blue"</span></span>}
-{"<span class="attribute">name</span>": <span class="value"><span class="string">"Format3"</span></span>, "<span class="attribute">favorite_number</span>": <span class="value"><span class="number">6</span></span>, "<span class="attribute">favorite_color</span>": <span class="value"><span class="string">"black"</span></span>}
-</code></pre><h2 id="Avro不使用生成的代码进行序列化和反序列化">Avro不使用生成的代码进行序列化和反序列化</h2><p>虽然Avro为我们提供了根据schema自动生成类的方法，我们也可以自己创建类，不使用Avro的自动生成工具。</p>
-<p><strong>创建User：</strong></p>
-<p>首先使用Parser读取schema信息并且创建Schema类：</p>
-<pre><code>Schema schema = <span class="keyword">new</span> Schema.Parser().parse(<span class="keyword">new</span> <span class="keyword">File</span>(<span class="string">"user.avsc"</span>));
-</code></pre><p>有了Schema之后可以创建record：</p>
-<pre><code>GenericRecord user1 = <span class="keyword">new</span> GenericData.Record(schema);
-user1.<span class="keyword">put</span>(<span class="string">"name"</span>, <span class="string">"Format"</span>);
-user1.<span class="keyword">put</span>(<span class="string">"favorite_number"</span>, <span class="number">666</span>);
-user1.<span class="keyword">put</span>(<span class="string">"favorite_color"</span>, <span class="string">"red"</span>);
-
-GenericRecord user2 = <span class="keyword">new</span> GenericData.Record(schema);
-user2.<span class="keyword">put</span>(<span class="string">"name"</span>, <span class="string">"Format2"</span>);
-user2.<span class="keyword">put</span>(<span class="string">"favorite_number"</span>, <span class="number">66</span>);
-user2.<span class="keyword">put</span>(<span class="string">"favorite_color"</span>, <span class="string">"blue"</span>);
-</code></pre><p>使用GenericRecord表示User，GenericRecord会根据schema验证字段是否正确，如果put进了不存在的字段 user1.put(“favorite_animal”, “cat”) ，那么运行的时候会得到AvroRuntimeException异常。</p>
-<p><strong>序列化：</strong></p>
-<p>序列化跟生成的User类似，只不过schema是自己构造的，不是User中拿的。</p>
-<pre><code>Schema schema = <span class="keyword">new</span> Schema.Parser().parse(<span class="keyword">new</span> File(<span class="string">"user.avsc"</span>));
-GenericRecord user1 = <span class="keyword">new</span> GenericData.Record(schema);
-user1.<span class="keyword">put</span>(<span class="string">"name"</span>, <span class="string">"Format"</span>);
-user1.<span class="keyword">put</span>(<span class="string">"favorite_number"</span>, <span class="number">666</span>);
-user1.<span class="keyword">put</span>(<span class="string">"favorite_color"</span>, <span class="string">"red"</span>);
-
-GenericRecord user2 = <span class="keyword">new</span> GenericData.Record(schema);
-user2.<span class="keyword">put</span>(<span class="string">"name"</span>, <span class="string">"Format2"</span>);
-user2.<span class="keyword">put</span>(<span class="string">"favorite_number"</span>, <span class="number">66</span>);
-user2.<span class="keyword">put</span>(<span class="string">"favorite_color"</span>, <span class="string">"blue"</span>);
-
-DatumWriter&lt;GenericRecord&gt; datumWriter = <span class="keyword">new</span> SpecificDatumWriter&lt;GenericRecord&gt;(schema);
-DataFileWriter&lt;GenericRecord&gt; dataFileWriter = <span class="keyword">new</span> DataFileWriter&lt;GenericRecord&gt;(datumWriter);
-dataFileWriter.create(schema, <span class="keyword">new</span> File(<span class="string">"users2.avro"</span>));
-dataFileWriter.<span class="built_in">append</span>(user1);
-dataFileWriter.<span class="built_in">append</span>(user2);
-dataFileWriter.<span class="keyword">close</span>();
-</code></pre><p><strong>反序列化：</strong></p>
-<p>反序列化跟生成的User类似，只不过schema是自己构造的，不是User中拿的。</p>
-<pre><code>Schema schema = <span class="keyword">new</span> Schema.Parser().parse(<span class="keyword">new</span> <span class="keyword">File</span>(<span class="string">"user.avsc"</span>));
-<span class="keyword">File</span> <span class="keyword">file</span> = <span class="keyword">new</span> <span class="keyword">File</span>(<span class="string">"users2.avro"</span>);
-DatumReader&lt;GenericRecord&gt; datumReader = <span class="keyword">new</span> SpecificDatumReader&lt;GenericRecord&gt;(schema);
-DataFileReader&lt;GenericRecord&gt; dataFileReader = <span class="keyword">new</span> DataFileReader&lt;GenericRecord&gt;(<span class="keyword">file</span>, datumReader);
-GenericRecord user = <span class="keyword">null</span>;
-<span class="keyword">while</span>(dataFileReader.hasNext()) {
-    user = dataFileReader.<span class="keyword">next</span>(user);
-    System.out.<span class="keyword">println</span>(user);
-}
-</code></pre><p>打印出：</p>
-<pre><code>{"<span class="attribute">name</span>": <span class="value"><span class="string">"Format"</span></span>, "<span class="attribute">favorite_number</span>": <span class="value"><span class="number">666</span></span>, "<span class="attribute">favorite_color</span>": <span class="value"><span class="string">"red"</span></span>}
-{"<span class="attribute">name</span>": <span class="value"><span class="string">"Format2"</span></span>, "<span class="attribute">favorite_number</span>": <span class="value"><span class="number">66</span></span>, "<span class="attribute">favorite_color</span>": <span class="value"><span class="string">"blue"</span></span>}
-</code></pre><h2 id="一些注意点">一些注意点</h2><p>Avro解析json文件的时候，如果类型是Record并且里面有字段是union并且允许空值的话，需要进行转换。因为[“bytes”, “string”]和[“int”,”long”]这2个union类型在json中是有歧义的，第一个union在json中都会被转换成string类型，第二个union在json中都会被转换成数字类型。</p>
-<p>所以如果json值的null的话，在avro提供的json中直接写null，否则使用只有一个键值对的对象，键是类型，值的具体的值。</p>
-<p>比如：</p>
-<pre><code>{
-"<span class="attribute">namespace</span>": <span class="value"><span class="string">"example.avro"</span></span>,
- "<span class="attribute">type</span>": <span class="value"><span class="string">"record"</span></span>,
- "<span class="attribute">name</span>": <span class="value"><span class="string">"User"</span></span>,
- "<span class="attribute">fields</span>": <span class="value">[
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"name"</span></span>, "<span class="attribute">type</span>": <span class="value"><span class="string">"string"</span></span>},
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"favorite_number"</span></span>,  "<span class="attribute">type</span>": <span class="value">[<span class="string">"int"</span>,<span class="string">"null"</span>]</span>},
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"favorite_color"</span></span>, "<span class="attribute">type</span>": <span class="value">[<span class="string">"string"</span>,<span class="string">"null"</span>]</span>}
- ]
-</span>}
-</code></pre><p>在要转换成json文件的时候要写成这样：</p>
-<pre><code>{"<span class="attribute">name</span>":<span class="value"><span class="string">"format"</span></span>,"<span class="attribute">favorite_number</span>":<span class="value">{"<span class="attribute">int</span>":<span class="value"><span class="number">1</span></span>}</span>,"<span class="attribute">favorite_color</span>":<span class="value">{"<span class="attribute">string</span>":<span class="value"><span class="string">"red"</span></span>}</span>}
-{"<span class="attribute">name</span>":<span class="value"><span class="string">"format2"</span></span>,"<span class="attribute">favorite_number</span>":<span class="value"><span class="literal">null</span></span>,"<span class="attribute">favorite_color</span>":<span class="value">{"<span class="attribute">string</span>":<span class="value"><span class="string">"black"</span></span>}</span>}
-{"<span class="attribute">name</span>":<span class="value"><span class="string">"format3"</span></span>,"<span class="attribute">favorite_number</span>":<span class="value">{"<span class="attribute">int</span>":<span class="value"><span class="number">66</span></span>}</span>,"<span class="attribute">favorite_color</span>":<span class="value"><span class="literal">null</span></span>}
-</code></pre><h2 id="Spark读取Avro文件">Spark读取Avro文件</h2><p>直接遍历avro文件，得到GenericRecord进行处理：</p>
-<pre><code>val conf = new <span class="function"><span class="title">SparkConf</span><span class="params">()</span></span>.<span class="function"><span class="title">setMaster</span><span class="params">(<span class="string">"local"</span>)</span></span>.<span class="function"><span class="title">setAppName</span><span class="params">(<span class="string">"AvroTest"</span>)</span></span>
-
-val sc = new <span class="function"><span class="title">SparkContext</span><span class="params">(conf)</span></span>
-
-val rdd = sc<span class="class">.hadoopFile</span>[AvroWrapper[GenericRecord], NullWritable, AvroInputFormat[GenericRecord]](this<span class="class">.getClass</span><span class="class">.getResource</span>(<span class="string">"/"</span>)<span class="class">.toString</span> + <span class="string">"users.avro"</span>)
-
-val nameRdd = rdd.<span class="function"><span class="title">map</span><span class="params">(s =&gt; s._1.datum()</span></span>.<span class="function"><span class="title">get</span><span class="params">(<span class="string">"name"</span>)</span></span>.toString)
-
-nameRdd.<span class="function"><span class="title">collect</span><span class="params">()</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(println)</span></span>
-</code></pre><h2 id="使用Avro需要注意的地方">使用Avro需要注意的地方</h2><p>笔者使用Avro的时候暂时遇到了下面2个坑。先记录一下，以后遇到新的坑会更新这篇文章。</p>
-<p>1.如果定义了unions类型的字段，而且unions中有null选项的schema，比如如下schema：</p>
-<pre><code>{
-"<span class="attribute">namespace</span>": <span class="value"><span class="string">"example.avro"</span></span>,
- "<span class="attribute">type</span>": <span class="value"><span class="string">"record"</span></span>,
- "<span class="attribute">name</span>": <span class="value"><span class="string">"User2"</span></span>,
- "<span class="attribute">fields</span>": <span class="value">[
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"name"</span></span>, "<span class="attribute">type</span>": <span class="value"><span class="string">"string"</span></span>},
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"favorite_number"</span></span>,  "<span class="attribute">type</span>": <span class="value">[<span class="string">"null"</span>,<span class="string">"int"</span>]</span>},
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"favorite_color"</span></span>, "<span class="attribute">type</span>": <span class="value">[<span class="string">"null"</span>,<span class="string">"string"</span>]</span>}
- ]
-</span>}
-</code></pre><p>这样的schema，如果不使用Avro自动生成的model代码进行insert，并且insert中的model数据有null数据的话。然后用spark读avro文件的话，会报org.apache.avro.AvroTypeException: Found null, expecting int … 这样的错误。</p>
-<p>这一点很奇怪，但是使用Avro生成的Model进行insert的话，sprak读取就没有任何问题。 很困惑。</p>
-<p>2.如果使用了Map类型的字段，avro生成的model中的Map的Key默认类型为CharSequence。这种model我们insert数据的话，用String是没有问题的。但是spark读取之后要根据Key拿这个Map数据的时候，永远得到的是null。</p>
-<p>stackoverflow上有一个页面说到了这个问题。<a href="http://stackoverflow.com/questions/19728853/apache-avro-map-uses-charsequence-as-key" target="_blank" rel="external">http://stackoverflow.com/questions/19728853/apache-avro-map-uses-charsequence-as-key
-</a></p>
-<p>需要在map类型的字段里加上”avro.java.string”: “String”这个选项, 然后compile的时候使用-string参数即可。</p>
-<p>比如以下这个schema：</p>
-<pre><code>{
-"<span class="attribute">namespace</span>": <span class="value"><span class="string">"example.avro"</span></span>,
- "<span class="attribute">type</span>": <span class="value"><span class="string">"record"</span></span>,
- "<span class="attribute">name</span>": <span class="value"><span class="string">"User3"</span></span>,
- "<span class="attribute">fields</span>": <span class="value">[
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"name"</span></span>, "<span class="attribute">type</span>": <span class="value"><span class="string">"string"</span></span>},
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"favorite_number"</span></span>,  "<span class="attribute">type</span>": <span class="value">[<span class="string">"null"</span>,<span class="string">"int"</span>]</span>},
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"favorite_color"</span></span>, "<span class="attribute">type</span>": <span class="value">[<span class="string">"null"</span>,<span class="string">"string"</span>]</span>},
-     {"<span class="attribute">name</span>": <span class="value"><span class="string">"scores"</span></span>, "<span class="attribute">type</span>": <span class="value">[<span class="string">"null"</span>, {"<span class="attribute">type</span>": <span class="value"><span class="string">"map"</span></span>, "<span class="attribute">values</span>": <span class="value"><span class="string">"string"</span></span>, "<span class="attribute">avro.java.string</span>": <span class="value"><span class="string">"String"</span></span>}]</span>}
- ]
-</span>}
-</code></pre>]]></content>
-    <summary type="html">
-    <![CDATA[Apache Avro是一个数据序列化系统, 提供丰富的数据结构，使用快速的压缩二进制数据格式，提供容器文件用于持久化数据 ...]]>
-    
-    </summary>
-    
-      <category term="avro" scheme="http://fangjian0423.github.io/tags/avro/"/>
-    
-      <category term="big data" scheme="http://fangjian0423.github.io/tags/big-data/"/>
-    
-      <category term="avro" scheme="http://fangjian0423.github.io/categories/avro/"/>
     
   </entry>
   

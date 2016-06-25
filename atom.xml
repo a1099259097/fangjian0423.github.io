@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-06-22T15:29:00.000Z</updated>
+  <updated>2016-06-25T07:38:28.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -15,11 +15,252 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title><![CDATA[SpringBoot的actuator模块]]></title>
+    <link href="http://fangjian0423.github.io/2016/06/25/springboot-actuator/"/>
+    <id>http://fangjian0423.github.io/2016/06/25/springboot-actuator/</id>
+    <published>2016-06-25T06:52:52.000Z</published>
+    <updated>2016-06-25T07:38:28.000Z</updated>
+    <content type="html"><![CDATA[<p>springboot内部提供了一个模块spring-boot-actuator用于监控和管理springboot应用。</p>
+<p>这个模块内部提供了很多功能，endpoint就是其中一块功能。</p>
+<p>我们在sbt中加入这个模块的依赖：</p>
+<pre><code><span class="title">libraryDependencies</span> += <span class="string">"org.springframework.boot"</span> % <span class="string">"spring-boot-starter-actuator"</span> % <span class="string">"1.3.5.RELEASE"</span>
+</code></pre><p>然后启动项目，访问地址 <a href="http://localhost:8080/health，看到以下页面：" target="_blank" rel="external">http://localhost:8080/health，看到以下页面：</a></p>
+<pre><code><span class="rules">{
+    <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
+    diskSpace: {
+        status: <span class="string">"UP"</span>,
+        total: <span class="number">249779191808</span>,
+        free: <span class="number">22231089152</span>,
+        threshold: <span class="number">10485760</span>
+    </span></span></span>},
+    <span class="tag">db</span>: <span class="rules">{
+        <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
+        database: <span class="string">"H2"</span>,
+        hello: <span class="number">1</span>
+    </span></span></span>}
+}
+</code></pre><a id="more"></a>
+<p>这个/health endpoint显示了目前应用的一些健康情况。</p>
+<h2 id="Endpoint">Endpoint</h2><p>spring-boot-autoconfigure模块中还提供了其他很多endpoint，比如 /beans(查看spring工厂信息，里面存在哪些bean)、/dump(应用中的所有线程状态)、/env(应用环境信息，比如jvm环境信息、配置文件内容、应用端口等信息)、/mappings(SpringMVC的RequestMapping映射信息)、/configprops(框架配置信息，比如数据源、freemarker、spring的配置信息)、/metrics(度量信息)等等。</p>
+<p>具体其他的endpoint可以查看springboot官方文档上的信息： <a href="http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready-endpoints" target="_blank" rel="external">http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready-endpoints</a></p>
+<p>这些endpoint是如何暴露出来的呢，是通过SpringBoot内部的一个Endpoint接口完成的。</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Endpoint</span>&lt;<span class="title">T</span>&gt; </span>{
+    <span class="function">String <span class="title">getId</span><span class="params">()</span></span>; <span class="comment">// endpoint的唯一标识</span>
+    <span class="function"><span class="keyword">boolean</span> <span class="title">isEnabled</span><span class="params">()</span></span>; <span class="comment">// 是否可用</span>
+    <span class="function"><span class="keyword">boolean</span> <span class="title">isSensitive</span><span class="params">()</span></span>; <span class="comment">// 是否对一般用户可见</span>
+    <span class="function">T <span class="title">invoke</span><span class="params">()</span></span>; <span class="comment">// 具体的执行过程，返回值会被解析成json暴露出口</span>
+}
+</code></pre><p>这个接口的实现类有DumpEndpoint、BeansEndpoint、InfoEndpoint、HealthEndpoint、RequestMappingEndpoint等等。这些EndPoint实现类就是对应对外暴露的endpoint。BeansEndpoint的代码如下：</p>
+<pre><code><span class="annotation">@ConfigurationProperties</span>(prefix = <span class="string">"endpoints.beans"</span>) <span class="comment">// 配置以endpoints.beans开头，可以覆盖</span>
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BeansEndpoint</span> <span class="keyword">extends</span> <span class="title">AbstractEndpoint</span>&lt;<span class="title">List</span>&lt;<span class="title">Object</span>&gt;&gt;
+        <span class="keyword">implements</span> <span class="title">ApplicationContextAware</span> </span>{
+
+    <span class="keyword">private</span> <span class="keyword">final</span> LiveBeansView liveBeansView = <span class="keyword">new</span> LiveBeansView();
+
+    <span class="keyword">private</span> <span class="keyword">final</span> JsonParser parser = JsonParserFactory.getJsonParser();
+
+    <span class="function"><span class="keyword">public</span> <span class="title">BeansEndpoint</span><span class="params">()</span> </span>{
+        <span class="keyword">super</span>(<span class="string">"beans"</span>); <span class="comment">// id为beans</span>
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setApplicationContext</span><span class="params">(ApplicationContext context)</span> <span class="keyword">throws</span> BeansException </span>{
+        <span class="keyword">if</span> (context.getEnvironment()
+                .getProperty(LiveBeansView.MBEAN_DOMAIN_PROPERTY_NAME) == <span class="keyword">null</span>) {
+            <span class="keyword">this</span>.liveBeansView.setApplicationContext(context);
+        }
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> List&lt;Object&gt; <span class="title">invoke</span><span class="params">()</span> </span>{
+        <span class="keyword">return</span> <span class="keyword">this</span>.parser.parseList(<span class="keyword">this</span>.liveBeansView.getSnapshotAsJson()); <span class="comment">// 返回值就是最后展示的json数组</span>
+    }
+}
+</code></pre><p>可以使用配置覆盖默认的beans endpoint中的信息：</p>
+<pre><code>endpoints.beans.enabled= <span class="comment"># Enable the endpoint.</span>
+endpoints.beans.<span class="property">id</span>= <span class="comment"># Endpoint identifier.</span>
+endpoints.beans.path= <span class="comment"># Endpoint path.</span>
+endpoints.beans.sensitive= <span class="comment"># Mark if the endpoint exposes sensitive information.</span>
+</code></pre><h2 id="Health_Indicator">Health Indicator</h2><p>HealthEndpoint这个endpoint是暴露通过扫描出的HealthIndicator接口的实现类完成的。</p>
+<p>用于查看应用的健康状况。</p>
+<p>在我们的应用中只使用了h2数据库，最终/health显示出来的内容如下(只有硬盘容量和数据库健康状况)：</p>
+<pre><code><span class="rules">{
+    <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
+    diskSpace: {
+        status: <span class="string">"UP"</span>,
+        total: <span class="number">249779191808</span>,
+        free: <span class="number">20595720192</span>,
+        threshold: <span class="number">10485760</span>
+    </span></span></span>},
+    <span class="tag">db</span>: <span class="rules">{
+        <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
+        database: <span class="string">"H2"</span>,
+        hello: <span class="number">1</span>
+    </span></span></span>}
+}
+</code></pre><p>springboot内置的HealthIndicator有这些：SolrHealthIndicator、RedisHealthIndicator、RabbitHealthIndicator、MongoHealthIndicator、ElasticsearchHealthIndicator、CassandraHealthIndicator、DiskSpaceHealthIndicator、DataSourceHealthIndicator等。</p>
+<p>这些都是springboot内置的，我们也可以编写自定义的health indicator。</p>
+<p>以服务器中某个目录中的文件个数不能超过某个值为健康指标作为需求进行编写health indicator。</p>
+<p>编写HealthIndicator：</p>
+<pre><code><span class="annotation">@Component</span>
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TempDirHealthIndicator</span> <span class="keyword">implements</span> <span class="title">HealthIndicator</span> </span>{
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> <span class="function">Health <span class="title">health</span><span class="params">()</span> </span>{
+        Health.Builder builder = <span class="keyword">new</span> Health.Builder();
+        File file = <span class="keyword">new</span> File(<span class="string">"youdirpath"</span>);
+        File[] fileList = file.listFiles();
+        <span class="keyword">if</span>(fileList.length &gt; <span class="number">10</span>) {
+            builder.down().withDetail(<span class="string">"file num"</span>,fileList.length);
+        } <span class="keyword">else</span> {
+            builder.up();
+        }
+        <span class="function"><span class="keyword">return</span> builder.<span class="title">build</span><span class="params">()</span></span>;
+    }
+
+}
+</code></pre><p>访问 <a href="http://localhost:8080/health" target="_blank" rel="external">http://localhost:8080/health</a></p>
+<pre><code><span class="rules">{
+    <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"DOWN"</span>,
+    tempDir: {
+        status: <span class="string">"DOWN"</span>,
+        file num: <span class="number">34</span>
+    </span></span></span>},
+    <span class="tag">diskSpace</span>: <span class="rules">{
+        <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
+        total: <span class="number">249779191808</span>,
+        free: <span class="number">20690649088</span>,
+        threshold: <span class="number">10485760</span>
+    </span></span></span>},
+    <span class="tag">db</span>: <span class="rules">{
+        <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
+        database: <span class="string">"H2"</span>,
+        hello: <span class="number">1</span>
+    </span></span></span>}
+}
+</code></pre><h2 id="Metrics">Metrics</h2><p>Metrics服务用来做一些度量支持，springboot提供了两种Metrics，分别是gauge(单一的值)和counter(计数器，自增或自减)。springboot提供了PublicMetrics接口用来支持Metrics服务。</p>
+<p>metrics这个endpoint中使用的metrics都是由SystemPublicMetrics完成的：</p>
+<pre><code>{
+    mem: <span class="number">388503</span>,
+    mem.<span class="built_in">free</span>: <span class="number">199992</span>,
+    processors: <span class="number">4</span>,
+    instance.uptime: <span class="number">58260089</span>,
+    uptime: <span class="number">21843805</span>,
+    systemload.average: <span class="number">3.28369140625</span>,
+    heap.committed: <span class="number">320000</span>,
+    heap.init: <span class="number">131072</span>,
+    heap.used: <span class="number">120007</span>,
+    heap: <span class="number">1864192</span>,
+    nonheap.committed: <span class="number">69528</span>,
+    nonheap.init: <span class="number">2496</span>,
+    nonheap.used: <span class="number">68501</span>,
+    nonheap: <span class="number">0</span>,
+    threads.peak: <span class="number">15</span>,
+    threads.daemon: <span class="number">13</span>,
+    threads.totalStarted: <span class="number">20</span>,
+    threads: <span class="number">15</span>,
+    classes: <span class="number">9483</span>,
+    classes.loaded: <span class="number">9484</span>,
+    classes.unloaded: <span class="number">1</span>,
+    gc.ps_scavenge.count: <span class="number">9</span>,
+    gc.ps_scavenge.time: <span class="number">152</span>,
+    gc.ps_marksweep.count: <span class="number">2</span>,
+    gc.ps_marksweep.time: <span class="number">167</span>,
+    httpsessions.max: -<span class="number">1</span>,
+    httpsessions.active: <span class="number">0</span>,
+    datasource.primary.active: <span class="number">0</span>,
+    datasource.primary.usage: <span class="number">0</span>,
+    gauge.response.health: <span class="number">218</span>,
+    gauge.response.star-star.favicon.ico: <span class="number">29</span>,
+    counter.status<span class="number">.200</span>.star-star.favicon.ico: <span class="number">1</span>,
+    counter.status<span class="number">.503</span>.health: <span class="number">1</span>
+}
+</code></pre><p>gauge和counter度量通过GaugeService和CounterService完成。</p>
+<p>比如我们要查看各个Controller中的接口被调用的次数话，可以使用CounterService和aop完成：</p>
+<pre><code><span class="variable">@Aspect</span>
+<span class="variable">@Component</span>
+<span class="class"><span class="keyword">class</span> <span class="title">ControllerAspect</span> @<span class="title">Autowired</span>() (</span>
+  <span class="symbol">counterService:</span> <span class="constant">CounterService</span>
+) {
+
+  <span class="variable">@Before</span>(<span class="string">"execution(* me.format.controller.*.*(..))"</span>)
+  <span class="function"><span class="keyword">def</span> <span class="title">controllerCounter</span><span class="params">(<span class="symbol">joinPoint:</span> <span class="constant">JoinPoint</span>)</span>: <span class="title">Unit</span> = {</span>
+    counterService.increment(joinPoint.getSignature.toString + <span class="string">"-invokeNum"</span>)
+  }
+
+}
+</code></pre><p>启动应用，调用getPersons接口4次，调用get/{long} 2次，查看metrics endpoint，得到以下信息：</p>
+<pre><code>counter<span class="class">.List</span> me<span class="class">.format</span><span class="class">.controller</span><span class="class">.PersonController</span><span class="class">.get</span>(HttpServletRequest)-invokeNum: <span class="number">4</span>,
+counter<span class="class">.Person</span> me<span class="class">.format</span><span class="class">.controller</span><span class="class">.PersonController</span><span class="class">.get</span>(long)-invokeNum: <span class="number">2</span>,
+</code></pre><p>比如我们要查看各个Controller中的接口的延迟情况，可以使用GaugeService和aop完成：</p>
+<pre><code>@<span class="type">Aspect</span>
+@<span class="type">Component</span>
+class <span class="type">ControllerAspect</span> @<span class="type">Autowired</span>() (
+  counterService: <span class="type">CounterService</span>,
+  gaugeService: <span class="type">GaugeService</span>
+) {
+
+  @<span class="type">Before</span>(<span class="string">"execution(* me.format.controller.*.*(..))"</span>)
+  def controllerCounter(joinPoint: <span class="type">JoinPoint</span>): <span class="type">Unit</span> = {
+    counterService.increment(joinPoint.getSignature.toString + <span class="string">"-invokeNum"</span>)
+  }
+
+  @<span class="type">Around</span>(<span class="string">"execution(* me.format.controller.*.*(..))"</span>)
+  def controllerGauge(proceedingJoinPoint: <span class="type">ProceedingJoinPoint</span>): <span class="type">AnyRef</span> = {
+    val st = <span class="type">System</span>.currentTimeMillis()
+    val <span class="literal">result</span> = proceedingJoinPoint.proceed()
+    val et = <span class="type">System</span>.currentTimeMillis()
+    gaugeService.submit(proceedingJoinPoint.getSignature.toString + <span class="string">"-invokeTime"</span>, (et - st))
+    <span class="literal">result</span>
+  }
+
+}
+</code></pre><p>启动应用，调用getPersons接口4次，调用get/{long} 2次，查看metrics endpoint，得到以下信息：</p>
+<pre><code>gauge<span class="class">.List</span> me<span class="class">.format</span><span class="class">.controller</span><span class="class">.PersonController</span><span class="class">.get</span>(HttpServletRequest)-invokeTime: <span class="number">4</span>,
+gauge<span class="class">.Person</span> me<span class="class">.format</span><span class="class">.controller</span><span class="class">.PersonController</span><span class="class">.get</span>(long)-invokeTime: <span class="number">11</span>,
+counter<span class="class">.List</span> me<span class="class">.format</span><span class="class">.controller</span><span class="class">.PersonController</span><span class="class">.get</span>(HttpServletRequest)-invokeNum: <span class="number">4</span>,
+counter<span class="class">.Person</span> me<span class="class">.format</span><span class="class">.controller</span><span class="class">.PersonController</span><span class="class">.get</span>(long)-invokeNum: <span class="number">2</span>,
+</code></pre><p>当然，actuator模块提供的功能远不止这些，更多的信息可以查看官方文档。</p>
+<p><a href="http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready" target="_blank" rel="external">http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready</a></p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>springboot内部提供了一个模块spring-boot-actuator用于监控和管理springboot应用。</p>
+<p>这个模块内部提供了很多功能，endpoint就是其中一块功能。</p>
+<p>我们在sbt中加入这个模块的依赖：</p>
+<pre><code><span class="title">libraryDependencies</span> += <span class="string">"org.springframework.boot"</span> % <span class="string">"spring-boot-starter-actuator"</span> % <span class="string">"1.3.5.RELEASE"</span>
+</code></pre><p>然后启动项目，访问地址 <a href="http://localhost:8080/health，看到以下页面：">http://localhost:8080/health，看到以下页面：</a></p>
+<pre><code><span class="rules">{
+    <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
+    diskSpace: {
+        status: <span class="string">"UP"</span>,
+        total: <span class="number">249779191808</span>,
+        free: <span class="number">22231089152</span>,
+        threshold: <span class="number">10485760</span>
+    </span></span></span>},
+    <span class="tag">db</span>: <span class="rules">{
+        <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
+        database: <span class="string">"H2"</span>,
+        hello: <span class="number">1</span>
+    </span></span></span>}
+}
+</code></pre>]]>
+    
+    </summary>
+    
+      <category term="scala" scheme="http://fangjian0423.github.io/tags/scala/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[SpringBoot with Scala]]></title>
     <link href="http://fangjian0423.github.io/2016/06/22/springboot-with-scala/"/>
     <id>http://fangjian0423.github.io/2016/06/22/springboot-with-scala/</id>
     <published>2016-06-22T15:22:39.000Z</published>
-    <updated>2016-06-22T15:29:00.000Z</updated>
+    <updated>2016-06-23T06:06:31.000Z</updated>
     <content type="html"><![CDATA[<p>一般情况下，我们使用java开发springboot应用，可以使用scala开发springboot应用吗？</p>
 <p>答案当然是可以的。</p>
 <p>今天参考了阿福老师的这篇<a href="http://afoo.me/posts/2015-07-21-scala-developers-springboot-guide.html" target="_blank" rel="external">Scala开发者的SpringBoot快速入门指南</a>以及一位国际友人的一个<a href="https://github.com/bijukunjummen/spring-boot-scala-web" target="_blank" rel="external">spring-boot-scala-web</a> demo。</p>
@@ -177,9 +418,9 @@ curl http:<span class="comment">//localhost:8080/getPersons</span>
     
       <category term="scala" scheme="http://fangjian0423.github.io/tags/scala/"/>
     
-      <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
     
-      <category term="spring" scheme="http://fangjian0423.github.io/categories/spring/"/>
+      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
     
   </entry>
   
@@ -4368,98 +4609,6 @@ ArrayList&lt;Integer&gt; <span class="built_in">list</span> = <span class="keywo
       <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
     
       <category term="thread" scheme="http://fangjian0423.github.io/tags/thread/"/>
-    
-      <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Java AtomicInteger原理分析]]></title>
-    <link href="http://fangjian0423.github.io/2016/03/16/java-AtomicInteger-analysis/"/>
-    <id>http://fangjian0423.github.io/2016/03/16/java-AtomicInteger-analysis/</id>
-    <published>2016-03-16T12:32:35.000Z</published>
-    <updated>2016-05-10T14:59:25.000Z</updated>
-    <content type="html"><![CDATA[<p>Java中的AtomicInteger大家应该很熟悉，它是为了解决多线程访问Integer变量导致结果不正确所设计的一个基于多线程并且支持原子操作的Integer类。</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/java-AtomicInteger-analysis.jpeg" alt=""></p>
-<a id="more"></a>
-<p>它的使用也非常简单：</p>
-<pre><code>AtomicInteger ai = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);
-ai.addAndGet(<span class="number">5</span>); <span class="comment">// 5</span>
-ai.getAndAdd(<span class="number">1</span>); <span class="comment">// 5</span>
-ai.get(); <span class="comment">// 6</span>
-</code></pre><p>AtomicInteger内部有一个变量UnSafe：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Unsafe</span> <span class="keyword">unsafe</span> = <span class="keyword">Unsafe</span>.getUnsafe();
-</code></pre><p>Unsafe类是一个可以执行不安全、容易犯错的操作的一个特殊类。虽然Unsafe类中所有方法都是public的，但是这个类只能在一些被信任的代码中使用。Unsafe的源码可以在这里看 -&gt; <a href="http://www.docjar.com/html/api/sun/misc/Unsafe.java.html" target="_blank" rel="external">UnSafe源码</a>。</p>
-<p>Unsafe类可以执行以下几种操作：</p>
-<ol>
-<li>分配内存，释放内存：在方法allocateMemory，reallocateMemory，freeMemory中，有点类似c中的malloc，free方法</li>
-<li>可以定位对象的属性在内存中的位置，可以修改对象的属性值。使用objectFieldOffset方法</li>
-<li>挂起和恢复线程，被封装在LockSupport类中供使用</li>
-<li>CAS操作(CompareAndSwap，比较并交换，是一个原子操作)</li>
-</ol>
-<p>AtomicInteger中用的就是Unsafe的CAS操作。</p>
-<p>Unsafe中的int类型的CAS操作方法：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">native</span> <span class="function"><span class="keyword">boolean</span> <span class="title">compareAndSwapInt</span><span class="params">(Object o, <span class="keyword">long</span> offset,
-                                                <span class="keyword">int</span> expected,
-                                                <span class="keyword">int</span> x)</span></span>;
-</code></pre><p>参数o就是要进行cas操作的对象，offset参数是内存位置，expected参数就是期望的值，x参数是需要更新到的值。</p>
-<p>也就是说，如果我把1这个数字属性更新到2的话，需要这样调用：</p>
-<pre><code>compareAndSwapInt(<span class="keyword">this</span>, valueOffset, <span class="number">1</span>, <span class="number">2</span>)
-</code></pre><p>valueOffset字段表示内存位置，可以在AtomicInteger对象中使用unsafe得到：</p>
-<pre><code><span class="keyword">static</span> {
-  <span class="keyword">try</span> {
-    valueOffset = unsafe.objectFieldOffset
-        (AtomicInteger.<span class="keyword">class</span>.getDeclaredField(<span class="string">"value"</span>));
-  } <span class="keyword">catch</span> (Exception ex) { <span class="keyword">throw</span> <span class="keyword">new</span> Error(ex); }
-}
-</code></pre><p>AtomicInteger内部使用变量value表示当前的整型值，这个整型变量还是volatile的，表示内存可见性，一个线程修改value之后保证对其他线程的可见性：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> <span class="keyword">value</span>;
-</code></pre><p>AtomicInteger内部还封装了一下CAS，定义了一个compareAndSet方法，只需要2个参数：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">compareAndSet</span><span class="params">(<span class="keyword">int</span> expect, <span class="keyword">int</span> update)</span> </span>{
-    <span class="function"><span class="keyword">return</span> unsafe.<span class="title">compareAndSwapInt</span><span class="params">(<span class="keyword">this</span>, valueOffset, expect, update)</span></span>;
-}
-</code></pre><p>addAndGet方法，addAndGet方法内部使用一个死循环，先得到当前的值value，然后再把当前的值加一，加完之后使用cas原子操作让当前值加一处理正确。当然cas原子操作不一定是成功的，所以做了一个死循环，当cas操作成功的时候返回数据。这里由于使用了cas原子操作，所以不会出现多线程处理错误的问题。比如线程A得到current为1，线程B也得到current为1；线程A的next值为2，进行cas操作并且成功的时候，将value修改成了2；这个时候线程B也得到next值为2，当进行cas操作的时候由于expected值已经是2，而不是1了；所以cas操作会失败，下一次循环的时候得到的current就变成了2；也就不会出现多线程处理问题了：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> addAndGet(<span class="keyword">int</span> delta) {
-    <span class="keyword">for</span> (;;) {
-        <span class="keyword">int</span> current = get();
-        <span class="keyword">int</span> <span class="keyword">next</span> = current + delta;
-        <span class="keyword">if</span> (compareAndSet(current, <span class="keyword">next</span>))
-            <span class="keyword">return</span> <span class="keyword">next</span>;
-    }
-}
-</code></pre><p>incrementAndGet方法，跟addAndGet方法类似，只不过next值变成了current+1：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> incrementAndGet() {
-    <span class="keyword">for</span> (;;) {
-        <span class="keyword">int</span> current = get();
-        <span class="keyword">int</span> <span class="keyword">next</span> = current + <span class="number">1</span>;
-        <span class="keyword">if</span> (compareAndSet(current, <span class="keyword">next</span>))
-            <span class="keyword">return</span> <span class="keyword">next</span>;
-    }
-}
-</code></pre><p>getAndAdd方法，跟addAndGet方法一样，返回值变成了current：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> getAndAdd(<span class="keyword">int</span> delta) {
-    <span class="keyword">for</span> (;;) {
-        <span class="keyword">int</span> current = get();
-        <span class="keyword">int</span> <span class="keyword">next</span> = current + delta;
-        <span class="keyword">if</span> (compareAndSet(current, <span class="keyword">next</span>))
-            <span class="keyword">return</span> current;
-    }
-}
-</code></pre><p>缺点：</p>
-<p>虽然AtomicInteger中的cas操作可以实现非阻塞的原子操作，但是会产生ABA问题，</p>
-<p>参考资料：</p>
-<p><a href="http://blog.csdn.net/ghsau/article/details/38471987" target="_blank" rel="external">http://blog.csdn.net/ghsau/article/details/38471987</a></p>
-<p><a href="http://blog.csdn.net/aesop_wubo/article/details/7537278" target="_blank" rel="external">http://blog.csdn.net/aesop_wubo/article/details/7537278</a></p>
-<p><a href="http://ifeve.com/sun-misc-unsafe/" target="_blank" rel="external">http://ifeve.com/sun-misc-unsafe/</a></p>
-<p><a href="http://ifeve.com/java-atomic/" target="_blank" rel="external">http://ifeve.com/java-atomic/</a></p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>Java中的AtomicInteger大家应该很熟悉，它是为了解决多线程访问Integer变量导致结果不正确所设计的一个基于多线程并且支持原子操作的Integer类。</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/java-AtomicInteger-analysis.jpeg" alt=""></p>]]>
-    
-    </summary>
-    
-      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
     
       <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
     

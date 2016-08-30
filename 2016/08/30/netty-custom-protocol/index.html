@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="jvm,scala," />
+  <meta name="keywords" content="netty,nio," />
 
 
 
@@ -82,16 +82,28 @@
 
 
 
-<meta name="description" content="介绍Scala类和对象">
+<meta name="description" content="Netty内部提供的Codec用于处理消息的编解码问题，比如Http，Ftp，SMTP这些协议，都需要进行编解码。
+Netty内部直接提供了Http协议的Codec组件用于编解码Http协议。
+在开发过程中，有时候我们需要构建一些适应自己业务的应用层协议，Netty可以很方便地实现自定义协议。
+比如我们的自定义协议CucstomProtocol结构如下：
+| version | header |">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Scala类和对象">
-<meta property="og:url" content="http://fangjian0423.github.io/2015/05/31/scala-class-object/index.html">
+<meta property="og:title" content="使用Netty编写自定义的协议">
+<meta property="og:url" content="http://fangjian0423.github.io/2016/08/30/netty-custom-protocol/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="介绍Scala类和对象">
-<meta property="og:updated_time" content="2016-05-10T14:59:25.000Z">
+<meta property="og:description" content="Netty内部提供的Codec用于处理消息的编解码问题，比如Http，Ftp，SMTP这些协议，都需要进行编解码。
+Netty内部直接提供了Http协议的Codec组件用于编解码Http协议。
+在开发过程中，有时候我们需要构建一些适应自己业务的应用层协议，Netty可以很方便地实现自定义协议。
+比如我们的自定义协议CucstomProtocol结构如下：
+| version | header |">
+<meta property="og:updated_time" content="2016-08-30T13:28:26.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Scala类和对象">
-<meta name="twitter:description" content="介绍Scala类和对象">
+<meta name="twitter:title" content="使用Netty编写自定义的协议">
+<meta name="twitter:description" content="Netty内部提供的Codec用于处理消息的编解码问题，比如Http，Ftp，SMTP这些协议，都需要进行编解码。
+Netty内部直接提供了Http协议的Codec组件用于编解码Http协议。
+在开发过程中，有时候我们需要构建一些适应自己业务的应用层协议，Netty可以很方便地实现自定义协议。
+比如我们的自定义协议CucstomProtocol结构如下：
+| version | header |">
 
 
 
@@ -109,7 +121,7 @@
   };
 </script>
 
-  <title> Scala类和对象 | Format's Notes </title>
+  <title> 使用Netty编写自定义的协议 | Format's Notes </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -298,7 +310,7 @@
             
             
               
-                Scala类和对象
+                使用Netty编写自定义的协议
               
             
           </h1>
@@ -310,8 +322,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-05-31T22:02:14+08:00" content="2015-05-31">
-              2015-05-31
+            <time itemprop="dateCreated" datetime="2016-08-30T22:04:52+08:00" content="2016-08-30">
+              2016-08-30
             </time>
           </span>
 
@@ -324,8 +336,8 @@
               <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/scala/" itemprop="url" rel="index">
-                    <span itemprop="name">scala</span>
+                  <a href="/categories/netty/" itemprop="url" rel="index">
+                    <span itemprop="name">netty</span>
                   </a>
                 </span>
 
@@ -340,8 +352,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2015/05/31/scala-class-object/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/05/31/scala-class-object/" itemprop="commentsCount"></span>
+                <a href="/2016/08/30/netty-custom-protocol/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/08/30/netty-custom-protocol/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -364,96 +376,133 @@
       
 
       
-        <h2 id="类的定义">类的定义</h2><pre><code><span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>(<span class="variable"><span class="keyword">val</span> name</span>:String, <span class="variable"><span class="keyword">val</span> age</span>: <span class="typename">Int</span>)
-</code></pre><h2 id="构造函数中的参数修饰符">构造函数中的参数修饰符</h2><h3 id="用val修饰，就是类的定义中的那种方式">用val修饰，就是类的定义中的那种方式</h3><p>使用val修饰，属性会有对应的getter方法。</p>
-<pre><code>val <span class="tag">p</span> = new <span class="function"><span class="title">Person</span><span class="params">(<span class="string">"format"</span>, <span class="number">99</span>)</span></span>
-<span class="tag">p</span><span class="class">.name</span> <span class="comment">// format</span>
-<span class="tag">p</span><span class="class">.name</span> = <span class="string">"new name"</span> <span class="comment">// 报错，用val修饰的变量不可变</span>
-</code></pre><h3 id="用var修饰">用var修饰</h3><p>使用var修饰，属性会有对应的getter方法。同时还会有setter方法。</p>
-<pre><code>class <span class="function"><span class="title">Person</span><span class="params">(var name:String, var age: Int)</span></span>
-val <span class="tag">p</span> = new <span class="function"><span class="title">Person</span><span class="params">(<span class="string">"format"</span>, <span class="number">99</span>)</span></span>
-<span class="tag">p</span><span class="class">.name</span> <span class="comment">// format</span>
-<span class="tag">p</span><span class="class">.name</span> = <span class="string">"new name"</span>
-<span class="tag">p</span><span class="class">.name</span> <span class="comment">// new name</span>
-<span class="tag">p</span><span class="class">.age</span> = <span class="number">100</span>
-</code></pre><h3 id="不用任何修饰符">不用任何修饰符</h3><p>不适用任何修饰符代表这个这些属性被当做私有的实例值(private instance values)，在类的外部不能被访问。</p>
-<pre><code>class <span class="function"><span class="title">Person</span><span class="params">(name:String, age: Int)</span></span>
-val <span class="tag">p</span> = new <span class="function"><span class="title">Person</span><span class="params">(<span class="string">"format"</span>, <span class="number">99</span>)</span></span>
-<span class="tag">p</span><span class="class">.name</span> <span class="comment">// 报错，error: value name is not a member of Person</span>
-<span class="tag">p</span><span class="class">.name</span> = <span class="string">"new name"</span> <span class="comment">// 报错，error: value name is not a member of Person</span>
-</code></pre><h3 id="使用private修饰符">使用private修饰符</h3><p>private修饰的属性不会有对应的生成器(accessors)，外部无法访问。</p>
-<pre><code>class <span class="function"><span class="title">Person</span><span class="params">(private var name:String, private var age: Int)</span></span>
-val <span class="tag">p</span> = new <span class="function"><span class="title">Person</span><span class="params">(<span class="string">"format"</span>, <span class="number">99</span>)</span></span>
-<span class="tag">p</span><span class="class">.name</span> <span class="comment">// error: variable name in class Person cannot be accessed in Person</span>
-</code></pre><h3 id="手动添加getter和setter生成器">手动添加getter和setter生成器</h3><pre><code><span class="class"><span class="keyword">class</span> <span class="title">Person</span>(</span>name:<span class="type">String</span>, <span class="keyword">private</span> <span class="keyword">var</span> _age: <span class="type">Int</span>) {
-       <span class="function"><span class="keyword">def</span> <span class="title">age</span> =</span> _age <span class="comment">// getter生成器</span>
-    <span class="function"><span class="keyword">def</span> <span class="title">age_=</span>(</span>newAge: <span class="type">Int</span>) = age = newAge <span class="comment">// setter生成器</span>
+        <p>Netty内部提供的Codec用于处理消息的编解码问题，比如Http，Ftp，SMTP这些协议，都需要进行编解码。</p>
+<p>Netty内部直接提供了Http协议的Codec组件用于编解码Http协议。</p>
+<p>在开发过程中，有时候我们需要构建一些适应自己业务的应用层协议，Netty可以很方便地实现自定义协议。</p>
+<p>比如我们的自定义协议CucstomProtocol结构如下：</p>
+<pre><code>|<span class="string"> version </span>|<span class="string"> header </span>|<span class="string"> content </span>|
+</code></pre><p>其中version表示版本号，long类型；header是一个uuid，string类型，content则是具体的内容，string类型。</p>
+<a id="more"></a>
+<p>对应的POJO如下：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CustomProtocol {
+    <span class="keyword">private</span> <span class="built_in">long</span> <span class="keyword">version</span>; <span class="comment">// 版本</span>
+    <span class="keyword">private</span> String header; <span class="comment">// 头信息(UUID)</span>
+    <span class="keyword">private</span> String content; <span class="comment">// 具体内容</span>
+    <span class="comment">// GET SET ...</span>
+    <span class="keyword">@Override</span>
+    <span class="keyword">public</span> String toString() {
+        <span class="keyword">return</span> <span class="string">"CustomProtocol{"</span> +
+                <span class="string">"version="</span> + <span class="keyword">version</span> +
+                <span class="string">", header='"</span> + header + <span class="string">'\''</span> +
+                <span class="string">", content='"</span> + content + <span class="string">'\''</span> +
+                <span class="string">'}'</span>;
+    }
 }
-<span class="keyword">val</span> p = <span class="keyword">new</span> <span class="type">Person</span>(<span class="string">"format"</span>, <span class="number">99</span>)
-p.age <span class="comment">// 99</span>
-p.age = <span class="number">1</span>
-p.age <span class="comment">// 1</span>
+</code></pre><p>解码器把byte转换成CustomProtocol，在server中使用：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CustomProtocolDecoder extends ByteToMessageDecoder {
+    <span class="keyword">@Override</span>
+    <span class="keyword">protected</span> <span class="keyword">void</span> decode(ChannelHandlerContext ctx, ByteBuf <span class="keyword">in</span>, List&lt;Object&gt; <span class="keyword">out</span>) throws Exception {
+        <span class="built_in">long</span> <span class="keyword">version</span> = <span class="keyword">in</span>.readLong(); <span class="comment">// 读取version</span>
 
-p.age = <span class="number">3</span>会被scala解析成p.age_=(<span class="number">3</span>)
-</code></pre><h3 id="构造函数的重载">构造函数的重载</h3><pre><code><span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>(<span class="variable"><span class="keyword">var</span> name</span>:String, <span class="variable"><span class="keyword">var</span> age</span>: <span class="typename">Int</span>) {
-    def this() = this(<span class="string">"format"</span>, <span class="number">11</span>)
-}
-<span class="variable"><span class="keyword">val</span> p</span> = new Person()
-p.name <span class="comment">// format</span>
-p.age <span class="comment">// 11</span>
-</code></pre><h2 id="单例对象的定义">单例对象的定义</h2><h3 id="单例对象">单例对象</h3><p>scala不提供static关键字，也就是说没有静态变量，静态类，静态方法等概念了，取而代之的是使用object关键字，也就是单例对象。</p>
-<pre><code>object Switch {
-    <span class="function"><span class="keyword">def</span> <span class="title">open</span>:</span> Boolean = true
-}
+        <span class="keyword">byte</span>[] headerBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">36</span>];
+        <span class="keyword">in</span>.readBytes(headerBytes); <span class="comment">// 读取header</span>
 
-Switch.open // true
-</code></pre><h3 id="apply方法">apply方法</h3><p>对象的apply方法比较特殊。</p>
-<pre><code><span class="class"><span class="keyword">object</span> <span class="title">Person</span> {</span>
-    <span class="function"><span class="keyword">def</span> <span class="title">apply</span>(</span>name: <span class="type">String</span>, age: <span class="type">Int</span>) = <span class="keyword">new</span> <span class="type">Person</span>(name, age)
-}
+        String header = <span class="keyword">new</span> String(headerBytes);
 
-<span class="keyword">val</span> p = <span class="type">Person</span>(<span class="string">"format"</span>, <span class="number">99</span>)
-p.name <span class="comment">// format</span>
-p.age <span class="comment">// 99</span>
-</code></pre><p>apply方法的作用也就是可以让对象被直接调用，这里Person的apply方法返回的是一个Person类的实例，Person类也就是之前定义的一个类。</p>
-<h3 id="unapply方法">unapply方法</h3><p>对象的unapply方法用于模式匹配(pattern match)。模式匹配的内容会在之后的文章中说明。</p>
-<pre><code>object Person {
-    <span class="function"><span class="keyword">def</span> <span class="title">unapply</span><span class="params">(p: Person)</span>:</span> Option[(String, Int)] = Some((p.name, p.age))
-}
+        <span class="keyword">byte</span>[] contentBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="keyword">in</span>.readableBytes()]; <span class="comment">// 读取content</span>
+        <span class="keyword">in</span>.readBytes(contentBytes);
 
-val p = new Person(<span class="string">"format"</span>, <span class="number">99</span>)
-p match {
-    case Person(name, age) =&gt; println(name + <span class="string">","</span> + age)
+        <span class="keyword">out</span>.add(<span class="keyword">new</span> CustomProtocol(<span class="keyword">version</span>, header, <span class="keyword">new</span> String(contentBytes)));
+    }
 }
-</code></pre><h2 id="样本类_(case_class)">样本类 (case class)</h2><p>样本类的定义:</p>
-<pre><code><span class="keyword">case</span> <span class="keyword">class</span> Person(<span class="keyword">name</span>: String, age: <span class="built_in">Int</span>)
-</code></pre><p>样本类会自定生成一些样本代码：</p>
-<ol>
-<li>会给所有的参数带上val前缀(可以手动改为var前缀，case class Person(var name: String, age: Int))</li>
-<li>equals和hashCode方法会根据参数自动生成</li>
-<li>toString方法也会自动生成，会带上类名和参数</li>
-<li>所有的case类都会有有一个copy方法</li>
-<li>companion object会自动生成，且还会带有apply方法，apply方法的参数跟类的参数一样(companion object也就是对应类的单例对象，比如本文提到了Person类和Person对象)</li>
-<li>companion object还会有unapply方法</li>
-<li>会有一个默认的序列化实现(a default implementation is provided for serialization)</li>
-</ol>
-<p>以之前定义的Person样本类为例，验证一些样本代码：</p>
-<pre><code>val p = Person(<span class="string">"format"</span>, <span class="number">99</span>)  <span class="comment">// case Person会生成一个带有apply的Person对象</span>
-p.name <span class="comment">// format</span>
-p.age <span class="comment">// 99</span>
-p <span class="comment">// Person(format, 99)</span>
-p == Person(<span class="string">"format"</span>, <span class="number">99</span>) <span class="comment">// true</span>
-p == Person(<span class="string">"format"</span>, <span class="number">9</span>) <span class="comment">// false</span>
-val p2 = p.copy() <span class="comment">// p2: Person(format, 99)</span>
-p == p2 <span class="comment">// true</span>
-p.copy(name=<span class="string">"newName"</span>) <span class="comment">// Person(newName, 99)</span>
-p.hashCode <span class="comment">// 187596955</span>
-p2.hashCode <span class="comment">//187596955</span>
-<span class="comment">// 模式匹配，unapply方法</span>
-p match {
-    <span class="function"><span class="keyword">case</span> <span class="title">Person</span><span class="params">(name, age)</span> </span>=&gt; println(name + <span class="string">","</span> + age)
-} 
-val p = <span class="keyword">new</span> Person(<span class="string">"name"</span>, <span class="number">99</span>) <span class="comment">// 不用单例对象，用new构造实例</span>
+</code></pre><p>编码器把CustomProtocol转换成byte，在client中使用：</p>
+<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">CustomProtocolEncoder</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">MessageToByteEncoder&lt;CustomProtocol&gt;</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void encode(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">CustomProtocol</span> msg, <span class="type">ByteBuf</span> out) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        out.writeLong(msg.getVersion());
+        out.writeBytes(msg.getHeader().getBytes());
+        out.writeBytes(msg.getContent().getBytes());
+    }
+}
+</code></pre><p>server代码：</p>
+<pre><code>ServerBootstrap serverBootstrap = <span class="keyword">new</span> ServerBootstrap();
+EventLoopGroup eventLoopGroup = <span class="keyword">new</span> NioEventLoopGroup();
+EventLoopGroup childEventLoopGroup = <span class="keyword">new</span> NioEventLoopGroup();
+
+<span class="keyword">try</span> {
+    serverBootstrap
+            .group(eventLoopGroup, childEventLoopGroup)
+            .channel(NioServerSocketChannel.class)
+            .childHandler(<span class="keyword">new</span> ChannelInitializer&lt;Channel&gt;() {
+                <span class="annotation">@Override</span>
+                <span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(Channel ch)</span> <span class="keyword">throws</span> Exception </span>{
+                    ch.pipeline().addLast(<span class="keyword">new</span> CustomProtocolDecoder()); <span class="comment">// 解码器</span>
+                    ch.pipeline().addLast(<span class="keyword">new</span> ServerHandler()); <span class="comment">// 打印数据</span>
+                }
+            });
+
+    ChannelFuture future = serverBootstrap.bind(<span class="string">"localhost"</span>, <span class="number">9999</span>).sync();
+
+    future.channel().closeFuture().sync();
+} <span class="keyword">catch</span> (Exception e) {
+    e.printStackTrace();
+} <span class="keyword">finally</span> {
+    <span class="keyword">try</span> {
+        eventLoopGroup.shutdownGracefully().sync();
+        childEventLoopGroup.shutdownGracefully().sync();
+    } <span class="keyword">catch</span> (Exception e1) {
+        e1.printStackTrace();
+    }
+}
+</code></pre><p>ServerHandler用于打印接收到的数据，并写数据回去给客户端表示接收到了数据：</p>
+<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">ServerHandler</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SimpleChannelInboundHandler&lt;CustomProtocol&gt;</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void channelRead0(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">CustomProtocol</span> msg) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="type">System</span>.out.println(<span class="string">"server receive: "</span> + msg);
+        ctx.writeAndFlush(<span class="type">Unpooled</span>.copiedBuffer(<span class="string">"server get"</span>, <span class="type">CharsetUtil</span>.<span class="type">UTF_8</span>)).addListener(<span class="type">ChannelFutureListener</span>.<span class="type">CLOSE</span>);
+    }
+}
+</code></pre><p>client代码：</p>
+<pre><code>Bootstrap bootstrap = <span class="keyword">new</span> Bootstrap();
+
+EventLoopGroup eventLoopGroup = <span class="keyword">new</span> NioEventLoopGroup();
+
+<span class="keyword">try</span> {
+    bootstrap
+            .group(eventLoopGroup)
+            .channel(NioSocketChannel.class)
+            .<span class="keyword">handler</span>(<span class="keyword">new</span> ChannelInitializer&lt;Channel&gt;() {
+                <span class="annotation">@Override</span>
+                <span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(Channel ch)</span> <span class="keyword">throws</span> Exception </span>{
+                    ch.pipeline().addLast(<span class="keyword">new</span> CustomProtocolEncoder()); <span class="comment">// 编码器</span>
+                    ch.pipeline().addLast(<span class="keyword">new</span> ClientHandler()); <span class="comment">// 接收服务端数据</span>
+                }
+            });
+    ChannelFuture channelFuture = bootstrap.connect(<span class="string">"localhost"</span>, <span class="number">9999</span>).sync();
+
+    channelFuture.channel().writeAndFlush(<span class="keyword">new</span> CustomProtocol(<span class="number">1024</span>l, UUID.randomUUID().toString(), <span class="string">"content detail"</span>));
+
+    channelFuture.channel().closeFuture().sync();
+} <span class="keyword">catch</span> (Exception e) {
+    e.printStackTrace();
+} <span class="keyword">finally</span> {
+    <span class="keyword">try</span> {
+        eventLoopGroup.shutdownGracefully().sync();
+    } <span class="keyword">catch</span> (InterruptedException e) {
+        e.printStackTrace();
+    }
+}
+</code></pre><p>ClientHandler用于接收服务端返回回来的数据：</p>
+<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">ClientHandler</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SimpleChannelInboundHandler&lt;ByteBuf&gt;</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void channelRead0(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">ByteBuf</span> msg) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="type">System</span>.out.println(<span class="string">"send success, response is: "</span> + msg.toString(<span class="type">CharsetUtil</span>.<span class="type">UTF_8</span>));
+    }
+}
+</code></pre><p>启动服务端和客户端之后，服务端收到客户端发来的CustomProtocol：</p>
+<pre><code><span class="keyword">server</span> receive: CustomProtocol{version=<span class="number">1024</span>, header=<span class="string">'6ed7fa3d-7d54-4add-9081-d659d4b37d3f'</span>, content=<span class="string">'content detail'</span>}
+</code></pre><p>之后客户端也收到服务端成功接收数据的反馈：</p>
+<pre><code>send success, <span class="built_in">response</span> <span class="keyword">is</span>: <span class="built_in">server</span> <span class="keyword">get</span>
 </code></pre>
       
     </div>
@@ -474,9 +523,9 @@ val p = <span class="keyword">new</span> Person(<span class="string">"name"</spa
       
         <div class="post-tags">
           
-            <a href="/tags/jvm/" rel="tag">#jvm</a>
+            <a href="/tags/netty/" rel="tag">#netty</a>
           
-            <a href="/tags/scala/" rel="tag">#scala</a>
+            <a href="/tags/nio/" rel="tag">#nio</a>
           
         </div>
       
@@ -485,17 +534,13 @@ val p = <span class="keyword">new</span> Person(<span class="string">"name"</spa
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2015/05/31/scala-introduction/" rel="next" title="Scala基础">
-                <i class="fa fa-chevron-left"></i> Scala基础
+              <a href="/2016/08/29/netty-in-action-note2/" rel="next" title="Netty in Action笔记(二)">
+                <i class="fa fa-chevron-left"></i> Netty in Action笔记(二)
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2015/06/04/scala-pattern-match/" rel="prev" title="Scala模式匹配">
-                Scala模式匹配 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -671,7 +716,7 @@ val p = <span class="keyword">new</span> Person(<span class="string">"name"</spa
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#类的定义"><span class="nav-number">1.</span> <span class="nav-text">类的定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构造函数中的参数修饰符"><span class="nav-number">2.</span> <span class="nav-text">构造函数中的参数修饰符</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#用val修饰，就是类的定义中的那种方式"><span class="nav-number">2.1.</span> <span class="nav-text">用val修饰，就是类的定义中的那种方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#用var修饰"><span class="nav-number">2.2.</span> <span class="nav-text">用var修饰</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#不用任何修饰符"><span class="nav-number">2.3.</span> <span class="nav-text">不用任何修饰符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用private修饰符"><span class="nav-number">2.4.</span> <span class="nav-text">使用private修饰符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#手动添加getter和setter生成器"><span class="nav-number">2.5.</span> <span class="nav-text">手动添加getter和setter生成器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构造函数的重载"><span class="nav-number">2.6.</span> <span class="nav-text">构造函数的重载</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#单例对象的定义"><span class="nav-number">3.</span> <span class="nav-text">单例对象的定义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#单例对象"><span class="nav-number">3.1.</span> <span class="nav-text">单例对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#apply方法"><span class="nav-number">3.2.</span> <span class="nav-text">apply方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#unapply方法"><span class="nav-number">3.3.</span> <span class="nav-text">unapply方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#样本类_(case_class)"><span class="nav-number">4.</span> <span class="nav-text">样本类 (case class)</span></a></li></ol></div>
+              <p class="post-toc-empty">此文章未包含目录</p>
             
           </div>
         </section>
@@ -798,9 +843,9 @@ val p = <span class="keyword">new</span> Person(<span class="string">"name"</spa
 
     <script type="text/javascript">
       var disqus_shortname = 'fangjian0423';
-      var disqus_identifier = '2015/05/31/scala-class-object/';
-      var disqus_title = 'Scala类和对象';
-      var disqus_url = 'http://fangjian0423.github.io/2015/05/31/scala-class-object/';
+      var disqus_identifier = '2016/08/30/netty-custom-protocol/';
+      var disqus_title = '使用Netty编写自定义的协议';
+      var disqus_url = 'http://fangjian0423.github.io/2016/08/30/netty-custom-protocol/';
 
       function run_disqus_script(disqus_script){
         var dsq = document.createElement('script');

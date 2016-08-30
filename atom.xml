@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-08-29T12:07:20.000Z</updated>
+  <updated>2016-08-30T13:28:26.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -13,6 +13,158 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[使用Netty编写自定义的协议]]></title>
+    <link href="http://fangjian0423.github.io/2016/08/30/netty-custom-protocol/"/>
+    <id>http://fangjian0423.github.io/2016/08/30/netty-custom-protocol/</id>
+    <published>2016-08-30T14:04:52.000Z</published>
+    <updated>2016-08-30T13:28:26.000Z</updated>
+    <content type="html"><![CDATA[<p>Netty内部提供的Codec用于处理消息的编解码问题，比如Http，Ftp，SMTP这些协议，都需要进行编解码。</p>
+<p>Netty内部直接提供了Http协议的Codec组件用于编解码Http协议。</p>
+<p>在开发过程中，有时候我们需要构建一些适应自己业务的应用层协议，Netty可以很方便地实现自定义协议。</p>
+<p>比如我们的自定义协议CucstomProtocol结构如下：</p>
+<pre><code>|<span class="string"> version </span>|<span class="string"> header </span>|<span class="string"> content </span>|
+</code></pre><p>其中version表示版本号，long类型；header是一个uuid，string类型，content则是具体的内容，string类型。</p>
+<a id="more"></a>
+<p>对应的POJO如下：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CustomProtocol {
+    <span class="keyword">private</span> <span class="built_in">long</span> <span class="keyword">version</span>; <span class="comment">// 版本</span>
+    <span class="keyword">private</span> String header; <span class="comment">// 头信息(UUID)</span>
+    <span class="keyword">private</span> String content; <span class="comment">// 具体内容</span>
+    <span class="comment">// GET SET ...</span>
+    <span class="keyword">@Override</span>
+    <span class="keyword">public</span> String toString() {
+        <span class="keyword">return</span> <span class="string">"CustomProtocol{"</span> +
+                <span class="string">"version="</span> + <span class="keyword">version</span> +
+                <span class="string">", header='"</span> + header + <span class="string">'\''</span> +
+                <span class="string">", content='"</span> + content + <span class="string">'\''</span> +
+                <span class="string">'}'</span>;
+    }
+}
+</code></pre><p>解码器把byte转换成CustomProtocol，在server中使用：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CustomProtocolDecoder extends ByteToMessageDecoder {
+    <span class="keyword">@Override</span>
+    <span class="keyword">protected</span> <span class="keyword">void</span> decode(ChannelHandlerContext ctx, ByteBuf <span class="keyword">in</span>, List&lt;Object&gt; <span class="keyword">out</span>) throws Exception {
+        <span class="built_in">long</span> <span class="keyword">version</span> = <span class="keyword">in</span>.readLong(); <span class="comment">// 读取version</span>
+
+        <span class="keyword">byte</span>[] headerBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">36</span>];
+        <span class="keyword">in</span>.readBytes(headerBytes); <span class="comment">// 读取header</span>
+
+        String header = <span class="keyword">new</span> String(headerBytes);
+
+        <span class="keyword">byte</span>[] contentBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="keyword">in</span>.readableBytes()]; <span class="comment">// 读取content</span>
+        <span class="keyword">in</span>.readBytes(contentBytes);
+
+        <span class="keyword">out</span>.add(<span class="keyword">new</span> CustomProtocol(<span class="keyword">version</span>, header, <span class="keyword">new</span> String(contentBytes)));
+    }
+}
+</code></pre><p>编码器把CustomProtocol转换成byte，在client中使用：</p>
+<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">CustomProtocolEncoder</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">MessageToByteEncoder&lt;CustomProtocol&gt;</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void encode(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">CustomProtocol</span> msg, <span class="type">ByteBuf</span> out) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        out.writeLong(msg.getVersion());
+        out.writeBytes(msg.getHeader().getBytes());
+        out.writeBytes(msg.getContent().getBytes());
+    }
+}
+</code></pre><p>server代码：</p>
+<pre><code>ServerBootstrap serverBootstrap = <span class="keyword">new</span> ServerBootstrap();
+EventLoopGroup eventLoopGroup = <span class="keyword">new</span> NioEventLoopGroup();
+EventLoopGroup childEventLoopGroup = <span class="keyword">new</span> NioEventLoopGroup();
+
+<span class="keyword">try</span> {
+    serverBootstrap
+            .group(eventLoopGroup, childEventLoopGroup)
+            .channel(NioServerSocketChannel.class)
+            .childHandler(<span class="keyword">new</span> ChannelInitializer&lt;Channel&gt;() {
+                <span class="annotation">@Override</span>
+                <span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(Channel ch)</span> <span class="keyword">throws</span> Exception </span>{
+                    ch.pipeline().addLast(<span class="keyword">new</span> CustomProtocolDecoder()); <span class="comment">// 解码器</span>
+                    ch.pipeline().addLast(<span class="keyword">new</span> ServerHandler()); <span class="comment">// 打印数据</span>
+                }
+            });
+
+    ChannelFuture future = serverBootstrap.bind(<span class="string">"localhost"</span>, <span class="number">9999</span>).sync();
+
+    future.channel().closeFuture().sync();
+} <span class="keyword">catch</span> (Exception e) {
+    e.printStackTrace();
+} <span class="keyword">finally</span> {
+    <span class="keyword">try</span> {
+        eventLoopGroup.shutdownGracefully().sync();
+        childEventLoopGroup.shutdownGracefully().sync();
+    } <span class="keyword">catch</span> (Exception e1) {
+        e1.printStackTrace();
+    }
+}
+</code></pre><p>ServerHandler用于打印接收到的数据，并写数据回去给客户端表示接收到了数据：</p>
+<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">ServerHandler</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SimpleChannelInboundHandler&lt;CustomProtocol&gt;</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void channelRead0(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">CustomProtocol</span> msg) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="type">System</span>.out.println(<span class="string">"server receive: "</span> + msg);
+        ctx.writeAndFlush(<span class="type">Unpooled</span>.copiedBuffer(<span class="string">"server get"</span>, <span class="type">CharsetUtil</span>.<span class="type">UTF_8</span>)).addListener(<span class="type">ChannelFutureListener</span>.<span class="type">CLOSE</span>);
+    }
+}
+</code></pre><p>client代码：</p>
+<pre><code>Bootstrap bootstrap = <span class="keyword">new</span> Bootstrap();
+
+EventLoopGroup eventLoopGroup = <span class="keyword">new</span> NioEventLoopGroup();
+
+<span class="keyword">try</span> {
+    bootstrap
+            .group(eventLoopGroup)
+            .channel(NioSocketChannel.class)
+            .<span class="keyword">handler</span>(<span class="keyword">new</span> ChannelInitializer&lt;Channel&gt;() {
+                <span class="annotation">@Override</span>
+                <span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(Channel ch)</span> <span class="keyword">throws</span> Exception </span>{
+                    ch.pipeline().addLast(<span class="keyword">new</span> CustomProtocolEncoder()); <span class="comment">// 编码器</span>
+                    ch.pipeline().addLast(<span class="keyword">new</span> ClientHandler()); <span class="comment">// 接收服务端数据</span>
+                }
+            });
+    ChannelFuture channelFuture = bootstrap.connect(<span class="string">"localhost"</span>, <span class="number">9999</span>).sync();
+
+    channelFuture.channel().writeAndFlush(<span class="keyword">new</span> CustomProtocol(<span class="number">1024</span>l, UUID.randomUUID().toString(), <span class="string">"content detail"</span>));
+
+    channelFuture.channel().closeFuture().sync();
+} <span class="keyword">catch</span> (Exception e) {
+    e.printStackTrace();
+} <span class="keyword">finally</span> {
+    <span class="keyword">try</span> {
+        eventLoopGroup.shutdownGracefully().sync();
+    } <span class="keyword">catch</span> (InterruptedException e) {
+        e.printStackTrace();
+    }
+}
+</code></pre><p>ClientHandler用于接收服务端返回回来的数据：</p>
+<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">ClientHandler</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SimpleChannelInboundHandler&lt;ByteBuf&gt;</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void channelRead0(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">ByteBuf</span> msg) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="type">System</span>.out.println(<span class="string">"send success, response is: "</span> + msg.toString(<span class="type">CharsetUtil</span>.<span class="type">UTF_8</span>));
+    }
+}
+</code></pre><p>启动服务端和客户端之后，服务端收到客户端发来的CustomProtocol：</p>
+<pre><code><span class="keyword">server</span> receive: CustomProtocol{version=<span class="number">1024</span>, header=<span class="string">'6ed7fa3d-7d54-4add-9081-d659d4b37d3f'</span>, content=<span class="string">'content detail'</span>}
+</code></pre><p>之后客户端也收到服务端成功接收数据的反馈：</p>
+<pre><code>send success, <span class="built_in">response</span> <span class="keyword">is</span>: <span class="built_in">server</span> <span class="keyword">get</span>
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<p>Netty内部提供的Codec用于处理消息的编解码问题，比如Http，Ftp，SMTP这些协议，都需要进行编解码。</p>
+<p>Netty内部直接提供了Http协议的Codec组件用于编解码Http协议。</p>
+<p>在开发过程中，有时候我们需要构建一些适应自己业务的应用层协议，Netty可以很方便地实现自定义协议。</p>
+<p>比如我们的自定义协议CucstomProtocol结构如下：</p>
+<pre><code>|<span class="string"> version </span>|<span class="string"> header </span>|<span class="string"> content </span>|
+</code></pre><p>其中version表示版本号，long类型；header是一个uuid，string类型，content则是具体的内容，string类型。</p>]]>
+    
+    </summary>
+    
+      <category term="netty" scheme="http://fangjian0423.github.io/tags/netty/"/>
+    
+      <category term="nio" scheme="http://fangjian0423.github.io/tags/nio/"/>
+    
+      <category term="netty" scheme="http://fangjian0423.github.io/categories/netty/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[Netty in Action笔记(二)]]></title>
@@ -4184,208 +4336,6 @@ E unlink(Node&lt;E&gt; x) {
     <![CDATA[<p>List接口的实现类之一ArrayList的内部实现是一个数组，而另外一个实现LinkedList内部实现是使用双向链表。</p>
 <p>LinkedList在内部定义了一个叫做Node类型的内部类，这个Node就是一个节点，链表中的节点，这个节点有3个属性，分别是元素item(当前节点要表示的值), 前节点prev(当前节点之前位置上的一个节点)，后节点next(当前节点后面位置的一个节点)。 </p>
 <p>LinkedList关于数据的插入，删除操作都会处理这些节点的前后关系。而不像ArrayList那样只需要移动元素的位置即可。</p>]]>
-    
-    </summary>
-    
-      <category term="collection" scheme="http://fangjian0423.github.io/tags/collection/"/>
-    
-      <category term="jdk" scheme="http://fangjian0423.github.io/tags/jdk/"/>
-    
-      <category term="jdk" scheme="http://fangjian0423.github.io/categories/jdk/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[jdk ArrayList工作原理分析]]></title>
-    <link href="http://fangjian0423.github.io/2016/03/27/jdk_arraylist/"/>
-    <id>http://fangjian0423.github.io/2016/03/27/jdk_arraylist/</id>
-    <published>2016-03-27T05:33:17.000Z</published>
-    <updated>2016-05-10T14:59:25.000Z</updated>
-    <content type="html"><![CDATA[<p>list是一种有序的集合(an ordered collection), 通常也会被称为序列(sequence)，使用list可以精确地控制每个元素的插入，可以通过索引值找到对应list中的各个项，也可以在list中查询元素。</p>
-<p>以前的几段话摘自jdk文档的说明。</p>
-<p>其实list就相当于一个动态的数组，也就是链表，普通的数组长度大小都是固定的，而list是一个动态的数组，当list的长度满了，再次插入数据到list当中的时候，list会自动地扩展它的长度。</p>
-<a id="more"></a>
-<h2 id="ArrayList源码分析">ArrayList源码分析</h2><p>首先我们先分析一个List接口的实现类之一，也是最常用的ArrayList的源码。</p>
-<p>ArrayList底层使用一个数组完成数据的添加，查询，删除，修改。这个数组就是下面提到的elementData。</p>
-<p>这里分析的代码是基于jdk1.7的。</p>
-<p>ArrayList类的属性如下：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="built_in">int</span> DEFAULT_CAPACITY = <span class="number">10</span>; <span class="comment">// 集合的默认容量</span>
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Object</span>[] EMPTY_ELEMENTDATA = {}; <span class="comment">// 一个空集合数组，容量为0</span>
-<span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">Object</span>[] elementData; <span class="comment">// 存储集合数据的数组，默认值为null</span>
-<span class="keyword">private</span> <span class="built_in">int</span> <span class="built_in">size</span>; <span class="comment">// ArrayList集合中数组的当前有效长度，比如数组的容量是5，size是1 表示容量为5的数组目前已经有1条记录了，其余4条记录还是为空</span>
-</code></pre><p>接下来看一下ArrayList的构造函数：</p>
-<p>ArrayList有3个构造函数，分别是</p>
-<pre><code><span class="keyword">public</span> ArrayList(<span class="keyword">int</span> initialCapacity) { <span class="comment">// 带有集合容量参数的构造函数</span>
-    <span class="comment">// 调用父类AbstractList的方法构造函数</span>
-    <span class="keyword">super</span>();
-    <span class="keyword">if</span> (initialCapacity &lt; <span class="number">0</span>) <span class="comment">// 如果集合的容量小于0，这明显是个错误数值，直接抛出异常</span>
-        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Illegal Capacity: "</span>+
-                                           initialCapacity);
-    <span class="keyword">this</span>.elementData = <span class="keyword">new</span> Object[initialCapacity]; <span class="comment">// 初始化elementData属性，确定容量</span>
-}
-
-<span class="keyword">public</span> ArrayList() { <span class="comment">// 没有参数的构造函数</span>
-    <span class="keyword">super</span>(); <span class="comment">// 调用父类AbstractList的方法构造函数</span>
-    <span class="keyword">this</span>.elementData = EMPTY_ELEMENTDATA; <span class="comment">// 让elementData和ArrayList的EMPTY_ELEMENTDATA这个空数组使用同一个引用</span>
-}
-
-<span class="keyword">public</span> ArrayList(Collection&lt;? <span class="keyword">extends</span> E&gt; c) { <span class="comment">// 参数是一个集合的构造函数</span>
-    elementData = c.toArray(); <span class="comment">// elementData直接使用参数集合内部的数组</span>
-    <span class="keyword">size</span> = elementData.length; <span class="comment">// 初始化数组当前有效长度</span>
-    <span class="comment">// c.toArray方法可能不会返回一个Object[]结果，需要做一层判断。这个一个Java的bug，可以在http://bugs.java.com/bugdatabase/view_bug.do?bug_id=6260652查看</span>
-    <span class="keyword">if</span> (elementData.getClass() != Object[].<span class="keyword">class</span>)
-        elementData = Arrays.copyOf(elementData, <span class="keyword">size</span>, Object[].<span class="keyword">class</span>);
-}
-</code></pre><p>接下来挑几个重要的方法讲解一下：</p>
-<h3 id="add(E_e)_方法">add(E e) 方法</h3><p>这个方法的作用就是把 <strong>元素添加到集合的最后面</strong> </p>
-<p>源码：</p>
-<pre><code><span class="function"><span class="keyword">public</span> boolean <span class="title">add</span><span class="params">(E e)</span> </span>{
-    ensureCapacityInternal(size + <span class="number">1</span>);  <span class="comment">// 调用ensureCapacityInternal，参数是集合当前的长度。确保集合容量够大，不够的话需要扩容</span>
-    elementData[size++] = e; <span class="comment">// 数组容量够的话，直接添加元素到数组最后一个位置即可，同时修改集合当前有效长度</span>
-    <span class="keyword">return</span> <span class="literal">true</span>;
-}
-
-<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">ensureCapacityInternal</span><span class="params">(<span class="keyword">int</span> minCapacity)</span> </span>{
-    <span class="keyword">if</span> (elementData == EMPTY_ELEMENTDATA) { <span class="comment">// 如果数组是个空数组，说明调用的是无参的构造函数</span>
-        <span class="comment">// 如果调用的是无参构造函数，说明数组容量为0，那就需要使用默认容量</span>
-        minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
-    }
-
-    ensureExplicitCapacity(minCapacity);
-}    
-
-<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">ensureExplicitCapacity</span><span class="params">(<span class="keyword">int</span> minCapacity)</span> </span>{
-    modCount++;
-
-    <span class="comment">// 如果集合需要的最小长度比数组容量要大，那么就需要扩容，已经放不下了</span>
-    <span class="keyword">if</span> (minCapacity - elementData.length &gt; <span class="number">0</span>)
-        grow(minCapacity);
-}
-
-<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">grow</span><span class="params">(<span class="keyword">int</span> minCapacity)</span> </span>{ <span class="comment">// 扩容的实现</span>
-    <span class="keyword">int</span> oldCapacity = elementData.length;
-    <span class="keyword">int</span> newCapacity = oldCapacity + (oldCapacity &gt;&gt; <span class="number">1</span>); <span class="comment">// 长度扩大1.5倍</span>
-    <span class="keyword">if</span> (newCapacity - minCapacity &lt; <span class="number">0</span>)
-        newCapacity = minCapacity;
-    <span class="keyword">if</span> (newCapacity - MAX_ARRAY_SIZE &gt; <span class="number">0</span>)
-        newCapacity = hugeCapacity(minCapacity);
-    <span class="comment">// 将数组拷贝到新长度的数组中</span>
-    elementData = Arrays.copyOf(elementData, newCapacity);
-}
-</code></pre><p>以下面这段代码讲解一下扩容的机制：</p>
-<pre><code><span class="comment">// 初始化一个容量为5的数组</span>
-ArrayList&lt;Integer&gt; <span class="built_in">list</span> = <span class="keyword">new</span> ArrayList&lt;Integer&gt;(<span class="number">5</span>);
-<span class="built_in">list</span>.add(<span class="number">1</span>);
-<span class="built_in">list</span>.add(<span class="number">2</span>);
-<span class="built_in">list</span>.add(<span class="number">3</span>);
-<span class="built_in">list</span>.add(<span class="number">4</span>);
-<span class="built_in">list</span>.add(<span class="number">5</span>);
-<span class="comment">// 当添加第6个元素的时候，数组进行了扩容，扩容1.5倍(5+5/2=7)</span>
-<span class="built_in">list</span>.add(<span class="number">6</span>);
-</code></pre><p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/arraylist01.jpg" alt=""></p>
-<p>上图2个白色的空间就是扩容出来的，添加第6个元素之后，最后一个元素没被设置。</p>
-<h3 id="add(int_index,_E_element)_方法">add(int index, E element) 方法</h3><p>这个方法的作用是 <strong>在指定位置插入数据</strong>，该方法的缺点就是如果集合数据量很大，移动元素位置将会话费不少时间：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">void</span> add(<span class="keyword">int</span> <span class="keyword">index</span>, E element) {
-    rangeCheckForAdd(<span class="keyword">index</span>); <span class="comment">// 检查索引位置的正确的，不能小于0也不能大于数组有效长度</span>
-
-    ensureCapacityInternal(size + <span class="number">1</span>);  <span class="comment">// 扩容检测</span>
-    System.arraycopy(elementData, <span class="keyword">index</span>, elementData, <span class="keyword">index</span> + <span class="number">1</span>,
-                     size - <span class="keyword">index</span>); <span class="comment">// 移动数组位置，数据量很大的话，性能变差</span>
-    elementData[<span class="keyword">index</span>] = element; <span class="comment">// 指定的位置插入数据</span>
-    size++; <span class="comment">// 数组有效长度+1</span>
-}
-</code></pre><p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/arraylist03.jpg" alt=""></p>
-<p>上图就表示要在容量为5的数组中的第4个位置插入6这个元素，会进行3个步骤：</p>
-<ol>
-<li>容量为5，再次加入元素，需要扩容，扩容出2个白色的空间</li>
-<li>扩容之后，5和4这2个元素都移到后面那个位置上</li>
-<li>移动完毕之后空出了第4个位置，插入元素6</li>
-</ol>
-<h3 id="remove(int_index)">remove(int index)</h3><p>remove方法就是 <strong>移除对应坐标值上的数据</strong></p>
-<pre><code><span class="keyword">public</span> E remove(<span class="keyword">int</span> <span class="keyword">index</span>) {
-  rangeCheck(<span class="keyword">index</span>); <span class="comment">// 检查索引值是否合法</span>
-
-  modCount++;
-  E oldValue = elementData(<span class="keyword">index</span>); <span class="comment">// 得到对应索引位置上的元素</span>
-
-  <span class="keyword">int</span> numMoved = size - <span class="keyword">index</span> - <span class="number">1</span>; <span class="comment">// 需要移动的数量</span>
-  <span class="keyword">if</span> (numMoved &gt; <span class="number">0</span>)
-      System.arraycopy(elementData, <span class="keyword">index</span>+<span class="number">1</span>, elementData, <span class="keyword">index</span>,
-                       numMoved); <span class="comment">// 从后往前移，留出最后一个元素</span>
-  elementData[--size] = <span class="keyword">null</span>; <span class="comment">// 清楚对应位置上的对象，让gc回收</span>
-
-  <span class="keyword">return</span> oldValue;
-}
-</code></pre><p>比如要移除5个元素中的第3个元素，首先要把4和5这2个位置的元素分别set到3和4这2个位置上，set完之后最后一个位置也就是第5个位置set为null。</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/arraylist02.jpg" alt=""></p>
-<h3 id="remove(Object_o)">remove(Object o)</h3><p> <strong>找出数组中的元素，然后移除</strong></p>
-<pre><code><span class="comment">// 跟remove索引元素一样，这个方法是根据equals比较</span>
-<span class="keyword">public</span> <span class="keyword">boolean</span> remove(Object o) {
-    <span class="keyword">if</span> (o == <span class="keyword">null</span>) {
-        <span class="comment">// ArrayList允许元素为null，所以对null值的删除在这个分支里进行</span>
-        <span class="keyword">for</span> (<span class="keyword">int</span> <span class="keyword">index</span> = <span class="number">0</span>; <span class="keyword">index</span> &lt; size; <span class="keyword">index</span>++)
-            <span class="keyword">if</span> (elementData[<span class="keyword">index</span>] == <span class="keyword">null</span>) {
-                fastRemove(<span class="keyword">index</span>);
-                <span class="keyword">return</span> <span class="keyword">true</span>;
-            }
-    } <span class="keyword">else</span> {
-        <span class="comment">// 效率比较低，需要从第1个元素开始遍历直到找到equals相等的元素后才进行删除，删除同样需要移动元素</span>
-        <span class="keyword">for</span> (<span class="keyword">int</span> <span class="keyword">index</span> = <span class="number">0</span>; <span class="keyword">index</span> &lt; size; <span class="keyword">index</span>++)
-            <span class="keyword">if</span> (o.equals(elementData[<span class="keyword">index</span>])) {
-                fastRemove(<span class="keyword">index</span>);
-                <span class="keyword">return</span> <span class="keyword">true</span>;
-            }
-    }
-    <span class="keyword">return</span> <span class="keyword">false</span>;
-}
-</code></pre><h3 id="clear">clear</h3><p><strong>清除list中的所有数据</strong></p>
-<pre><code><span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">clear</span>() {
-  modCount++;
-
-  <span class="comment">// 遍历集合数据，全部set为null</span>
-  <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">size</span>; i++)
-      elementData[i] = <span class="keyword">null</span>;
-
-  <span class="built_in">size</span> = <span class="number">0</span>; <span class="comment">// 数组有效长度变成0</span>
-}
-</code></pre><h3 id="set(int_index,_E_element)">set(int index, E element)</h3><p><strong>用element值替换下标值为index的值</strong></p>
-<pre><code><span class="keyword">public</span> E set(<span class="keyword">int</span> <span class="keyword">index</span>, E element) {
-  rangeCheck(<span class="keyword">index</span>); <span class="comment">// 检查索引值是否合法</span>
-
-  E oldValue = elementData(<span class="keyword">index</span>); 
-  elementData[<span class="keyword">index</span>] = element; <span class="comment">// 直接替换</span>
-  <span class="keyword">return</span> oldValue;
-}
-</code></pre><h3 id="get(int_index)">get(int index)</h3><p><strong>得到下标值为index的元素</strong></p>
-<pre><code><span class="keyword">public</span> E get(<span class="keyword">int</span> <span class="keyword">index</span>) {
-    rangeCheck(<span class="keyword">index</span>); <span class="comment">// 检查索引值是否合法</span>
-
-    <span class="keyword">return</span> elementData(<span class="keyword">index</span>); <span class="comment">// 直接返回下标值</span>
-}
-</code></pre><h3 id="addAll">addAll</h3><p><strong>在列表的结尾添加一个Collection集合</strong></p>
-<pre><code><span class="keyword">public</span> <span class="keyword">boolean</span> addAll(Collection&lt;? <span class="keyword">extends</span> E&gt; c) {
-    Object[] a = c.toArray();
-    <span class="keyword">int</span> numNew = a.length;
-    ensureCapacityInternal(<span class="keyword">size</span> + numNew);  <span class="comment">// 扩容检测</span>
-    System.arraycopy(a, <span class="number">0</span>, elementData, <span class="keyword">size</span>, numNew); <span class="comment">// 直接在数组后面添加新的数组中的所有元素</span>
-    <span class="keyword">size</span> += numNew; <span class="comment">// 更新有效长度</span>
-    <span class="keyword">return</span> numNew != <span class="number">0</span>;
-}
-</code></pre><h3 id="toArray">toArray</h3><p><strong>根据elementData数组拷贝一份新的数组</strong></p>
-<pre><code><span class="keyword">public</span> <span class="keyword">Object</span>[] toArray() {
-    <span class="keyword">return</span> Arrays.copyOf(elementData, <span class="built_in">size</span>);
-}
-</code></pre><h2 id="ArrayList的注意点">ArrayList的注意点</h2><ol>
-<li>当数据量很大的时候，ArrayList内部操作元素的时候会移动位置，很耗性能</li>
-<li>ArrayList虽然可以自动扩展长度，但是数据量一大，扩展的也多，会造成很多空间的浪费</li>
-<li>ArrayList有一个内部私有类，SubList。ArrayList提供一个subList方法用于构造这个SubList。这里需要注意的是SubList和ArrayList使用的数据引用是同一个对象，在SubList中操作数据和在ArrayList中操作数据都会影响双方。</li>
-<li>ArrayList允许加入null元素</li>
-</ol>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>list是一种有序的集合(an ordered collection), 通常也会被称为序列(sequence)，使用list可以精确地控制每个元素的插入，可以通过索引值找到对应list中的各个项，也可以在list中查询元素。</p>
-<p>以前的几段话摘自jdk文档的说明。</p>
-<p>其实list就相当于一个动态的数组，也就是链表，普通的数组长度大小都是固定的，而list是一个动态的数组，当list的长度满了，再次插入数据到list当中的时候，list会自动地扩展它的长度。</p>]]>
     
     </summary>
     

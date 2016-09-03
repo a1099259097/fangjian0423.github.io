@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-08-30T13:28:26.000Z</updated>
+  <updated>2016-09-03T12:47:41.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -13,6 +13,150 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[Netty的单元测试]]></title>
+    <link href="http://fangjian0423.github.io/2016/09/03/netty-unittest/"/>
+    <id>http://fangjian0423.github.io/2016/09/03/netty-unittest/</id>
+    <published>2016-09-03T13:04:52.000Z</published>
+    <updated>2016-09-03T12:47:41.000Z</updated>
+    <content type="html"><![CDATA[<p>我们在编写完Netty程序之后，会需要进行ChannelHandler的一些测试。</p>
+<p>在初学Netty的时候，我们都是直接起一个Server，然后再写一个Client去连接Server，看传输的数据和接收到的数据是否正确。</p>
+<p>在<a href="https://book.douban.com/subject/24700704/" target="_blank" rel="external">Netty in Action</a>书中的Transport和Unit-test your code这两章就提出了可以使用EmbeddedChannel进行ChanndlHandler的单元测试。</p>
+<a id="more"></a>
+<h2 id="EmbeddedChannel介绍">EmbeddedChannel介绍</h2><p>EmbeddedChannel中提供了一些方法：</p>
+<table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>writeInbound</td>
+<td>写数据到Channel中，但是这些数据只会被ChannelPipeline中的inbound handler处理。如果可以从EmbeddedChannel的readInbound方法中读取出数据的话，就返回true</td>
+</tr>
+<tr>
+<td>readInbound</td>
+<td>读取在EmbeddedChannel上被所有inbound handler处理过的数据，如果已经没有数据可以读取就返回null</td>
+</tr>
+<tr>
+<td>writeInbound</td>
+<td>写数据到Channel中，但是这些数据只会被ChannelPipeline中的outbound handler处理。如果可以从EmbeddedChannel的readOutbound方法中读取出数据的话，就返回true</td>
+</tr>
+<tr>
+<td>readOutbound</td>
+<td>读取在EmbeddedChannel上被所有outbound handler处理过的数据，如果已经没有数据可以读取就返回null</td>
+</tr>
+<tr>
+<td>finish</td>
+<td>标记EmbeddedChannel已经完成。如果可以从inbound或者outbound中返回数据，该方法就返回true。这个方法还会关闭Channel</td>
+</tr>
+</tbody>
+</table>
+<p>下图就是EmbeddedChannel的处理流程图：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty10.png" alt=""></p>
+<p>使用writeInbound方法写入的数据，并经过Pipeline中所有的inbound handler，之后可以使用readInbound方法读取经过inbound handler之后的数据。</p>
+<p>使用writeOutbound方法写入的数据，并经过Pipeline中所有的outbound handler，之后可以使用readOutbound方法读取经过outbound handler之后的数据。</p>
+<p>调用finish方法可以标记EmbeddedChannel已经完成。</p>
+<h2 id="Inbound_Handler的测试">Inbound Handler的测试</h2><p>Netty内部提供了一个FixedLengthFrameDecoder解码器用于把长度不固定的字节转换成固定长度的字节，处理流程图如下：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty11.png" alt=""></p>
+<p>针对这个Decoder编写单元测试。</p>
+<p>由于是个Decoder，针对的是inbound中的数据，所以需要使用的方法是writeInbound和readInbound：</p>
+<pre><code>ByteBuf buf = Unpooled.buffer(); <span class="comment">// 构造heap buffer</span>
+<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">9</span>; i ++) { <span class="comment">// 写入9个字节</span>
+    buf.writeByte(i);
+}
+
+ByteBuf input = buf.copy();
+
+<span class="comment">// 构造EmbeddedChannel，并在Pipeline中加入FixedLengthFrameDecoder</span>
+EmbeddedChannel channel = <span class="keyword">new</span> EmbeddedChannel(<span class="keyword">new</span> FixedLengthFrameDecoder(<span class="number">3</span>));
+
+<span class="comment">// 使用writeInbound方法写入数据</span>
+Assert.assertTrue(channel.writeInbound(input));
+<span class="comment">// 标记EmbeddedChannel状态已经complete</span>
+Assert.assertTrue(channel.finish());
+
+<span class="comment">// 读取经过FixedLengthFrameDecoder处理过后的字节</span>
+Assert.assertEquals(buf.readBytes(<span class="number">3</span>), channel.readInbound());
+Assert.assertEquals(buf.readBytes(<span class="number">3</span>), channel.readInbound());
+Assert.assertEquals(buf.readBytes(<span class="number">3</span>), channel.readInbound());
+Assert.assertNull(channel.readInbound());
+</code></pre><p>我们在<a href="http://fangjian0423.github.io/2016/08/30/netty-custom-protocol/">使用Netty编写自定义的协议</a>文章中编写的自定义协议CustomProtocol的解码器，并最后通过一个server和client的编写完成了测试。</p>
+<p>现在我们可以使用EmbeddedChannel进行Decoder的unit test：</p>
+<pre><code>EmbeddedChannel channel = <span class="keyword">new</span> EmbeddedChannel(<span class="keyword">new</span> CustomProtocolDecoder());
+<span class="typename">String</span> uuid = UUID.randomUUID().toString();
+channel.writeInbound(<span class="keyword">new</span> CustomProtocol(<span class="number">1024</span>l, uuid, <span class="string">"content content"</span>));
+<span class="keyword">Assert</span>.assertTrue(channel.finish());
+
+CustomProtocol customProtocol = (CustomProtocol) channel.readInbound();
+// 判断是否正确
+<span class="keyword">Assert</span>.assertEquals(<span class="number">1024</span>l, customProtocol.getVersion());
+<span class="keyword">Assert</span>.assertEquals(uuid, customProtocol.getHeader());
+<span class="keyword">Assert</span>.assertEquals(<span class="string">"content content"</span>, customProtocol.getContent());
+<span class="keyword">Assert</span>.assertNull(channel.readInbound());
+</code></pre><h2 id="Outbound_Handler的测试">Outbound Handler的测试</h2><p>AbsIntegerEncoder对所有的int数据取绝对值。处理流过图如下：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty12.png" alt=""></p>
+<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">AbsIntegerEncoder</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">MessageToMessageEncoder&lt;ByteBuf&gt;</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void encode(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">ByteBuf</span> msg, <span class="type">List</span>&lt;<span class="type">Object</span>&gt; out) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="keyword">while</span>(msg.readableBytes() &gt;= <span class="number">4</span>) {
+            int value = <span class="type">Math</span>.abs(msg.readInt());
+            out.add(value);
+        }
+    }
+}
+</code></pre><p>针对这个Encoder编写单元测试。</p>
+<p>由于是个Encoder，针对的是outbound中的数据，所以需要使用的方法是writeOutbound和readOutbound：</p>
+<pre><code>ByteBuf buf = Unpooled.buffer(); <span class="comment">// 构造heap buffer</span>
+<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; <span class="number">10</span>; i ++) { <span class="comment">// 写入10个负数</span>
+    buf.writeInt(i * -<span class="number">1</span>);
+}
+<span class="comment">// 构造EmbeddedChannel，并在Pipeline中加入AbsIntegerEncoder</span>
+EmbeddedChannel channel = <span class="keyword">new</span> EmbeddedChannel(<span class="keyword">new</span> AbsIntegerEncoder());
+<span class="comment">// 使用writeOutbound方法写入数据</span>
+Assert.assertTrue(channel.writeOutbound(buf));
+<span class="comment">// 标记EmbeddedChannel状态已经complete</span>
+Assert.assertTrue(channel.finish());
+
+<span class="comment">// 测试是否所有的int数据都取了绝对值</span>
+<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; <span class="number">10</span>; i ++) {
+    Assert.assertEquals(i, (<span class="keyword">int</span>)channel.readOutbound());
+}
+Assert.assertNull(channel.readOutbound());
+</code></pre><p>同理我们可以使用EmbeddedChannel进行CustomProtocol的Encoder的unit test：</p>
+<pre><code>EmbeddedChannel channel = <span class="keyword">new</span> EmbeddedChannel(<span class="keyword">new</span> CustomProtocolEncoder());
+<span class="typename">String</span> uuid = UUID.randomUUID().toString();
+
+channel.writeOutbound(<span class="keyword">new</span> CustomProtocol(<span class="number">1024</span>l, uuid, <span class="string">"content content"</span>));
+<span class="keyword">Assert</span>.assertTrue(channel.finish());
+
+ByteBuf buf = (ByteBuf) channel.readOutbound();
+<span class="keyword">Assert</span>.assertEquals(<span class="number">1024</span>l, buf.readLong());
+byte[] headerBytes = <span class="keyword">new</span> byte[<span class="number">36</span>];
+buf.readBytes(headerBytes);
+<span class="keyword">Assert</span>.assertEquals(uuid, <span class="keyword">new</span> <span class="typename">String</span>(headerBytes));
+byte[] contentBytes = <span class="keyword">new</span> byte[buf.readableBytes()];
+buf.readBytes(contentBytes);
+<span class="keyword">Assert</span>.assertEquals(<span class="string">"content content"</span>, <span class="keyword">new</span> <span class="typename">String</span>(contentBytes));
+<span class="keyword">Assert</span>.assertNull(channel.readOutbound());
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<p>我们在编写完Netty程序之后，会需要进行ChannelHandler的一些测试。</p>
+<p>在初学Netty的时候，我们都是直接起一个Server，然后再写一个Client去连接Server，看传输的数据和接收到的数据是否正确。</p>
+<p>在<a href="https://book.douban.com/subject/24700704/">Netty in Action</a>书中的Transport和Unit-test your code这两章就提出了可以使用EmbeddedChannel进行ChanndlHandler的单元测试。</p>]]>
+    
+    </summary>
+    
+      <category term="netty" scheme="http://fangjian0423.github.io/tags/netty/"/>
+    
+      <category term="nio" scheme="http://fangjian0423.github.io/tags/nio/"/>
+    
+      <category term="netty" scheme="http://fangjian0423.github.io/categories/netty/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[使用Netty编写自定义的协议]]></title>
@@ -4198,150 +4342,6 @@ static final int tableSizeFor(int <span class="keyword">cap</span>) {
       <category term="jdk" scheme="http://fangjian0423.github.io/tags/jdk/"/>
     
       <category term="map" scheme="http://fangjian0423.github.io/tags/map/"/>
-    
-      <category term="jdk" scheme="http://fangjian0423.github.io/categories/jdk/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[jdk LinkedList工作原理分析]]></title>
-    <link href="http://fangjian0423.github.io/2016/03/27/jdk_linkedlist/"/>
-    <id>http://fangjian0423.github.io/2016/03/27/jdk_linkedlist/</id>
-    <published>2016-03-27T09:35:27.000Z</published>
-    <updated>2016-05-10T14:59:25.000Z</updated>
-    <content type="html"><![CDATA[<p>List接口的实现类之一ArrayList的内部实现是一个数组，而另外一个实现LinkedList内部实现是使用双向链表。</p>
-<p>LinkedList在内部定义了一个叫做Node类型的内部类，这个Node就是一个节点，链表中的节点，这个节点有3个属性，分别是元素item(当前节点要表示的值), 前节点prev(当前节点之前位置上的一个节点)，后节点next(当前节点后面位置的一个节点)。 </p>
-<p>LinkedList关于数据的插入，删除操作都会处理这些节点的前后关系。而不像ArrayList那样只需要移动元素的位置即可。</p>
-<a id="more"></a>
-<h2 id="源码分析">源码分析</h2><p>在分析LinkedList之前，我们先看下它里面的内部类Node，也就是节点的定义：</p>
-<pre><code>private static class <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; {
-    E item; // 节点所表示的值
-    <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; next; // 后节点
-    <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; prev; // 前节点
-
-    <span class="keyword">Node</span><span class="identifier"></span><span class="title">(Node</span><span class="tag">&lt;E&gt;</span> prev, E element, <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; next) {
-        this.item = element;
-        this.next = next;
-        this.prev = prev;
-    }
-}
-</code></pre><p>LinkedList的3个属性：</p>
-<pre><code>transient int size = <span class="number">0</span>; // 集合链表内节点数量
-
-transient <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; first; // 集合链表的首节点
-
-transient <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; last; // 集合链表的尾节点
-</code></pre><h3 id="add(E_e)">add(E e)</h3><p><strong> 添加元素到链表的最后一个位置 </strong></p>
-<pre><code>public boolean add(<span class="keyword">E</span> <span class="keyword">e</span>) {
-    linkLast(<span class="keyword">e</span>);
-    <span class="keyword">return</span> true;
-}
-
-void linkLast(<span class="keyword">E</span> <span class="keyword">e</span>) {
-    final Node&lt;<span class="keyword">E</span>&gt; <span class="keyword">l</span> = last;
-    final Node&lt;<span class="keyword">E</span>&gt; newNode = new Node&lt;&gt;(<span class="keyword">l</span>, <span class="keyword">e</span>, null); <span class="comment">// 由于是添加元素的链表尾部，所以也就是这个新的节点是最后1个节点，它的前节点肯定是目前链表的尾节点，它的后节点为null</span>
-    last = newNode; <span class="comment">// 尾节点变成新的节点</span>
-    <span class="keyword">if</span> (<span class="keyword">l</span> == null) <span class="comment">// 如果一开始尾节点还没设置，那么说明这个新的节点是第一个节点，那么首节点也就是这个第一个节点</span>
-        first = newNode;
-    <span class="keyword">else</span> <span class="comment">// 否则，说明新节点不是第一个节点，处理节点前后关系</span>
-        <span class="keyword">l</span>.next = newNode;
-    size++; <span class="comment">// 节点数量+1</span>
-    modCount++;
-}
-</code></pre><p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/linkedlist01.jpg" alt=""></p>
-<p>上图第一个图就表示一个已经有1，2这2个节点的LinkedList调用add方法，第二个图表示添加一个值为3的元素后的情况。原先的尾节点2的后节点变成的新节点3，新节点3的前节点是原先的尾节点2，新节点3的后节点为null。同时链表的尾节点变成了3.</p>
-<h3 id="add(int_index,_E_element)">add(int index, E element)</h3><p><strong> 添加元素到列表中的指定位置 </strong></p>
-<pre><code><span class="keyword">public</span> <span class="keyword">void</span> add(<span class="keyword">int</span> <span class="keyword">index</span>, E element) {
-    checkPositionIndex(<span class="keyword">index</span>); <span class="comment">// 检查索引的合法性，不能超过链表个数，不能小于0</span>
-
-    <span class="keyword">if</span> (<span class="keyword">index</span> == size) <span class="comment">// 如果是在链表尾部插入节点，那么直接调用linkLast方法，上面已经分析过</span>
-        linkLast(element);
-    <span class="keyword">else</span> <span class="comment">// 不在链表尾部插入节点的话，调用linkBefore方法，参数为要插入的元素值和节点对象</span>
-        linkBefore(element, node(<span class="keyword">index</span>));
-}
-</code></pre><p>先看一下node方法是如何根据索引找到对应的节点的：</p>
-<pre><code>Node&lt;E&gt; node(<span class="keyword">int</span> index) {
-    <span class="comment">// 用了一个小算法，如果索引比链表数量的一半还要小，从前往后找，这样只需要花O(n/2)的时间获取节点</span>
-    <span class="keyword">if</span> (index &lt; (<span class="keyword">size</span> &gt;&gt; <span class="number">1</span>)) {
-        Node&lt;E&gt; x = first;
-        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; index; i++)
-            x = x.<span class="keyword">next</span>;
-        <span class="keyword">return</span> x;
-    } <span class="keyword">else</span> { <span class="comment">// 否则从后往前找</span>
-        Node&lt;E&gt; x = last;
-        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="keyword">size</span> - <span class="number">1</span>; i &gt; index; i--)
-            x = x.prev;
-        <span class="keyword">return</span> x;
-    }
-}
-
-<span class="keyword">void</span> linkBefore(E e, Node&lt;E&gt; succ) { <span class="comment">// succ节点表示要新插入节点应该在的位置</span>
-    <span class="keyword">final</span> Node&lt;E&gt; pred = succ.prev;
-    <span class="keyword">final</span> Node&lt;E&gt; newNode = <span class="keyword">new</span> Node&lt;&gt;(pred, e, succ); <span class="comment">// 1：新节点的前节点就是succ节点的前节点，新节点的后节点是succ节点</span>
-    succ.prev = newNode; <span class="comment">// 2：succ的前节点就是新节点</span>
-    <span class="keyword">if</span> (pred == <span class="keyword">null</span>)    <span class="comment">// prev=null表示succ节点就是head首节点，这样的话只需要重新set一下首节点即可，首节点的后节点在步骤1以及设置过了</span>
-        first = newNode;
-    <span class="keyword">else</span> <span class="comment">// succ不是首节点的话执行步骤3</span>
-        pred.<span class="keyword">next</span> = newNode; <span class="comment">// 3：succ节点的前节点的后节点就是新节点</span>
-    <span class="keyword">size</span>++; <span class="comment">// 节点数量+1</span>
-    modCount++;
-} 
-</code></pre><p>上面代码中注释的1，2，3点就在下图中表示：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/linkedlist02.jpg" alt=""></p>
-<p>LinkedList还提供了2种特殊的add方法，分别是addFirst和addLast方法，处理添加首节点和尾节点，原理都是差不多的，处理链表之间的关联关系即可。</p>
-<h3 id="remove(int_index)">remove(int index)</h3><p><strong> 移除指定位置上的节点 </strong></p>
-<pre><code><span class="keyword">public</span> E remove(<span class="keyword">int</span> index) {
-    checkElementIndex(index); <span class="comment">// 检查索引的合法性，不能超过链表个数，不能小于0 </span>
-    <span class="keyword">return</span> unlink(node(index));
-}
-
-E unlink(Node&lt;E&gt; x) {
-    <span class="keyword">final</span> E element = x.item;
-    <span class="keyword">final</span> Node&lt;E&gt; <span class="keyword">next</span> = x.<span class="keyword">next</span>;
-    <span class="keyword">final</span> Node&lt;E&gt; prev = x.prev;
-
-    <span class="keyword">if</span> (prev == <span class="keyword">null</span>) { <span class="comment">// 特殊情况，删除的是头节点</span>
-        first = <span class="keyword">next</span>;
-    } <span class="keyword">else</span> {
-        prev.<span class="keyword">next</span> = <span class="keyword">next</span>; <span class="comment">// 1</span>
-        x.prev = <span class="keyword">null</span>; <span class="comment">// 1</span>
-    }
-
-    <span class="keyword">if</span> (<span class="keyword">next</span> == <span class="keyword">null</span>) { <span class="comment">// 特殊情况，删除的是尾节点</span>
-        last = prev;
-    } <span class="keyword">else</span> {
-        <span class="keyword">next</span>.prev = prev; <span class="comment">// 2</span>
-        x.<span class="keyword">next</span> = <span class="keyword">null</span>; <span class="comment">// 2</span>
-    }
-
-    x.item = <span class="keyword">null</span>; <span class="comment">// 3</span>
-    <span class="keyword">size</span>--; <span class="comment">// 链表数量减一</span>
-    modCount++;
-    <span class="keyword">return</span> element;
-}
-</code></pre><p>上面代码中注释的1，2，3点就在下图中表示：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/linkedlist03.jpg" alt=""></p>
-<h3 id="get(int_index)">get(int index)</h3><p><strong> 得到索引位置上的元素 </strong></p>
-<pre><code><span class="keyword">public</span> E get(<span class="keyword">int</span> <span class="keyword">index</span>) {
-    checkElementIndex(<span class="keyword">index</span>); <span class="comment">// 检查索引的合法性，不能超过链表个数，不能小于0 </span>
-    <span class="keyword">return</span> node(<span class="keyword">index</span>).item; <span class="comment">// 直接找到节点，返回节点的元素值即可</span>
-}
-</code></pre><h2 id="LinkedList和ArrayList的比较">LinkedList和ArrayList的比较</h2><ol>
-<li>LinkedList和ArrayList的设计理念完全不一样，ArrayList基于数组，而LinkedList基于节点，也就是链表。所以LinkedList内部没有容量这个概念，因为是链表，链表是无界的</li>
-<li>两者的使用场景不同，ArrayList适用于读多写少的场合。LinkedList适用于写多读少的场合。 刚好相反。 那是因为LinkedList要找节点的话必须要遍历一个一个节点，直到找到为止。而ArrayList完全不需要，因为ArrayList内部维护着一个数组，直接根据索引拿到需要的元素即可。</li>
-<li>两个都是List接口的实现类，都是一种集合</li>
-</ol>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>List接口的实现类之一ArrayList的内部实现是一个数组，而另外一个实现LinkedList内部实现是使用双向链表。</p>
-<p>LinkedList在内部定义了一个叫做Node类型的内部类，这个Node就是一个节点，链表中的节点，这个节点有3个属性，分别是元素item(当前节点要表示的值), 前节点prev(当前节点之前位置上的一个节点)，后节点next(当前节点后面位置的一个节点)。 </p>
-<p>LinkedList关于数据的插入，删除操作都会处理这些节点的前后关系。而不像ArrayList那样只需要移动元素的位置即可。</p>]]>
-    
-    </summary>
-    
-      <category term="collection" scheme="http://fangjian0423.github.io/tags/collection/"/>
-    
-      <category term="jdk" scheme="http://fangjian0423.github.io/tags/jdk/"/>
     
       <category term="jdk" scheme="http://fangjian0423.github.io/categories/jdk/"/>
     

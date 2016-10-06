@@ -93,7 +93,7 @@
 比如不使用springboot而使用SpringMVC作为web框架进行开发的时候，需要配置相关的SpringMVC配置以及对应的依赖，比较繁琐；而使用springboot的话只需要以下短短的几行代码就可以使用SpringMVC，可谓相当地方便：
 @RestControlle">
 <meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/springboot01.png">
-<meta property="og:updated_time" content="2016-06-22T15:31:29.000Z">
+<meta property="og:updated_time" content="2016-09-23T17:07:18.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SpringBoot内部的一些自动化配置原理">
 <meta name="twitter:description" content="springboot用来简化Spring框架带来的大量XML配置以及复杂的依赖管理，让开发人员可以更加关注业务逻辑的开发。
@@ -585,6 +585,8 @@ spring.freemarker.<span class="keyword">view</span>-<span class="keyword">names<
 </code></pre><p>所以说一开始我们加入了一个spring-boot-starter-freemarker依赖，这个依赖中存在freemarker的lib，满足了FreeMarkerAutoConfiguration中的ConditionalOnClass里写的freemarker.template.Configuration.class这个类存在于classpath中。</p>
 <p>所以就构造了FreeMarkerAutoConfiguration里的ViewResolver，这个ViewResolver被自动加入到SpringMVC中。</p>
 <p>同样地，如果我们要使用velocity模板，springboot内部也有velocity的自动配置类VelocityAutoConfiguration，原理是跟freemarker一样的。</p>
+<p>其他：</p>
+<p><a href="https://github.com/mybatis/spring-boot-starter" target="_blank" rel="external">Mybatis的autoconfigure</a>是Mybatis提供的springboot的自动配置模块，由于springboot官方没有提供mybatis的自动化配置模块，所以mybatis自己写了这么一个模块，观察它的源码，发现基本上跟freemarker的autoconfigure模块一样，只需要构造对应的实例即可。</p>
 <p>总结：</p>
 <p>springboot内部提供了很多自动化配置的类，这些类会判断classpath中是否存在自己需要的那个类，如果存在则会自动配置相关的配置，否则就不会自动配置。</p>
 <p>如果我们需要使用一些框架，只需要加入依赖即可，这些依赖内部是没有代码的，只是一些对应框架需要的lib，有了这些lib就会触发自动化配置，于是就能使用框架了。</p>
@@ -703,7 +705,7 @@ spring.freemarker.<span class="keyword">view</span>-<span class="keyword">names<
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">87</span>
+              <span class="site-state-item-count">88</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

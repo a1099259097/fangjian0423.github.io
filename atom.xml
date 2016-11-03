@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-10-09T13:50:09.000Z</updated>
+  <updated>2016-11-03T16:03:49.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -13,6 +13,202 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[java Annotation的RetentionPolicy介绍]]></title>
+    <link href="http://fangjian0423.github.io/2016/11/04/java-annotation-retentionpolicy/"/>
+    <id>http://fangjian0423.github.io/2016/11/04/java-annotation-retentionpolicy/</id>
+    <published>2016-11-03T16:01:06.000Z</published>
+    <updated>2016-11-03T16:03:49.000Z</updated>
+    <content type="html"><![CDATA[<p>Java Annotation对应的Retention有3种，在RetentionPolicy中定义，有3种：</p>
+<ol>
+<li>SOURCE. 注解保留在源代码中，但是编译的时候会被编译器所丢弃。比如@Override, @SuppressWarnings</li>
+<li>CLASS. 这是默认的policy。注解会被保留在class文件中，但是在运行时期间就不会识别这个注解。</li>
+<li>RUNTIME. 注解会被保留在class文件中，同时运行时期间也会被识别。所以可以使用反射机制获取注解信息。比如@Deprecated</li>
+</ol>
+<a id="more"></a>
+<h2 id="RUNTIME">RUNTIME</h2><p>大部分情况下，我们都是使用RUNTIME这个Policy。</p>
+<p>下面就是一个RUNTIME Annotation的例子。</p>
+<p>先定义Annotation：</p>
+<pre><code><span class="annotation">@Retention</span>(RetentionPolicy.RUNTIME)
+<span class="annotation">@Target</span>(ElementType.TYPE)
+<span class="keyword">public</span> <span class="annotation">@interface</span> MyClassRuntimeAnno {
+    <span class="function">String <span class="title">name</span><span class="params">()</span></span>;
+    <span class="function"><span class="keyword">int</span> <span class="title">level</span><span class="params">()</span> <span class="keyword">default</span> 1</span>;
+}
+</code></pre><p>然后在CLASS前面使用这个Annotation。</p>
+<pre><code><span class="annotation">@MyClassRuntimeAnno</span>(name = <span class="string">"simple"</span>, level = <span class="number">10</span>)
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SimpleObj</span> {</span>
+}
+</code></pre><p>最后写一个testcase通过反射可以获取这个类的Annotation进行后续操作。</p>
+<pre><code><span class="keyword">@Test</span>
+<span class="keyword">public</span> <span class="keyword">void</span> testGetAnnotation() {
+    Annotation[] annotations = SimpleObj.<span class="keyword">class</span>.getAnnotations();
+    System.<span class="keyword">out</span>.println(Arrays.toString(annotations));
+    MyClassRuntimeAnno myClassAnno = SimpleObj.<span class="keyword">class</span>.getAnnotation(MyClassRuntimeAnno.<span class="keyword">class</span>);
+    System.<span class="keyword">out</span>.println(myClassAnno.name() + <span class="string">", "</span> + myClassAnno.level());
+    System.<span class="keyword">out</span>.println(myClassAnno == annotations[<span class="number">0</span>]);
+}
+</code></pre><h2 id="SOURCE">SOURCE</h2><p>SOURCE这个policy表示注解保留在源代码中，但是编译的时候会被编译器所丢弃。 由于在编译的过程中这个注解还被保留着，所以在编译过程中可以针对这个policy进行一些操作。比如在自动生成java代码的场景下使用。最常见的就是<a href="https://projectlombok.org/" target="_blank" rel="external">lombok</a>的使用了，可以自动生成field的get和set方法以及toString方法，构造器等；消除了冗长的java代码。</p>
+<p>SOURCE这个policy可以使用jdk中的javax.annotation.processing.*包中的processor处理器进行注解的处理过程。</p>
+<p>以1个编译过程中会打印类中的方法的例子来说明SOUCRE这个policy的作用：</p>
+<p>首先定义一个Printer注解：</p>
+<pre><code><span class="variable">@Retention</span>(RetentionPolicy.SOURCE)
+<span class="variable">@Target</span>(ElementType.METHOD)
+public <span class="variable">@interface</span> Printer {
+}
+</code></pre><p>然后一个类的方法使用这个注解：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SimpleObject</span> </span>{
+
+    <span class="annotation">@Printer</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">methodA</span><span class="params">()</span> </span>{
+
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">methodB</span><span class="params">()</span> </span>{
+
+    }
+
+}
+</code></pre><p>创建对应的Processor：</p>
+<pre><code><span class="annotation">@SupportedAnnotationTypes</span>({<span class="string">"me.format.annotaion.Printer"</span>})
+public <span class="class"><span class="keyword">class</span> <span class="title">PrintProcessor</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">AbstractProcessor</span> {</span>
+    <span class="annotation">@Override</span>
+    public boolean process(<span class="type">Set</span>&lt;? <span class="keyword">extends</span> <span class="type">TypeElement</span>&gt; annotations, <span class="type">RoundEnvironment</span> roundEnv) {
+        <span class="type">Messager</span> messager = processingEnv.getMessager();
+        messager.printMessage(<span class="type">Diagnostic</span>.<span class="type">Kind</span>.<span class="type">NOTE</span>, <span class="string">"start to use PrintProcessor .."</span>);
+
+
+        <span class="type">Set</span>&lt;? <span class="keyword">extends</span> <span class="type">Element</span>&gt; rootElements = roundEnv.getRootElements();
+        messager.printMessage(<span class="type">Diagnostic</span>.<span class="type">Kind</span>.<span class="type">NOTE</span>, <span class="string">"root classes: "</span>);
+        <span class="keyword">for</span>(<span class="type">Element</span> root : rootElements) {
+            messager.printMessage(<span class="type">Diagnostic</span>.<span class="type">Kind</span>.<span class="type">NOTE</span>, <span class="string">"&gt;&gt; "</span> + root.toString());
+        }
+        messager.printMessage(<span class="type">Diagnostic</span>.<span class="type">Kind</span>.<span class="type">NOTE</span>, <span class="string">"annotation: "</span>);
+        <span class="keyword">for</span>(<span class="type">TypeElement</span> te : annotations) {
+            messager.printMessage(<span class="type">Diagnostic</span>.<span class="type">Kind</span>.<span class="type">NOTE</span>, <span class="string">"&gt;&gt;&gt; "</span> + te.toString());
+            <span class="type">Set</span>&lt;? <span class="keyword">extends</span> <span class="type">Element</span>&gt; elements = roundEnv.getElementsAnnotatedWith(te);
+            <span class="keyword">for</span>(<span class="type">Element</span> ele : elements) {
+                messager.printMessage(<span class="type">Diagnostic</span>.<span class="type">Kind</span>.<span class="type">NOTE</span>, <span class="string">"&gt;&gt;&gt;&gt; "</span> + ele.toString());
+            }
+        }
+
+        <span class="keyword">return</span> <span class="literal">true</span>;
+    }
+    <span class="annotation">@Override</span>
+    public <span class="type">SourceVersion</span> getSupportedSourceVersion() {
+        <span class="keyword">return</span> <span class="type">SourceVersion</span>.latestSupported();
+    }
+}
+</code></pre><p>然后先使用javac编译Printer和PrintProcessor：</p>
+<pre><code>javac -d classes src<span class="regexp">/main/</span>java<span class="regexp">/me/</span>format<span class="regexp">/annotation/</span>Printer.java src<span class="regexp">/main/</span>java<span class="regexp">/me/</span>format<span class="regexp">/annotation/</span>PrintProcessor.java
+</code></pre><p>最后再使用javac中的processor参数处理：</p>
+<pre><code>javac -cp classes -processor me<span class="class">.format</span><span class="class">.annotation</span><span class="class">.PrintProcessor</span> -d classes src/main/java/me/format/annotation/SimpleObject.java
+</code></pre><p>控制台打印出：</p>
+<pre><code>注: start to use PrintProcessor ..
+注: root classes: 
+注: &gt;&gt; hello<span class="class">.annotation</span><span class="class">.SimpleObject</span>
+注: annotation: 
+注: &gt;&gt;&gt; hello<span class="class">.annotation</span><span class="class">.Printer</span>
+注: &gt;&gt;&gt;&gt; <span class="function"><span class="title">methodA</span><span class="params">()</span></span>
+</code></pre><h2 id="CLASS">CLASS</h2><p>CLASS和RUNTIME的唯一区别是RUNTIME在运行时期间注解是存在的，而CLASS则不存在。</p>
+<p>我们通过<a href="http://asm.ow2.org/" target="_blank" rel="external">asm</a>来获取class文件里的annotation。</p>
+<p>首先定义注解：</p>
+<p>policy为CLASS的注解。</p>
+<pre><code>@Retention(RetentionPolicy.<span class="keyword">CLASS</span>)
+@<span class="type">Target</span>(ElementType.<span class="keyword">TYPE</span>)
+<span class="keyword">public</span> @<span class="keyword">interface</span> Meta {
+
+    String <span class="keyword">name</span>();
+
+}
+</code></pre><p>policy为RUNTIME的注解。</p>
+<pre><code><span class="annotation">@Retention</span>(RetentionPolicy.RUNTIME)
+<span class="annotation">@Target</span>(ElementType.TYPE)
+<span class="keyword">public</span> <span class="annotation">@interface</span> Header {
+
+    <span class="function"><span class="keyword">int</span> <span class="title">code</span><span class="params">()</span></span>;
+
+}
+</code></pre><p>使用注解：</p>
+<pre><code><span class="annotation">@Meta</span>(name = <span class="string">"obj"</span>)
+<span class="annotation">@Header</span>(code = <span class="number">200</span>)
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnnotationObject</span> </span>{
+
+    <span class="keyword">private</span> String val;
+
+    <span class="function"><span class="keyword">public</span> String <span class="title">getVal</span><span class="params">()</span> </span>{
+        <span class="keyword">return</span> val;
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setVal</span><span class="params">(String val)</span> </span>{
+        <span class="keyword">this</span>.val = val;
+    }
+}
+</code></pre><p>编译这3个java文件得到字节码文件AnnotationObject.class：</p>
+<pre><code>javac -d classes src<span class="regexp">/main/</span>java<span class="regexp">/me/</span>format<span class="regexp">/annotaion/</span>AnnotationObject.java src<span class="regexp">/main/</span>java<span class="regexp">/me/</span>format<span class="regexp">/annotation/M</span>eta.java src<span class="regexp">/main/</span>java<span class="regexp">/me/</span>format<span class="regexp">/annotation/</span>Header.java
+</code></pre><p>使用asm获取字节码文件中的注解：</p>
+<pre><code>ClassNode classNode = <span class="keyword">new</span> ClassNode();
+
+ClassReader cr = <span class="keyword">new</span> ClassReader(<span class="keyword">new</span> FileInputStream(<span class="string">"classes/me/format/annotation/AnnotationObject.class"</span>));
+
+cr.accept(classNode, <span class="number">0</span>);
+
+System.<span class="keyword">out</span>.println(<span class="string">"Class Name: "</span> + classNode.name);
+System.<span class="keyword">out</span>.println(<span class="string">"Source File: "</span> + classNode.sourceFile);
+
+System.<span class="keyword">out</span>.println(<span class="string">"invisible: "</span>);
+AnnotationNode anNode = null;
+<span class="keyword">for</span> (Object <span class="annotation">annotation</span> : classNode.invisibleAnnotations) {
+    anNode = (AnnotationNode) <span class="annotation">annotation</span>;
+    System.<span class="keyword">out</span>.println(<span class="string">"Annotation Descriptor : "</span> + anNode.desc);
+    System.<span class="keyword">out</span>.println(<span class="string">"Annotation attribute pairs : "</span> + anNode.values);
+}
+
+System.<span class="keyword">out</span>.println(<span class="string">"visible: "</span>);
+<span class="keyword">for</span> (Object <span class="annotation">annotation</span> : classNode.visibleAnnotations) {
+    anNode = (AnnotationNode) <span class="annotation">annotation</span>;
+    System.<span class="keyword">out</span>.println(<span class="string">"Annotation Descriptor : "</span> + anNode.desc);
+    System.<span class="keyword">out</span>.println(<span class="string">"Annotation attribute pairs : "</span> + anNode.values);
+}
+</code></pre><p>打印出：</p>
+<pre><code>Class <span class="string">Name:</span> me<span class="regexp">/format/</span>annotation/AnnotationObject
+Source <span class="string">File:</span> AnnotationObject.java
+<span class="string">invisible:</span> 
+Annotation <span class="string">Descriptor :</span> Lme<span class="regexp">/format/</span>annotation/Meta;
+Annotation attribute <span class="string">pairs :</span> [name, obj]
+<span class="string">visible:</span> 
+Annotation <span class="string">Descriptor :</span> Lme<span class="regexp">/format/</span>annotation/Header;
+Annotation attribute <span class="string">pairs :</span> [code, <span class="number">200</span>]
+</code></pre><p>其中policy为CLASS的注解编译完后不可见，而policy为RUNTIME的注解编译后可见。</p>
+<p>同样，我们可以使用javap查看编译后的信息：</p>
+<pre><code>javap -v me<span class="class">.format</span><span class="class">.annotation</span><span class="class">.AnnotationObject</span>
+</code></pre><p>会打印出注解的visible信息：</p>
+<pre><code><span class="preprocessor">#<span class="number">16</span> = Utf8               AnnotationObject.java</span>
+<span class="preprocessor">#<span class="number">17</span> = Utf8               RuntimeVisibleAnnotations</span>
+<span class="preprocessor">#<span class="number">18</span> = Utf8               Lhello/annotation/Header;</span>
+<span class="preprocessor">#<span class="number">19</span> = Utf8               code</span>
+<span class="preprocessor">#<span class="number">20</span> = Integer            <span class="number">200</span></span>
+<span class="preprocessor">#<span class="number">21</span> = Utf8               RuntimeInvisibleAnnotations</span>
+<span class="preprocessor">#<span class="number">22</span> = Utf8               Lhello/annotation/Meta;</span>
+<span class="preprocessor">#<span class="number">23</span> = Utf8               name</span>
+<span class="preprocessor">#<span class="number">24</span> = Utf8               obj</span>
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<p>Java Annotation对应的Retention有3种，在RetentionPolicy中定义，有3种：</p>
+<ol>
+<li>SOURCE. 注解保留在源代码中，但是编译的时候会被编译器所丢弃。比如@Override, @SuppressWarnings</li>
+<li>CLASS. 这是默认的policy。注解会被保留在class文件中，但是在运行时期间就不会识别这个注解。</li>
+<li>RUNTIME. 注解会被保留在class文件中，同时运行时期间也会被识别。所以可以使用反射机制获取注解信息。比如@Deprecated</li>
+</ol>]]>
+    
+    </summary>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[Swagger在SpringBoot中的使用]]></title>
@@ -4052,86 +4248,6 @@ public E pollLast() {
       <category term="collection" scheme="http://fangjian0423.github.io/tags/collection/"/>
     
       <category term="jdk" scheme="http://fangjian0423.github.io/tags/jdk/"/>
-    
-      <category term="jdk" scheme="http://fangjian0423.github.io/categories/jdk/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[jdk HashSet, LinkedHashSet工作原理分析]]></title>
-    <link href="http://fangjian0423.github.io/2016/03/30/jdk_hashset_linkedhashset/"/>
-    <id>http://fangjian0423.github.io/2016/03/30/jdk_hashset_linkedhashset/</id>
-    <published>2016-03-29T16:46:33.000Z</published>
-    <updated>2016-05-10T14:59:25.000Z</updated>
-    <content type="html"><![CDATA[<p>Set是一个没有包括重复数据的集合，跟List一样，他们都继承自Collection。</p>
-<p>Java中的Set接口最主要的实现类就是HashSet和LinkedHashSet。</p>
-<a id="more"></a>
-<h2 id="HashSet原理分析">HashSet原理分析</h2><p>首先看下HashSet的属性。</p>
-<p>HashSet内部有个HashMap属性和一个对象属性：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">HashMap</span>&lt;E,<span class="keyword">Object</span>&gt; <span class="built_in">map</span>;
-
-<span class="comment">// HashSet内部使用HashMap进行处理，由于Set只需要键值对中的键，而不需要值，所有的值都用这个对象</span>
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Object</span> PRESENT = <span class="keyword">new</span> <span class="keyword">Object</span>();
-</code></pre><p>HashSet的构造函数中也提供了HashMap的capacity，loadFactor这些参数。</p>
-<h3 id="add方法">add方法</h3><p>调用HashMap的put操作完成Set的add操作。</p>
-<pre><code><span class="keyword">public</span> <span class="built_in">boolean</span> <span class="built_in">add</span>(E e) {
-    <span class="keyword">return</span> <span class="built_in">map</span>.put(e, PRESENT)==<span class="keyword">null</span>;  <span class="comment">// HashMap put成功返回true，否则false</span>
-}
-</code></pre><p>HashMap相关的put操作在之前的博客中已经介绍过了，这里就不分析了。</p>
-<h3 id="boolean_remove(Object_o)">boolean remove(Object o)</h3><p>调用HashMap的remove操作完成。</p>
-<pre><code><span class="keyword">public</span> <span class="built_in">boolean</span> remove(<span class="keyword">Object</span> o) {
-    <span class="keyword">return</span> <span class="built_in">map</span>.remove(o)==PRESENT; <span class="comment">// 对应的节点移除成功返回true，否则false</span>
-}
-</code></pre><h3 id="一个HashSet例子">一个HashSet例子</h3><pre><code>Set&lt;<span class="keyword">String</span>&gt; <span class="built_in">set</span> = <span class="keyword">new</span> HashSet&lt;<span class="keyword">String</span>&gt;(<span class="number">5</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"java"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"golang"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"python"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"ruby"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"scala"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"c"</span>);
-
-<span class="keyword">for</span>(<span class="keyword">String</span> <span class="built_in">str</span> : <span class="built_in">set</span>) {
-    System.out.<span class="built_in">println</span>(<span class="built_in">str</span>);
-}
-</code></pre><p>这个例子中set中的HashMap内部结构如下图所示：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/hashmap03.jpg" alt=""></p>
-<h3 id="HashSet总结">HashSet总结</h3><ol>
-<li>HashSet内部使用HashMap，HashSet集合内部所有的操作基本上都是基于HashMap完成的</li>
-<li>HashSet中的元素是无序的，这是因为它内部使用HashMap进行存储，而HashMap添加键值对的时候是根据hash函数得到数组的下标的</li>
-</ol>
-<h2 id="LinkedHashSet原理分析">LinkedHashSet原理分析</h2><p>LinkedHashSet继承自HashSet，它的构造函数会调用父类HashSet的构造函数：</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="title">LinkedHashSet</span><span class="params">(<span class="keyword">int</span> initialCapacity, <span class="keyword">float</span> loadFactor)</span> </span>{
-    <span class="keyword">super</span>(initialCapacity, loadFactor, <span class="keyword">true</span>);
-}
-
-HashSet(<span class="keyword">int</span> initialCapacity, <span class="keyword">float</span> loadFactor, <span class="keyword">boolean</span> dummy) {
-    <span class="comment">// map使用LinkedHashMap构造，LinkedHashMap是HashMap的子类，accessOrder为false，即使用插入顺序</span>
-    map = <span class="keyword">new</span> LinkedHashMap&lt;&gt;(initialCapacity, loadFactor);
-}
-</code></pre><h3 id="一个LinkedHashSet例子">一个LinkedHashSet例子</h3><pre><code>Set&lt;<span class="keyword">String</span>&gt; <span class="built_in">set</span> = <span class="keyword">new</span> LinkedHashSet&lt;<span class="keyword">String</span>&gt;(<span class="number">5</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"java"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"golang"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"python"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"ruby"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"scala"</span>);
-<span class="keyword">for</span>(<span class="keyword">String</span> <span class="built_in">str</span> : <span class="built_in">set</span>) {
-    System.out.<span class="built_in">println</span>(<span class="built_in">str</span>);
-}
-</code></pre><p>这个例子中set中的LinkedHashMap内部结构如下图所示：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/linkedhashmap02.jpg" alt=""></p>
-<h3 id="LinkedHashSet总结">LinkedHashSet总结</h3><ol>
-<li>LinkedHashSet继自HashSet，但是内部的map是使用LinkedHashMap构造的，并且accessOrder为false，使用查询顺序。所以LinkedHashSet遍历的顺序就是插入顺序。</li>
-</ol>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>Set是一个没有包括重复数据的集合，跟List一样，他们都继承自Collection。</p>
-<p>Java中的Set接口最主要的实现类就是HashSet和LinkedHashSet。</p>]]>
-    
-    </summary>
-    
-      <category term="jdk" scheme="http://fangjian0423.github.io/tags/jdk/"/>
-    
-      <category term="set" scheme="http://fangjian0423.github.io/tags/set/"/>
     
       <category term="jdk" scheme="http://fangjian0423.github.io/categories/jdk/"/>
     

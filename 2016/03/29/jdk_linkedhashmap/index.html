@@ -94,6 +94,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="jdk LinkedHashMap工作原理分析">
 <meta name="twitter:description" content="LinkedHashMap是一种会记录插入顺序的Map，内部维护着一个accessOrder属性，用于表示map数据的迭代顺序是基于访问顺序还是插入顺序。">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/linkedhashmap02.jpg">
 
 
 
@@ -368,117 +369,117 @@
       
         <p>LinkedHashMap是一种会记录插入顺序的Map，内部维护着一个accessOrder属性，用于表示map数据的迭代顺序是基于访问顺序还是插入顺序。</p>
 <a id="more"></a>
-<h2 id="LinkedHashMap原理分析">LinkedHashMap原理分析</h2><p>首先是LinkedHashMap的定义：</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LinkedHashMap</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt;
-    <span class="keyword">extends</span> <span class="title">HashMap</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt;
-        <span class="keyword">implements</span> <span class="title">Map</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt;</span>
+<h2 id="LinkedHashMap原理分析"><a href="#LinkedHashMap原理分析" class="headerlink" title="LinkedHashMap原理分析"></a>LinkedHashMap原理分析</h2><p>首先是LinkedHashMap的定义：</p>
+<pre><code>public class LinkedHashMap&lt;K,V&gt;
+    extends HashMap&lt;K,V&gt;
+        implements Map&lt;K,V&gt;
 </code></pre><p>LinkedHashMap继承HashMap，实现Map接口，所以它的结构跟HashMap是一样的，使用链表法解决哈希冲突的哈希表，基本操作跟HashMap也是一样的，就是多了一点额外的步骤用于处理链表。</p>
 <p>LinkedHashMap有个内部类Entry，这个Entry就是链表中的节点，继承自HashMap.Node，多出了2个属性before和after，所以LinkedHashMap内部链表的节点是双向的，代码如下：</p>
-<pre><code>static <span class="class"><span class="keyword">class</span> <span class="title">Entry&lt;K</span>,<span class="title">V&gt;</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">HashMap</span>.<span class="title">Node&lt;K</span>,<span class="title">V&gt;</span> {</span>
-    <span class="type">Entry</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; before, after;
-    <span class="type">Entry</span>(int hash, <span class="type">K</span> key, <span class="type">V</span> value, <span class="type">Node</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; next) {
-        <span class="keyword">super</span>(hash, key, value, next);
+<pre><code>static class Entry&lt;K,V&gt; extends HashMap.Node&lt;K,V&gt; {
+    Entry&lt;K,V&gt; before, after;
+    Entry(int hash, K key, V value, Node&lt;K,V&gt; next) {
+        super(hash, key, value, next);
     }
 }
 </code></pre><p>另外LinkedHashMap还有两个重要的属性head，tail，这2个属性用于存储插入的节点，形成一个双向链表：</p>
-<pre><code><span class="comment">// 首节点</span>
-<span class="keyword">transient</span> LinkedHashMap.Entry&lt;K,V&gt; head;
+<pre><code>// 首节点
+transient LinkedHashMap.Entry&lt;K,V&gt; head;
 
-<span class="comment">// 尾节点</span>
-<span class="keyword">transient</span> LinkedHashMap.Entry&lt;K,V&gt; tail;
+// 尾节点
+transient LinkedHashMap.Entry&lt;K,V&gt; tail;
 </code></pre><p>跟HashMap一样，下面这个例子对应的LinkedHashMap结构图示如下所示，accessOrder为false，使用插入顺序：</p>
-<pre><code>Map&lt;String, Integer&gt; <span class="built_in">map</span> = <span class="keyword">new</span> LinkedHashMap&lt;String, Integer&gt;(<span class="number">5</span>);
-<span class="built_in">map</span>.put(<span class="string">"java"</span>, <span class="number">1</span>);
-<span class="built_in">map</span>.put(<span class="string">"golang"</span>, <span class="number">2</span>);
-<span class="built_in">map</span>.put(<span class="string">"python"</span>, <span class="number">3</span>);
-<span class="built_in">map</span>.put(<span class="string">"ruby"</span>, <span class="number">4</span>);
-<span class="built_in">map</span>.put(<span class="string">"scala"</span>, <span class="number">5</span>);
+<pre><code>Map&lt;String, Integer&gt; map = new LinkedHashMap&lt;String, Integer&gt;(5);
+map.put(&quot;java&quot;, 1);
+map.put(&quot;golang&quot;, 2);
+map.put(&quot;python&quot;, 3);
+map.put(&quot;ruby&quot;, 4);
+map.put(&quot;scala&quot;, 5);
 </code></pre><p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/linkedhashmap02.jpg" alt=""></p>
-<h3 id="put操作">put操作</h3><p>LinkedHashMap没有覆盖HashMap的put方法，所以put操作跟HashMap是一样的。但是它覆盖了newNode方法，也就是说构造新节点的时候，LinkedHashMap跟HashMap是不一样的：</p>
-<pre><code><span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;K</span>,V&gt; newNode(int hash, K key, V value, <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;K</span>,V&gt; e) {
-    // 使用Entry双向链表构造节点，而不是HashMap的<span class="keyword">Node</span><span class="identifier"></span><span class="title">单向链表
-    LinkedHashMap</span>.Entry<span class="tag">&lt;K,V&gt;</span> p =
-        new LinkedHashMap.Entry<span class="tag">&lt;K,V&gt;</span>(hash, key, value, e);
+<h3 id="put操作"><a href="#put操作" class="headerlink" title="put操作"></a>put操作</h3><p>LinkedHashMap没有覆盖HashMap的put方法，所以put操作跟HashMap是一样的。但是它覆盖了newNode方法，也就是说构造新节点的时候，LinkedHashMap跟HashMap是不一样的：</p>
+<pre><code>Node&lt;K,V&gt; newNode(int hash, K key, V value, Node&lt;K,V&gt; e) {
+    // 使用Entry双向链表构造节点，而不是HashMap的Node单向链表
+    LinkedHashMap.Entry&lt;K,V&gt; p =
+        new LinkedHashMap.Entry&lt;K,V&gt;(hash, key, value, e);
     linkNodeLast(p); // 更新双向链表，这一操作在HashMap里面是没有的
     return p;
 }
 </code></pre><p>另外，LinkedHashMap重写了afterNodeInsertion这个钩子方法，在put一个关键字不存在的节点之后会调用这个方法：</p>
-<pre><code><span class="keyword">void</span> afterNodeInsertion(<span class="built_in">boolean</span> evict) { <span class="comment">// possibly remove eldest</span>
+<pre><code>void afterNodeInsertion(boolean evict) { // possibly remove eldest
     LinkedHashMap.Entry&lt;K,V&gt; first;
-    <span class="comment">// removeEldestEntry方法LinkedHashMap永远返回false，一些使用缓存策略的Map会覆盖这个方法，比如jackson的LRUMap，会移除最老的节点，也就是首节点</span>
-    <span class="keyword">if</span> (evict &amp;&amp; (first = head) != <span class="keyword">null</span> &amp;&amp; removeEldestEntry(first)) {
-        K <span class="variable">key</span> = first.<span class="variable">key</span>;
-        removeNode(hash(<span class="variable">key</span>), <span class="variable">key</span>, <span class="keyword">null</span>, <span class="keyword">false</span>, <span class="keyword">true</span>);
+    // removeEldestEntry方法LinkedHashMap永远返回false，一些使用缓存策略的Map会覆盖这个方法，比如jackson的LRUMap，会移除最老的节点，也就是首节点
+    if (evict &amp;&amp; (first = head) != null &amp;&amp; removeEldestEntry(first)) {
+        K key = first.key;
+        removeNode(hash(key), key, null, false, true);
     }
 }
 </code></pre><p>put操作如果关键字已经存在，会调用afterNodeAccess这个钩子方法：</p>
-<pre><code><span class="label">void</span> afterNodeAccess(Node&lt;K,V&gt; e) { // <span class="keyword">move </span>node to last
-    LinkedHashMap.Entry&lt;K,V&gt; last<span class="comment">;</span>
-    <span class="preprocessor">if</span> (accessOrder &amp;&amp; (last = tail) != e) { // 如果使用访问顺序并且访问的不是尾节点
-        LinkedHashMap.Entry&lt;K,V&gt; p =
-            (LinkedHashMap.Entry&lt;K,V&gt;)e, <span class="keyword">b </span>= p.<span class="keyword">before, </span>a = p.after<span class="comment">;</span>
-        p.after = null<span class="comment">;</span>
-        <span class="preprocessor">if</span> (<span class="keyword">b </span>== null)
-            head = a<span class="comment">;</span>
-        <span class="preprocessor">else</span>
-            <span class="keyword">b.after </span>= a<span class="comment">;</span>
-        <span class="preprocessor">if</span> (a != null)
-            a.<span class="keyword">before </span>= <span class="keyword">b;
-</span>        <span class="preprocessor">else</span>
-            last = <span class="keyword">b;
-</span>        <span class="preprocessor">if</span> (last == null)
-            head = p<span class="comment">;</span>
-        <span class="preprocessor">else</span> {
-            p.<span class="keyword">before </span>= last<span class="comment">;</span>
-            last.after = p<span class="comment">;</span>
-        }
-        tail = p<span class="comment">;</span>
-        ++modCount<span class="comment">;</span>
-    }
-}
-</code></pre><h3 id="get操作">get操作</h3><p>LinkedHashMap复写了get方法：</p>
-<pre><code><span class="keyword">public</span> V <span class="built_in">get</span>(<span class="keyword">Object</span> <span class="variable">key</span>) {
-    Node&lt;K,V&gt; e;
-    <span class="keyword">if</span> ((e = getNode(hash(<span class="variable">key</span>), <span class="variable">key</span>)) == <span class="keyword">null</span>)
-        <span class="keyword">return</span> <span class="keyword">null</span>;
-    <span class="keyword">if</span> (accessOrder) <span class="comment">// 使用访问顺序的话，调用afterNodeAccess方法</span>
-        afterNodeAccess(e);
-    <span class="keyword">return</span> e.value;
-}
-</code></pre><h3 id="remove操作">remove操作</h3><p>LinkedHashMap的remove方法没有复写HashMap的remove方法，但是同样实现了afterNodeRemoval这个钩子方法：</p>
-<pre><code>// 更新双向链表
-<span class="label">void</span> afterNodeRemoval(Node&lt;K,V&gt; e) { // unlink
-    LinkedHashMap.Entry&lt;K,V&gt; p =
-        (LinkedHashMap.Entry&lt;K,V&gt;)e, <span class="keyword">b </span>= p.<span class="keyword">before, </span>a = p.after<span class="comment">;</span>
-    p.<span class="keyword">before </span>= p.after = null<span class="comment">;</span>
-    <span class="preprocessor">if</span> (<span class="keyword">b </span>== null)
-        head = a<span class="comment">;</span>
-    <span class="preprocessor">else</span>
-        <span class="keyword">b.after </span>= a<span class="comment">;</span>
-    <span class="preprocessor">if</span> (a == null)
-        tail = <span class="keyword">b;
-</span>    <span class="preprocessor">else</span>
-        a.<span class="keyword">before </span>= <span class="keyword">b;
-</span>}
-</code></pre><h3 id="accessOrder属性分析">accessOrder属性分析</h3><p>LinkedHashMap默认情况下，accessOrder属性为false，也就是使用插入顺序，这个插入顺序是根据LinkedHashMap内部的一个双向链表实现的。如果accessOrder为true，也就是使用访问顺序，那么afterNodeAccess这个钩子方法内部的逻辑会被执行，将会修改双向链表的结构，再来看一下这个方法的具体逻辑：</p>
-<pre><code><span class="function"><span class="keyword">void</span> <span class="title">afterNodeAccess</span><span class="params">(Node&lt;K,V&gt; e)</span> </span>{ <span class="comment">// move node to last</span>
+<pre><code>void afterNodeAccess(Node&lt;K,V&gt; e) { // move node to last
     LinkedHashMap.Entry&lt;K,V&gt; last;
-    <span class="keyword">if</span> (accessOrder &amp;&amp; (last = tail) != e) { <span class="comment">// 使用访问顺序，把节点移动到双向链表的最后面，如果已经在最后面了，不需要进行移动</span>
+    if (accessOrder &amp;&amp; (last = tail) != e) { // 如果使用访问顺序并且访问的不是尾节点
         LinkedHashMap.Entry&lt;K,V&gt; p =
             (LinkedHashMap.Entry&lt;K,V&gt;)e, b = p.before, a = p.after;
-        p.after = <span class="keyword">null</span>;
-        <span class="keyword">if</span> (b == <span class="keyword">null</span>)
-            head = a; <span class="comment">// 特殊情况，处理头节点</span>
-        <span class="keyword">else</span>
-            b.after = a; <span class="comment">// 节点处理</span>
-        <span class="keyword">if</span> (a != <span class="keyword">null</span>)
-            a.before = b; <span class="comment">// 节点处理</span>
-        <span class="keyword">else</span>
-            last = b; <span class="comment">// 特殊情况，处理尾节点</span>
-        <span class="keyword">if</span> (last == <span class="keyword">null</span>)
+        p.after = null;
+        if (b == null)
+            head = a;
+        else
+            b.after = a;
+        if (a != null)
+            a.before = b;
+        else
+            last = b;
+        if (last == null)
             head = p;
-        <span class="keyword">else</span> {
-            p.before = last; <span class="comment">// 尾节点处理</span>
+        else {
+            p.before = last;
+            last.after = p;
+        }
+        tail = p;
+        ++modCount;
+    }
+}
+</code></pre><h3 id="get操作"><a href="#get操作" class="headerlink" title="get操作"></a>get操作</h3><p>LinkedHashMap复写了get方法：</p>
+<pre><code>public V get(Object key) {
+    Node&lt;K,V&gt; e;
+    if ((e = getNode(hash(key), key)) == null)
+        return null;
+    if (accessOrder) // 使用访问顺序的话，调用afterNodeAccess方法
+        afterNodeAccess(e);
+    return e.value;
+}
+</code></pre><h3 id="remove操作"><a href="#remove操作" class="headerlink" title="remove操作"></a>remove操作</h3><p>LinkedHashMap的remove方法没有复写HashMap的remove方法，但是同样实现了afterNodeRemoval这个钩子方法：</p>
+<pre><code>// 更新双向链表
+void afterNodeRemoval(Node&lt;K,V&gt; e) { // unlink
+    LinkedHashMap.Entry&lt;K,V&gt; p =
+        (LinkedHashMap.Entry&lt;K,V&gt;)e, b = p.before, a = p.after;
+    p.before = p.after = null;
+    if (b == null)
+        head = a;
+    else
+        b.after = a;
+    if (a == null)
+        tail = b;
+    else
+        a.before = b;
+}
+</code></pre><h3 id="accessOrder属性分析"><a href="#accessOrder属性分析" class="headerlink" title="accessOrder属性分析"></a>accessOrder属性分析</h3><p>LinkedHashMap默认情况下，accessOrder属性为false，也就是使用插入顺序，这个插入顺序是根据LinkedHashMap内部的一个双向链表实现的。如果accessOrder为true，也就是使用访问顺序，那么afterNodeAccess这个钩子方法内部的逻辑会被执行，将会修改双向链表的结构，再来看一下这个方法的具体逻辑：</p>
+<pre><code>void afterNodeAccess(Node&lt;K,V&gt; e) { // move node to last
+    LinkedHashMap.Entry&lt;K,V&gt; last;
+    if (accessOrder &amp;&amp; (last = tail) != e) { // 使用访问顺序，把节点移动到双向链表的最后面，如果已经在最后面了，不需要进行移动
+        LinkedHashMap.Entry&lt;K,V&gt; p =
+            (LinkedHashMap.Entry&lt;K,V&gt;)e, b = p.before, a = p.after;
+        p.after = null;
+        if (b == null)
+            head = a; // 特殊情况，处理头节点
+        else
+            b.after = a; // 节点处理
+        if (a != null)
+            a.before = b; // 节点处理
+        else
+            last = b; // 特殊情况，处理尾节点
+        if (last == null)
+            head = p;
+        else {
+            p.before = last; // 尾节点处理
             last.after = p;
         }
         tail = p;
@@ -486,25 +487,25 @@
     }
 }
 </code></pre><p>afterNodeAccess在使用get方法或者put方法遇到关键字已经存在的情况下，会被触发，一个例子如下：</p>
-<pre><code>Map&lt;String, Integer&gt; <span class="built_in">map</span> = <span class="keyword">new</span> LinkedHashMap&lt;String, Integer&gt;(<span class="number">5</span>, <span class="number">0.75f</span>, <span class="literal">true</span>);
-<span class="built_in">map</span>.put(<span class="string">"java"</span>, <span class="number">1</span>);
-<span class="built_in">map</span>.put(<span class="string">"golang"</span>, <span class="number">2</span>);
-<span class="built_in">map</span>.put(<span class="string">"python"</span>, <span class="number">3</span>);
-<span class="built_in">map</span>.put(<span class="string">"ruby"</span>, <span class="number">4</span>);
-<span class="built_in">map</span>.put(<span class="string">"scala"</span>, <span class="number">5</span>);
-System.out.println(<span class="built_in">map</span>.get(<span class="string">"ruby"</span>));
+<pre><code>Map&lt;String, Integer&gt; map = new LinkedHashMap&lt;String, Integer&gt;(5, 0.75f, true);
+map.put(&quot;java&quot;, 1);
+map.put(&quot;golang&quot;, 2);
+map.put(&quot;python&quot;, 3);
+map.put(&quot;ruby&quot;, 4);
+map.put(&quot;scala&quot;, 5);
+System.out.println(map.get(&quot;ruby&quot;));
 </code></pre><p>上面这段代码，LinkedHashMap的accessOrder属性为true，使用访问顺序，最后调用了get方法，触发afterNodeAccess方法，修改双向链表，效果如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/linkedhashmap03.jpg" alt=""></p>
-<h2 id="注意点">注意点</h2><p>LinkedHashMap使用访问顺序并且进行遍历的时候，如果使用如下代码，会发生ConcurrentModificationException异常：</p>
-<pre><code><span class="keyword">for</span>(<span class="keyword">String</span> <span class="built_in">str</span> : <span class="built_in">map</span>.keySet()) {
-    System.out.<span class="built_in">println</span>(<span class="built_in">map</span>.<span class="built_in">get</span>(<span class="built_in">str</span>));
+<h2 id="注意点"><a href="#注意点" class="headerlink" title="注意点"></a>注意点</h2><p>LinkedHashMap使用访问顺序并且进行遍历的时候，如果使用如下代码，会发生ConcurrentModificationException异常：</p>
+<pre><code>for(String str : map.keySet()) {
+    System.out.println(map.get(str));
 }
 </code></pre><p>不应该这么使用，而是应该直接读取value：</p>
-<pre><code><span class="function">for</span>(Integer it <span class="value">: map.<span class="function">values</span>()) {
-    System.out.<span class="function">println</span>(it);</span>
+<pre><code>for(Integer it : map.values()) {
+    System.out.println(it);
 }
 </code></pre><p>具体可以参考<a href="http://stackoverflow.com/questions/16180568/concurrentmodificationexception-with-linkedhashmap" target="_blank" rel="external">stackoverflow上的这篇帖子</a>。</p>
-<h2 id="总结">总结</h2><ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
 <li><p>LinkedHashMap也是一种使用拉链式哈希表的数据结构，除了哈希表，它内部还维护着一个双向链表，用于处理访问顺序和插入顺序的问题</p>
 </li>
 <li><p>LinkedHashMap继承自HashMap，大多数的方法都是跟HashMap一样的，不过覆盖了一些方法</p>

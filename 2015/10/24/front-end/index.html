@@ -98,6 +98,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="最近前端的一点总结">
 <meta name="twitter:description" content="这段时间被拉去当做前端了，做了快1个多月了，也好久没写博客了。 做了两个项目的前端，这周是第二个项目的启动 ...">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/content-box1.png">
 
 
 
@@ -375,52 +376,52 @@
 <p>1.box-sizing属性。</p>
 <p>box-sizing是css3引入的。有两个值，分别content-box和border-box。 默认为content-box。这个属性的作用是这样的：</p>
 <p>比如我们定义一个div，宽度和高度都是50px。padding 5px， border: 5px。 那么这个div实际的宽度和高度是：</p>
-<pre><code><span class="number">50</span> + <span class="number">2</span> * <span class="number">5</span> + <span class="number">2</span> * <span class="number">5</span> = <span class="number">70</span>。
+<pre><code>50 + 2 * 5 + 2 * 5 = 70。
 </code></pre><p>如果使用border-box的话，那么这个div的宽度还是50。 因为border-box会把padding和border都一起算到宽度和高度里面。所以使用border-box后div的高度和宽度为还是50。但是实际上真正显示内容的高度和宽度是 50 - 5 <em> 2 - 5 </em> 2 = 30。</p>
 <p>直接来点实际的代码，使用content-box，也就是默认情况：</p>
-<pre><code>&lt;<span class="keyword">div</span> style=<span class="string">"background-color: blue; width: 100px; height: 100px;"</span>&gt;
-    &lt;<span class="keyword">div</span> style=<span class="string">"background-color: yellow; width: 50px; height: 50px; padding: 5px; border: 5px solid red; box-sizing: content-box;"</span>&gt;&lt;/<span class="keyword">div</span>&gt;
-&lt;/<span class="keyword">div</span>&gt;
+<pre><code>&lt;div style=&quot;background-color: blue; width: 100px; height: 100px;&quot;&gt;
+    &lt;div style=&quot;background-color: yellow; width: 50px; height: 50px; padding: 5px; border: 5px solid red; box-sizing: content-box;&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
 </code></pre><p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/content-box1.png" alt=""><br><img src="http://7x2wh6.com1.z0.glb.clouddn.com/content-box2.png" alt=""></p>
-<pre><code>&lt;<span class="keyword">div</span> style=<span class="string">"background-color: blue; width: 100px; height: 100px;"</span>&gt;
-    &lt;<span class="keyword">div</span> style=<span class="string">"background-color: yellow; width: 50px; height: 50px; padding: 5px; border: 5px solid red; box-sizing: border-box;"</span>&gt;&lt;/<span class="keyword">div</span>&gt;
-&lt;/<span class="keyword">div</span>&gt;
+<pre><code>&lt;div style=&quot;background-color: blue; width: 100px; height: 100px;&quot;&gt;
+    &lt;div style=&quot;background-color: yellow; width: 50px; height: 50px; padding: 5px; border: 5px solid red; box-sizing: border-box;&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
 </code></pre><p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/border-box1.png" alt=""><br><img src="http://7x2wh6.com1.z0.glb.clouddn.com/border-box2.png" alt=""></p>
 <p>Bootstrap3中也大量使用了border-box。</p>
 <p>2.white-space属性。</p>
 <p>使用white-space是为了让多张图片在同一行展示，不会换行。</p>
-<pre><code>&lt;<span class="tag">div</span> style=<span class="string">"width: 200px;"</span>&gt;
-    &lt;<span class="tag">img</span> src=<span class="string">"http://7x2wh6.com1.z0.glb.clouddn.com/border-box1.png"</span> <span class="attribute">width</span>=<span class="string">"50px"</span>/&gt;
-    &lt;<span class="tag">img</span> src=<span class="string">"http://7x2wh6.com1.z0.glb.clouddn.com/border-box1.png"</span> <span class="attribute">width</span>=<span class="string">"50px"</span>/&gt;
-    &lt;<span class="tag">img</span> src=<span class="string">"http://7x2wh6.com1.z0.glb.clouddn.com/border-box1.png"</span> <span class="attribute">width</span>=<span class="string">"50px"</span>/&gt;
-    &lt;<span class="tag">img</span> src=<span class="string">"http://7x2wh6.com1.z0.glb.clouddn.com/border-box1.png"</span> <span class="attribute">width</span>=<span class="string">"50px"</span>/&gt;
-    &lt;<span class="tag">img</span> src=<span class="string">"http://7x2wh6.com1.z0.glb.clouddn.com/border-box1.png"</span> <span class="attribute">width</span>=<span class="string">"50px"</span>/&gt;
+<pre><code>&lt;div style=&quot;width: 200px;&quot;&gt;
+    &lt;img src=&quot;http://7x2wh6.com1.z0.glb.clouddn.com/border-box1.png&quot; width=&quot;50px&quot;/&gt;
+    &lt;img src=&quot;http://7x2wh6.com1.z0.glb.clouddn.com/border-box1.png&quot; width=&quot;50px&quot;/&gt;
+    &lt;img src=&quot;http://7x2wh6.com1.z0.glb.clouddn.com/border-box1.png&quot; width=&quot;50px&quot;/&gt;
+    &lt;img src=&quot;http://7x2wh6.com1.z0.glb.clouddn.com/border-box1.png&quot; width=&quot;50px&quot;/&gt;
+    &lt;img src=&quot;http://7x2wh6.com1.z0.glb.clouddn.com/border-box1.png&quot; width=&quot;50px&quot;/&gt;
 &lt;/div&gt;
 </code></pre><p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/white-space1.png" alt=""></p>
 <p>将外层的div改为：</p>
-<pre><code>&lt;<span class="tag">div</span> style=<span class="string">"width: 200px; white-space: nowrap; overflow: scroll;"</span>&gt;
+<pre><code>&lt;div style=&quot;width: 200px; white-space: nowrap; overflow: scroll;&quot;&gt;
 </code></pre><p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/white-space2.png" alt=""></p>
 <p>white-space设置为nowrap后，文本内容不会换行直到遇到br标签为止。</p>
 <p>3.CSS3的动画。</p>
 <p>一开始没有使用CSS3的动画，使用了JQuery的animate，结果发现页面动画有点卡，后来改成了CSS3的动画。</p>
 <p>因为都是一些比较简单的动画，所以只能写下简单的动画属性了。</p>
-<pre><code>&lt;<span class="keyword">div</span> style=<span class="string">"width: 50px; height: 50px; background-color: yellow; transition: width .2s;"</span>&gt;
-&lt;/<span class="keyword">div</span>&gt;
+<pre><code>&lt;div style=&quot;width: 50px; height: 50px; background-color: yellow; transition: width .2s;&quot;&gt;
+&lt;/div&gt;
 </code></pre><p>div的点击事件：</p>
-<pre><code>$(<span class="string">"div"</span>).click(<span class="keyword">function</span>() {
-    var <span class="variable">$div</span> = $(this);
-    if(<span class="variable">$div</span>.width() == <span class="number">50</span>) {
-      <span class="variable">$div</span>.width(<span class="string">"100"</span>);  
+<pre><code>$(&quot;div&quot;).click(function() {
+    var $div = $(this);
+    if($div.width() == 50) {
+      $div.width(&quot;100&quot;);  
     } else {
-      <span class="variable">$div</span>.width(<span class="string">"50"</span>);  
+      $div.width(&quot;50&quot;);  
     }
 });
 </code></pre><p>动画还有延迟效果，这里就不举例了。</p>
 <p>4.垂直居中</p>
 <p>高度固定的垂直居中，设置line-height为容器高度，text-align为center即可：</p>
-<pre><code>&lt;<span class="keyword">div</span> style=<span class="string">"width: 100px; height: 100px; background-color: yellow; line-height: 100px; text-align: center;"</span>&gt;
+<pre><code>&lt;div style=&quot;width: 100px; height: 100px; background-color: yellow; line-height: 100px; text-align: center;&quot;&gt;
     我居中了
-&lt;/<span class="keyword">div</span>&gt;
+&lt;/div&gt;
 </code></pre><p>高度不固定的垂直居中：</p>
 <pre><code>html, body {
   height: 100%;
@@ -435,24 +436,24 @@ body {
   display: -ms-flexbox;
 
   display: flex;
-<span class="comment">
-  /* 水平居中*/</span>
-  -<span class="ruby">webkit-box-<span class="symbol">align:</span> center;
-</span>  -<span class="ruby">moz-box-<span class="symbol">align:</span> center;
-</span>  -<span class="ruby">ms-flex-<span class="symbol">pack:</span>center;<span class="regexp">/* IE 10 */</span>
-</span>
-  -<span class="ruby">webkit-justify-<span class="symbol">content:</span> center;
-</span>  -<span class="ruby">moz-justify-<span class="symbol">content:</span> center;
-</span>  justify-content: center;/* IE 11+,Firefox 22+,Chrome 29+,Opera 12.1*/
-<span class="comment">
-  /* 垂直居中 */</span>
-  -<span class="ruby">webkit-box-<span class="symbol">pack:</span> center;
-</span>  -<span class="ruby">moz-box-<span class="symbol">pack:</span> center;
-</span>  -<span class="ruby">ms-flex-<span class="symbol">align:</span>center;<span class="regexp">/* IE 10 */</span>
-</span>
-  -<span class="ruby">webkit-align-<span class="symbol">items:</span> center;
-</span>  -<span class="ruby">moz-align-<span class="symbol">items:</span> center;
-</span>  align-items: center;
+
+  /* 水平居中*/
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -ms-flex-pack:center;/* IE 10 */
+
+  -webkit-justify-content: center;
+  -moz-justify-content: center;
+  justify-content: center;/* IE 11+,Firefox 22+,Chrome 29+,Opera 12.1*/
+
+  /* 垂直居中 */
+  -webkit-box-pack: center;
+  -moz-box-pack: center;
+  -ms-flex-align:center;/* IE 10 */
+
+  -webkit-align-items: center;
+  -moz-align-items: center;
+  align-items: center;
 }
 
 ...

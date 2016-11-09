@@ -94,6 +94,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Flume几个比较有用的功能和一些坑(用到新功能后会更新文章)">
 <meta name="twitter:description" content="根据项目的经验，介绍几个flume比较有用的功能...">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/flume-note1.png">
 
 
 
@@ -367,46 +368,46 @@
 
       
         <p>根据项目的经验，介绍几个flume比较有用的功能。</p>
-<h2 id="ChannelSelector功能">ChannelSelector功能</h2><p>flume内置的ChannelSelector有两种，分别是Replicating和Multiplexing。</p>
+<h2 id="ChannelSelector功能"><a href="#ChannelSelector功能" class="headerlink" title="ChannelSelector功能"></a>ChannelSelector功能</h2><p>flume内置的ChannelSelector有两种，分别是Replicating和Multiplexing。</p>
 <p>Replicating类型的ChannelSelector会针对每一个Event，拷贝到所有的Channel中，这是默认的ChannelSelector。</p>
 <p>replicating类型的ChannelSelector例子如下：</p>
 <pre><code>a1.sources = r1
-a1.channels = c1 c2 <span class="preprocessor"># 如果有<span class="number">100</span>个Event，那么c1和c2中都会有这<span class="number">100</span>个事件</span>
+a1.channels = c1 c2 # 如果有100个Event，那么c1和c2中都会有这100个事件
 
 a1.channels.c1.type = memory
-a1.channels.c1.capacity = <span class="number">1000</span>
-a1.channels.c1.transactionCapacity = <span class="number">100</span>
+a1.channels.c1.capacity = 1000
+a1.channels.c1.transactionCapacity = 100
 
 
 a1.channels.c2.type = memory
-a1.channels.c2.capacity = <span class="number">1000</span>
-a1.channels.c2.transactionCapacity = <span class="number">100</span>
+a1.channels.c2.capacity = 1000
+a1.channels.c2.transactionCapacity = 100
 </code></pre><p>Multiplexing类型的ChannelSelector会根据Event中Header中的某个属性决定分发到哪个Channel。</p>
 <p>multiplexing类型的ChannelSelector例子如下：</p>
-<pre><code><span class="label">a1.sources</span> = <span class="literal">r1</span>
+<pre><code>a1.sources = r1
 
-<span class="label">a1.sources.source1.selector.type</span> = <span class="keyword">multiplexing
-</span><span class="label">a1.sources.source1.selector.header</span> = validation # 以header中的validation对应的值作为条件
-<span class="label">a1.sources.source1.selector.mapping.SUCCESS</span> = <span class="literal">c2</span> # 如果header中validation的值为SUCCESS，使用<span class="literal">c2</span>这个channel
-<span class="label">a1.sources.source1.selector.mapping.FAIL</span> = <span class="literal">c1</span> # 如果header中validation的值为FAIL，使用<span class="literal">c1</span>这个channel
-<span class="label">a1.sources.source1.selector.default</span> = <span class="literal">c1</span> # 默认使用<span class="literal">c1</span>这个channel
-</code></pre><h2 id="Sink的Serializer">Sink的Serializer</h2><p>HDFS Sink， HBase Sink，ElasticSearch Sink都支持Serializer功能。</p>
+a1.sources.source1.selector.type = multiplexing
+a1.sources.source1.selector.header = validation # 以header中的validation对应的值作为条件
+a1.sources.source1.selector.mapping.SUCCESS = c2 # 如果header中validation的值为SUCCESS，使用c2这个channel
+a1.sources.source1.selector.mapping.FAIL = c1 # 如果header中validation的值为FAIL，使用c1这个channel
+a1.sources.source1.selector.default = c1 # 默认使用c1这个channel
+</code></pre><h2 id="Sink的Serializer"><a href="#Sink的Serializer" class="headerlink" title="Sink的Serializer"></a>Sink的Serializer</h2><p>HDFS Sink， HBase Sink，ElasticSearch Sink都支持Serializer功能。</p>
 <p>Serializer的作用是sink写入的时候，做一些处理。</p>
-<h3 id="HDFS_Sink的Serializer">HDFS Sink的Serializer</h3><p>在<a href="http://fangjian0423.github.io/2015/06/23/flume-sink/">Flume Sink组件分析中</a>一文中，分析过了HDFS写文件的时候使用BucketWriter写数据，BucketWriter内部使用HDFSWriter属性写数据。HDFSWriter是一个处理hdfs文件的接口。</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">HDFSWriter</span> <span class="keyword">extends</span> <span class="title">Configurable</span> </span>{
+<h3 id="HDFS-Sink的Serializer"><a href="#HDFS-Sink的Serializer" class="headerlink" title="HDFS Sink的Serializer"></a>HDFS Sink的Serializer</h3><p>在<a href="http://fangjian0423.github.io/2015/06/23/flume-sink/">Flume Sink组件分析中</a>一文中，分析过了HDFS写文件的时候使用BucketWriter写数据，BucketWriter内部使用HDFSWriter属性写数据。HDFSWriter是一个处理hdfs文件的接口。</p>
+<pre><code>public interface HDFSWriter extends Configurable {
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">open</span><span class="params">(String filePath)</span> <span class="keyword">throws</span> IOException</span>;
+  public void open(String filePath) throws IOException;
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">open</span><span class="params">(String filePath, CompressionCodec codec,
-      CompressionType cType)</span> <span class="keyword">throws</span> IOException</span>;
+  public void open(String filePath, CompressionCodec codec,
+      CompressionType cType) throws IOException;
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">append</span><span class="params">(Event e)</span> <span class="keyword">throws</span> IOException</span>;
+  public void append(Event e) throws IOException;
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sync</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+  public void sync() throws IOException;
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+  public void close() throws IOException;
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isUnderReplicated</span><span class="params">()</span></span>;
+  public boolean isUnderReplicated();
 
 }
 </code></pre><p>HDFSWriter的结构如下：</p>
@@ -415,92 +416,92 @@ a1.channels.c2.transactionCapacity = <span class="number">100</span>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/flume-note2.png" alt=""></p>
 <p>HDFSDataStream对应DataStream类型，HDFSCompressedDataStream对应CompressedStream，HDFSSequenceFile对应SequenceFile。</p>
 <p>以DataStream为例，HDFSDataStream的append方法如下：</p>
-<pre><code><span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">append</span><span class="params">(Event e)</span> <span class="keyword">throws</span> IOException </span>{
+<pre><code>@Override
+public void append(Event e) throws IOException {
     serializer.write(e);
 }
 </code></pre><p>这个serializer是HDFSDataStream的属性。是EventSerializer接口类型的属性。HDFSDataStream的append很简单，直接调用serializer的writer方法。</p>
 <p>HDFS Sink的Serializer都需要实现EventSerializer接口：</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">EventSerializer</span> </span>{
+<pre><code>public interface EventSerializer {
 
-  <span class="keyword">public</span> <span class="keyword">static</span> String CTX_PREFIX = <span class="string">"serializer."</span>;
+  public static String CTX_PREFIX = &quot;serializer.&quot;;
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterCreate</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+  public void afterCreate() throws IOException;
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterReopen</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+  public void afterReopen() throws IOException;
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">write</span><span class="params">(Event event)</span> <span class="keyword">throws</span> IOException</span>;
+  public void write(Event event) throws IOException;
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">flush</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+  public void flush() throws IOException;
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">beforeClose</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+  public void beforeClose() throws IOException;
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">supportsReopen</span><span class="params">()</span></span>;
+  public boolean supportsReopen();
 
-  <span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Builder</span> </span>{
-    <span class="function"><span class="keyword">public</span> EventSerializer <span class="title">build</span><span class="params">(Context context, OutputStream out)</span></span>;
+  public interface Builder {
+    public EventSerializer build(Context context, OutputStream out);
   }
 
 }
 </code></pre><p>HDFS Sink默认的serializer是BodyTextEventSerializer类，不配置的话也是使用这个Serializer。</p>
 <p>BodyTextEventSerializer的writer方法：</p>
 <pre><code>@Override
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="keyword">write</span>(Event e) <span class="keyword">throws</span> IOException {
-  out.<span class="keyword">write</span>(e.getBody());
-  <span class="keyword">if</span> (appendNewline) {
-    out.<span class="keyword">write</span>(<span class="string">'\n'</span>);
+public void write(Event e) throws IOException {
+  out.write(e.getBody());
+  if (appendNewline) {
+    out.write(&apos;\n&apos;);
   }
 }
 </code></pre><p>这就是为什么hdfs sink写数据的时候写完会自动换行的原因。</p>
 <p>当然，我们可以定义自定义的Serializer来满足自身的要求。</p>
-<h3 id="HBase_Sink的Serializer">HBase Sink的Serializer</h3><p>HBase Sink的Serializer都需要实现HbaseEventSerializer接口。</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">HbaseEventSerializer</span> <span class="keyword">extends</span> <span class="title">Configurable</span>,
-            <span class="title">ConfigurableComponent</span> </span>{
+<h3 id="HBase-Sink的Serializer"><a href="#HBase-Sink的Serializer" class="headerlink" title="HBase Sink的Serializer"></a>HBase Sink的Serializer</h3><p>HBase Sink的Serializer都需要实现HbaseEventSerializer接口。</p>
+<pre><code>public interface HbaseEventSerializer extends Configurable,
+            ConfigurableComponent {
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initialize</span><span class="params">(Event event, <span class="keyword">byte</span>[] columnFamily)</span></span>;
+  public void initialize(Event event, byte[] columnFamily);
 
-  <span class="function"><span class="keyword">public</span> List&lt;Row&gt; <span class="title">getActions</span><span class="params">()</span></span>;
+  public List&lt;Row&gt; getActions();
 
-  <span class="function"><span class="keyword">public</span> List&lt;Increment&gt; <span class="title">getIncrements</span><span class="params">()</span></span>;
+  public List&lt;Increment&gt; getIncrements();
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">()</span></span>;
+  public void close();
 
 }
 </code></pre><p>HBaseSink的process方法关键代码：</p>
-<pre><code>for <span class="list">(<span class="comment">; i &lt; batchSize; i++) {</span>
-    Event event = channel.take<span class="list">()</span><span class="comment">;</span>
-    if <span class="list">(<span class="keyword">event</span> == null)</span> {
-      if <span class="list">(<span class="keyword">i</span> == <span class="number">0</span>)</span> {
-        status = Status.BACKOFF<span class="comment">;</span>
-        sinkCounter.incrementBatchEmptyCount<span class="list">()</span><span class="comment">;</span>
+<pre><code>for (; i &lt; batchSize; i++) {
+    Event event = channel.take();
+    if (event == null) {
+      if (i == 0) {
+        status = Status.BACKOFF;
+        sinkCounter.incrementBatchEmptyCount();
       } else {
-        sinkCounter.incrementBatchUnderflowCount<span class="list">()</span><span class="comment">;</span>
+        sinkCounter.incrementBatchUnderflowCount();
       }
-      break<span class="comment">;</span>
+      break;
     } else {
-      serializer.initialize<span class="list">(<span class="keyword">event</span>, columnFamily)</span><span class="comment">;</span>
-      actions.addAll<span class="list">(<span class="keyword">serializer</span>.getActions<span class="list">()</span>)</span><span class="comment">;</span>
-      incs.addAll<span class="list">(<span class="keyword">serializer</span>.getIncrements<span class="list">()</span>)</span><span class="comment">;</span>
+      serializer.initialize(event, columnFamily);
+      actions.addAll(serializer.getActions());
+      incs.addAll(serializer.getIncrements());
     }
-  }</span>
+  }
 </code></pre><p>actions和incs都加入了serializer里的actions和increments。之后会commit这里的actions和increments数据。</p>
 <p>HBase默认的Serializer是org.apache.flume.sink.hbase.SimpleHbaseEventSerializer。</p>
 <p>我们也可以根据需求定义自定义的HbaseEventSerializer，需要注意的是getActions和getIncrements方法。</p>
 <p>HBase Sink会加入这2个方法的返回值，并写入到HBase。</p>
-<h3 id="Elasticsearch_Sink的Serializer">Elasticsearch Sink的Serializer</h3><p>Elasticsearch Sink的Serializer都需要实现ElasticSearchEventSerializer接口。</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ElasticSearchEventSerializer</span> <span class="keyword">extends</span> <span class="title">Configurable</span>,
-                <span class="title">ConfigurableComponent</span> </span>{
+<h3 id="Elasticsearch-Sink的Serializer"><a href="#Elasticsearch-Sink的Serializer" class="headerlink" title="Elasticsearch Sink的Serializer"></a>Elasticsearch Sink的Serializer</h3><p>Elasticsearch Sink的Serializer都需要实现ElasticSearchEventSerializer接口。</p>
+<pre><code>public interface ElasticSearchEventSerializer extends Configurable,
+                ConfigurableComponent {
 
-  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Charset charset = Charset.defaultCharset();
+  public static final Charset charset = Charset.defaultCharset();
 
-  <span class="function"><span class="keyword">abstract</span> BytesStream <span class="title">getContentBuilder</span><span class="params">(Event event)</span> <span class="keyword">throws</span> IOException</span>;
+  abstract BytesStream getContentBuilder(Event event) throws IOException;
 }
 </code></pre><p>默认的Serializer是org.apache.flume.sink.elasticsearch.ElasticSearchLogStashEventSerializer。</p>
 <p>同样，我们也可以根据需求定义自定义的ElasticSearchEventSerialize，就不分析了。</p>
-<h2 id="SinkGroup">SinkGroup</h2><p>这个功能暂时还没用到，不过以后可能会用到。</p>
+<h2 id="SinkGroup"><a href="#SinkGroup" class="headerlink" title="SinkGroup"></a>SinkGroup</h2><p>这个功能暂时还没用到，不过以后可能会用到。</p>
 <p>Sink Group的作用是把多个Sink合并成一个。这样的话Sink处理器会根据配置的类型来决定如何使用Sink。比如可以使用load balance，failover策略，或者可以使用自定义的策略来处理。</p>
 <p><a href="https://flume.apache.org/FlumeUserGuide.html#default-sink-processor" target="_blank" rel="external">官方文档Sink Group</a>已经写的很清楚了。</p>
-<h2 id="其它">其它</h2><p>目前还正在用Flume开发一些功能，后续可能会使用一些新的功能，到时候回头更新这篇文章。</p>
+<h2 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h2><p>目前还正在用Flume开发一些功能，后续可能会使用一些新的功能，到时候回头更新这篇文章。</p>
 
       
     </div>
@@ -718,7 +719,7 @@ a1.channels.c2.transactionCapacity = <span class="number">100</span>
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ChannelSelector功能"><span class="nav-number">1.</span> <span class="nav-text">ChannelSelector功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Sink的Serializer"><span class="nav-number">2.</span> <span class="nav-text">Sink的Serializer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#HDFS_Sink的Serializer"><span class="nav-number">2.1.</span> <span class="nav-text">HDFS Sink的Serializer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HBase_Sink的Serializer"><span class="nav-number">2.2.</span> <span class="nav-text">HBase Sink的Serializer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Elasticsearch_Sink的Serializer"><span class="nav-number">2.3.</span> <span class="nav-text">Elasticsearch Sink的Serializer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SinkGroup"><span class="nav-number">3.</span> <span class="nav-text">SinkGroup</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其它"><span class="nav-number">4.</span> <span class="nav-text">其它</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ChannelSelector功能"><span class="nav-number">1.</span> <span class="nav-text">ChannelSelector功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Sink的Serializer"><span class="nav-number">2.</span> <span class="nav-text">Sink的Serializer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#HDFS-Sink的Serializer"><span class="nav-number">2.1.</span> <span class="nav-text">HDFS Sink的Serializer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HBase-Sink的Serializer"><span class="nav-number">2.2.</span> <span class="nav-text">HBase Sink的Serializer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Elasticsearch-Sink的Serializer"><span class="nav-number">2.3.</span> <span class="nav-text">Elasticsearch Sink的Serializer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SinkGroup"><span class="nav-number">3.</span> <span class="nav-text">SinkGroup</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其它"><span class="nav-number">4.</span> <span class="nav-text">其它</span></a></li></ol></div>
             
           </div>
         </section>

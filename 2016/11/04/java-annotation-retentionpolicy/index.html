@@ -383,172 +383,172 @@ RUNTIME. 注解会被保留在class文件中">
 <li>RUNTIME. 注解会被保留在class文件中，同时运行时期间也会被识别。所以可以使用反射机制获取注解信息。比如@Deprecated</li>
 </ol>
 <a id="more"></a>
-<h2 id="RUNTIME">RUNTIME</h2><p>大部分情况下，我们都是使用RUNTIME这个Policy。</p>
+<h2 id="RUNTIME"><a href="#RUNTIME" class="headerlink" title="RUNTIME"></a>RUNTIME</h2><p>大部分情况下，我们都是使用RUNTIME这个Policy。</p>
 <p>下面就是一个RUNTIME Annotation的例子。</p>
 <p>先定义Annotation：</p>
-<pre><code><span class="annotation">@Retention</span>(RetentionPolicy.RUNTIME)
-<span class="annotation">@Target</span>(ElementType.TYPE)
-<span class="keyword">public</span> <span class="annotation">@interface</span> MyClassRuntimeAnno {
-    <span class="function">String <span class="title">name</span><span class="params">()</span></span>;
-    <span class="function"><span class="keyword">int</span> <span class="title">level</span><span class="params">()</span> <span class="keyword">default</span> 1</span>;
+<pre><code>@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface MyClassRuntimeAnno {
+    String name();
+    int level() default 1;
 }
 </code></pre><p>然后在CLASS前面使用这个Annotation。</p>
-<pre><code><span class="annotation">@MyClassRuntimeAnno</span>(name = <span class="string">"simple"</span>, level = <span class="number">10</span>)
-<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SimpleObj</span> {</span>
+<pre><code>@MyClassRuntimeAnno(name = &quot;simple&quot;, level = 10)
+public class SimpleObj {
 }
 </code></pre><p>最后写一个testcase通过反射可以获取这个类的Annotation进行后续操作。</p>
-<pre><code><span class="keyword">@Test</span>
-<span class="keyword">public</span> <span class="keyword">void</span> testGetAnnotation() {
-    Annotation[] annotations = SimpleObj.<span class="keyword">class</span>.getAnnotations();
-    System.<span class="keyword">out</span>.println(Arrays.toString(annotations));
-    MyClassRuntimeAnno myClassAnno = SimpleObj.<span class="keyword">class</span>.getAnnotation(MyClassRuntimeAnno.<span class="keyword">class</span>);
-    System.<span class="keyword">out</span>.println(myClassAnno.name() + <span class="string">", "</span> + myClassAnno.level());
-    System.<span class="keyword">out</span>.println(myClassAnno == annotations[<span class="number">0</span>]);
+<pre><code>@Test
+public void testGetAnnotation() {
+    Annotation[] annotations = SimpleObj.class.getAnnotations();
+    System.out.println(Arrays.toString(annotations));
+    MyClassRuntimeAnno myClassAnno = SimpleObj.class.getAnnotation(MyClassRuntimeAnno.class);
+    System.out.println(myClassAnno.name() + &quot;, &quot; + myClassAnno.level());
+    System.out.println(myClassAnno == annotations[0]);
 }
-</code></pre><h2 id="SOURCE">SOURCE</h2><p>SOURCE这个policy表示注解保留在源代码中，但是编译的时候会被编译器所丢弃。 由于在编译的过程中这个注解还被保留着，所以在编译过程中可以针对这个policy进行一些操作。比如在自动生成java代码的场景下使用。最常见的就是<a href="https://projectlombok.org/" target="_blank" rel="external">lombok</a>的使用了，可以自动生成field的get和set方法以及toString方法，构造器等；消除了冗长的java代码。</p>
+</code></pre><h2 id="SOURCE"><a href="#SOURCE" class="headerlink" title="SOURCE"></a>SOURCE</h2><p>SOURCE这个policy表示注解保留在源代码中，但是编译的时候会被编译器所丢弃。 由于在编译的过程中这个注解还被保留着，所以在编译过程中可以针对这个policy进行一些操作。比如在自动生成java代码的场景下使用。最常见的就是<a href="https://projectlombok.org/" target="_blank" rel="external">lombok</a>的使用了，可以自动生成field的get和set方法以及toString方法，构造器等；消除了冗长的java代码。</p>
 <p>SOURCE这个policy可以使用jdk中的javax.annotation.processing.*包中的processor处理器进行注解的处理过程。</p>
 <p>以1个编译过程中会打印类中的方法的例子来说明SOUCRE这个policy的作用：</p>
 <p>首先定义一个Printer注解：</p>
-<pre><code><span class="variable">@Retention</span>(RetentionPolicy.SOURCE)
-<span class="variable">@Target</span>(ElementType.METHOD)
-public <span class="variable">@interface</span> Printer {
+<pre><code>@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.METHOD)
+public @interface Printer {
 }
 </code></pre><p>然后一个类的方法使用这个注解：</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SimpleObject</span> </span>{
+<pre><code>public class SimpleObject {
 
-    <span class="annotation">@Printer</span>
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">methodA</span><span class="params">()</span> </span>{
+    @Printer
+    public void methodA() {
 
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">methodB</span><span class="params">()</span> </span>{
+    public void methodB() {
 
     }
 
 }
 </code></pre><p>创建对应的Processor：</p>
-<pre><code><span class="annotation">@SupportedAnnotationTypes</span>({<span class="string">"me.format.annotaion.Printer"</span>})
-public <span class="class"><span class="keyword">class</span> <span class="title">PrintProcessor</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">AbstractProcessor</span> {</span>
-    <span class="annotation">@Override</span>
-    public boolean process(<span class="type">Set</span>&lt;? <span class="keyword">extends</span> <span class="type">TypeElement</span>&gt; annotations, <span class="type">RoundEnvironment</span> roundEnv) {
-        <span class="type">Messager</span> messager = processingEnv.getMessager();
-        messager.printMessage(<span class="type">Diagnostic</span>.<span class="type">Kind</span>.<span class="type">NOTE</span>, <span class="string">"start to use PrintProcessor .."</span>);
+<pre><code>@SupportedAnnotationTypes({&quot;me.format.annotaion.Printer&quot;})
+public class PrintProcessor extends AbstractProcessor {
+    @Override
+    public boolean process(Set&lt;? extends TypeElement&gt; annotations, RoundEnvironment roundEnv) {
+        Messager messager = processingEnv.getMessager();
+        messager.printMessage(Diagnostic.Kind.NOTE, &quot;start to use PrintProcessor ..&quot;);
 
 
-        <span class="type">Set</span>&lt;? <span class="keyword">extends</span> <span class="type">Element</span>&gt; rootElements = roundEnv.getRootElements();
-        messager.printMessage(<span class="type">Diagnostic</span>.<span class="type">Kind</span>.<span class="type">NOTE</span>, <span class="string">"root classes: "</span>);
-        <span class="keyword">for</span>(<span class="type">Element</span> root : rootElements) {
-            messager.printMessage(<span class="type">Diagnostic</span>.<span class="type">Kind</span>.<span class="type">NOTE</span>, <span class="string">"&gt;&gt; "</span> + root.toString());
+        Set&lt;? extends Element&gt; rootElements = roundEnv.getRootElements();
+        messager.printMessage(Diagnostic.Kind.NOTE, &quot;root classes: &quot;);
+        for(Element root : rootElements) {
+            messager.printMessage(Diagnostic.Kind.NOTE, &quot;&gt;&gt; &quot; + root.toString());
         }
-        messager.printMessage(<span class="type">Diagnostic</span>.<span class="type">Kind</span>.<span class="type">NOTE</span>, <span class="string">"annotation: "</span>);
-        <span class="keyword">for</span>(<span class="type">TypeElement</span> te : annotations) {
-            messager.printMessage(<span class="type">Diagnostic</span>.<span class="type">Kind</span>.<span class="type">NOTE</span>, <span class="string">"&gt;&gt;&gt; "</span> + te.toString());
-            <span class="type">Set</span>&lt;? <span class="keyword">extends</span> <span class="type">Element</span>&gt; elements = roundEnv.getElementsAnnotatedWith(te);
-            <span class="keyword">for</span>(<span class="type">Element</span> ele : elements) {
-                messager.printMessage(<span class="type">Diagnostic</span>.<span class="type">Kind</span>.<span class="type">NOTE</span>, <span class="string">"&gt;&gt;&gt;&gt; "</span> + ele.toString());
+        messager.printMessage(Diagnostic.Kind.NOTE, &quot;annotation: &quot;);
+        for(TypeElement te : annotations) {
+            messager.printMessage(Diagnostic.Kind.NOTE, &quot;&gt;&gt;&gt; &quot; + te.toString());
+            Set&lt;? extends Element&gt; elements = roundEnv.getElementsAnnotatedWith(te);
+            for(Element ele : elements) {
+                messager.printMessage(Diagnostic.Kind.NOTE, &quot;&gt;&gt;&gt;&gt; &quot; + ele.toString());
             }
         }
 
-        <span class="keyword">return</span> <span class="literal">true</span>;
+        return true;
     }
-    <span class="annotation">@Override</span>
-    public <span class="type">SourceVersion</span> getSupportedSourceVersion() {
-        <span class="keyword">return</span> <span class="type">SourceVersion</span>.latestSupported();
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latestSupported();
     }
 }
 </code></pre><p>然后先使用javac编译Printer和PrintProcessor：</p>
-<pre><code>javac -d classes src<span class="regexp">/main/</span>java<span class="regexp">/me/</span>format<span class="regexp">/annotation/</span>Printer.java src<span class="regexp">/main/</span>java<span class="regexp">/me/</span>format<span class="regexp">/annotation/</span>PrintProcessor.java
+<pre><code>javac -d classes src/main/java/me/format/annotation/Printer.java src/main/java/me/format/annotation/PrintProcessor.java
 </code></pre><p>最后再使用javac中的processor参数处理：</p>
-<pre><code>javac -cp classes -processor me<span class="class">.format</span><span class="class">.annotation</span><span class="class">.PrintProcessor</span> -d classes src/main/java/me/format/annotation/SimpleObject.java
+<pre><code>javac -cp classes -processor me.format.annotation.PrintProcessor -d classes src/main/java/me/format/annotation/SimpleObject.java
 </code></pre><p>控制台打印出：</p>
 <pre><code>注: start to use PrintProcessor ..
 注: root classes: 
-注: &gt;&gt; hello<span class="class">.annotation</span><span class="class">.SimpleObject</span>
+注: &gt;&gt; hello.annotation.SimpleObject
 注: annotation: 
-注: &gt;&gt;&gt; hello<span class="class">.annotation</span><span class="class">.Printer</span>
-注: &gt;&gt;&gt;&gt; <span class="function"><span class="title">methodA</span><span class="params">()</span></span>
-</code></pre><h2 id="CLASS">CLASS</h2><p>CLASS和RUNTIME的唯一区别是RUNTIME在运行时期间注解是存在的，而CLASS则不存在。</p>
+注: &gt;&gt;&gt; hello.annotation.Printer
+注: &gt;&gt;&gt;&gt; methodA()
+</code></pre><h2 id="CLASS"><a href="#CLASS" class="headerlink" title="CLASS"></a>CLASS</h2><p>CLASS和RUNTIME的唯一区别是RUNTIME在运行时期间注解是存在的，而CLASS则不存在。</p>
 <p>我们通过<a href="http://asm.ow2.org/" target="_blank" rel="external">asm</a>来获取class文件里的annotation。</p>
 <p>首先定义注解：</p>
 <p>policy为CLASS的注解。</p>
-<pre><code>@Retention(RetentionPolicy.<span class="keyword">CLASS</span>)
-@<span class="type">Target</span>(ElementType.<span class="keyword">TYPE</span>)
-<span class="keyword">public</span> @<span class="keyword">interface</span> Meta {
+<pre><code>@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.TYPE)
+public @interface Meta {
 
-    String <span class="keyword">name</span>();
+    String name();
 
 }
 </code></pre><p>policy为RUNTIME的注解。</p>
-<pre><code><span class="annotation">@Retention</span>(RetentionPolicy.RUNTIME)
-<span class="annotation">@Target</span>(ElementType.TYPE)
-<span class="keyword">public</span> <span class="annotation">@interface</span> Header {
+<pre><code>@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface Header {
 
-    <span class="function"><span class="keyword">int</span> <span class="title">code</span><span class="params">()</span></span>;
+    int code();
 
 }
 </code></pre><p>使用注解：</p>
-<pre><code><span class="annotation">@Meta</span>(name = <span class="string">"obj"</span>)
-<span class="annotation">@Header</span>(code = <span class="number">200</span>)
-<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnnotationObject</span> </span>{
+<pre><code>@Meta(name = &quot;obj&quot;)
+@Header(code = 200)
+public class AnnotationObject {
 
-    <span class="keyword">private</span> String val;
+    private String val;
 
-    <span class="function"><span class="keyword">public</span> String <span class="title">getVal</span><span class="params">()</span> </span>{
-        <span class="keyword">return</span> val;
+    public String getVal() {
+        return val;
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setVal</span><span class="params">(String val)</span> </span>{
-        <span class="keyword">this</span>.val = val;
+    public void setVal(String val) {
+        this.val = val;
     }
 }
 </code></pre><p>编译这3个java文件得到字节码文件AnnotationObject.class：</p>
-<pre><code>javac -d classes src<span class="regexp">/main/</span>java<span class="regexp">/me/</span>format<span class="regexp">/annotaion/</span>AnnotationObject.java src<span class="regexp">/main/</span>java<span class="regexp">/me/</span>format<span class="regexp">/annotation/M</span>eta.java src<span class="regexp">/main/</span>java<span class="regexp">/me/</span>format<span class="regexp">/annotation/</span>Header.java
+<pre><code>javac -d classes src/main/java/me/format/annotaion/AnnotationObject.java src/main/java/me/format/annotation/Meta.java src/main/java/me/format/annotation/Header.java
 </code></pre><p>使用asm获取字节码文件中的注解：</p>
-<pre><code>ClassNode classNode = <span class="keyword">new</span> ClassNode();
+<pre><code>ClassNode classNode = new ClassNode();
 
-ClassReader cr = <span class="keyword">new</span> ClassReader(<span class="keyword">new</span> FileInputStream(<span class="string">"classes/me/format/annotation/AnnotationObject.class"</span>));
+ClassReader cr = new ClassReader(new FileInputStream(&quot;classes/me/format/annotation/AnnotationObject.class&quot;));
 
-cr.accept(classNode, <span class="number">0</span>);
+cr.accept(classNode, 0);
 
-System.<span class="keyword">out</span>.println(<span class="string">"Class Name: "</span> + classNode.name);
-System.<span class="keyword">out</span>.println(<span class="string">"Source File: "</span> + classNode.sourceFile);
+System.out.println(&quot;Class Name: &quot; + classNode.name);
+System.out.println(&quot;Source File: &quot; + classNode.sourceFile);
 
-System.<span class="keyword">out</span>.println(<span class="string">"invisible: "</span>);
+System.out.println(&quot;invisible: &quot;);
 AnnotationNode anNode = null;
-<span class="keyword">for</span> (Object <span class="annotation">annotation</span> : classNode.invisibleAnnotations) {
-    anNode = (AnnotationNode) <span class="annotation">annotation</span>;
-    System.<span class="keyword">out</span>.println(<span class="string">"Annotation Descriptor : "</span> + anNode.desc);
-    System.<span class="keyword">out</span>.println(<span class="string">"Annotation attribute pairs : "</span> + anNode.values);
+for (Object annotation : classNode.invisibleAnnotations) {
+    anNode = (AnnotationNode) annotation;
+    System.out.println(&quot;Annotation Descriptor : &quot; + anNode.desc);
+    System.out.println(&quot;Annotation attribute pairs : &quot; + anNode.values);
 }
 
-System.<span class="keyword">out</span>.println(<span class="string">"visible: "</span>);
-<span class="keyword">for</span> (Object <span class="annotation">annotation</span> : classNode.visibleAnnotations) {
-    anNode = (AnnotationNode) <span class="annotation">annotation</span>;
-    System.<span class="keyword">out</span>.println(<span class="string">"Annotation Descriptor : "</span> + anNode.desc);
-    System.<span class="keyword">out</span>.println(<span class="string">"Annotation attribute pairs : "</span> + anNode.values);
+System.out.println(&quot;visible: &quot;);
+for (Object annotation : classNode.visibleAnnotations) {
+    anNode = (AnnotationNode) annotation;
+    System.out.println(&quot;Annotation Descriptor : &quot; + anNode.desc);
+    System.out.println(&quot;Annotation attribute pairs : &quot; + anNode.values);
 }
 </code></pre><p>打印出：</p>
-<pre><code>Class <span class="string">Name:</span> me<span class="regexp">/format/</span>annotation/AnnotationObject
-Source <span class="string">File:</span> AnnotationObject.java
-<span class="string">invisible:</span> 
-Annotation <span class="string">Descriptor :</span> Lme<span class="regexp">/format/</span>annotation/Meta;
-Annotation attribute <span class="string">pairs :</span> [name, obj]
-<span class="string">visible:</span> 
-Annotation <span class="string">Descriptor :</span> Lme<span class="regexp">/format/</span>annotation/Header;
-Annotation attribute <span class="string">pairs :</span> [code, <span class="number">200</span>]
+<pre><code>Class Name: me/format/annotation/AnnotationObject
+Source File: AnnotationObject.java
+invisible: 
+Annotation Descriptor : Lme/format/annotation/Meta;
+Annotation attribute pairs : [name, obj]
+visible: 
+Annotation Descriptor : Lme/format/annotation/Header;
+Annotation attribute pairs : [code, 200]
 </code></pre><p>其中policy为CLASS的注解编译完后不可见，而policy为RUNTIME的注解编译后可见。</p>
 <p>同样，我们可以使用javap查看编译后的信息：</p>
-<pre><code>javap -v me<span class="class">.format</span><span class="class">.annotation</span><span class="class">.AnnotationObject</span>
+<pre><code>javap -v me.format.annotation.AnnotationObject
 </code></pre><p>会打印出注解的visible信息：</p>
-<pre><code><span class="preprocessor">#<span class="number">16</span> = Utf8               AnnotationObject.java</span>
-<span class="preprocessor">#<span class="number">17</span> = Utf8               RuntimeVisibleAnnotations</span>
-<span class="preprocessor">#<span class="number">18</span> = Utf8               Lhello/annotation/Header;</span>
-<span class="preprocessor">#<span class="number">19</span> = Utf8               code</span>
-<span class="preprocessor">#<span class="number">20</span> = Integer            <span class="number">200</span></span>
-<span class="preprocessor">#<span class="number">21</span> = Utf8               RuntimeInvisibleAnnotations</span>
-<span class="preprocessor">#<span class="number">22</span> = Utf8               Lhello/annotation/Meta;</span>
-<span class="preprocessor">#<span class="number">23</span> = Utf8               name</span>
-<span class="preprocessor">#<span class="number">24</span> = Utf8               obj</span>
+<pre><code>#16 = Utf8               AnnotationObject.java
+#17 = Utf8               RuntimeVisibleAnnotations
+#18 = Utf8               Lhello/annotation/Header;
+#19 = Utf8               code
+#20 = Integer            200
+#21 = Utf8               RuntimeInvisibleAnnotations
+#22 = Utf8               Lhello/annotation/Meta;
+#23 = Utf8               name
+#24 = Utf8               obj
 </code></pre>
       
     </div>

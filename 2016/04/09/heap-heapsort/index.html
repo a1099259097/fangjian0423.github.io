@@ -109,6 +109,7 @@ n个元素序列 { k1, k2, k3, k4, k5, k6 …. kn } 当且仅当满足以下关�
 ki &amp;lt;= k2i,ki &amp;lt;= k2i+1 或者 ki &amp;gt;= k2i,ki &amp;gt;= k2i+1 (i = 1,2,3,4 .. n/2)
 如果数组的下表是从0开始，那么需要满足 
 ki &amp;lt;= k2i+1,ki &amp;lt;= k2i+2 或者 k">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/heap01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10">
 
 
 
@@ -383,9 +384,9 @@ ki &amp;lt;= k2i+1,ki &amp;lt;= k2i+2 或者 k">
       
         <p>堆的概念：</p>
 <p>n个元素序列 { k1, k2, k3, k4, k5, k6 …. kn } 当且仅当满足以下关系时才会被称为堆：</p>
-<pre><code>ki &lt;= k2i,ki &lt;= k2i+<span class="number">1</span> 或者 ki &gt;= k2i,ki &gt;= k2i+<span class="number">1</span> (i = <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span> .. n/<span class="number">2</span>)
+<pre><code>ki &lt;= k2i,ki &lt;= k2i+1 或者 ki &gt;= k2i,ki &gt;= k2i+1 (i = 1,2,3,4 .. n/2)
 </code></pre><p>如果数组的下表是从0开始，那么需要满足 </p>
-<pre><code>ki &lt;= k2i+<span class="number">1</span>,ki &lt;= k2i+<span class="number">2</span> 或者 ki &gt;= k2i+<span class="number">1</span>,ki &gt;= k2i+<span class="number">2</span> (i = <span class="number">0</span>,<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span> .. n/<span class="number">2</span>)
+<pre><code>ki &lt;= k2i+1,ki &lt;= k2i+2 或者 ki &gt;= k2i+1,ki &gt;= k2i+2 (i = 0,1,2,3 .. n/2)
 </code></pre><p>比如 { 1,3,5,10,15,9 } 这个序列就满足 [1 &lt;= 3; 1 &lt;= 5],  [3 &lt;= 10; 3 &lt;= 15], [5 &lt;= 9] 这3个条件，这个序列就是一个堆。</p>
 <p>所以堆其实是一个序列(数组)，如果这个序列满足上述条件，那么就把这个序列看成堆。</p>
 <p>堆的实现通常是通过构造二叉堆，因为二叉堆应用很普遍，当不加限定时，堆通常指的就是二叉堆。</p>
@@ -396,7 +397,7 @@ ki &amp;lt;= k2i+1,ki &amp;lt;= k2i+2 或者 k">
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/heap01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
 <p>上图中的最小堆对应的序列是： [1,3,5,9,10,15]  满足最小堆的特性(父节点的键值小于或等于任何一个子节点的键值，并且也满足堆的性质 [1 &lt;= 3; 1 &lt;= 5], [3 &lt;= 9; 3 &lt;= 10], [5 &lt;= 15])</p>
 <p>上图中的最大堆对应的序列是： [15,10,9,7,5,3]  满足最大堆的特性(父节点的键值大于或等于任何一个子节点的键值，并且也满足堆的性质 [15 &gt;= 10; 15 &gt;= 9], [10 &gt;= 7; 10 &gt;= 5], [9 &gt;= 3])</p>
-<h2 id="堆的操作">堆的操作</h2><h3 id="堆排序">堆排序</h3><p>堆排序指的是对堆这种数据结构进行排序的一种算法。其基本思想如下，以最大堆为例：</p>
+<h2 id="堆的操作"><a href="#堆的操作" class="headerlink" title="堆的操作"></a>堆的操作</h2><h3 id="堆排序"><a href="#堆排序" class="headerlink" title="堆排序"></a>堆排序</h3><p>堆排序指的是对堆这种数据结构进行排序的一种算法。其基本思想如下，以最大堆为例：</p>
 <ol>
 <li>将数组序列构建成最大堆[ A1, A2, A3 .. An]，这个堆是一个刚初始化无序区，同时有序区为空</li>
 <li>堆顶元素A1与最后一个元素An进行交换，得到新的有序区[An]，无序区变成[A1 … An-1]</li>
@@ -411,63 +412,63 @@ ki &amp;lt;= k2i+1,ki &amp;lt;= k2i+2 或者 k">
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/heap03.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
 <p>构造完之后有序区的元素依次是：1，3，5，9，10，15</p>
 <p>简单地使用java写一下堆排序：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> HeapSort {
+<pre><code>public class HeapSort {
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">maxHeapify</span><span class="params">(<span class="keyword">int</span>[] arr, <span class="keyword">int</span> size, <span class="keyword">int</span> index)</span> </span>{
-        <span class="keyword">int</span> leftSonIndex = <span class="number">2</span> * index + <span class="number">1</span>;
-        <span class="keyword">int</span> rightSonIndex = <span class="number">2</span> * index + <span class="number">2</span>;
-        <span class="keyword">int</span> temp = index;
-        <span class="keyword">if</span>(index &lt;= size / <span class="number">2</span>) {
-            <span class="keyword">if</span>(leftSonIndex &lt; size &amp;&amp; arr[temp] &lt; arr[leftSonIndex]) {
+    public static void maxHeapify(int[] arr, int size, int index) {
+        int leftSonIndex = 2 * index + 1;
+        int rightSonIndex = 2 * index + 2;
+        int temp = index;
+        if(index &lt;= size / 2) {
+            if(leftSonIndex &lt; size &amp;&amp; arr[temp] &lt; arr[leftSonIndex]) {
                 temp = leftSonIndex;
             }
-            <span class="keyword">if</span>(rightSonIndex &lt; size &amp;&amp; arr[temp] &lt; arr[rightSonIndex]) {
+            if(rightSonIndex &lt; size &amp;&amp; arr[temp] &lt; arr[rightSonIndex]) {
                 temp = rightSonIndex;
             }
-            <span class="comment">// 左右子节点的值存在比父节点的值更大</span>
-            <span class="keyword">if</span>(temp != index) {
-                swap(arr, index, temp); <span class="comment">// 交换值</span>
-                maxHeapify(arr, size, temp); <span class="comment">// 递归调整</span>
+            // 左右子节点的值存在比父节点的值更大
+            if(temp != index) {
+                swap(arr, index, temp); // 交换值
+                maxHeapify(arr, size, temp); // 递归调整
             }
         }
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">heapSort</span><span class="params">(<span class="keyword">int</span>[] arr, <span class="keyword">int</span> size)</span> </span>{
-        <span class="comment">// 构造成最大堆</span>
+    public static void heapSort(int[] arr, int size) {
+        // 构造成最大堆
         buildMaxHeap(arr, arr.length);
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = size - <span class="number">1</span>; i &gt; <span class="number">0</span>; i --) {
-            <span class="comment">// 先交换堆顶元素和无序区最后一个元素</span>
-            swap(arr, <span class="number">0</span>, i);
-            <span class="comment">// 重新调整无序区</span>
-            buildMaxHeap(arr, i - <span class="number">1</span>);
+        for(int i = size - 1; i &gt; 0; i --) {
+            // 先交换堆顶元素和无序区最后一个元素
+            swap(arr, 0, i);
+            // 重新调整无序区
+            buildMaxHeap(arr, i - 1);
         }
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">buildMaxHeap</span><span class="params">(<span class="keyword">int</span>[] arr, <span class="keyword">int</span> size)</span> </span>{
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = size / <span class="number">2</span>; i &gt;= <span class="number">0</span>; i --) { <span class="comment">// 最后一个非叶子节点开始调整</span>
+    public static void buildMaxHeap(int[] arr, int size) {
+        for(int i = size / 2; i &gt;= 0; i --) { // 最后一个非叶子节点开始调整
             maxHeapify(arr, size, i);
         }
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">swap</span><span class="params">(<span class="keyword">int</span>[] arr, <span class="keyword">int</span> i, <span class="keyword">int</span> j)</span> </span>{
-        <span class="keyword">int</span> temp = arr[i];
+    public static void swap(int[] arr, int i, int j) {
+        int temp = arr[i];
         arr[i] = arr[j];
         arr[j] = temp;
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-        <span class="keyword">int</span>[] arr = { <span class="number">3</span>, <span class="number">5</span>, <span class="number">15</span>, <span class="number">9</span>, <span class="number">10</span>, <span class="number">1</span>};
-        System.out.println(<span class="string">"before build: "</span> + Arrays.toString(arr)); <span class="comment">// before build: [3, 5, 15, 9, 10, 1]</span>
+    public static void main(String[] args) {
+        int[] arr = { 3, 5, 15, 9, 10, 1};
+        System.out.println(&quot;before build: &quot; + Arrays.toString(arr)); // before build: [3, 5, 15, 9, 10, 1]
         buildMaxHeap(arr, arr.length);
-        System.out.println(<span class="string">"after build: "</span> + Arrays.toString(arr)); <span class="comment">// after build: [15, 10, 3, 9, 5, 1]</span>
+        System.out.println(&quot;after build: &quot; + Arrays.toString(arr)); // after build: [15, 10, 3, 9, 5, 1]
         heapSort(arr, arr.length);
-        System.out.println(<span class="string">"after sort: "</span> + Arrays.toString(arr)); <span class="comment">// after sort: [1, 3, 5, 9, 10, 15]</span>
+        System.out.println(&quot;after sort: &quot; + Arrays.toString(arr)); // after sort: [1, 3, 5, 9, 10, 15]
     }
 
 }
-</code></pre><h3 id="添加">添加</h3><p>在最大堆[ 15,10,9,7,5,3 ]上添加一个新的元素 11 ，执行的步骤如下：</p>
+</code></pre><h3 id="添加"><a href="#添加" class="headerlink" title="添加"></a>添加</h3><p>在最大堆[ 15,10,9,7,5,3 ]上添加一个新的元素 11 ，执行的步骤如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/heap04.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<h3 id="删除">删除</h3><p>在最大堆[ 15,10,9,7,5,3 ]上删除元素 10 ，执行的步骤如下：</p>
+<h3 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h3><p>在最大堆[ 15,10,9,7,5,3 ]上删除元素 10 ，执行的步骤如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/heap05.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
 
       

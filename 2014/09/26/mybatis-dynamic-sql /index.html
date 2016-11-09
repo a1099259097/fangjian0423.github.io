@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="java,mybatis," />
+  <meta name="keywords" content="mybatis,java," />
 
 
 
@@ -108,6 +108,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="MyBatis动态SQL底层原理分析">
 <meta name="twitter:description" content="MyBatis动态SQL底层原理分析">
+<meta name="twitter:image" content="http://format-blog-image.qiniudn.com/dynamicsql2.png">
 
 
 
@@ -380,31 +381,31 @@
       
 
       
-        <h2 id="前言">前言</h2><p>废话不多说，直接进入文章。<br>我们在使用mybatis的时候，会在xml中编写sql语句。<br>比如这段动态sql代码：</p>
-<pre><code>&lt;<span class="keyword">update</span> id=<span class="string">"update"</span> parameterType=<span class="string">"org.format.dynamicproxy.mybatis.bean.User"</span>&gt;
-    <span class="keyword">UPDATE</span> users
-    &lt;<span class="keyword">trim</span> prefix=<span class="string">"SET"</span> prefixOverrides=<span class="string">","</span>&gt;
-        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"name != null and name != ''"</span>&gt;
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>废话不多说，直接进入文章。<br>我们在使用mybatis的时候，会在xml中编写sql语句。<br>比如这段动态sql代码：</p>
+<pre><code>&lt;update id=&quot;update&quot; parameterType=&quot;org.format.dynamicproxy.mybatis.bean.User&quot;&gt;
+    UPDATE users
+    &lt;trim prefix=&quot;SET&quot; prefixOverrides=&quot;,&quot;&gt;
+        &lt;if test=&quot;name != null and name != &apos;&apos;&quot;&gt;
             name = #{name}
-        &lt;/<span class="keyword">if</span>&gt;
-        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"age != null and age != ''"</span>&gt;
+        &lt;/if&gt;
+        &lt;if test=&quot;age != null and age != &apos;&apos;&quot;&gt;
             , age = #{age}
-        &lt;/<span class="keyword">if</span>&gt;
-        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"birthday != null and birthday != ''"</span>&gt;
+        &lt;/if&gt;
+        &lt;if test=&quot;birthday != null and birthday != &apos;&apos;&quot;&gt;
             , birthday = #{birthday}
-        &lt;/<span class="keyword">if</span>&gt;
-    &lt;/<span class="keyword">trim</span>&gt;
-    where id = <span class="label">${id}</span>
-&lt;/<span class="keyword">update</span>&gt;
+        &lt;/if&gt;
+    &lt;/trim&gt;
+    where id = ${id}
+&lt;/update&gt;
 </code></pre><p>mybatis底层是如何构造这段sql的？<br>这方面的知识网上资料不多，于是就写了这么一篇文章。<br>下面带着这个疑问，我们一步一步分析。</p>
-<h2 id="介绍MyBatis中一些关于动态SQL的接口和类">介绍MyBatis中一些关于动态SQL的接口和类</h2><p><strong>SqlNode接口</strong>，简单理解就是xml中的每个标签，比如上述sql的update,trim,if标签：</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">SqlNode</span> </span>{
-  <span class="function"><span class="keyword">boolean</span> <span class="title">apply</span><span class="params">(DynamicContext context)</span></span>;
+<h2 id="介绍MyBatis中一些关于动态SQL的接口和类"><a href="#介绍MyBatis中一些关于动态SQL的接口和类" class="headerlink" title="介绍MyBatis中一些关于动态SQL的接口和类"></a>介绍MyBatis中一些关于动态SQL的接口和类</h2><p><strong>SqlNode接口</strong>，简单理解就是xml中的每个标签，比如上述sql的update,trim,if标签：</p>
+<pre><code>public interface SqlNode {
+  boolean apply(DynamicContext context);
 }
 </code></pre><p><img src="http://format-blog-image.qiniudn.com/dynamicsql2.png" alt=""></p>
 <p><strong>SqlSource Sql源接口</strong>，代表从xml文件或注解映射的sql内容，主要就是用于创建BoundSql，有实现类DynamicSqlSource(动态Sql源)，StaticSqlSource(静态Sql源)等：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">SqlSource</span> {
-  <span class="function">BoundSql <span class="title">getBoundSql</span>(<span class="params">Object parameterObject</span>)</span>;
+<pre><code>public interface SqlSource {
+  BoundSql getBoundSql(Object parameterObject);
 }
 </code></pre><p><img src="http://format-blog-image.qiniudn.com/dynamicsql3.png" alt=""></p>
 <p><strong>BoundSql类</strong>，封装mybatis最终产生sql的类，包括sql语句，参数，参数源数据等参数：</p>
@@ -427,11 +428,11 @@
 <p>简单分析下XMLLanguageDriver(处理xml中的sql，RawLanguageDriver处理静态sql)：</p>
 <p>XMLLanguageDriver内部会使用XMLScriptBuilder解析xml中的sql部分。</p>
 <p>ok， 大部分比较重要的类我们都已经介绍了，下面源码分析走起。</p>
-<h2 id="源码分析走起">源码分析走起</h2><p>Spring与Mybatis整合的时候需要配置SqlSessionFactoryBean，该配置会加入数据源和mybatis xml配置文件路径等信息：</p>
-<pre><code>&lt;bean id=<span class="string">"sqlSessionFactory"</span> class=<span class="string">"org.mybatis.spring.SqlSessionFactoryBean"</span>&gt;
-    &lt;property name=<span class="string">"dataSource"</span> <span class="keyword">ref</span>=<span class="string">"dataSource"</span>/&gt;
-    &lt;property name=<span class="string">"configLocation"</span> value=<span class="string">"classpath:mybatisConfig.xml"</span>/&gt;
-    &lt;property name=<span class="string">"mapperLocations"</span> value=<span class="string">"classpath*:org/format/dao/*.xml"</span>/&gt;
+<h2 id="源码分析走起"><a href="#源码分析走起" class="headerlink" title="源码分析走起"></a>源码分析走起</h2><p>Spring与Mybatis整合的时候需要配置SqlSessionFactoryBean，该配置会加入数据源和mybatis xml配置文件路径等信息：</p>
+<pre><code>&lt;bean id=&quot;sqlSessionFactory&quot; class=&quot;org.mybatis.spring.SqlSessionFactoryBean&quot;&gt;
+    &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+    &lt;property name=&quot;configLocation&quot; value=&quot;classpath:mybatisConfig.xml&quot;/&gt;
+    &lt;property name=&quot;mapperLocations&quot; value=&quot;classpath*:org/format/dao/*.xml&quot;/&gt;
 &lt;/bean&gt;
 </code></pre><p>我们就分析这一段配置背后的细节：</p>
 <p>SqlSessionFactoryBean实现了Spring的InitializingBean接口，InitializingBean接口的afterPropertiesSet方法中会调用buildSqlSessionFactory方法</p>
@@ -451,22 +452,22 @@
 <p>XMLScriptBuilder解析sql：</p>
 <p><img src="http://format-blog-image.qiniudn.com/dynamicsql13.png" alt=""></p>
 <p>得到SqlSource之后，会放到Configuration中，有了SqlSource，就能拿BoundSql了，BoundSql可以得到最终的sql。</p>
-<h2 id="实例分析">实例分析</h2><p>我以以下xml的解析大概说下parseDynamicTags的解析过程：</p>
-<pre><code>&lt;<span class="keyword">update</span> id=<span class="string">"update"</span> parameterType=<span class="string">"org.format.dynamicproxy.mybatis.bean.User"</span>&gt;
-    <span class="keyword">UPDATE</span> users
-    &lt;<span class="keyword">trim</span> prefix=<span class="string">"SET"</span> prefixOverrides=<span class="string">","</span>&gt;
-        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"name != null and name != ''"</span>&gt;
+<h2 id="实例分析"><a href="#实例分析" class="headerlink" title="实例分析"></a>实例分析</h2><p>我以以下xml的解析大概说下parseDynamicTags的解析过程：</p>
+<pre><code>&lt;update id=&quot;update&quot; parameterType=&quot;org.format.dynamicproxy.mybatis.bean.User&quot;&gt;
+    UPDATE users
+    &lt;trim prefix=&quot;SET&quot; prefixOverrides=&quot;,&quot;&gt;
+        &lt;if test=&quot;name != null and name != &apos;&apos;&quot;&gt;
             name = #{name}
-        &lt;/<span class="keyword">if</span>&gt;
-        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"age != null and age != ''"</span>&gt;
+        &lt;/if&gt;
+        &lt;if test=&quot;age != null and age != &apos;&apos;&quot;&gt;
             , age = #{age}
-        &lt;/<span class="keyword">if</span>&gt;
-        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"birthday != null and birthday != ''"</span>&gt;
+        &lt;/if&gt;
+        &lt;if test=&quot;birthday != null and birthday != &apos;&apos;&quot;&gt;
             , birthday = #{birthday}
-        &lt;/<span class="keyword">if</span>&gt;
-    &lt;/<span class="keyword">trim</span>&gt;
-    where id = <span class="label">${id}</span>
-&lt;/<span class="keyword">update</span>&gt;
+        &lt;/if&gt;
+    &lt;/trim&gt;
+    where id = ${id}
+&lt;/update&gt;
 </code></pre><p>在看这段解析之前，请先了解dom相关的知识，<a href="http://www.w3school.com.cn/xmldom/index.asp" target="_blank" rel="external">xml dom知识</a>, <a href="http://www.cnblogs.com/fangjian0423/p/dom-parse-xml-html.html" target="_blank" rel="external">dom博文</a></p>
 <p>parseDynamicTags方法的返回值是一个List<sqlnode>，也就是一个Sql节点集合。SqlNode本文一开始已经介绍，分析完解析过程之后会说一下各个SqlNode类型的作用。</sqlnode></p>
 <p>1 首先根据update节点(Node)得到所有的子节点，分别是3个子节点</p>
@@ -481,25 +482,25 @@
 <p>  trim子节点内部有7个子节点，分别是文本节点、if节点、是文本节点、if节点、是文本节点、if节点、文本节点。文本节点跟之前一样处理，if节点使用IfHandler处理</p>
 <p>遍历步骤如上所示，下面我们看下几个Handler的实现细节。</p>
 <p>IfHandler处理方法也是使用parseDynamicTags方法，然后加上if标签必要的属性。 </p>
-<pre><code>private <span class="class"><span class="keyword">class</span> <span class="title">IfHandler</span> <span class="keyword">implements</span> <span class="title">NodeHandler</span> </span>{
-    public <span class="keyword">void</span> handleNode(XNode nodeToHandle, <span class="built_in">List</span>&lt;SqlNode&gt; targetContents) {
-      <span class="built_in">List</span>&lt;SqlNode&gt; contents = parseDynamicTags(nodeToHandle);
-      MixedSqlNode mixedSqlNode = <span class="keyword">new</span> MixedSqlNode(contents);
-      <span class="built_in">String</span> test = nodeToHandle.getStringAttribute(<span class="string">"test"</span>);
-      IfSqlNode ifSqlNode = <span class="keyword">new</span> IfSqlNode(mixedSqlNode, test);
+<pre><code>private class IfHandler implements NodeHandler {
+    public void handleNode(XNode nodeToHandle, List&lt;SqlNode&gt; targetContents) {
+      List&lt;SqlNode&gt; contents = parseDynamicTags(nodeToHandle);
+      MixedSqlNode mixedSqlNode = new MixedSqlNode(contents);
+      String test = nodeToHandle.getStringAttribute(&quot;test&quot;);
+      IfSqlNode ifSqlNode = new IfSqlNode(mixedSqlNode, test);
       targetContents.add(ifSqlNode);
     }
 }
 </code></pre><p>TrimHandler处理方法也是使用parseDynamicTags方法，然后加上trim标签必要的属性。</p>
-<pre><code>private <span class="class"><span class="keyword">class</span> <span class="title">TrimHandler</span> <span class="keyword">implements</span> <span class="title">NodeHandler</span> </span>{
-    public <span class="keyword">void</span> handleNode(XNode nodeToHandle, <span class="built_in">List</span>&lt;SqlNode&gt; targetContents) {
-      <span class="built_in">List</span>&lt;SqlNode&gt; contents = parseDynamicTags(nodeToHandle);
-      MixedSqlNode mixedSqlNode = <span class="keyword">new</span> MixedSqlNode(contents);
-      <span class="built_in">String</span> prefix = nodeToHandle.getStringAttribute(<span class="string">"prefix"</span>);
-      <span class="built_in">String</span> prefixOverrides = nodeToHandle.getStringAttribute(<span class="string">"prefixOverrides"</span>);
-      <span class="built_in">String</span> suffix = nodeToHandle.getStringAttribute(<span class="string">"suffix"</span>);
-      <span class="built_in">String</span> suffixOverrides = nodeToHandle.getStringAttribute(<span class="string">"suffixOverrides"</span>);
-      TrimSqlNode trim = <span class="keyword">new</span> TrimSqlNode(configuration, mixedSqlNode, prefix, prefixOverrides, suffix, suffixOverrides);
+<pre><code>private class TrimHandler implements NodeHandler {
+    public void handleNode(XNode nodeToHandle, List&lt;SqlNode&gt; targetContents) {
+      List&lt;SqlNode&gt; contents = parseDynamicTags(nodeToHandle);
+      MixedSqlNode mixedSqlNode = new MixedSqlNode(contents);
+      String prefix = nodeToHandle.getStringAttribute(&quot;prefix&quot;);
+      String prefixOverrides = nodeToHandle.getStringAttribute(&quot;prefixOverrides&quot;);
+      String suffix = nodeToHandle.getStringAttribute(&quot;suffix&quot;);
+      String suffixOverrides = nodeToHandle.getStringAttribute(&quot;suffixOverrides&quot;);
+      TrimSqlNode trim = new TrimSqlNode(configuration, mixedSqlNode, prefix, prefixOverrides, suffix, suffixOverrides);
       targetContents.add(trim);
     }
 }
@@ -514,96 +515,96 @@
 <p>然后我们看看各个SqlNode实现类的apply方法</p>
 <p>下面分析一下两个SqlNode实现类的apply方法实现：</p>
 <p>MixedSqlNode：</p>
-<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">apply</span><span class="params">(DynamicContext context)</span> </span>{
-    <span class="keyword">for</span> (SqlNode sqlNode : contents) {
+<pre><code>public boolean apply(DynamicContext context) {
+    for (SqlNode sqlNode : contents) {
       sqlNode.apply(context);
     }
-    <span class="keyword">return</span> <span class="keyword">true</span>;
+    return true;
 }
 </code></pre><p>MixedSqlNode会遍历调用内部各个sqlNode的apply方法。</p>
 <p>StaticTextSqlNode:</p>
-<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">apply</span><span class="params">(DynamicContext context)</span> </span>{
+<pre><code>public boolean apply(DynamicContext context) {
     context.appendSql(text);
-    <span class="keyword">return</span> <span class="keyword">true</span>;
+    return true;
 }
 </code></pre><p>直接append sql文本。</p>
 <p>IfSqlNode:</p>
-<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">apply</span><span class="params">(DynamicContext context)</span> </span>{
-    <span class="keyword">if</span> (evaluator.evaluateBoolean(test, context.getBindings())) {
+<pre><code>public boolean apply(DynamicContext context) {
+    if (evaluator.evaluateBoolean(test, context.getBindings())) {
       contents.apply(context);
-      <span class="keyword">return</span> <span class="keyword">true</span>;
+      return true;
     }
-    <span class="keyword">return</span> <span class="keyword">false</span>;
+    return false;
 }
 </code></pre><p>这里的evaluator是一个ExpressionEvaluator类型的实例，内部使用了OGNL处理表达式逻辑。</p>
 <p>TrimSqlNode:</p>
-<pre><code>public boolean apply(<span class="type">DynamicContext</span> context) {
-    <span class="type">FilteredDynamicContext</span> filteredDynamicContext = new <span class="type">FilteredDynamicContext</span>(context);
-    boolean <span class="literal">result</span> = contents.apply(filteredDynamicContext);
+<pre><code>public boolean apply(DynamicContext context) {
+    FilteredDynamicContext filteredDynamicContext = new FilteredDynamicContext(context);
+    boolean result = contents.apply(filteredDynamicContext);
     filteredDynamicContext.applyAll();
-    <span class="keyword">return</span> <span class="literal">result</span>;
+    return result;
 }
 
-public <span class="type">void</span> applyAll() {
-  sqlBuffer = new <span class="type">StringBuilder</span>(sqlBuffer.toString().trim());
-  <span class="type">String</span> trimmedUppercaseSql = sqlBuffer.toString().toUpperCase(<span class="type">Locale</span>.<span class="type">ENGLISH</span>);
-  <span class="keyword">if</span> (trimmedUppercaseSql.length() &gt; <span class="number">0</span>) {
+public void applyAll() {
+  sqlBuffer = new StringBuilder(sqlBuffer.toString().trim());
+  String trimmedUppercaseSql = sqlBuffer.toString().toUpperCase(Locale.ENGLISH);
+  if (trimmedUppercaseSql.length() &gt; 0) {
     applyPrefix(sqlBuffer, trimmedUppercaseSql);
     applySuffix(sqlBuffer, trimmedUppercaseSql);
   }
   delegate.appendSql(sqlBuffer.toString());
 }
 
-private <span class="type">void</span> applyPrefix(<span class="type">StringBuilder</span> sql, <span class="type">String</span> trimmedUppercaseSql) {
-  <span class="keyword">if</span> (!prefixApplied) {
-    prefixApplied = <span class="literal">true</span>;
-    <span class="keyword">if</span> (prefixesToOverride != null) {
-      <span class="keyword">for</span> (<span class="type">String</span> toRemove : prefixesToOverride) {
-        <span class="keyword">if</span> (trimmedUppercaseSql.startsWith(toRemove)) {
-          sql.delete(<span class="number">0</span>, toRemove.trim().length());
-          <span class="keyword">break</span>;
+private void applyPrefix(StringBuilder sql, String trimmedUppercaseSql) {
+  if (!prefixApplied) {
+    prefixApplied = true;
+    if (prefixesToOverride != null) {
+      for (String toRemove : prefixesToOverride) {
+        if (trimmedUppercaseSql.startsWith(toRemove)) {
+          sql.delete(0, toRemove.trim().length());
+          break;
         }
       }
     }
-    <span class="keyword">if</span> (prefix != null) {
-      sql.insert(<span class="number">0</span>, <span class="string">" "</span>);
-      sql.insert(<span class="number">0</span>, prefix);
+    if (prefix != null) {
+      sql.insert(0, &quot; &quot;);
+      sql.insert(0, prefix);
     }
   }
 }
 </code></pre><p>TrimSqlNode的apply方法也是调用属性contents(一般都是MixedSqlNode)的apply方法，按照实例也就是7个SqlNode，都是StaticTextSqlNode和IfSqlNode。 最后会使用FilteredDynamicContext过滤掉prefix和suffix。  </p>
-<h2 id="总结">总结</h2><p>大致讲解了一下mybatis对动态sql语句的解析过程，其实回过头来看看不算复杂，还算蛮简单的。 之前接触mybaits的时候遇到刚才分析的那一段动态sql的时候总是很费解。</p>
-<pre><code>&lt;<span class="keyword">update</span> id=<span class="string">"update"</span> parameterType=<span class="string">"org.format.dynamicproxy.mybatis.bean.User"</span>&gt;
-    <span class="keyword">UPDATE</span> users
-    &lt;<span class="keyword">trim</span> prefix=<span class="string">"SET"</span> prefixOverrides=<span class="string">","</span>&gt;
-        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"name != null and name != ''"</span>&gt;
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>大致讲解了一下mybatis对动态sql语句的解析过程，其实回过头来看看不算复杂，还算蛮简单的。 之前接触mybaits的时候遇到刚才分析的那一段动态sql的时候总是很费解。</p>
+<pre><code>&lt;update id=&quot;update&quot; parameterType=&quot;org.format.dynamicproxy.mybatis.bean.User&quot;&gt;
+    UPDATE users
+    &lt;trim prefix=&quot;SET&quot; prefixOverrides=&quot;,&quot;&gt;
+        &lt;if test=&quot;name != null and name != &apos;&apos;&quot;&gt;
             name = #{name}
-        &lt;/<span class="keyword">if</span>&gt;
-        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"age != null and age != ''"</span>&gt;
+        &lt;/if&gt;
+        &lt;if test=&quot;age != null and age != &apos;&apos;&quot;&gt;
             , age = #{age}
-        &lt;/<span class="keyword">if</span>&gt;
-        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"birthday != null and birthday != ''"</span>&gt;
+        &lt;/if&gt;
+        &lt;if test=&quot;birthday != null and birthday != &apos;&apos;&quot;&gt;
             , birthday = #{birthday}
-        &lt;/<span class="keyword">if</span>&gt;
-    &lt;/<span class="keyword">trim</span>&gt;
-    where id = <span class="label">${id}</span>
-&lt;/<span class="keyword">update</span>&gt;
+        &lt;/if&gt;
+    &lt;/trim&gt;
+    where id = ${id}
+&lt;/update&gt;
 </code></pre><p>想搞明白这个trim节点的prefixOverrides到底是什么意思(从字面上理解就是前缀覆盖)，而且官方文档上也没这方面知识的说明。我将这段xml改成如下：</p>
-<pre><code>&lt;<span class="keyword">update</span> id=<span class="string">"update"</span> parameterType=<span class="string">"org.format.dynamicproxy.mybatis.bean.User"</span>&gt;
-    <span class="keyword">UPDATE</span> users
-    &lt;<span class="keyword">trim</span> prefix=<span class="string">"SET"</span> prefixOverrides=<span class="string">","</span>&gt;
-        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"name != null and name != ''"</span>&gt;
+<pre><code>&lt;update id=&quot;update&quot; parameterType=&quot;org.format.dynamicproxy.mybatis.bean.User&quot;&gt;
+    UPDATE users
+    &lt;trim prefix=&quot;SET&quot; prefixOverrides=&quot;,&quot;&gt;
+        &lt;if test=&quot;name != null and name != &apos;&apos;&quot;&gt;
             , name = #{name}
-        &lt;/<span class="keyword">if</span>&gt;
-        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"age != null and age != ''"</span>&gt;
+        &lt;/if&gt;
+        &lt;if test=&quot;age != null and age != &apos;&apos;&quot;&gt;
             , age = #{age}
-        &lt;/<span class="keyword">if</span>&gt;
-        &lt;<span class="keyword">if</span> <span class="keyword">test</span>=<span class="string">"birthday != null and birthday != ''"</span>&gt;
+        &lt;/if&gt;
+        &lt;if test=&quot;birthday != null and birthday != &apos;&apos;&quot;&gt;
             , birthday = #{birthday}
-        &lt;/<span class="keyword">if</span>&gt;
-    &lt;/<span class="keyword">trim</span>&gt;
-    where id = <span class="label">${id}</span>
-&lt;/<span class="keyword">update</span>&gt;
+        &lt;/if&gt;
+    &lt;/trim&gt;
+    where id = ${id}
+&lt;/update&gt;
 </code></pre><p>(第二段第一个if节点多了个逗号)  结果我发现这2段xml解析的结果是一样的，非常迫切地想知道这到底是为什么，然后这也促使了我去看源码的决心。最终还是看下来了。</p>
 <p>文章有点长，而且讲的也不是非常直观，希望对有些人有帮助。</p>
 
@@ -626,9 +627,9 @@ private <span class="type">void</span> applyPrefix(<span class="type">StringBuil
       
         <div class="post-tags">
           
-            <a href="/tags/java/" rel="tag">#java</a>
-          
             <a href="/tags/mybatis/" rel="tag">#mybatis</a>
+          
+            <a href="/tags/java/" rel="tag">#java</a>
           
         </div>
       

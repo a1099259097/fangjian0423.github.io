@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="guava,java," />
+  <meta name="keywords" content="java,guava," />
 
 
 
@@ -364,26 +364,26 @@
       
 
       
-        <h2 id="Guava简介">Guava简介</h2><p><a href="https://mail.google.com/mail/u/0/" target="_blank" rel="external">Guava</a>是一个Google开发的基于java的扩展项目，提供了很多有用的工具类，可以让java代码更加优雅，更加简洁。</p>
+        <h2 id="Guava简介"><a href="#Guava简介" class="headerlink" title="Guava简介"></a>Guava简介</h2><p><a href="https://mail.google.com/mail/u/0/" target="_blank" rel="external">Guava</a>是一个Google开发的基于java的扩展项目，提供了很多有用的工具类，可以让java代码更加优雅，更加简洁。</p>
 <p>Guava包括诸多工具类，比如Collections，cache，concurrent，hash，reflect，annotations，eventbus等。</p>
 <p>刚好在看flume源码的时候看到源码里面使用了很多guava提供的代码，于是记录学习一下这个类库。</p>
-<h2 id="各个模块介绍">各个模块介绍</h2><p><a href="https://code.google.com/p/guava-libraries/wiki/GuavaExplained" target="_blank" rel="external">Guava的wiki</a>已经很明细地介绍了各个工具类的作用和说明。</p>
+<h2 id="各个模块介绍"><a href="#各个模块介绍" class="headerlink" title="各个模块介绍"></a>各个模块介绍</h2><p><a href="https://code.google.com/p/guava-libraries/wiki/GuavaExplained" target="_blank" rel="external">Guava的wiki</a>已经很明细地介绍了各个工具类的作用和说明。</p>
 <p>简单翻译一下各个工具类的说明，有用到的需要了解详情的直接去官网看就可以了。</p>
-<h3 id="Basic_utilties_基础工具类">Basic utilties 基础工具类</h3><p>基础工具类的作用是写java语言写的更轻松。它包括了5个子模块：</p>
+<h3 id="Basic-utilties-基础工具类"><a href="#Basic-utilties-基础工具类" class="headerlink" title="Basic utilties 基础工具类"></a>Basic utilties 基础工具类</h3><p>基础工具类的作用是写java语言写的更轻松。它包括了5个子模块：</p>
 <p>1.<a href="https://code.google.com/p/guava-libraries/wiki/UsingAndAvoidingNullExplained" target="_blank" rel="external">使用和避免null</a>，null值是有歧义的，也会引起错误。有时候它会让人很不舒服，<br>2.<a href="https://code.google.com/p/guava-libraries/wiki/PreconditionsExplained" target="_blank" rel="external">前置条件</a>,让方法中的条件检查更简单<br>3.<a href="https://code.google.com/p/guava-libraries/wiki/CommonObjectUtilitiesExplained" target="_blank" rel="external">公用的object方法</a>，简化object对象的hashCode和toString<br>4.<a href="https://code.google.com/p/guava-libraries/wiki/OrderingExplained" target="_blank" rel="external">排序</a>，Guava提供了强大的fluent Comparator<br>5.<a href="https://code.google.com/p/guava-libraries/wiki/ThrowablesExplained" target="_blank" rel="external">Throwables</a>，简化了异常和错误的传播与检查</p>
-<h3 id="Collections_集合">Collections 集合</h3><p>Guava扩展了jdk提供的集合机制</p>
+<h3 id="Collections-集合"><a href="#Collections-集合" class="headerlink" title="Collections 集合"></a>Collections 集合</h3><p>Guava扩展了jdk提供的集合机制</p>
 <p>1.<a href="https://code.google.com/p/guava-libraries/wiki/ImmutableCollectionsExplained" target="_blank" rel="external">不可变集合</a>用不变的集合进行防御性编程和性能提升<br>2.<a href="https://code.google.com/p/guava-libraries/wiki/NewCollectionTypesExplained" target="_blank" rel="external">新集合类型</a>multisets，multimaps，tables，bidirectional map等<br>3.<a href="https://code.google.com/p/guava-libraries/wiki/CollectionUtilitiesExplained" target="_blank" rel="external">强大的集合工具类</a>提供了jdk中没有的集合工具类<br>4.<a href="https://code.google.com/p/guava-libraries/wiki/CollectionHelpersExplained" target="_blank" rel="external">扩展工具类</a>让实现和扩展集合类变得更容易，比如创建Collection的装饰器，或实现迭代器</p>
-<h3 id="Caches_缓存">Caches 缓存</h3><p>本地缓存实现，支持多种缓存过期策略</p>
-<h3 id="函数式风格">函数式风格</h3><p>Guava的函数式支持可以显著简化代码，但请谨慎使用它</p>
-<h3 id="并发">并发</h3><p>1.<a href="https://code.google.com/p/guava-libraries/wiki/ListenableFutureExplained" target="_blank" rel="external">ListenableFuture</a>：完成后触发回调的Future<br>2.<a href="https://code.google.com/p/guava-libraries/wiki/ServiceExplained" target="_blank" rel="external">Service框架</a>：抽象可开启和关闭的服务，帮助你维护服务的状态逻辑</p>
-<h3 id="字符串处理">字符串处理</h3><p>非常有用的字符串工具，包括分割、连接、填充等操作</p>
-<h3 id="原生类型">原生类型</h3><p>扩展 JDK 未提供的原生类型（如int、char）操作， 包括某些类型的无符号形式</p>
-<h3 id="区间">区间</h3><p>可比较类型的区间API，包括连续和离散类型</p>
-<h3 id="IO">IO</h3><p>简化I/O尤其是I/O流和文件的操作，针对Java5和6版本</p>
-<h3 id="散列">散列</h3><p>提供比Object.hashCode()更复杂的散列实现，并提供布鲁姆过滤器的实现</p>
-<h3 id="事件总线">事件总线</h3><p>发布-订阅模式的组件通信，但组件不需要显式地注册到其他组件中</p>
-<h3 id="数学运算">数学运算</h3><p>优化的、充分测试的数学工具类</p>
-<h3 id="反射">反射</h3><p>Guava的Java反射机制工具类</p>
+<h3 id="Caches-缓存"><a href="#Caches-缓存" class="headerlink" title="Caches 缓存"></a>Caches 缓存</h3><p>本地缓存实现，支持多种缓存过期策略</p>
+<h3 id="函数式风格"><a href="#函数式风格" class="headerlink" title="函数式风格"></a>函数式风格</h3><p>Guava的函数式支持可以显著简化代码，但请谨慎使用它</p>
+<h3 id="并发"><a href="#并发" class="headerlink" title="并发"></a>并发</h3><p>1.<a href="https://code.google.com/p/guava-libraries/wiki/ListenableFutureExplained" target="_blank" rel="external">ListenableFuture</a>：完成后触发回调的Future<br>2.<a href="https://code.google.com/p/guava-libraries/wiki/ServiceExplained" target="_blank" rel="external">Service框架</a>：抽象可开启和关闭的服务，帮助你维护服务的状态逻辑</p>
+<h3 id="字符串处理"><a href="#字符串处理" class="headerlink" title="字符串处理"></a>字符串处理</h3><p>非常有用的字符串工具，包括分割、连接、填充等操作</p>
+<h3 id="原生类型"><a href="#原生类型" class="headerlink" title="原生类型"></a>原生类型</h3><p>扩展 JDK 未提供的原生类型（如int、char）操作， 包括某些类型的无符号形式</p>
+<h3 id="区间"><a href="#区间" class="headerlink" title="区间"></a>区间</h3><p>可比较类型的区间API，包括连续和离散类型</p>
+<h3 id="IO"><a href="#IO" class="headerlink" title="IO"></a>IO</h3><p>简化I/O尤其是I/O流和文件的操作，针对Java5和6版本</p>
+<h3 id="散列"><a href="#散列" class="headerlink" title="散列"></a>散列</h3><p>提供比Object.hashCode()更复杂的散列实现，并提供布鲁姆过滤器的实现</p>
+<h3 id="事件总线"><a href="#事件总线" class="headerlink" title="事件总线"></a>事件总线</h3><p>发布-订阅模式的组件通信，但组件不需要显式地注册到其他组件中</p>
+<h3 id="数学运算"><a href="#数学运算" class="headerlink" title="数学运算"></a>数学运算</h3><p>优化的、充分测试的数学工具类</p>
+<h3 id="反射"><a href="#反射" class="headerlink" title="反射"></a>反射</h3><p>Guava的Java反射机制工具类</p>
 
       
     </div>
@@ -404,9 +404,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/guava/" rel="tag">#guava</a>
-          
             <a href="/tags/java/" rel="tag">#java</a>
+          
+            <a href="/tags/guava/" rel="tag">#guava</a>
           
         </div>
       
@@ -601,7 +601,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Guava简介"><span class="nav-number">1.</span> <span class="nav-text">Guava简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#各个模块介绍"><span class="nav-number">2.</span> <span class="nav-text">各个模块介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Basic_utilties_基础工具类"><span class="nav-number">2.1.</span> <span class="nav-text">Basic utilties 基础工具类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Collections_集合"><span class="nav-number">2.2.</span> <span class="nav-text">Collections 集合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Caches_缓存"><span class="nav-number">2.3.</span> <span class="nav-text">Caches 缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#函数式风格"><span class="nav-number">2.4.</span> <span class="nav-text">函数式风格</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并发"><span class="nav-number">2.5.</span> <span class="nav-text">并发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#字符串处理"><span class="nav-number">2.6.</span> <span class="nav-text">字符串处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#原生类型"><span class="nav-number">2.7.</span> <span class="nav-text">原生类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#区间"><span class="nav-number">2.8.</span> <span class="nav-text">区间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IO"><span class="nav-number">2.9.</span> <span class="nav-text">IO</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#散列"><span class="nav-number">2.10.</span> <span class="nav-text">散列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件总线"><span class="nav-number">2.11.</span> <span class="nav-text">事件总线</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数学运算"><span class="nav-number">2.12.</span> <span class="nav-text">数学运算</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#反射"><span class="nav-number">2.13.</span> <span class="nav-text">反射</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Guava简介"><span class="nav-number">1.</span> <span class="nav-text">Guava简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#各个模块介绍"><span class="nav-number">2.</span> <span class="nav-text">各个模块介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Basic-utilties-基础工具类"><span class="nav-number">2.1.</span> <span class="nav-text">Basic utilties 基础工具类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Collections-集合"><span class="nav-number">2.2.</span> <span class="nav-text">Collections 集合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Caches-缓存"><span class="nav-number">2.3.</span> <span class="nav-text">Caches 缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#函数式风格"><span class="nav-number">2.4.</span> <span class="nav-text">函数式风格</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并发"><span class="nav-number">2.5.</span> <span class="nav-text">并发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#字符串处理"><span class="nav-number">2.6.</span> <span class="nav-text">字符串处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#原生类型"><span class="nav-number">2.7.</span> <span class="nav-text">原生类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#区间"><span class="nav-number">2.8.</span> <span class="nav-text">区间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IO"><span class="nav-number">2.9.</span> <span class="nav-text">IO</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#散列"><span class="nav-number">2.10.</span> <span class="nav-text">散列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件总线"><span class="nav-number">2.11.</span> <span class="nav-text">事件总线</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数学运算"><span class="nav-number">2.12.</span> <span class="nav-text">数学运算</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#反射"><span class="nav-number">2.13.</span> <span class="nav-text">反射</span></a></li></ol></li></ol></div>
             
           </div>
         </section>

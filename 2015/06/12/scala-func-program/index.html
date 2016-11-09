@@ -364,100 +364,100 @@
       
 
       
-        <h2 id="函数式编程简介">函数式编程简介</h2><p>函数式编程(functional programming)，Lisp作为最古老的函数式编程语言，已重获新生。新的函数式编程语言也层出不穷，比如Erlang，clojure，Scala等。</p>
+        <h2 id="函数式编程简介"><a href="#函数式编程简介" class="headerlink" title="函数式编程简介"></a>函数式编程简介</h2><p>函数式编程(functional programming)，Lisp作为最古老的函数式编程语言，已重获新生。新的函数式编程语言也层出不穷，比如Erlang，clojure，Scala等。</p>
 <p>一个简单的Scala函数式编程例子如下：</p>
-<pre><code><span class="function"><span class="title">List</span><span class="params">(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)</span></span>.<span class="function"><span class="title">foreach</span><span class="params">(x =&gt; println(x)</span></span>)
-</code></pre><h2 id="Scala函数式编程介绍">Scala函数式编程介绍</h2><h3 id="函数是一等公民">函数是一等公民</h3><p>函数是第一等公民，指的是函数与其他数据类型一样，处于平等地位，可以赋值给其他变量，也可以作为参数，传入另一个函数，或者作为别的函数的返回值。</p>
+<pre><code>List(1, 2, 3).foreach(x =&gt; println(x))
+</code></pre><h2 id="Scala函数式编程介绍"><a href="#Scala函数式编程介绍" class="headerlink" title="Scala函数式编程介绍"></a>Scala函数式编程介绍</h2><h3 id="函数是一等公民"><a href="#函数是一等公民" class="headerlink" title="函数是一等公民"></a>函数是一等公民</h3><p>函数是第一等公民，指的是函数与其他数据类型一样，处于平等地位，可以赋值给其他变量，也可以作为参数，传入另一个函数，或者作为别的函数的返回值。</p>
 <p>以下就是将一个匿名函数赋值给++变量的例子：</p>
-<pre><code>val ++ = (num: Int) =&gt; num + <span class="number">1</span>
+<pre><code>val ++ = (num: Int) =&gt; num + 1
 
-++(<span class="number">2</span>) <span class="comment">// 3</span>
-++(<span class="number">6</span>) <span class="comment">// 7</span>
+++(2) // 3
+++(6) // 7
 
-<span class="comment">// ++ 变量赋值给tmp变量</span>
+// ++ 变量赋值给tmp变量
 val tmp = ++
-<span class="function"><span class="title">tmp</span><span class="params">(<span class="number">7</span>)</span></span> <span class="comment">// 8</span>
-<span class="function"><span class="title">tmp</span><span class="params">(<span class="number">9</span>)</span></span> <span class="comment">// 10</span>
+tmp(7) // 8
+tmp(9) // 10
 </code></pre><p>函数作为参数例子，一个最典型的例子就是一些connection的处理，connection处理完毕之后都需要close，可以使用函数作为参数，这样就不用每次都close数据了：</p>
-<pre><code><span class="keyword">import</span> scala.reflect.io.<span class="keyword">File</span>
-<span class="keyword">import</span> java.util.Scanner
+<pre><code>import scala.reflect.io.File
+import java.util.Scanner
 
-<span class="keyword">def</span> scanFile(f: <span class="keyword">File</span>, f: Scanner =&gt; Unit) = {
-    val scanner = <span class="keyword">new</span> Scanner(f.bufferedReader)
-    <span class="keyword">try</span> {
+def scanFile(f: File, f: Scanner =&gt; Unit) = {
+    val scanner = new Scanner(f.bufferedReader)
+    try {
         f(scanner)
-    } <span class="keyword">finally</span> {
+    } finally {
         scanner.close()
     }
 }
 
-scanFile(<span class="keyword">File</span>(<span class="string">"/tmp/test.txt"</span>), scanner =&gt; <span class="keyword">println</span>(scanner.<span class="keyword">next</span>()))
-</code></pre><h3 id="一些常用的higher-order函数">一些常用的higher-order函数</h3><p>higher-order函数指的是以函数做参数或者返回值是一个函数的函数。</p>
+scanFile(File(&quot;/tmp/test.txt&quot;), scanner =&gt; println(scanner.next()))
+</code></pre><h3 id="一些常用的higher-order函数"><a href="#一些常用的higher-order函数" class="headerlink" title="一些常用的higher-order函数"></a>一些常用的higher-order函数</h3><p>higher-order函数指的是以函数做参数或者返回值是一个函数的函数。</p>
 <p>List中的map，flatMap，foreach函数都是higher-order函数。</p>
 <p>map例子，map函数的作用是使用一个函数调用集合中的各个元素，得到一个新的集合：</p>
-<pre><code><span class="function"><span class="title">List</span><span class="params">(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)</span></span>.<span class="function"><span class="title">map</span><span class="params">({x =&gt; x * <span class="number">2</span>})</span></span>  <span class="comment">// List(2, 4, 6)</span>
+<pre><code>List(1, 2, 3).map({x =&gt; x * 2})  // List(2, 4, 6)
 </code></pre><p>可以简化为：</p>
-<pre><code><span class="function"><span class="title">List</span><span class="params">(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)</span></span>.<span class="function"><span class="title">map</span><span class="params">(x =&gt; x * <span class="number">2</span>)</span></span>  <span class="comment">// List(2, 4, 6)</span>
+<pre><code>List(1, 2, 3).map(x =&gt; x * 2)  // List(2, 4, 6)
 </code></pre><p>还可以简化为:</p>
-<pre><code>List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>).<span class="built_in">map</span> { x =&gt; x * <span class="number">2</span> } <span class="comment">// List(2, 4, 6)  currying函数的应用</span>
+<pre><code>List(1, 2, 3).map { x =&gt; x * 2 } // List(2, 4, 6)  currying函数的应用
 </code></pre><p>还可以简化为：</p>
-<pre><code>List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>).<span class="built_in">map</span> { _ * <span class="number">2</span> } <span class="comment">// List(2, 4, 6)</span>
+<pre><code>List(1, 2, 3).map { _ * 2 } // List(2, 4, 6)
 </code></pre><p>flatMap例子，flatMap函数的作用跟map函数类似，把多个集合合并成一个集合，注意，<strong>flatMap针对的是集合</strong>：</p>
-<pre><code>List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>).flatMap { x =&gt; List(x * <span class="number">2</span>) } <span class="comment">// List(2, 4, 6)</span>
+<pre><code>List(1, 2, 3).flatMap { x =&gt; List(x * 2) } // List(2, 4, 6)
 </code></pre><p>foreach例子：</p>
-<pre><code>List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>).foreach { println(_) }
-</code></pre><h3 id="函数和方法的区别">函数和方法的区别</h3><p>方法：方法指的是定义在类中的方法</p>
-<pre><code><span class="class"><span class="keyword">class</span> <span class="title">UseResource</span> {</span>
-    <span class="function"><span class="keyword">def</span> <span class="title">use</span><span class="params">(<span class="symbol">r:</span> <span class="constant">Resource</span>)</span>: <span class="title">Boolean</span> = { ... }</span>
+<pre><code>List(1, 2, 3).foreach { println(_) }
+</code></pre><h3 id="函数和方法的区别"><a href="#函数和方法的区别" class="headerlink" title="函数和方法的区别"></a>函数和方法的区别</h3><p>方法：方法指的是定义在类中的方法</p>
+<pre><code>class UseResource {
+    def use(r: Resource): Boolean = { ... }
 }
 </code></pre><p>上面UseResource类中的use方法就是一个方法，it is a method.</p>
 <p>函数：函数在scala中代表1个类型和一个对象，方法却不会，方法只会出现在类中。</p>
-<pre><code>val succ = <span class="function"><span class="params">(x: Int)</span> =&gt;</span> x + <span class="number">1</span>
+<pre><code>val succ = (x: Int) =&gt; x + 1
 </code></pre><p>scala允许将方法转换成函数，可以在方法后面添加 “_” 即可。比如：</p>
-<pre><code>val use_func: Resource =&gt; Boolean = new <span class="function"><span class="title">UserResource</span><span class="params">()</span></span><span class="class">.use</span> _
-</code></pre><h3 id="函数柯里化(function_currying)">函数柯里化(function currying)</h3><p>函数柯里化是一种把函数中多个参数改造成只有一个参数的技术。</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">add</span><span class="params">(<span class="symbol">x:</span> <span class="constant">Int</span>, <span class="symbol">y:</span> <span class="constant">Int</span>)</span> = <span class="title">x</span> <span class="title">+</span> <span class="title">y</span></span>
+<pre><code>val use_func: Resource =&gt; Boolean = new UserResource().use _
+</code></pre><h3 id="函数柯里化-function-currying"><a href="#函数柯里化-function-currying" class="headerlink" title="函数柯里化(function currying)"></a>函数柯里化(function currying)</h3><p>函数柯里化是一种把函数中多个参数改造成只有一个参数的技术。</p>
+<pre><code>def add(x: Int, y: Int) = x + y
 </code></pre><p>add函数柯里化之后：</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">add</span><span class="params">(<span class="symbol">x:</span> <span class="constant">Int</span>)</span> = <span class="params">(<span class="symbol">y:</span> <span class="constant">Int</span>)</span> =<span class="title">&gt;</span> <span class="title">x</span> <span class="title">+</span> <span class="title">y</span></span>
+<pre><code>def add(x: Int) = (y: Int) =&gt; x + y
 </code></pre><p>简化为:</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">add</span><span class="params">(<span class="symbol">x:</span> <span class="constant">Int</span>)</span><span class="params">(<span class="symbol">y:</span> <span class="constant">Int</span>)</span> = <span class="title">x</span> <span class="title">+</span> <span class="title">y</span></span>
+<pre><code>def add(x: Int)(y: Int) = x + y
 </code></pre><p>调用柯里化后的add函数：</p>
-<pre><code>add(<span class="number">2</span>)(<span class="number">3</span>) <span class="comment">// 5</span>
-add(<span class="number">2</span>) { <span class="number">5</span> } <span class="comment">// 7</span>
+<pre><code>add(2)(3) // 5
+add(2) { 5 } // 7
 </code></pre><p>scala支持把一个非柯里化的函数转换成一个柯里化函数，使用函数变量的curried方法：</p>
-<pre><code>def add(x: <span class="typename">Int</span>, y: <span class="typename">Int</span>) = x + y
-<span class="variable"><span class="keyword">val</span> addVar</span> = add _ <span class="comment">// 转换成函数变量</span>
-<span class="variable"><span class="keyword">val</span> curryingFunc</span> = addVar.curried <span class="comment">// 使用curried方法转换成柯里化函数</span>
-curryingFunc(<span class="number">1</span>) { <span class="number">3</span> } <span class="comment">// 4</span>
+<pre><code>def add(x: Int, y: Int) = x + y
+val addVar = add _ // 转换成函数变量
+val curryingFunc = addVar.curried // 使用curried方法转换成柯里化函数
+curryingFunc(1) { 3 } // 4
 
-<span class="comment">// 或者定义add函数的时候直接使用函数变量</span>
-<span class="variable"><span class="keyword">val</span> add</span> = (x: <span class="typename">Int</span>, y: <span class="typename">Int</span>) =&gt; x + y
-<span class="variable"><span class="keyword">val</span> curryingFunc</span> = addVar.curried
-curryingFunc(<span class="number">1</span>) { <span class="number">3</span> } <span class="comment">// 4</span>
+// 或者定义add函数的时候直接使用函数变量
+val add = (x: Int, y: Int) =&gt; x + y
+val curryingFunc = addVar.curried
+curryingFunc(1) { 3 } // 4
 </code></pre><p>不过一般我们定义函数的时候都会定义成柯里化函数，而不会去转换：</p>
-<pre><code><span class="function">def <span class="title">add</span><span class="params">(x: Int)</span><span class="params">(y: Int)</span> </span>= x + <span class="function">y
-<span class="title">add</span><span class="params">(<span class="number">2</span>)</span> </span>{ <span class="number">7</span> } <span class="comment">// 9</span>
+<pre><code>def add(x: Int)(y: Int) = x + y
+add(2) { 7 } // 9
 
-<span class="comment">// 实现一个map函数</span>
-def <span class="built_in">map</span>[A, B](xs: List[A])(func: A =&gt; B) = xs.<span class="built_in">map</span> { func(_) }
-<span class="comment">// List[String] = List(11, 21, 31)</span>
-<span class="built_in">map</span>(List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)) {
-    x =&gt; x + <span class="string">"1"</span>
+// 实现一个map函数
+def map[A, B](xs: List[A])(func: A =&gt; B) = xs.map { func(_) }
+// List[String] = List(11, 21, 31)
+map(List(1, 2, 3)) {
+    x =&gt; x + &quot;1&quot;
 }
-</code></pre><h2 id="鸭子类型">鸭子类型</h2><p>鸭子类型是动态类型的一种风格，使用鸭子类型就不可以不使用继承这种不够灵活的特性。</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">withClose</span>(</span>closeAble: { <span class="function"><span class="keyword">def</span> <span class="title">close</span>(</span>): <span class="type">Unit</span> }, op: { <span class="function"><span class="keyword">def</span> <span class="title">close</span>(</span>): <span class="type">Unit</span> } =&gt; <span class="type">Unit</span>) {
-    <span class="keyword">try</span> {
+</code></pre><h2 id="鸭子类型"><a href="#鸭子类型" class="headerlink" title="鸭子类型"></a>鸭子类型</h2><p>鸭子类型是动态类型的一种风格，使用鸭子类型就不可以不使用继承这种不够灵活的特性。</p>
+<pre><code>def withClose(closeAble: { def close(): Unit }, op: { def close(): Unit } =&gt; Unit) {
+    try {
         op(closeAble)
-    } <span class="keyword">finally</span> {
+    } finally {
         closeAble.close()
     }
 }
 
-<span class="class"><span class="keyword">class</span> <span class="title">Connection</span> {</span>
-    <span class="function"><span class="keyword">def</span> <span class="title">close</span> =</span> println(<span class="string">"close Connection"</span>)
+class Connection {
+    def close = println(&quot;close Connection&quot;)
 }
-<span class="keyword">val</span> conn = <span class="keyword">new</span> <span class="type">Connection</span>()
-withClose(conn, conn =&gt; println(<span class="string">"do something with Connection"</span>))
+val conn = new Connection()
+withClose(conn, conn =&gt; println(&quot;do something with Connection&quot;))
 </code></pre>
       
     </div>
@@ -675,7 +675,7 @@ withClose(conn, conn =&gt; println(<span class="string">"do something with Conne
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#函数式编程简介"><span class="nav-number">1.</span> <span class="nav-text">函数式编程简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Scala函数式编程介绍"><span class="nav-number">2.</span> <span class="nav-text">Scala函数式编程介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#函数是一等公民"><span class="nav-number">2.1.</span> <span class="nav-text">函数是一等公民</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一些常用的higher-order函数"><span class="nav-number">2.2.</span> <span class="nav-text">一些常用的higher-order函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#函数和方法的区别"><span class="nav-number">2.3.</span> <span class="nav-text">函数和方法的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#函数柯里化(function_currying)"><span class="nav-number">2.4.</span> <span class="nav-text">函数柯里化(function currying)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#鸭子类型"><span class="nav-number">3.</span> <span class="nav-text">鸭子类型</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#函数式编程简介"><span class="nav-number">1.</span> <span class="nav-text">函数式编程简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Scala函数式编程介绍"><span class="nav-number">2.</span> <span class="nav-text">Scala函数式编程介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#函数是一等公民"><span class="nav-number">2.1.</span> <span class="nav-text">函数是一等公民</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一些常用的higher-order函数"><span class="nav-number">2.2.</span> <span class="nav-text">一些常用的higher-order函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#函数和方法的区别"><span class="nav-number">2.3.</span> <span class="nav-text">函数和方法的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#函数柯里化-function-currying"><span class="nav-number">2.4.</span> <span class="nav-text">函数柯里化(function currying)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#鸭子类型"><span class="nav-number">3.</span> <span class="nav-text">鸭子类型</span></a></li></ol></div>
             
           </div>
         </section>

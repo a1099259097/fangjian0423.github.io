@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="netty,nio," />
+  <meta name="keywords" content="nio,netty," />
 
 
 
@@ -94,6 +94,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Netty in Action笔记(一)">
 <meta name="twitter:description" content="一篇读书笔记，根据章节进行下总结。已经看了5章，先对这5个章节做个小总结。">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/netty01.png">
 
 
 
@@ -368,7 +369,7 @@
       
         <p>一篇读书笔记，根据章节进行下总结。已经看了5章，先对这5个章节做个小总结。</p>
 <a id="more"></a>
-<h2 id="第一章">第一章</h2><p>然后介绍了一下Netty出来的背景以及Netty所拥有的一些强大的特性，比如Netty的设计高可用，可扩展，性能高，使用NIO这种非阻塞式的IO模型等特点。</p>
+<h2 id="第一章"><a href="#第一章" class="headerlink" title="第一章"></a>第一章</h2><p>然后介绍了一下Netty出来的背景以及Netty所拥有的一些强大的特性，比如Netty的设计高可用，可扩展，性能高，使用NIO这种非阻塞式的IO模型等特点。</p>
 <p>然后介绍了一下异步编程的设计，有两种方式：</p>
 <ol>
 <li>基于Callback</li>
@@ -381,8 +382,8 @@
 <p>其中IO阻塞模型对于每一个Socket都会创建一个线程进行处理，虽然可以使用线程池解决线程过多的问题，但是底层还是使用线程处理每一个请求，系统的瓶颈在于线程的个数，并且线程多了会导致频繁的线程切换，导致CPU利用效率不高。</p>
 <p>NIO非阻塞模型采用Reactor模式，一个Reactor线程内部使用一个多路复用器selector，这个selector可以同时注册、监听和轮询成百上千个Channel，一个IO线程可以同时并发处理多个客户端连接，就不会存在频繁的IO线程之间的切换，CPU利用率高。</p>
 <p>之后使用JDK的NIO Api编写了一个demo，发现JDK的NIO Api比较难用，比如在ByteBuffer中进行读操作后又要进行写操作，需要调用flip进行切换，api很难用，而netty很好地解决了这个问题，这也是netty的一个优点。</p>
-<h2 id="第二章">第二章</h2><p>第二章主要就是使用netty的api编写了一个server端和client端，让读者先简单熟悉一下netty中的一些api的使用。</p>
-<h2 id="第三章">第三章</h2><p>第三章主要对netty中的一些主要的组件做一个简单的介绍。</p>
+<h2 id="第二章"><a href="#第二章" class="headerlink" title="第二章"></a>第二章</h2><p>第二章主要就是使用netty的api编写了一个server端和client端，让读者先简单熟悉一下netty中的一些api的使用。</p>
+<h2 id="第三章"><a href="#第三章" class="headerlink" title="第三章"></a>第三章</h2><p>第三章主要对netty中的一些主要的组件做一个简单的介绍。</p>
 <p>Channel: 一个Channel表示一个通道，跟io中的stream的角色一样，但是有几点不同。 1. stream是单向的，只支持读或者写，channel是双向的，既支持读也支持写。2. stream是阻塞的，channel是并行的。</p>
 <p>EventLoop: 当一个channel注册之后，会将这个channel绑定到EventLoop里来处理channel的IO操作，一个EventLoop对应一个线程。</p>
 <p>EventLoopGroup: 多个EventLoop的集合</p>
@@ -394,14 +395,14 @@
 <p>ChannelInBoundHandler和ChannelOutBoundHandler是ChannelHandler的两种很常见的实现类，他们分别用于读取socket中的数据和写数据到socket中，他们存储在ChannelPipeline中用于处理socket，有一张很经典关于ChannelInboundHandler和ChannelOutboundHandler的图如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty01.png" alt="image"></p>
 <p>最后讲解了关于java对象的编码和解码，因为使用netty开发的时候需要传输字节数据，而这些字节数据可以跟java对象之间进行互相转换使编程更加方便。</p>
-<h2 id="第四章">第四章</h2><p>第四章主要讲解了netty中的4种transport，分别是OIO、NIO、Local和Embedded。</p>
+<h2 id="第四章"><a href="#第四章" class="headerlink" title="第四章"></a>第四章</h2><p>第四章主要讲解了netty中的4种transport，分别是OIO、NIO、Local和Embedded。</p>
 <p>其中OIO这种transport在netty中的io.netty.channel.socket.oio包里，底层使用jdk的java.net包里的类，io模型为阻塞io模型</p>
 <p>NIO在netty中的io.netty.channel.socket.nio包里，底层使用jdk的java.nio.channels包里的类，netty提供了2种nio的实现，分别是基于selector和基于epoll的实现。</p>
 <p>Local在io.netty.channel.local包里，这是一种在同一个JVM中客户端与服务器进行通信的一种transport。</p>
 <p>Embedded在io.netty.channel.embedded包里，主要用于测试，可以在不需要网络的情况下进行ChannelHandler的单元测试。</p>
 <p>这4种transport的使用场景如下：</p>
 <p>OIO: 低连接数，低延迟，需要阻塞时使用<br>NIO: 搞链接数<br>Local: 同一个JVM中进行通信时使用<br>Embedded: ChannelHandler单元测试时使用</p>
-<h2 id="第五章">第五章</h2><p>第五章主要讲解netty中的ByteBuf的使用。</p>
+<h2 id="第五章"><a href="#第五章" class="headerlink" title="第五章"></a>第五章</h2><p>第五章主要讲解netty中的ByteBuf的使用。</p>
 <p>Jdk的NIO中的ByteBuffer使用成本过多，netty发现了这一缺点并进行了改造，设计出了ByteBuf这个类来代替ByteBuffer，相比ByteBuffer，ByteBuf有如下几个特点：</p>
 <ol>
 <li>可以定义自己的buffer类型，比如heap buffer, direct buffer等</li>
@@ -449,9 +450,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/netty/" rel="tag">#netty</a>
-          
             <a href="/tags/nio/" rel="tag">#nio</a>
+          
+            <a href="/tags/netty/" rel="tag">#netty</a>
           
         </div>
       

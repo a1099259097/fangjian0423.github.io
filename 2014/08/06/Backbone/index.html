@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="backbone,javascript," />
+  <meta name="keywords" content="javascript,backbone," />
 
 
 
@@ -364,205 +364,205 @@
       
 
       
-        <h2 id="前言">前言</h2><p>这两天看了下<a href="http://backbonejs.org/" target="_blank" rel="external">Backbone.js</a>的知识，大概了解了这个框架的一些知识。 写篇博客总结一下。</p>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这两天看了下<a href="http://backbonejs.org/" target="_blank" rel="external">Backbone.js</a>的知识，大概了解了这个框架的一些知识。 写篇博客总结一下。</p>
 <p>Backbone.js是一个web端javascript的轻量级MVC框架。为什么说是轻量级呢？因为它基于<a href="http://underscorejs.org/" target="_blank" rel="external">underscore</a>(基于jQuery)和<a href="http://jquery.com/" target="_blank" rel="external">jQuery</a>这2个框架，熟悉jQuery的小伙伴们可以快速入门Backbone.js。</p>
-<h2 id="为何使用Backbone">为何使用Backbone</h2><p>使用Backbone.js可以让你像写Java代码一样对js代码进行组织，比如定义类，类的属性、方法，这点非常重要。<br>比如传统的js开发是这样的：</p>
-<pre><code><span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"button"</span> <span class="attribute">value</span>=<span class="value">"save"</span> <span class="attribute">onclick</span>=<span class="value">"save()"</span>/&gt;</span>
-<span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"button"</span> <span class="attribute">value</span>=<span class="value">"add"</span> <span class="attribute">onclick</span>=<span class="value">"add()"</span>/&gt;</span>
+<h2 id="为何使用Backbone"><a href="#为何使用Backbone" class="headerlink" title="为何使用Backbone"></a>为何使用Backbone</h2><p>使用Backbone.js可以让你像写Java代码一样对js代码进行组织，比如定义类，类的属性、方法，这点非常重要。<br>比如传统的js开发是这样的：</p>
+<pre><code>&lt;input type=&quot;button&quot; value=&quot;save&quot; onclick=&quot;save()&quot;/&gt;
+&lt;input type=&quot;button&quot; value=&quot;add&quot; onclick=&quot;add()&quot;/&gt;
 
 ...
 
-<span class="tag">&lt;<span class="title">script</span> <span class="attribute">type</span>=<span class="value">"text/javascript"</span>&gt;</span><span class="actionscript">
-    <span class="function"><span class="keyword">function</span> <span class="title">save</span><span class="params">()</span> </span>{
+&lt;script type=&quot;text/javascript&quot;&gt;
+    function save() {
         ...
     }
-    <span class="function"><span class="keyword">function</span> <span class="title">add</span><span class="params">()</span> </span>{
+    function add() {
         ...
     }
-</span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+&lt;/script&gt;
 </code></pre><p>页面内容一多，js代码会分布在页面的各个角落，维护、开发都很麻烦。</p>
 <p>使用Backbone处理：</p>
-<pre><code><span class="keyword">var</span> AppView = Backbone.View.extend({
-    el: <span class="string">"body"</span>,
+<pre><code>var AppView = Backbone.View.extend({
+    el: &quot;body&quot;,
 
-    <span class="comment">// 事件</span>
+    // 事件
     events: {
-        <span class="string">'click input[type=button][value=add]'</span>: <span class="string">'add'</span>,
-        <span class="string">'click input[type=button][value=save]'</span>: <span class="string">'save'</span>
+        &apos;click input[type=button][value=add]&apos;: &apos;add&apos;,
+        &apos;click input[type=button][value=save]&apos;: &apos;save&apos;
     },
 
-    add: <span class="function"><span class="keyword">function</span><span class="params">(event)</span> </span>{
+    add: function(event) {
         ...
     },
 
-    save: <span class="function"><span class="keyword">function</span><span class="params">(event)</span> </span>{
+    save: function(event) {
         ...
     }
 
 });
 
-<span class="keyword">var</span> appView = <span class="keyword">new</span> AppView;
+var appView = new AppView;
 </code></pre><p>使用Backbone之后，所有js的代码都会在同一个地方，也就是对js代码进行了组织，我只需要管理这段js代码即可，前面button里的onclick事件就不需要单独写了。</p>
-<h2 id="Backbone中的几个重要概念">Backbone中的几个重要概念</h2><p>Backbone中有4个重要的概念，分别是Model，Collection，View，Router。</p>
-<h4 id="Model">Model</h4><p>Model是Javascript应用程序的核心，包括基础的数据以及围绕着这些数据的逻辑：数据转换、数据验证、访问控制。自定义的Model可以继承Backbone.Model。1个Person实体：</p>
-<pre><code><span class="keyword">var</span> Person = Backbone.Model.extend({
-    initialize: <span class="function"><span class="keyword">function</span><span class="params">()</span> </span>{
-        <span class="comment">// 构造实例的时候会调用这里</span>
+<h2 id="Backbone中的几个重要概念"><a href="#Backbone中的几个重要概念" class="headerlink" title="Backbone中的几个重要概念"></a>Backbone中的几个重要概念</h2><p>Backbone中有4个重要的概念，分别是Model，Collection，View，Router。</p>
+<h4 id="Model"><a href="#Model" class="headerlink" title="Model"></a>Model</h4><p>Model是Javascript应用程序的核心，包括基础的数据以及围绕着这些数据的逻辑：数据转换、数据验证、访问控制。自定义的Model可以继承Backbone.Model。1个Person实体：</p>
+<pre><code>var Person = Backbone.Model.extend({
+    initialize: function() {
+        // 构造实例的时候会调用这里
     },
-    <span class="comment">//默认属性</span>
+    //默认属性
     defaults: {
-        name: <span class="string">'unknow'</span>,
-        age: <span class="number">0</span>
+        name: &apos;unknow&apos;,
+        age: 0
     },
-    validate: <span class="function"><span class="keyword">function</span><span class="params">(attributes)</span> </span>{
-        <span class="keyword">if</span>(!attributes.age || attributes.age &lt; <span class="number">0</span>) {
-            <span class="keyword">return</span> <span class="string">"年龄小于0，出问题了"</span>;
+    validate: function(attributes) {
+        if(!attributes.age || attributes.age &lt; 0) {
+            return &quot;年龄小于0，出问题了&quot;;
         }
     },
-    customMethod: <span class="function"><span class="keyword">function</span><span class="params">()</span> </span>{
-        console.log(<span class="string">"自定义方法"</span>);
+    customMethod: function() {
+        console.log(&quot;自定义方法&quot;);
     }
 });
 
-<span class="comment">// 实例化1个Person对象</span>
-<span class="keyword">var</span> person = <span class="keyword">new</span> Person;
-console.log(person.<span class="keyword">get</span>(<span class="string">'name'</span>)); <span class="comment">// unknow</span>
-console.log(person.<span class="keyword">get</span>(<span class="string">'age'</span>));  <span class="comment">// 0</span>
+// 实例化1个Person对象
+var person = new Person;
+console.log(person.get(&apos;name&apos;)); // unknow
+console.log(person.get(&apos;age&apos;));  // 0
 
-person.<span class="keyword">set</span>(<span class="string">'name'</span>, <span class="string">'format'</span>);
-console.log(person.<span class="keyword">get</span>(<span class="string">'name'</span>)); <span class="comment">// format</span>
+person.set(&apos;name&apos;, &apos;format&apos;);
+console.log(person.get(&apos;name&apos;)); // format
 
-person.<span class="keyword">set</span>({name: <span class="string">'james'</span>, age: <span class="number">33</span>});
-console.log(person.<span class="keyword">get</span>(<span class="string">'age'</span>) + <span class="string">', '</span> + person.<span class="keyword">get</span>(<span class="string">'age'</span>)); <span class="comment">// james, 33</span>
+person.set({name: &apos;james&apos;, age: 33});
+console.log(person.get(&apos;age&apos;) + &apos;, &apos; + person.get(&apos;age&apos;)); // james, 33
 
-person.customMethod(); <span class="comment">// 自定义方法</span>
+person.customMethod(); // 自定义方法
 
-<span class="comment">//设置其他属性</span>
-person.<span class="keyword">set</span>({birth: <span class="string">'1977-12-15'</span>});
-console.log(person.<span class="keyword">get</span>(<span class="string">'birth'</span>)); <span class="comment">// 1977-12-15</span>
+//设置其他属性
+person.set({birth: &apos;1977-12-15&apos;});
+console.log(person.get(&apos;birth&apos;)); // 1977-12-15
 
-console.log(person.attributes); <span class="comment">//{name: "james", age: 33, birth: "1977-12-15"}</span>
+console.log(person.attributes); //{name: &quot;james&quot;, age: 33, birth: &quot;1977-12-15&quot;}
 
 
-<span class="keyword">if</span>(!person.<span class="keyword">set</span>({age: <span class="string">'-1'</span>})) { <span class="comment">//set属性默认不验证，这边set age 0，可以设置进去</span>
-    console.log(<span class="string">'设置age属性出错------11'</span>); <span class="comment">//这里不会打印</span>
+if(!person.set({age: &apos;-1&apos;})) { //set属性默认不验证，这边set age 0，可以设置进去
+    console.log(&apos;设置age属性出错------11&apos;); //这里不会打印
 }
 
-<span class="keyword">if</span>(!person.<span class="keyword">set</span>({age: <span class="string">'-1'</span>}, {validate: <span class="literal">true</span>})) { <span class="comment">//set 的时候加上validate: true， 让其验证，这里验证出错返回false</span>
-    console.log(<span class="string">'设置age属性出错------22'</span>); <span class="comment">//这里会打印</span>
+if(!person.set({age: &apos;-1&apos;}, {validate: true})) { //set 的时候加上validate: true， 让其验证，这里验证出错返回false
+    console.log(&apos;设置age属性出错------22&apos;); //这里会打印
 }
 </code></pre><p>更加详细的资料请参考<a href="http://backbonejs.org/#Model" target="_blank" rel="external">Model</a></p>
-<h4 id="Collection">Collection</h4><p>Collection, 集合， 也就是多个Model，很好理解。</p>
+<h4 id="Collection"><a href="#Collection" class="headerlink" title="Collection"></a>Collection</h4><p>Collection, 集合， 也就是多个Model，很好理解。</p>
 <p>可以绑定’change’, ‘add’, ‘remove’事件到集合上以监听集合的数据状态。</p>
-<pre><code><span class="comment">// 这里的代码依赖之前的Person这个Model</span>
-<span class="keyword">var</span> Family = Backbone.Collection.extend({
+<pre><code>// 这里的代码依赖之前的Person这个Model
+var Family = Backbone.Collection.extend({
     model: Person,
-    initialize: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
-        <span class="comment">//构造集合会调用这里 </span>
+    initialize: function() {
+        //构造集合会调用这里 
     }
 });
 
-<span class="keyword">var</span> father = <span class="keyword">new</span> Person({name: <span class="string">'father'</span>, age: <span class="number">42</span>});
-<span class="keyword">var</span> mother = <span class="keyword">new</span> Person({name: <span class="string">'mother'</span>, age: <span class="number">40</span>});
+var father = new Person({name: &apos;father&apos;, age: 42});
+var mother = new Person({name: &apos;mother&apos;, age: 40});
 
-<span class="keyword">var</span> family = <span class="keyword">new</span> Family([father, mother]);
+var family = new Family([father, mother]);
 
-family.bind(<span class="string">'change'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">person</span>) </span>{
-    <span class="built_in">console</span>.log(<span class="string">'family集合有数据改变了: '</span> + person.get(<span class="string">'age'</span>));
+family.bind(&apos;change&apos;, function(person) {
+    console.log(&apos;family集合有数据改变了: &apos; + person.get(&apos;age&apos;));
 });
 
-family.bind(<span class="string">'add'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">person</span>) </span>{
-    <span class="built_in">console</span>.log(<span class="string">'family集合有数据进来了: '</span> + person.get(<span class="string">'name'</span>));
+family.bind(&apos;add&apos;, function(person) {
+    console.log(&apos;family集合有数据进来了: &apos; + person.get(&apos;name&apos;));
 });
 
-family.bind(<span class="string">'remove'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">person</span>) </span>{
-    <span class="built_in">console</span>.log(<span class="string">'family集合有数据被删掉了: '</span> + person.get(<span class="string">'name'</span>));
+family.bind(&apos;remove&apos;, function(person) {
+    console.log(&apos;family集合有数据被删掉了: &apos; + person.get(&apos;name&apos;));
 });
 
-<span class="comment">// 触发add事件</span>
-family.add(<span class="keyword">new</span> Person({name: <span class="string">'son'</span>, age: <span class="number">0</span>}));
-<span class="comment">// 触发remove事件</span>
+// 触发add事件
+family.add(new Person({name: &apos;son&apos;, age: 0}));
+// 触发remove事件
 family.remove(father);
-<span class="comment">// 触发change事件</span>
-mother.set(<span class="string">'age'</span>, <span class="number">41</span>);
+// 触发change事件
+mother.set(&apos;age&apos;, 41);
 
-<span class="comment">// 查询</span>
-<span class="built_in">console</span>.log(family.where({name: <span class="string">'son'</span>}));   [son]
+// 查询
+console.log(family.where({name: &apos;son&apos;}));   [son]
 
-<span class="comment">// 触发add事件</span>
+// 触发add事件
 family.add(father);
 
-<span class="comment">// 比较器，排序使用</span>
-family.comparator = <span class="string">'age'</span>;
+// 比较器，排序使用
+family.comparator = &apos;age&apos;;
 family.sort();
 
-<span class="comment">//根据age排序，并从对象里拿出name属性</span>
-<span class="built_in">console</span>.log(family.pluck(<span class="string">'name'</span>)); <span class="comment">// ["son", "mother", "father"]</span>
+//根据age排序，并从对象里拿出name属性
+console.log(family.pluck(&apos;name&apos;)); // [&quot;son&quot;, &quot;mother&quot;, &quot;father&quot;]
 </code></pre><p>更加详细的资料请参考<a href="http://backbonejs.org/#Collection" target="_blank" rel="external">Collection</a></p>
-<h4 id="View">View</h4><p>Backbone的View是用来显示你的model中的数据到页面的，同时它也可用来监听DOM上的事件然后做出响应。</p>
+<h4 id="View"><a href="#View" class="headerlink" title="View"></a>View</h4><p>Backbone的View是用来显示你的model中的数据到页面的，同时它也可用来监听DOM上的事件然后做出响应。</p>
 <p>html:</p>
-<pre><code>&lt;<span class="tag">ul</span> id=<span class="string">"persons"</span>&gt;
+<pre><code>&lt;ul id=&quot;persons&quot;&gt;
 
 &lt;/ul&gt;
-&lt;<span class="tag">input</span> type=<span class="string">"button"</span> value=<span class="string">"add"</span>/&gt;
+&lt;input type=&quot;button&quot; value=&quot;add&quot;/&gt;
 </code></pre><p>javascript:</p>
-<pre><code>$(<span class="built_in">document</span>).ready(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
+<pre><code>$(document).ready(function() {
 
-    <span class="keyword">var</span> AppView = Backbone.View.extend({
-        <span class="comment">// 注意这里的el是body，不然的话下面的事件绑定不了。下面事件的element是基于el进行查找的</span>
-        el: <span class="string">'body'</span>,
+    var AppView = Backbone.View.extend({
+        // 注意这里的el是body，不然的话下面的事件绑定不了。下面事件的element是基于el进行查找的
+        el: &apos;body&apos;,
 
         events: {
-            <span class="string">'click input[type=button][value=add]'</span>: <span class="string">'add'</span>,
-            <span class="string">'click #persons li'</span>: <span class="string">'remove'</span>
+            &apos;click input[type=button][value=add]&apos;: &apos;add&apos;,
+            &apos;click #persons li&apos;: &apos;remove&apos;
         },
 
-        add: <span class="function"><span class="keyword">function</span>(<span class="params">event</span>) </span>{
-            <span class="keyword">var</span> name = <span class="built_in">window</span>.prompt(<span class="string">"请输入名字"</span>);
-            <span class="keyword">this</span>.$(<span class="string">'#persons'</span>).append(<span class="string">'&lt;li&gt;'</span> + name + <span class="string">'&lt;/li&gt;'</span>);
+        add: function(event) {
+            var name = window.prompt(&quot;请输入名字&quot;);
+            this.$(&apos;#persons&apos;).append(&apos;&lt;li&gt;&apos; + name + &apos;&lt;/li&gt;&apos;);
         },
 
-        remove: <span class="function"><span class="keyword">function</span>(<span class="params">event</span>) </span>{
+        remove: function(event) {
             $(event.target).remove();
         }
 
     });
 
-    <span class="keyword">var</span> appView = <span class="keyword">new</span> AppView;
+    var appView = new AppView;
 
 });
 </code></pre><p>更加详细的资料请参考<a href="http://backbonejs.org/#View" target="_blank" rel="external">View</a></p>
-<h4 id="Router">Router</h4><p>Router既控制器，用来监控一些#(锚)地址的访问情况。</p>
-<pre><code><span class="keyword">var</span> AppRouter = Backbone.Router.extend({
+<h4 id="Router"><a href="#Router" class="headerlink" title="Router"></a>Router</h4><p>Router既控制器，用来监控一些#(锚)地址的访问情况。</p>
+<pre><code>var AppRouter = Backbone.Router.extend({
 
     routes: {
-        <span class="comment">//* 代表全部， : 代表1个</span>
-        <span class="string">"all/*action"</span>: <span class="string">"actionRoute"</span>,   <span class="comment">// all/*action 会截获all/后面全部的地址</span>
-        <span class="string">"posts/:id"</span>: <span class="string">"posts"</span>,            <span class="comment">// :id 会截获</span>
-        <span class="string">"trigger"</span>: <span class="string">"trigger"</span>
+        //* 代表全部， : 代表1个
+        &quot;all/*action&quot;: &quot;actionRoute&quot;,   // all/*action 会截获all/后面全部的地址
+        &quot;posts/:id&quot;: &quot;posts&quot;,            // :id 会截获
+        &quot;trigger&quot;: &quot;trigger&quot;
     },
 
-    actionRoute: <span class="function"><span class="keyword">function</span>(<span class="params">actions</span>) </span>{
-        <span class="built_in">console</span>.log(<span class="string">"all/*action生效了，具体的地址: "</span> + actions);
+    actionRoute: function(actions) {
+        console.log(&quot;all/*action生效了，具体的地址: &quot; + actions);
     },
 
-    posts: <span class="function"><span class="keyword">function</span>(<span class="params">id</span>) </span>{
-        <span class="built_in">console</span>.log(<span class="string">"posts/:id生效了，id: "</span> + id);
+    posts: function(id) {
+        console.log(&quot;posts/:id生效了，id: &quot; + id);
     },
 
-    trigger: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
-        <span class="comment">//手动触发其他route, 参数trigger表示触发事件，如果为false，则只是url变化，并不会触发事件，replace表示url替换，而不是前进到这个url，意味着启用该参数，浏览器的history不会记录这个变动。</span>
-        appRouter.navigate(<span class="string">"/posts/"</span> + <span class="number">404</span>, {trigger: <span class="literal">true</span>, replace: <span class="literal">true</span>});
+    trigger: function() {
+        //手动触发其他route, 参数trigger表示触发事件，如果为false，则只是url变化，并不会触发事件，replace表示url替换，而不是前进到这个url，意味着启用该参数，浏览器的history不会记录这个变动。
+        appRouter.navigate(&quot;/posts/&quot; + 404, {trigger: true, replace: true});
     }
 
 });
 
-<span class="keyword">var</span> appRouter = <span class="keyword">new</span> AppRouter;
+var appRouter = new AppRouter;
 
-<span class="comment">// 使用Router必须要有以下这个代码</span>
+// 使用Router必须要有以下这个代码
 Backbone.history.start();
 </code></pre><p>更加详细的资料请参考<a href="http://backbonejs.org/#Router" target="_blank" rel="external">Router</a></p>
-<h2 id="总结">总结</h2><p>总结了一下Backbone中4大核心概念的知识，接下来准备写一个使用Backbone的小项目。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>总结了一下Backbone中4大核心概念的知识，接下来准备写一个使用Backbone的小项目。</p>
 <p>参考资料：</p>
 <p><a href="https://github.com/the5fire/backbonejs-learning-note" target="_blank" rel="external">https://github.com/the5fire/backbonejs-learning-note</a></p>
 <p><a href="http://www.cnblogs.com/yexiaochai/archive/2013/07/27/3219402.html" target="_blank" rel="external">http://www.cnblogs.com/yexiaochai/archive/2013/07/27/3219402.html</a></p>
@@ -586,9 +586,9 @@ Backbone.history.start();
       
         <div class="post-tags">
           
-            <a href="/tags/backbone/" rel="tag">#backbone</a>
-          
             <a href="/tags/javascript/" rel="tag">#javascript</a>
+          
+            <a href="/tags/backbone/" rel="tag">#backbone</a>
           
         </div>
       

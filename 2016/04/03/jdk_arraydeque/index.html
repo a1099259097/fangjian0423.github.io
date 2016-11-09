@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="collection,jdk," />
+  <meta name="keywords" content="jdk,collection," />
 
 
 
@@ -102,6 +102,7 @@ Deque接口(双向队列)的两个主要实现类是ArrayDeque和LinkedList。
 <meta name="twitter:description" content="ArrayDeque双向队列是jdk中列表的一种实现，支持元素在头和尾这两端进行插入和删除操作。
 Deque接口(双向队列)的两个主要实现类是ArrayDeque和LinkedList。
 其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链接实现，之前在jdk LinkedList工作原理分析这篇文章中，已经分析过了LinkedList的实现原理，本文分析Array">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/arraydeque01.jpg">
 
 
 
@@ -378,102 +379,102 @@ Deque接口(双向队列)的两个主要实现类是ArrayDeque和LinkedList。
 <p>Deque接口(双向队列)的两个主要实现类是ArrayDeque和LinkedList。</p>
 <p>其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链接实现，之前在<a href="http://fangjian0423.github.io/2016/03/27/jdk_linkedlist/">jdk LinkedList工作原理分析</a>这篇文章中，已经分析过了LinkedList的实现原理，本文分析ArrayDeque的实现原理。</p>
 <a id="more"></a>
-<h2 id="一个ArrayDeque例子">一个ArrayDeque例子</h2><p>一段ArrayDeque代码：</p>
-<pre><code>ArrayDeque&lt;<span class="keyword">String</span>&gt; arrayDeque = <span class="keyword">new</span> ArrayDeque&lt;<span class="keyword">String</span>&gt;(<span class="number">4</span>);
-arrayDeque.<span class="built_in">add</span>(<span class="string">"1"</span>);
-arrayDeque.<span class="built_in">add</span>(<span class="string">"2"</span>);
-arrayDeque.<span class="built_in">add</span>(<span class="string">"3"</span>);
-arrayDeque.addFirst(<span class="string">"0.5"</span>);
-arrayDeque.<span class="built_in">add</span>(<span class="string">"4"</span>);
+<h2 id="一个ArrayDeque例子"><a href="#一个ArrayDeque例子" class="headerlink" title="一个ArrayDeque例子"></a>一个ArrayDeque例子</h2><p>一段ArrayDeque代码：</p>
+<pre><code>ArrayDeque&lt;String&gt; arrayDeque = new ArrayDeque&lt;String&gt;(4);
+arrayDeque.add(&quot;1&quot;);
+arrayDeque.add(&quot;2&quot;);
+arrayDeque.add(&quot;3&quot;);
+arrayDeque.addFirst(&quot;0.5&quot;);
+arrayDeque.add(&quot;4&quot;);
 </code></pre><p>ArrayDeque内部使用的循环数组的容量，当首次进行初始化的时候，最小容量为8，如果超过8，扩大成2的幂。</p>
-<pre><code><span class="comment">// 调用带有容量参数的构造函数后，数组初始化过程</span>
-<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">allocateElements</span><span class="params">(<span class="keyword">int</span> numElements)</span> </span>{
-    <span class="keyword">int</span> initialCapacity = MIN_INITIAL_CAPACITY; <span class="comment">// 最小容量为8</span>
-    <span class="keyword">if</span> (numElements &gt;= initialCapacity) { <span class="comment">// 如果要分配的容量大于等于8，扩大成2的幂；否则使用最小容量8</span>
+<pre><code>// 调用带有容量参数的构造函数后，数组初始化过程
+private void allocateElements(int numElements) {
+    int initialCapacity = MIN_INITIAL_CAPACITY; // 最小容量为8
+    if (numElements &gt;= initialCapacity) { // 如果要分配的容量大于等于8，扩大成2的幂；否则使用最小容量8
         initialCapacity = numElements;
-        initialCapacity |= (initialCapacity &gt;&gt;&gt;  <span class="number">1</span>);
-        initialCapacity |= (initialCapacity &gt;&gt;&gt;  <span class="number">2</span>);
-        initialCapacity |= (initialCapacity &gt;&gt;&gt;  <span class="number">4</span>);
-        initialCapacity |= (initialCapacity &gt;&gt;&gt;  <span class="number">8</span>);
-        initialCapacity |= (initialCapacity &gt;&gt;&gt; <span class="number">16</span>);
+        initialCapacity |= (initialCapacity &gt;&gt;&gt;  1);
+        initialCapacity |= (initialCapacity &gt;&gt;&gt;  2);
+        initialCapacity |= (initialCapacity &gt;&gt;&gt;  4);
+        initialCapacity |= (initialCapacity &gt;&gt;&gt;  8);
+        initialCapacity |= (initialCapacity &gt;&gt;&gt; 16);
         initialCapacity++;
 
-        <span class="keyword">if</span> (initialCapacity &lt; <span class="number">0</span>)
-            initialCapacity &gt;&gt;&gt;= <span class="number">1</span>;
+        if (initialCapacity &lt; 0)
+            initialCapacity &gt;&gt;&gt;= 1;
     }
-    elements = <span class="keyword">new</span> Object[initialCapacity]; <span class="comment">// 构造数组</span>
+    elements = new Object[initialCapacity]; // 构造数组
 }
 </code></pre><p>上面例子构造容量为4的数组，但是由于最小容量为8，所以构造的数组的容量是8。</p>
 <p>执行过程如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/arraydeque01.jpg" alt=""></p>
-<h2 id="ArrayDeque原理分析">ArrayDeque原理分析</h2><p>ArrayDeque使用的是循环数组，内部有3个属性，分别是：</p>
-<pre><code><span class="built_in">Object</span>[] elements; <span class="comment">// 数组</span>
-<span class="built_in">int</span> head; <span class="comment">// 头索引</span>
-<span class="built_in">int</span> tail; <span class="comment">// 尾索引</span>
-</code></pre><h3 id="add操作">add操作</h3><p>上面例子使用的add方法，其实内部使用了addLast方法，addLast也就添加数据到双向队列尾端：</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addLast</span><span class="params">(E e)</span> </span>{
-    <span class="keyword">if</span> (e == null)
-        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();
-    elements[tail] = e; <span class="comment">// 根据尾索引，添加到尾端</span>
-    <span class="keyword">if</span> ( (tail = (tail + <span class="number">1</span>) &amp; (elements.length - <span class="number">1</span>)) == head) <span class="comment">// 尾索引+1，如果尾索引和头索引重复了，说明数组满了，进行扩容</span>
+<h2 id="ArrayDeque原理分析"><a href="#ArrayDeque原理分析" class="headerlink" title="ArrayDeque原理分析"></a>ArrayDeque原理分析</h2><p>ArrayDeque使用的是循环数组，内部有3个属性，分别是：</p>
+<pre><code>Object[] elements; // 数组
+int head; // 头索引
+int tail; // 尾索引
+</code></pre><h3 id="add操作"><a href="#add操作" class="headerlink" title="add操作"></a>add操作</h3><p>上面例子使用的add方法，其实内部使用了addLast方法，addLast也就添加数据到双向队列尾端：</p>
+<pre><code>public void addLast(E e) {
+    if (e == null)
+        throw new NullPointerException();
+    elements[tail] = e; // 根据尾索引，添加到尾端
+    if ( (tail = (tail + 1) &amp; (elements.length - 1)) == head) // 尾索引+1，如果尾索引和头索引重复了，说明数组满了，进行扩容
         doubleCapacity();
 }
 </code></pre><p>addFirst方法跟addLast方法相反，添加数据到双向队列头端：</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addFirst</span><span class="params">(E e)</span> </span>{
-    <span class="keyword">if</span> (e == null)
-        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();
-    elements[head = (head - <span class="number">1</span>) &amp; (elements.length - <span class="number">1</span>)] = e; <span class="comment">// 根据头索引，添加到头端，头索引-1</span>
-    <span class="keyword">if</span> (head == tail) <span class="comment">// 如果头索引和尾索引重复了，说明数组满了，进行扩容</span>
+<pre><code>public void addFirst(E e) {
+    if (e == null)
+        throw new NullPointerException();
+    elements[head = (head - 1) &amp; (elements.length - 1)] = e; // 根据头索引，添加到头端，头索引-1
+    if (head == tail) // 如果头索引和尾索引重复了，说明数组满了，进行扩容
         doubleCapacity();            
 }
-</code></pre><h3 id="remove操作">remove操作</h3><p>remove操作分别removeFirst和removeLast，removeLast代码如下：</p>
+</code></pre><h3 id="remove操作"><a href="#remove操作" class="headerlink" title="remove操作"></a>remove操作</h3><p>remove操作分别removeFirst和removeLast，removeLast代码如下：</p>
 <pre><code>public E removeLast() {
     E x = pollLast(); // 调用pollLast方法
-    <span class="keyword">if</span> (x == null)
-        throw new <span class="type">NoSuchElementException</span>();
-    <span class="keyword">return</span> x;
+    if (x == null)
+        throw new NoSuchElementException();
+    return x;
 }
 
 public E pollLast() {
-    <span class="type">int</span> t = (tail - <span class="number">1</span>) &amp; (elements.length - <span class="number">1</span>); // 尾索引 -<span class="number">1</span>
-    @<span class="type">SuppressWarnings</span>(<span class="string">"unchecked"</span>)
-    E <span class="literal">result</span> = (E) elements[t]; // 根据尾索引，得到尾元素
-    <span class="keyword">if</span> (<span class="literal">result</span> == null)
-        <span class="keyword">return</span> null;
+    int t = (tail - 1) &amp; (elements.length - 1); // 尾索引 -1
+    @SuppressWarnings(&quot;unchecked&quot;)
+    E result = (E) elements[t]; // 根据尾索引，得到尾元素
+    if (result == null)
+        return null;
     elements[t] = null; // 尾元素置空
     tail = t;
-    <span class="keyword">return</span> <span class="literal">result</span>;
+    return result;
 }
 </code></pre><p>removeFirst方法原理一样，remove头元素。 头索引 +1</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/arraydeque02.jpg" alt=""></p>
-<h3 id="扩容">扩容</h3><p>ArrayDeque的扩容会把数组容量扩大2倍，同时还会重置头索引和尾索引，头索引置为0，尾索引置为原容量的值。</p>
+<h3 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h3><p>ArrayDeque的扩容会把数组容量扩大2倍，同时还会重置头索引和尾索引，头索引置为0，尾索引置为原容量的值。</p>
 <p>比如容量为8，扩容为16，头索引变成0，尾索引变成8。</p>
 <p>扩容代码如下：</p>
-<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doubleCapacity</span><span class="params">()</span> </span>{
+<pre><code>private void doubleCapacity() {
     assert head == tail;
-    <span class="keyword">int</span> p = head;
-    <span class="keyword">int</span> n = elements.length;
-    <span class="keyword">int</span> r = n - p;
-    <span class="keyword">int</span> newCapacity = n &lt;&lt; <span class="number">1</span>;
-    <span class="keyword">if</span> (newCapacity &lt; <span class="number">0</span>)
-        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Sorry, deque too big"</span>);
-    Object[] a = <span class="keyword">new</span> Object[newCapacity];
-    System.arraycopy(elements, p, a, <span class="number">0</span>, r);
-    System.arraycopy(elements, <span class="number">0</span>, a, r, p);
+    int p = head;
+    int n = elements.length;
+    int r = n - p;
+    int newCapacity = n &lt;&lt; 1;
+    if (newCapacity &lt; 0)
+        throw new IllegalStateException(&quot;Sorry, deque too big&quot;);
+    Object[] a = new Object[newCapacity];
+    System.arraycopy(elements, p, a, 0, r);
+    System.arraycopy(elements, 0, a, r, p);
     elements = a;
-    head = <span class="number">0</span>;  <span class="comment">// 头索引重置</span>
-    tail = n;  <span class="comment">// 尾索引重置</span>
+    head = 0;  // 头索引重置
+    tail = n;  // 尾索引重置
 }
 </code></pre><p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/arraydeque03.jpg" alt=""></p>
-<h2 id="其他">其他</h2><p>Deque接口同时还附带了Stack的功能。</p>
-<pre><code>ArrayDeque&lt;<span class="built_in">String</span>&gt; <span class="built_in">stack</span> = <span class="literal">new</span> ArrayDeque&lt;<span class="built_in">String</span>&gt;(<span class="number">4</span>);
-<span class="built_in">stack</span><span class="built_in">.</span>push(<span class="string">"1"</span>);
-<span class="built_in">stack</span><span class="built_in">.</span>push(<span class="string">"2"</span>);
-<span class="built_in">stack</span><span class="built_in">.</span>push(<span class="string">"3"</span>);
-<span class="built_in">String</span> pop = <span class="built_in">stack</span><span class="built_in">.</span>pop(); <span class="comment">// 3</span>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>Deque接口同时还附带了Stack的功能。</p>
+<pre><code>ArrayDeque&lt;String&gt; stack = new ArrayDeque&lt;String&gt;(4);
+stack.push(&quot;1&quot;);
+stack.push(&quot;2&quot;);
+stack.push(&quot;3&quot;);
+String pop = stack.pop(); // 3
 </code></pre><p>push方法内部调用addFirst方法，pop方法内部调用removeFirst方法。</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/arraydeque04.jpg" alt=""></p>
-<h2 id="注意点">注意点</h2><ol>
+<h2 id="注意点"><a href="#注意点" class="headerlink" title="注意点"></a>注意点</h2><ol>
 <li>ArrayDeque是一个使用循环数组实现的双向队列，LinkedList也是一个双向队列，不过它的底层实现是使用链表</li>
 <li>ArrayDeque的扩容会把数组容量扩大2倍，同时还会重置头索引和尾索引</li>
 <li>Deque双向队列接口同时也实现了Stack接口，可以把Deque当成Stack使用，它的速度比java.util.Stack要快，因为Stack底层操作数据会加锁，而Deque不会加锁</li>
@@ -499,9 +500,9 @@ public E pollLast() {
       
         <div class="post-tags">
           
-            <a href="/tags/collection/" rel="tag">#collection</a>
-          
             <a href="/tags/jdk/" rel="tag">#jdk</a>
+          
+            <a href="/tags/collection/" rel="tag">#collection</a>
           
         </div>
       

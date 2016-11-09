@@ -368,67 +368,67 @@
 <p>以1个需求为例讲解es模板的使用：</p>
 <p><strong>页面上某个按钮在一段时间内的点击次数统计，并且可以以小时，天，月为单位进行汇总，并且需要去重。</strong></p>
 <p>创建索引，只定义3个字段，user_id, user_name和create_time:</p>
-<pre><code>-POST /<span class="variable">$ES</span>/event_index
+<pre><code>-POST /$ES/event_index
 
 {
-  <span class="string">"mappings"</span>: {
-    <span class="string">"event"</span>: {
-      <span class="string">"_ttl"</span>: {
-        <span class="string">"enabled"</span>: false
+  &quot;mappings&quot;: {
+    &quot;event&quot;: {
+      &quot;_ttl&quot;: {
+        &quot;enabled&quot;: false
       },
-      <span class="string">"_timestamp"</span>: {
-        <span class="string">"enabled"</span>: true,
-        <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span>
+      &quot;_timestamp&quot;: {
+        &quot;enabled&quot;: true,
+        &quot;format&quot;: &quot;yyyy-MM-dd HH:mm:ss&quot;
       },
-      <span class="string">"properties"</span>: {
-        <span class="string">"user_id"</span>: {
-          <span class="string">"type"</span>: <span class="string">"string"</span>,
-          <span class="string">"store"</span>: <span class="string">"no"</span>,
-          <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>
+      &quot;properties&quot;: {
+        &quot;user_id&quot;: {
+          &quot;type&quot;: &quot;string&quot;,
+          &quot;store&quot;: &quot;no&quot;,
+          &quot;index&quot;: &quot;not_analyzed&quot;
         },
-        <span class="string">"create_time"</span>: {
-          <span class="string">"type"</span>: <span class="string">"date"</span>,
-          <span class="string">"store"</span>: <span class="string">"no"</span>,
-          <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
-          <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span>
+        &quot;create_time&quot;: {
+          &quot;type&quot;: &quot;date&quot;,
+          &quot;store&quot;: &quot;no&quot;,
+          &quot;index&quot;: &quot;not_analyzed&quot;,
+          &quot;format&quot;: &quot;yyyy-MM-dd HH:mm:ss&quot;
         },
-        <span class="string">"user_name"</span>: {
-          <span class="string">"type"</span>: <span class="string">"string"</span>,
-          <span class="string">"store"</span>: <span class="string">"no"</span>
+        &quot;user_name&quot;: {
+          &quot;type&quot;: &quot;string&quot;,
+          &quot;store&quot;: &quot;no&quot;
         }
       }
     }
   }
 }
 </code></pre><p>定义对应的查询模板，模板名字stats，使用了Cardinality和DateHistogram这两个Aggregation<br>，其中Date Histogram嵌套在Cardinality里。在定义模板的时候，{ { } } 的表示是个参数，需要调用模板的时候传递进来:</p>
-<pre><code>  -POST /<span class="variable">$ES</span>/_search/template/stats
+<pre><code>  -POST /$ES/_search/template/stats
 {
-    <span class="string">"template"</span>: {
-        <span class="string">"query"</span>: {
-            <span class="string">"bool"</span>: {
-                <span class="string">"must"</span>: [
+    &quot;template&quot;: {
+        &quot;query&quot;: {
+            &quot;bool&quot;: {
+                &quot;must&quot;: [
                     {
-                        <span class="string">"range"</span>: {
-                            <span class="string">"create_time"</span>: {
-                                <span class="string">"gte"</span>: <span class="string">""</span>,
-                                <span class="string">"lte"</span>: <span class="string">""</span>
+                        &quot;range&quot;: {
+                            &quot;create_time&quot;: {
+                                &quot;gte&quot;: &quot;{{earliest}}&quot;,
+                                &quot;lte&quot;: &quot;{{latest}}&quot;
                             }
                         }
                     }
                 ]
             }
         },
-        <span class="string">"size"</span>: <span class="number">0</span>,
-        <span class="string">"aggs"</span>: {
-            <span class="string">"stats_data"</span>: {
-                <span class="string">"date_histogram"</span>: {
-                    <span class="string">"field"</span>: <span class="string">"create_time"</span>,
-                    <span class="string">"interval"</span>: <span class="string">""</span>
+        &quot;size&quot;: 0,
+        &quot;aggs&quot;: {
+            &quot;stats_data&quot;: {
+                &quot;date_histogram&quot;: {
+                    &quot;field&quot;: &quot;create_time&quot;,
+                    &quot;interval&quot;: &quot;{{interval}}&quot;
                 },
-                <span class="string">"aggs"</span>: {
-                    <span class="string">"time"</span>: {
-                        <span class="string">"cardinality"</span>: {
-                            <span class="string">"field"</span>: <span class="string">"user_id"</span>
+                &quot;aggs&quot;: {
+                    &quot;time&quot;: {
+                        &quot;cardinality&quot;: {
+                            &quot;field&quot;: &quot;user_id&quot;
                         }
                     }
                 }
@@ -439,118 +439,118 @@
 </code></pre><p>Cardinality Aggregation的作用就是类似sql中的distinct，去重。</p>
 <p>Date Histogram Aggregation的作用是根据时间进行统计。内部有个interval属性表面统计的范畴。</p>
 <p>下面加几条数据到event_index里：</p>
-<pre><code>-POST <span class="variable">$ES</span>/event_index/event
+<pre><code>-POST $ES/event_index/event
 {
-    <span class="string">"user_id"</span>: <span class="string">"1"</span>,
-    <span class="string">"user_name"</span>: <span class="string">"format1"</span>,
-    <span class="string">"create_time"</span>: <span class="string">"2015-11-07 12:00:00"</span>
+    &quot;user_id&quot;: &quot;1&quot;,
+    &quot;user_name&quot;: &quot;format1&quot;,
+    &quot;create_time&quot;: &quot;2015-11-07 12:00:00&quot;
 }
 
--POST <span class="variable">$ES</span>/event_index/event
+-POST $ES/event_index/event
 {
-    <span class="string">"user_id"</span>: <span class="string">"2"</span>,
-    <span class="string">"user_name"</span>: <span class="string">"format2"</span>,
-    <span class="string">"create_time"</span>: <span class="string">"2015-11-07 13:30:00"</span>
+    &quot;user_id&quot;: &quot;2&quot;,
+    &quot;user_name&quot;: &quot;format2&quot;,
+    &quot;create_time&quot;: &quot;2015-11-07 13:30:00&quot;
 }
 
--POST <span class="variable">$ES</span>/event_index/event
+-POST $ES/event_index/event
 {
-    <span class="string">"user_id"</span>: <span class="string">"3"</span>,
-    <span class="string">"user_name"</span>: <span class="string">"format3"</span>,
-    <span class="string">"create_time"</span>: <span class="string">"2015-11-07 13:30:00"</span>
+    &quot;user_id&quot;: &quot;3&quot;,
+    &quot;user_name&quot;: &quot;format3&quot;,
+    &quot;create_time&quot;: &quot;2015-11-07 13:30:00&quot;
 }
 
--POST <span class="variable">$ES</span>/event_index/event
+-POST $ES/event_index/event
 {
-    <span class="string">"user_id"</span>: <span class="string">"1"</span>,
-    <span class="string">"user_name"</span>: <span class="string">"format1"</span>,
-    <span class="string">"create_time"</span>: <span class="string">"2015-11-07 13:50:00"</span>
+    &quot;user_id&quot;: &quot;1&quot;,
+    &quot;user_name&quot;: &quot;format1&quot;,
+    &quot;create_time&quot;: &quot;2015-11-07 13:50:00&quot;
 }
 
--POST <span class="variable">$ES</span>/event_index/event
+-POST $ES/event_index/event
 {
-    <span class="string">"user_id"</span>: <span class="string">"1"</span>,
-    <span class="string">"user_name"</span>: <span class="string">"format1"</span>,
-    <span class="string">"create_time"</span>: <span class="string">"2015-11-07 13:55:00"</span>
+    &quot;user_id&quot;: &quot;1&quot;,
+    &quot;user_name&quot;: &quot;format1&quot;,
+    &quot;create_time&quot;: &quot;2015-11-07 13:55:00&quot;
 }
 </code></pre><p>11-07 12-13点有1条数据，1个用户<br>11-07 13-14点有4条数据，3个用户</p>
 <p>使用模板查询：</p>
-<pre><code>curl -XGET <span class="string">"<span class="variable">$ES</span>/event_index/_search/template"</span> -d'{
-  <span class="string">"template"</span>: { <span class="string">"id"</span>: <span class="string">"stats"</span> }, 
-  <span class="string">"params"</span>: { <span class="string">"earliest"</span>: <span class="string">"2015-11-07 00:00:00"</span>, <span class="string">"latest"</span>: <span class="string">"2015-11-07 23:59:59"</span>, <span class="string">"interval"</span>: <span class="string">"hour"</span> }
-}'    
+<pre><code>curl -XGET &quot;$ES/event_index/_search/template&quot; -d&apos;{
+  &quot;template&quot;: { &quot;id&quot;: &quot;stats&quot; }, 
+  &quot;params&quot;: { &quot;earliest&quot;: &quot;2015-11-07 00:00:00&quot;, &quot;latest&quot;: &quot;2015-11-07 23:59:59&quot;, &quot;interval&quot;: &quot;hour&quot; }
+}&apos;    
 </code></pre><p>结果：</p>
 <pre><code>{
-    "<span class="attribute">took</span>": <span class="value"><span class="number">3</span></span>,
-    "<span class="attribute">timed_out</span>": <span class="value"><span class="literal">false</span></span>,
-    "<span class="attribute">_shards</span>": <span class="value">{
-        "<span class="attribute">total</span>": <span class="value"><span class="number">5</span></span>,
-        "<span class="attribute">successful</span>": <span class="value"><span class="number">5</span></span>,
-        "<span class="attribute">failed</span>": <span class="value"><span class="number">0</span>
-    </span>}</span>,
-    "<span class="attribute">hits</span>": <span class="value">{
-        "<span class="attribute">total</span>": <span class="value"><span class="number">5</span></span>,
-        "<span class="attribute">max_score</span>": <span class="value"><span class="number">0</span></span>,
-        "<span class="attribute">hits</span>": <span class="value">[]
-    </span>}</span>,
-    "<span class="attribute">aggregations</span>": <span class="value">{
-        "<span class="attribute">stats_data</span>": <span class="value">{
-            "<span class="attribute">buckets</span>": <span class="value">[
+    &quot;took&quot;: 3,
+    &quot;timed_out&quot;: false,
+    &quot;_shards&quot;: {
+        &quot;total&quot;: 5,
+        &quot;successful&quot;: 5,
+        &quot;failed&quot;: 0
+    },
+    &quot;hits&quot;: {
+        &quot;total&quot;: 5,
+        &quot;max_score&quot;: 0,
+        &quot;hits&quot;: []
+    },
+    &quot;aggregations&quot;: {
+        &quot;stats_data&quot;: {
+            &quot;buckets&quot;: [
                 {
-                    "<span class="attribute">key_as_string</span>": <span class="value"><span class="string">"2015-11-07 12:00:00"</span></span>,
-                    "<span class="attribute">key</span>": <span class="value"><span class="number">1446897600000</span></span>,
-                    "<span class="attribute">doc_count</span>": <span class="value"><span class="number">1</span></span>,
-                    "<span class="attribute">time</span>": <span class="value">{
-                        "<span class="attribute">value</span>": <span class="value"><span class="number">1</span>
-                    </span>}
-                </span>},
+                    &quot;key_as_string&quot;: &quot;2015-11-07 12:00:00&quot;,
+                    &quot;key&quot;: 1446897600000,
+                    &quot;doc_count&quot;: 1,
+                    &quot;time&quot;: {
+                        &quot;value&quot;: 1
+                    }
+                },
                 {
-                    "<span class="attribute">key_as_string</span>": <span class="value"><span class="string">"2015-11-07 13:00:00"</span></span>,
-                    "<span class="attribute">key</span>": <span class="value"><span class="number">1446901200000</span></span>,
-                    "<span class="attribute">doc_count</span>": <span class="value"><span class="number">4</span></span>,
-                    "<span class="attribute">time</span>": <span class="value">{
-                        "<span class="attribute">value</span>": <span class="value"><span class="number">3</span>
-                    </span>}
-                </span>}
+                    &quot;key_as_string&quot;: &quot;2015-11-07 13:00:00&quot;,
+                    &quot;key&quot;: 1446901200000,
+                    &quot;doc_count&quot;: 4,
+                    &quot;time&quot;: {
+                        &quot;value&quot;: 3
+                    }
+                }
             ]
-        </span>}
-    </span>}
-</span>}
+        }
+    }
+}
 </code></pre><p>12点-13点的只有1条数据，1个用户。13-14点的有4条数据，3个用户。</p>
 <p>以天(day)统计：</p>
-<pre><code>curl -XGET <span class="string">"<span class="variable">$ES</span>/event_index/_search/template"</span> -d'{
-  <span class="string">"template"</span>: { <span class="string">"id"</span>: <span class="string">"stats"</span> }, 
-  <span class="string">"params"</span>: { <span class="string">"earliest"</span>: <span class="string">"2015-11-07 00:00:00"</span>, <span class="string">"latest"</span>: <span class="string">"2015-11-07 23:59:59"</span>, <span class="string">"interval"</span>: <span class="string">"day"</span> }
-}'    
+<pre><code>curl -XGET &quot;$ES/event_index/_search/template&quot; -d&apos;{
+  &quot;template&quot;: { &quot;id&quot;: &quot;stats&quot; }, 
+  &quot;params&quot;: { &quot;earliest&quot;: &quot;2015-11-07 00:00:00&quot;, &quot;latest&quot;: &quot;2015-11-07 23:59:59&quot;, &quot;interval&quot;: &quot;day&quot; }
+}&apos;    
 </code></pre><p>结果：</p>
 <pre><code>{
-    "<span class="attribute">took</span>": <span class="value"><span class="number">4</span></span>,
-    "<span class="attribute">timed_out</span>": <span class="value"><span class="literal">false</span></span>,
-    "<span class="attribute">_shards</span>": <span class="value">{
-        "<span class="attribute">total</span>": <span class="value"><span class="number">5</span></span>,
-        "<span class="attribute">successful</span>": <span class="value"><span class="number">5</span></span>,
-        "<span class="attribute">failed</span>": <span class="value"><span class="number">0</span>
-    </span>}</span>,
-    "<span class="attribute">hits</span>": <span class="value">{
-        "<span class="attribute">total</span>": <span class="value"><span class="number">5</span></span>,
-        "<span class="attribute">max_score</span>": <span class="value"><span class="number">0</span></span>,
-        "<span class="attribute">hits</span>": <span class="value">[]
-    </span>}</span>,
-    "<span class="attribute">aggregations</span>": <span class="value">{
-        "<span class="attribute">stats_data</span>": <span class="value">{
-            "<span class="attribute">buckets</span>": <span class="value">[
+    &quot;took&quot;: 4,
+    &quot;timed_out&quot;: false,
+    &quot;_shards&quot;: {
+        &quot;total&quot;: 5,
+        &quot;successful&quot;: 5,
+        &quot;failed&quot;: 0
+    },
+    &quot;hits&quot;: {
+        &quot;total&quot;: 5,
+        &quot;max_score&quot;: 0,
+        &quot;hits&quot;: []
+    },
+    &quot;aggregations&quot;: {
+        &quot;stats_data&quot;: {
+            &quot;buckets&quot;: [
                 {
-                    "<span class="attribute">key_as_string</span>": <span class="value"><span class="string">"2015-11-07 00:00:00"</span></span>,
-                    "<span class="attribute">key</span>": <span class="value"><span class="number">1446854400000</span></span>,
-                    "<span class="attribute">doc_count</span>": <span class="value"><span class="number">5</span></span>,
-                    "<span class="attribute">time</span>": <span class="value">{
-                        "<span class="attribute">value</span>": <span class="value"><span class="number">3</span>
-                    </span>}
-                </span>}
+                    &quot;key_as_string&quot;: &quot;2015-11-07 00:00:00&quot;,
+                    &quot;key&quot;: 1446854400000,
+                    &quot;doc_count&quot;: 5,
+                    &quot;time&quot;: {
+                        &quot;value&quot;: 3
+                    }
+                }
             ]
-        </span>}
-    </span>}
-</span>}
+        }
+    }
+}
 </code></pre><p>11-07这一天有5条数据，3个用户。</p>
 <p>本文只是简单说明了es查询模板的使用，也简单使用了2个aggregation。更多内容可以去官网查看相关资料。</p>
 

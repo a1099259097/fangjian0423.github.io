@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="dom,java,javascript," />
+  <meta name="keywords" content="javascript,java,dom," />
 
 
 
@@ -95,6 +95,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="简单谈谈dom解析xml和html">
 <meta name="twitter:description" content="文件对象模型是W3C组织推荐的处理可扩展标志语言的标准编程接口 ...">
+<meta name="twitter:image" content="http://format-blog-image.qiniudn.com/dom_parse_xml1.png">
 
 
 
@@ -367,46 +368,46 @@
       
 
       
-        <h2 id="前言">前言</h2><p><a href="http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/" target="_blank" rel="external">文件对象模型（Document Object Model，简称DOM）</a>，是W3C组织推荐的处理可扩展标志语言的标准编程接口。html，xml都是基于这个模型构造的。这也是一个W3C推出的标准。java，python，javascript等语言都提供了一套基于dom的编程接口。</p>
-<h2 id="java使用dom解析xml">java使用dom解析xml</h2><p>一段xml文档, note.xml：</p>
-<pre><code><span class="pi">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
-<span class="tag">&lt;<span class="title">note</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">to</span> <span class="attribute">id</span>=<span class="value">"1"</span>&gt;</span>George<span class="tag">&lt;/<span class="title">to</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">from</span>&gt;</span>John<span class="tag">&lt;/<span class="title">from</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">heading</span>&gt;</span>Reminder<span class="tag">&lt;/<span class="title">heading</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">body</span>&gt;</span>Don't forget the meeting!<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">note</span>&gt;</span>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><a href="http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/" target="_blank" rel="external">文件对象模型（Document Object Model，简称DOM）</a>，是W3C组织推荐的处理可扩展标志语言的标准编程接口。html，xml都是基于这个模型构造的。这也是一个W3C推出的标准。java，python，javascript等语言都提供了一套基于dom的编程接口。</p>
+<h2 id="java使用dom解析xml"><a href="#java使用dom解析xml" class="headerlink" title="java使用dom解析xml"></a>java使用dom解析xml</h2><p>一段xml文档, note.xml：</p>
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;note&gt;
+    &lt;to id=&quot;1&quot;&gt;George&lt;/to&gt;
+    &lt;from&gt;John&lt;/from&gt;
+    &lt;heading&gt;Reminder&lt;/heading&gt;
+    &lt;body&gt;Don&apos;t forget the meeting!&lt;/body&gt;
+&lt;/note&gt;
 </code></pre><p>我们先使用w3c dom解析该xml：</p>
-<pre><code>@<span class="function">Test
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span>(<span class="params"></span>) </span>{
-    NodeList nodeList = doc.getChildNodes().item(<span class="number">0</span>).getChildNodes();
-    System.<span class="keyword">out</span>.println(<span class="string">"xml size: "</span> + nodeList.getLength());
-    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nodeList.getLength(); i ++) {
+<pre><code>@Test
+public void test() {
+    NodeList nodeList = doc.getChildNodes().item(0).getChildNodes();
+    System.out.println(&quot;xml size: &quot; + nodeList.getLength());
+    for(int i = 0; i &lt; nodeList.getLength(); i ++) {
         Node node = nodeList.item(i);
-        System.<span class="keyword">out</span>.println(node.getNodeType());
-        System.<span class="keyword">out</span>.println(node.getNodeName());
+        System.out.println(node.getNodeType());
+        System.out.println(node.getNodeName());
     }
 }
 </code></pre><p>输出：</p>
-<pre><code>xml size: <span class="number">9</span>
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-<span class="number">1</span>
+<pre><code>xml size: 9
+3
+#text
+1
 to
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-<span class="number">1</span>
+3
+#text
+1
 from
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-<span class="number">1</span>
+3
+#text
+1
 heading
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
-<span class="number">1</span>
+3
+#text
+1
 body
-<span class="number">3</span>
-<span class="preprocessor">#text</span>
+3
+#text
 </code></pre><p>我们看到代码输出note节点的字节点的时候，有9个节点，但是xml文档中note节点实际上只有to、from、heading、body4个节点。 那为什么是9个呢，原因是这样的。<br>选取几个w3c规范中关于节点类型的描述：</p>
 <table>
 <thead>
@@ -475,58 +476,58 @@ body
 <p>其中红色部分为Text节点，紫色部分是Element节点(只画了部分)。&lt;/body&gt;后面的也是一个Element节点，所有4个Element节点，5个Text节点。</p>
 <p>所以输出的内容中3 #text表示该节点是个Text节点，1 节点name是个Element节点，这与表格中表述的是一样的。</p>
 <p>测试代码：</p>
-<pre><code>@<span class="function">Test
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test1</span><span class="params">()</span> </span>{
-    NodeList nodeList = doc.getChildNodes().item(<span class="number">0</span>).getChildNodes();
-    System.out.println(<span class="string">"xml size: "</span> + nodeList.getLength());
-    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nodeList.getLength(); i ++) {
+<pre><code>@Test
+public void test1() {
+    NodeList nodeList = doc.getChildNodes().item(0).getChildNodes();
+    System.out.println(&quot;xml size: &quot; + nodeList.getLength());
+    for(int i = 0; i &lt; nodeList.getLength(); i ++) {
         Node node = nodeList.item(i);
-        <span class="keyword">if</span>(node.getNodeType() == Node.TEXT_NODE) {
-            System.out.println(node.getNodeValue().replace(<span class="string">"\n"</span>,<span class="string">"hr"</span>).replace(<span class="string">' '</span>, <span class="string">'-'</span>));
+        if(node.getNodeType() == Node.TEXT_NODE) {
+            System.out.println(node.getNodeValue().replace(&quot;\n&quot;,&quot;hr&quot;).replace(&apos; &apos;, &apos;-&apos;));
         }
     }
 }
 </code></pre><p><img src="http://format-blog-image.qiniudn.com/dom_parse_xml2.png" alt=""><br>很明显，我们把空格和回车键替换打印后发现我们的结论是正确的。</p>
 <p>测试代码：</p>
 <pre><code>@Test
-<span class="component">public void test2() {
-    System<span class="string">.out.println("doc</span> type: " + doc<span class="string">.getNodeType())</span>;
-    NodeList nodeList = doc<span class="string">.getChildNodes().item(0).getChildNodes()</span>;
-    Node secondNode = nodeList<span class="string">.item(1)</span>;
-    System<span class="string">.out.println("element</span> [to] node type: " + secondNode<span class="string">.getNodeType())</span>;
-    System<span class="string">.out.println("element</span> [to] node name: " + secondNode<span class="string">.getNodeName())</span>;
-    System<span class="string">.out.println("element</span> [to] node value: " + secondNode<span class="string">.getNodeValue())</span>;
-    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> len: " + secondNode<span class="string">.getChildNodes().getLength())</span>;
-    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node type: " + secondNode<span class="string">.getChildNodes().item(0).getNodeType())</span>;
-    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node value: " + secondNode<span class="string">.getChildNodes().item(0).getNodeValue())</span>;
-    System<span class="string">.out.println("element</span> [to] <span class="keyword">children</span> node name: " + secondNode<span class="string">.getChildNodes().item(0).getNodeName())</span>;
-    Node attNode = secondNode<span class="string">.getAttributes().item(0)</span>;
-    System<span class="string">.out.println("attr</span> type: " + attNode<span class="string">.getNodeType())</span>;
-}</span>
+public void test2() {
+    System.out.println(&quot;doc type: &quot; + doc.getNodeType());
+    NodeList nodeList = doc.getChildNodes().item(0).getChildNodes();
+    Node secondNode = nodeList.item(1);
+    System.out.println(&quot;element [to] node type: &quot; + secondNode.getNodeType());
+    System.out.println(&quot;element [to] node name: &quot; + secondNode.getNodeName());
+    System.out.println(&quot;element [to] node value: &quot; + secondNode.getNodeValue());
+    System.out.println(&quot;element [to] children len: &quot; + secondNode.getChildNodes().getLength());
+    System.out.println(&quot;element [to] children node type: &quot; + secondNode.getChildNodes().item(0).getNodeType());
+    System.out.println(&quot;element [to] children node value: &quot; + secondNode.getChildNodes().item(0).getNodeValue());
+    System.out.println(&quot;element [to] children node name: &quot; + secondNode.getChildNodes().item(0).getNodeName());
+    Node attNode = secondNode.getAttributes().item(0);
+    System.out.println(&quot;attr type: &quot; + attNode.getNodeType());
+}
 </code></pre><p><img src="http://format-blog-image.qiniudn.com/dom_parse_xml3.png" alt=""><br>输出结果跟表格中是一样的。</p>
 <p>大家有兴趣的话其他类型的节点比如CDATA节点大家可以自行测试～</p>
-<h2 id="javascript使用dom解析html">javascript使用dom解析html</h2><p>html代码：</p>
-<pre><code><span class="doctype">&lt;!DOCTYPE html&gt;</span>
-<span class="tag">&lt;<span class="title">html</span>&gt;</span>
-<span class="tag">&lt;<span class="title">head</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">title</span>&gt;</span>JS Bin<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">head</span>&gt;</span>
-<span class="tag">&lt;<span class="title">body</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">div</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">p</span>&gt;</span>gogogo<span class="tag">&lt;/<span class="title">p</span>&gt;</span>
-  <span class="tag">&lt;/<span class="title">div</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">html</span>&gt;</span>
+<h2 id="javascript使用dom解析html"><a href="#javascript使用dom解析html" class="headerlink" title="javascript使用dom解析html"></a>javascript使用dom解析html</h2><p>html代码：</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;utf-8&quot;&gt;
+  &lt;title&gt;JS Bin&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;p&gt;gogogo&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
 </code></pre><p>js代码：</p>
-<pre><code><span class="built_in">console</span>.log(<span class="built_in">document</span>.nodeType);
-<span class="keyword">var</span> div = <span class="built_in">document</span>.getElementsByTagName(<span class="string">"div"</span>)[<span class="number">0</span>]; <span class="comment">//9</span>
-<span class="built_in">console</span>.log(div.nodeType); <span class="comment">//1</span>
-<span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>;i &lt; div.childNodes.length; i ++) {
-  <span class="built_in">console</span>.log(div.childNodes[i].nodeType);
+<pre><code>console.log(document.nodeType);
+var div = document.getElementsByTagName(&quot;div&quot;)[0]; //9
+console.log(div.nodeType); //1
+for(var i = 0;i &lt; div.childNodes.length; i ++) {
+  console.log(div.childNodes[i].nodeType);
 }
 </code></pre><p>分别输出9，1，3，1，3<br>跟我们在表格中对应～</p>
-<h2 id="总结">总结</h2><p>本次博客主要讲解了dom解析xml和html。 以前使用java解析xml的时候总是使用一些第三方库，比如jdom。 但是dom却是w3c的规范，不止java，包括javascript，python这些主流语言也都主持，有了规范，语言只是实现了这些规范而已。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本次博客主要讲解了dom解析xml和html。 以前使用java解析xml的时候总是使用一些第三方库，比如jdom。 但是dom却是w3c的规范，不止java，包括javascript，python这些主流语言也都主持，有了规范，语言只是实现了这些规范而已。</p>
 
       
     </div>
@@ -547,11 +548,11 @@ body
       
         <div class="post-tags">
           
-            <a href="/tags/dom/" rel="tag">#dom</a>
+            <a href="/tags/javascript/" rel="tag">#javascript</a>
           
             <a href="/tags/java/" rel="tag">#java</a>
           
-            <a href="/tags/javascript/" rel="tag">#javascript</a>
+            <a href="/tags/dom/" rel="tag">#dom</a>
           
         </div>
       

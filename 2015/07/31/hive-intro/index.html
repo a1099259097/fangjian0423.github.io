@@ -367,122 +367,122 @@
         <p>Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集。</p>
 <p>Hive提供了一种叫做HiveQL的类似SQL查询语言用来查询数据，HiveQL也允许熟悉MapReduce开发者开发自定义的mapper和reducer来处理内建的mapper和reducer无法完成的复杂的分析工作。</p>
 <p>Hive的工作模式是提交一个任务，等到任务结束时被通知，而不是实时查询。</p>
-<h2 id="Hive安装">Hive安装</h2><p>直接去<a href="https://hive.apache.org/" target="_blank" rel="external">Hive官网</a>下载最新的文件，解压。</p>
+<h2 id="Hive安装"><a href="#Hive安装" class="headerlink" title="Hive安装"></a>Hive安装</h2><p>直接去<a href="https://hive.apache.org/" target="_blank" rel="external">Hive官网</a>下载最新的文件，解压。</p>
 <p>运行bin目录里的hive文件，运行之前先启动hadoop，运行的时候可能会出现：</p>
-<pre><code>Missing Hive <span class="keyword">CLI</span> Jar ....
+<pre><code>Missing Hive CLI Jar ....
 </code></pre><p>将hive解压出来的lib目录里的jline<em>.jar拷贝到$HADOOP/share/hadoop/yarn/lib里，同时将$HADOOP/share/hadoop/yarn/lib里的jline</em>.jar删除，重启hadoop。</p>
 <p>再次运行，可能还会出现</p>
-<pre><code>The reported blocks <span class="number">2662</span> has reached <span class="operator">the</span> threshold <span class="number">0.9990</span> <span class="operator">of</span> total blocks <span class="number">2662.</span> The <span class="built_in">number</span> <span class="operator">of</span> live datanodes <span class="number">1</span> has reached <span class="operator">the</span> minimum <span class="built_in">number</span> <span class="number">0.</span> In safe mode extension. Safe mode will be turned off automatically <span class="operator">in</span> <span class="number">0</span> <span class="built_in">seconds</span>. ...
+<pre><code>The reported blocks 2662 has reached the threshold 0.9990 of total blocks 2662. The number of live datanodes 1 has reached the minimum number 0. In safe mode extension. Safe mode will be turned off automatically in 0 seconds. ...
 </code></pre><p>类似的问题，关闭hdfs的安全模式即可：</p>
-<pre><code><span class="title">hadoop</span> dfsadmin -safemode leave
-</code></pre><h2 id="基本命令">基本命令</h2><p>HiveQL就是模仿sql而创建的，以SQL的角度来介绍HiveQL。</p>
-<h3 id="DDL操作">DDL操作</h3><p>创建表：</p>
-<pre><code>hive&gt; create table users(age <span class="built_in">INT</span>, name <span class="built_in">STRING</span>)<span class="comment">;</span>
+<pre><code>hadoop dfsadmin -safemode leave
+</code></pre><h2 id="基本命令"><a href="#基本命令" class="headerlink" title="基本命令"></a>基本命令</h2><p>HiveQL就是模仿sql而创建的，以SQL的角度来介绍HiveQL。</p>
+<h3 id="DDL操作"><a href="#DDL操作" class="headerlink" title="DDL操作"></a>DDL操作</h3><p>创建表：</p>
+<pre><code>hive&gt; create table users(age INT, name STRING);
 </code></pre><p>查看所有的表：</p>
-<pre><code>hive&gt; <span class="built_in">show</span> <span class="built_in">tables</span>;
+<pre><code>hive&gt; show tables;
 </code></pre><p>查看以CLIENT开头的表：</p>
-<pre><code>hive&gt; <span class="built_in">show</span> <span class="built_in">tables</span> 'CLIENT.*';
+<pre><code>hive&gt; show tables &apos;CLIENT.*&apos;;
 </code></pre><p>表加列：</p>
-<pre><code>hive&gt; alter table users add columns<span class="list">(<span class="keyword">gender</span> BOOLEAN)</span><span class="comment">;</span>
+<pre><code>hive&gt; alter table users add columns(gender BOOLEAN);
 </code></pre><p>改表名字：</p>
-<pre><code>hive&gt; alter <span class="built_in">table</span> users rename <span class="keyword">to</span> <span class="keyword">user</span>;
+<pre><code>hive&gt; alter table users rename to user;
 </code></pre><p>删除表：</p>
-<pre><code>hive&gt; drop <span class="built_in">table</span> <span class="keyword">user</span>;
+<pre><code>hive&gt; drop table user;
 </code></pre><p>查看表的具体信息：</p>
-<pre><code>hive&gt; descibe user<span class="comment">;</span>
-hive&gt; desc user<span class="comment">;</span>
-</code></pre><h3 id="DML操作">DML操作</h3><p>hive创建表的时候可以指定分隔符，由于hive操作的是hdfs，数据最终会存储在hdfs上，所以hdfs上的内容肯定是以某种分隔符分开各个列的。 hive默认的列分隔符是 <strong>^A</strong> 。 我们可以自定义自己的分隔符，在创建表的时候指定分隔符即可。</p>
+<pre><code>hive&gt; descibe user;
+hive&gt; desc user;
+</code></pre><h3 id="DML操作"><a href="#DML操作" class="headerlink" title="DML操作"></a>DML操作</h3><p>hive创建表的时候可以指定分隔符，由于hive操作的是hdfs，数据最终会存储在hdfs上，所以hdfs上的内容肯定是以某种分隔符分开各个列的。 hive默认的列分隔符是 <strong>^A</strong> 。 我们可以自定义自己的分隔符，在创建表的时候指定分隔符即可。</p>
 <p>本地导入数据到hive：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table users;
+<pre><code>hive&gt; load data local inpath &apos;localFile&apos; overwrite into table users;
 </code></pre><p>users表的结构只有2列，name和age，而且使用默认的分隔符。</p>
 <p>比如本地文件的内容是这样的：</p>
-<pre><code><span class="xml">format1</span><span class="keyword">^A11</span><span class="xml">
-format2</span><span class="keyword">^A22</span><span class="xml"></span>
+<pre><code>format1^A11
+format2^A22
 </code></pre><p>导入之后进行查询：</p>
-<pre><code>hive&gt; <span class="keyword">select</span> * <span class="keyword">from</span> users;
+<pre><code>hive&gt; select * from users;
 </code></pre><p>显示结果：</p>
 <pre><code>OK
-format1    <span class="number">11</span>
-format2    <span class="number">22</span>
-Time taken: <span class="number">0.362</span> seconds, Fetched: <span class="number">2</span> row(s)
+format1    11
+format2    22
+Time taken: 0.362 seconds, Fetched: 2 row(s)
 </code></pre><p>在创建表的时候可以指定列分隔符和数组分隔符：</p>
-<pre><code>hive&gt; create table users(name <span class="built_in">string</span>, age int)
+<pre><code>hive&gt; create table users(name string, age int)
  &gt; ROW FORMAT DELIMITED
- &gt; FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">'\t'</span>
- &gt; COLLECTION ITEMS TERMINATED <span class="keyword">BY</span> <span class="string">','</span>;
+ &gt; FIELDS TERMINATED BY &apos;\t&apos;
+ &gt; COLLECTION ITEMS TERMINATED BY &apos;,&apos;;
 </code></pre><p>导入数据还有几个参数：</p>
 <p>local参数意味着从本地加载文件，如果没有local参数，那表示从hdfs加载文件。</p>
 <p>关键字overwrite意味着当前表中已经存在的数据将会被删除掉，没有overwrite关键字，表示数据是追加，追加到原先数据集里面。</p>
 <p>插入数据，插入数据后会起一个map reduce job去跑插入的数据：</p>
-<pre><code>hive&gt; <span class="function">insert <span class="keyword">into</span> table users <span class="title">values</span>(<span class="params"><span class="string">'formatgogo'</span>, <span class="number">222</span></span>)</span>;
+<pre><code>hive&gt; insert into table users values(&apos;formatgogo&apos;, 222);
 </code></pre><p>带条件的查询数据：</p>
-<pre><code>hive&gt; <span class="keyword">select</span> * <span class="keyword">from</span> users <span class="keyword">where</span> age = <span class="number">11</span>;
+<pre><code>hive&gt; select * from users where age = 11;
 </code></pre><p>group by查询：</p>
-<pre><code>hive&gt; <span class="keyword">select</span> age, <span class="built_in">count</span>(<span class="number">1</span>) <span class="keyword">from</span> users <span class="built_in">group</span> <span class="keyword">by</span> age;
+<pre><code>hive&gt; select age, count(1) from users group by age;
 </code></pre><p>partition的使用，以部门表为例，用type进行partition：</p>
-<pre><code>hive&gt; create table dept<span class="list">(<span class="keyword">name</span> STRING)</span> partitioned by <span class="list">(<span class="keyword">type</span> INT)</span><span class="comment">;</span>
+<pre><code>hive&gt; create table dept(name STRING) partitioned by (type INT);
 </code></pre><p>以2个文件为例，dept1.txt：</p>
-<pre><code><span class="label">dept1</span>^<span class="literal">A1</span>
-<span class="label">dept11</span>^<span class="literal">A1</span>
-<span class="label">dept111</span>^<span class="literal">A1</span>
-<span class="label">dept1111</span>^<span class="literal">A1</span>
-<span class="label">dept11111</span>^<span class="literal">A1</span>
-<span class="label">dept111111</span>^<span class="literal">A1</span>
+<pre><code>dept1^A1
+dept11^A1
+dept111^A1
+dept1111^A1
+dept11111^A1
+dept111111^A1
 </code></pre><p>dept2.txt</p>
-<pre><code><span class="label">dept2</span>^<span class="literal">A2</span>
-<span class="label">dept22</span>^<span class="literal">A2</span>
-<span class="label">dept222</span>^<span class="literal">A2</span>
-<span class="label">dept2222</span>^<span class="literal">A2</span>
-<span class="label">dept22222</span>^<span class="literal">A2</span>
-<span class="label">dept222222</span>^<span class="literal">A2</span>
+<pre><code>dept2^A2
+dept22^A2
+dept222^A2
+dept2222^A2
+dept22222^A2
+dept222222^A2
 </code></pre><p>使用partition之后，导入数据的时候需要指定对应的partition：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'$PATH/dept1.txt'</span> overwrite <span class="keyword">into</span> table dept partition(<span class="keyword">type</span>=<span class="number">1</span>);
-hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'$PATH/dept2.txt'</span> overwrite <span class="keyword">into</span> table dept partition(<span class="keyword">type</span>=<span class="number">2</span>);
+<pre><code>hive&gt; load data local inpath &apos;$PATH/dept1.txt&apos; overwrite into table dept partition(type=1);
+hive&gt; load data local inpath &apos;$PATH/dept2.txt&apos; overwrite into table dept partition(type=2);
 
-hive&gt; <span class="keyword">select</span> * from dept;
+hive&gt; select * from dept;
 </code></pre><p>结果：</p>
 <pre><code>OK
-dept1    <span class="number">1</span>
-dept11    <span class="number">1</span>
-dept111    <span class="number">1</span>
-dept1111    <span class="number">1</span>
-dept11111    <span class="number">1</span>
-dept111111    <span class="number">1</span>
-dept2    <span class="number">2</span>
-dept22    <span class="number">2</span>
-dept222    <span class="number">2</span>
-dept2222    <span class="number">2</span>
-dept22222    <span class="number">2</span>
-dept222222    <span class="number">2</span>
-Time taken: <span class="number">0.114</span> seconds, Fetched: <span class="number">12</span> row(s)
+dept1    1
+dept11    1
+dept111    1
+dept1111    1
+dept11111    1
+dept111111    1
+dept2    2
+dept22    2
+dept222    2
+dept2222    2
+dept22222    2
+dept222222    2
+Time taken: 0.114 seconds, Fetched: 12 row(s)
 </code></pre><p>insert可以将数据导出到指定目录，将users表导入到本地文件。 去掉local关键字表示导出到hdfs目录：</p>
-<pre><code>hive&gt; insert overwrite <span class="keyword">local</span> directory <span class="string">'localFileName'</span> <span class="keyword">select</span> * from users<span class="comment">;</span>
-</code></pre><h3 id="hive存储在hdfs的位置">hive存储在hdfs的位置</h3><p>进入hive控制台之后，可以使用：</p>
-<pre><code><span class="tag">hive</span>&gt; <span class="tag">set</span> <span class="tag">hive</span><span class="class">.metastore</span><span class="class">.warehouse</span><span class="class">.dir</span>;
+<pre><code>hive&gt; insert overwrite local directory &apos;localFileName&apos; select * from users;
+</code></pre><h3 id="hive存储在hdfs的位置"><a href="#hive存储在hdfs的位置" class="headerlink" title="hive存储在hdfs的位置"></a>hive存储在hdfs的位置</h3><p>进入hive控制台之后，可以使用：</p>
+<pre><code>hive&gt; set hive.metastore.warehouse.dir;
 </code></pre><p>查看hive存储在hdfs的位置，默认是存在 /user/hive/warehouse 目录。</p>
 <p>之前的users表，会存储在/user/hive/warehouse/user目录里。</p>
 <p>有partition的表会存在的不同位置，比如之前的dept表的type为1和2的分别存储在 /user/hive/warehouse/dept/type=1 和 /user/hive/warehouse/dept/type=2。</p>
-<h2 id="数据类型">数据类型</h2><p>hive中的数据类型分2种，简单类型和复杂类型。</p>
+<h2 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h2><p>hive中的数据类型分2种，简单类型和复杂类型。</p>
 <p>简单类型有以下几种：TINYINT, SMALLINT, INT, BIGINT, BOOLEAN, FLOAT, DOUBLE, STRING。</p>
 <p>复杂类型有以下几种：Structs(结构体，学过C都知道)，MAPS(key-value键值对)，Arrays(数组类型，数组内的元素类型都必须一致)</p>
 <p>简单类型就不分析了，来看一下复杂类型的使用：</p>
-<h3 id="Structs">Structs</h3><pre><code><span class="label">hive</span>&gt; create table employee(id INT, <span class="preprocessor">info</span> <span class="keyword">struct&lt;name:STRING, </span>age:INT&gt;)
-      &gt; ROW FORMAT DELIMITED FIELDS TERMINATED <span class="keyword">BY </span><span class="string">','</span> 
-      &gt; COLLECTION <span class="keyword">ITEMS </span>TERMINATED <span class="keyword">BY </span><span class="string">':'</span><span class="comment">; </span>
+<h3 id="Structs"><a href="#Structs" class="headerlink" title="Structs"></a>Structs</h3><pre><code>hive&gt; create table employee(id INT, info struct&lt;name:STRING, age:INT&gt;)
+      &gt; ROW FORMAT DELIMITED FIELDS TERMINATED BY &apos;,&apos; 
+      &gt; COLLECTION ITEMS TERMINATED BY &apos;:&apos;; 
 </code></pre><p>要导入的数据：</p>
-<pre><code><span class="number">1</span>,format:<span class="number">11</span>
-<span class="number">2</span>,fj:<span class="number">22</span>
-<span class="number">3</span>,formatfj:<span class="number">33</span>
+<pre><code>1,format:11
+2,fj:22
+3,formatfj:33
 </code></pre><p>导入数据：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table employee;
+<pre><code>hive&gt; load data local inpath &apos;localFile&apos; overwrite into table employee;
 </code></pre><p>查询：</p>
 <pre><code>select * from employee;
 
 OK
-<span class="number">1</span>    {<span class="string">"name"</span>:<span class="string">"format"</span>,<span class="string">"age"</span>:<span class="number">11</span>}
-<span class="number">2</span>    {<span class="string">"name"</span>:<span class="string">"fj"</span>,<span class="string">"age"</span>:<span class="number">22</span>}
-<span class="number">3</span>    {<span class="string">"name"</span>:<span class="string">"formatfj"</span>,<span class="string">"age"</span>:<span class="number">33</span>}
-Time taken: <span class="number">0.042</span> seconds, Fetched: <span class="number">3</span> row(s)
+1    {&quot;name&quot;:&quot;format&quot;,&quot;age&quot;:11}
+2    {&quot;name&quot;:&quot;fj&quot;,&quot;age&quot;:22}
+3    {&quot;name&quot;:&quot;formatfj&quot;,&quot;age&quot;:33}
+Time taken: 0.042 seconds, Fetched: 3 row(s)
 
 hive&gt; select info.name from employee;
 
@@ -490,53 +490,53 @@ OK
 format
 fj
 formatfj
-Time taken: <span class="number">0.061</span> seconds, Fetched: <span class="number">3</span> row(s)
-</code></pre><h3 id="Maps">Maps</h3><pre><code>hive&gt; create table lessons(id <span class="built_in">string</span>, score <span class="built_in">map</span>&lt;<span class="built_in">string</span>, int&gt;)
+Time taken: 0.061 seconds, Fetched: 3 row(s)
+</code></pre><h3 id="Maps"><a href="#Maps" class="headerlink" title="Maps"></a>Maps</h3><pre><code>hive&gt; create table lessons(id string, score map&lt;string, int&gt;)
     &gt; ROW FORMAT DELIMITED
-    &gt; FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">'\t'</span>
-    &gt; COLLECTION ITEMS TERMINATED <span class="keyword">BY</span> <span class="string">','</span>
-    &gt; <span class="built_in">MAP</span> KEYS TERMINATED <span class="keyword">BY</span> <span class="string">':'</span>;
+    &gt; FIELDS TERMINATED BY &apos;\t&apos;
+    &gt; COLLECTION ITEMS TERMINATED BY &apos;,&apos;
+    &gt; MAP KEYS TERMINATED BY &apos;:&apos;;
 </code></pre><p>要导入的数据：</p>
-<pre><code><span class="number">1</span>       chinese:<span class="number">80</span>,english:<span class="number">60</span>,math:<span class="number">70</span>  
-<span class="number">2</span>       computer:<span class="number">60</span>,chemistry:<span class="number">80</span>   
+<pre><code>1       chinese:80,english:60,math:70  
+2       computer:60,chemistry:80   
 </code></pre><p>导入数据：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table lessons;
+<pre><code>hive&gt; load data local inpath &apos;localFile&apos; overwrite into table lessons;
 </code></pre><p>查询：</p>
-<pre><code>hive&gt; <span class="keyword">select</span> score[<span class="string">'chinese'</span>] <span class="keyword">from</span> lessions;
+<pre><code>hive&gt; select score[&apos;chinese&apos;] from lessions;
 
 OK
-<span class="number">80</span>
+80
 NULL
-Time taken: <span class="number">0.05</span> seconds, Fetched: <span class="number">2</span> row(s)
+Time taken: 0.05 seconds, Fetched: 2 row(s)
 
-hive&gt; <span class="keyword">select</span> * <span class="keyword">from</span> lessons;
+hive&gt; select * from lessons;
 OK
-<span class="number">1</span>    {<span class="string">"chinese"</span>:<span class="number">80</span>,<span class="string">"english"</span>:<span class="number">60</span>,<span class="string">"math"</span>:<span class="number">70</span>}
-<span class="number">2</span>    {<span class="string">"computer"</span>:<span class="number">60</span>,<span class="string">"chemistry"</span>:<span class="number">80</span>}
-Time taken: <span class="number">0.032</span> seconds, Fetched: <span class="number">2</span> row(s)
-</code></pre><h3 id="Arrays">Arrays</h3><pre><code>hive&gt; create table student(name <span class="built_in">string</span>, hobby_list <span class="built_in">array</span>&lt;<span class="built_in">STRING</span>&gt;)
+1    {&quot;chinese&quot;:80,&quot;english&quot;:60,&quot;math&quot;:70}
+2    {&quot;computer&quot;:60,&quot;chemistry&quot;:80}
+Time taken: 0.032 seconds, Fetched: 2 row(s)
+</code></pre><h3 id="Arrays"><a href="#Arrays" class="headerlink" title="Arrays"></a>Arrays</h3><pre><code>hive&gt; create table student(name string, hobby_list array&lt;STRING&gt;)
     &gt; ROW FORMAT DELIMITED
-    &gt; FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">','</span>
-    &gt; COLLECTION ITEMS TERMINATED <span class="keyword">BY</span> <span class="string">':'</span>;
+    &gt; FIELDS TERMINATED BY &apos;,&apos;
+    &gt; COLLECTION ITEMS TERMINATED BY &apos;:&apos;;
 </code></pre><p>要导入的数据：</p>
-<pre><code><span class="tag">format</span>,<span class="tag">basketball</span><span class="pseudo">:football</span><span class="pseudo">:swimming</span>
-<span class="tag">fj</span>,<span class="tag">coding</span><span class="pseudo">:running</span>
+<pre><code>format,basketball:football:swimming
+fj,coding:running
 </code></pre><p>导入数据：</p>
-<pre><code>hive&gt; load <span class="built_in">data</span> <span class="built_in">local</span> inpath <span class="string">'localFile'</span> overwrite <span class="keyword">into</span> table student;
+<pre><code>hive&gt; load data local inpath &apos;localFile&apos; overwrite into table student;
 </code></pre><p>查询(数组下标没对应的值的话返回NULL)：</p>
 <pre><code>hive&gt; select * from student;
 
 OK
-format    [<span class="string">"basketball"</span>,<span class="string">"football"</span>,<span class="string">"swimming"</span>]
-fj    [<span class="string">"coding"</span>,<span class="string">"running"</span>]
-Time taken: <span class="number">0.041</span> seconds, Fetched: <span class="number">2</span> row(s)
+format    [&quot;basketball&quot;,&quot;football&quot;,&quot;swimming&quot;]
+fj    [&quot;coding&quot;,&quot;running&quot;]
+Time taken: 0.041 seconds, Fetched: 2 row(s)
 
-hive&gt; select hobby_list[<span class="number">2</span>] from student;
+hive&gt; select hobby_list[2] from student;
 
 OK
 swimming
-<span class="literal">NULL</span>
-Time taken: <span class="number">0.07</span> seconds, Fetched: <span class="number">2</span> row(s)
+NULL
+Time taken: 0.07 seconds, Fetched: 2 row(s)
 </code></pre>
       
     </div>

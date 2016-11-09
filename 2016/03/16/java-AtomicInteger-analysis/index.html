@@ -93,6 +93,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java AtomicInteger原理分析">
 <meta name="twitter:description" content="Java中的AtomicInteger大家应该很熟悉，它是为了解决多线程访问Integer变量导致结果不正确所设计的一个基于多线程并且支持原子操作的Integer类。">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/java-AtomicInteger-analysis.jpeg">
 
 
 
@@ -369,12 +370,12 @@
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/java-AtomicInteger-analysis.jpeg" alt=""></p>
 <a id="more"></a>
 <p>它的使用也非常简单：</p>
-<pre><code>AtomicInteger ai = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);
-ai.addAndGet(<span class="number">5</span>); <span class="comment">// 5</span>
-ai.getAndAdd(<span class="number">1</span>); <span class="comment">// 5</span>
-ai.get(); <span class="comment">// 6</span>
+<pre><code>AtomicInteger ai = new AtomicInteger(0);
+ai.addAndGet(5); // 5
+ai.getAndAdd(1); // 5
+ai.get(); // 6
 </code></pre><p>AtomicInteger内部有一个变量UnSafe：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Unsafe</span> <span class="keyword">unsafe</span> = <span class="keyword">Unsafe</span>.getUnsafe();
+<pre><code>private static final Unsafe unsafe = Unsafe.getUnsafe();
 </code></pre><p>Unsafe类是一个可以执行不安全、容易犯错的操作的一个特殊类。虽然Unsafe类中所有方法都是public的，但是这个类只能在一些被信任的代码中使用。Unsafe的源码可以在这里看 -&gt; <a href="http://www.docjar.com/html/api/sun/misc/Unsafe.java.html" target="_blank" rel="external">UnSafe源码</a>。</p>
 <p>Unsafe类可以执行以下几种操作：</p>
 <ol>
@@ -385,50 +386,50 @@ ai.get(); <span class="comment">// 6</span>
 </ol>
 <p>AtomicInteger中用的就是Unsafe的CAS操作。</p>
 <p>Unsafe中的int类型的CAS操作方法：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">native</span> <span class="function"><span class="keyword">boolean</span> <span class="title">compareAndSwapInt</span><span class="params">(Object o, <span class="keyword">long</span> offset,
-                                                <span class="keyword">int</span> expected,
-                                                <span class="keyword">int</span> x)</span></span>;
+<pre><code>public final native boolean compareAndSwapInt(Object o, long offset,
+                                                int expected,
+                                                int x);
 </code></pre><p>参数o就是要进行cas操作的对象，offset参数是内存位置，expected参数就是期望的值，x参数是需要更新到的值。</p>
 <p>也就是说，如果我把1这个数字属性更新到2的话，需要这样调用：</p>
-<pre><code>compareAndSwapInt(<span class="keyword">this</span>, valueOffset, <span class="number">1</span>, <span class="number">2</span>)
+<pre><code>compareAndSwapInt(this, valueOffset, 1, 2)
 </code></pre><p>valueOffset字段表示内存位置，可以在AtomicInteger对象中使用unsafe得到：</p>
-<pre><code><span class="keyword">static</span> {
-  <span class="keyword">try</span> {
+<pre><code>static {
+  try {
     valueOffset = unsafe.objectFieldOffset
-        (AtomicInteger.<span class="keyword">class</span>.getDeclaredField(<span class="string">"value"</span>));
-  } <span class="keyword">catch</span> (Exception ex) { <span class="keyword">throw</span> <span class="keyword">new</span> Error(ex); }
+        (AtomicInteger.class.getDeclaredField(&quot;value&quot;));
+  } catch (Exception ex) { throw new Error(ex); }
 }
 </code></pre><p>AtomicInteger内部使用变量value表示当前的整型值，这个整型变量还是volatile的，表示内存可见性，一个线程修改value之后保证对其他线程的可见性：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> <span class="keyword">value</span>;
+<pre><code>private volatile int value;
 </code></pre><p>AtomicInteger内部还封装了一下CAS，定义了一个compareAndSet方法，只需要2个参数：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">compareAndSet</span><span class="params">(<span class="keyword">int</span> expect, <span class="keyword">int</span> update)</span> </span>{
-    <span class="function"><span class="keyword">return</span> unsafe.<span class="title">compareAndSwapInt</span><span class="params">(<span class="keyword">this</span>, valueOffset, expect, update)</span></span>;
+<pre><code>public final boolean compareAndSet(int expect, int update) {
+    return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
 }
 </code></pre><p>addAndGet方法，addAndGet方法内部使用一个死循环，先得到当前的值value，然后再把当前的值加一，加完之后使用cas原子操作让当前值加一处理正确。当然cas原子操作不一定是成功的，所以做了一个死循环，当cas操作成功的时候返回数据。这里由于使用了cas原子操作，所以不会出现多线程处理错误的问题。比如线程A得到current为1，线程B也得到current为1；线程A的next值为2，进行cas操作并且成功的时候，将value修改成了2；这个时候线程B也得到next值为2，当进行cas操作的时候由于expected值已经是2，而不是1了；所以cas操作会失败，下一次循环的时候得到的current就变成了2；也就不会出现多线程处理问题了：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> addAndGet(<span class="keyword">int</span> delta) {
-    <span class="keyword">for</span> (;;) {
-        <span class="keyword">int</span> current = get();
-        <span class="keyword">int</span> <span class="keyword">next</span> = current + delta;
-        <span class="keyword">if</span> (compareAndSet(current, <span class="keyword">next</span>))
-            <span class="keyword">return</span> <span class="keyword">next</span>;
+<pre><code>public final int addAndGet(int delta) {
+    for (;;) {
+        int current = get();
+        int next = current + delta;
+        if (compareAndSet(current, next))
+            return next;
     }
 }
 </code></pre><p>incrementAndGet方法，跟addAndGet方法类似，只不过next值变成了current+1：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> incrementAndGet() {
-    <span class="keyword">for</span> (;;) {
-        <span class="keyword">int</span> current = get();
-        <span class="keyword">int</span> <span class="keyword">next</span> = current + <span class="number">1</span>;
-        <span class="keyword">if</span> (compareAndSet(current, <span class="keyword">next</span>))
-            <span class="keyword">return</span> <span class="keyword">next</span>;
+<pre><code>public final int incrementAndGet() {
+    for (;;) {
+        int current = get();
+        int next = current + 1;
+        if (compareAndSet(current, next))
+            return next;
     }
 }
 </code></pre><p>getAndAdd方法，跟addAndGet方法一样，返回值变成了current：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> getAndAdd(<span class="keyword">int</span> delta) {
-    <span class="keyword">for</span> (;;) {
-        <span class="keyword">int</span> current = get();
-        <span class="keyword">int</span> <span class="keyword">next</span> = current + delta;
-        <span class="keyword">if</span> (compareAndSet(current, <span class="keyword">next</span>))
-            <span class="keyword">return</span> current;
+<pre><code>public final int getAndAdd(int delta) {
+    for (;;) {
+        int current = get();
+        int next = current + delta;
+        if (compareAndSet(current, next))
+            return current;
     }
 }
 </code></pre><p>缺点：</p>

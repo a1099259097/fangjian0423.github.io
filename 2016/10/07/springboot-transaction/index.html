@@ -102,6 +102,7 @@ Springboot会构造一个JpaTransactionManager这个事务管理器。
 比如当使用jpa的时候，也就是pom中加入了spring-boot-starter-data-jpa这个starter之后(之前我们分析过springboot的自动化配置原理)。
 Springboot会构造一个JpaTransactionManager这个事务管理器。
 而当我们使用spring-boot-sta">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/transactionmanager.png">
 
 
 
@@ -391,63 +392,63 @@ Springboot会构造一个JpaTransactionManager这个事务管理器。
 <a id="more"></a>
 <p>spring-boot-starter-data-jpa这个starter会触发HibernateJpaAutoConfiguration这个自动化配置类，HibernateJpaAutoConfiguration继承了JpaBaseConfiguration基础类。</p>
 <p>在JpaBaseConfiguration中构造了事务管理器：</p>
-<pre><code><span class="annotation">@Bean</span>
-<span class="annotation">@ConditionalOnMissingBean</span>(PlatformTransactionManager.class)
-<span class="keyword">public</span> <span class="function">PlatformTransactionManager <span class="title">transactionManager</span><span class="params">()</span> </span>{
-    <span class="keyword">return</span> <span class="keyword">new</span> JpaTransactionManager();
+<pre><code>@Bean
+@ConditionalOnMissingBean(PlatformTransactionManager.class)
+public PlatformTransactionManager transactionManager() {
+    return new JpaTransactionManager();
 }
 </code></pre><p>spring-boot-starter-jdbc会触发DataSourceTransactionManagerAutoConfiguration这个自动化配置类，也会构造事务管理器：</p>
-<pre><code><span class="keyword">@Bean</span>
-<span class="keyword">@ConditionalOnMissingBean</span>(PlatformTransactionManager.<span class="keyword">class</span>)
-<span class="keyword">@ConditionalOnBean</span>(DataSource.<span class="keyword">class</span>)
-<span class="keyword">public</span> DataSourceTransactionManager transactionManager() {
-    <span class="keyword">return</span> <span class="keyword">new</span> DataSourceTransactionManager(<span class="keyword">this</span>.dataSource);
+<pre><code>@Bean
+@ConditionalOnMissingBean(PlatformTransactionManager.class)
+@ConditionalOnBean(DataSource.class)
+public DataSourceTransactionManager transactionManager() {
+    return new DataSourceTransactionManager(this.dataSource);
 }
 </code></pre><p>Spring的事务管理器PlatformTransactionManager接口中定义了3个方法：</p>
-<pre><code><span class="comment">// 基于事务的传播特性，返回一个已经存在的事务或者创建一个新的事务</span>
-<span class="function">TransactionStatus <span class="title">getTransaction</span><span class="params">(TransactionDefinition definition)</span> <span class="keyword">throws</span> TransactionException</span>;
+<pre><code>// 基于事务的传播特性，返回一个已经存在的事务或者创建一个新的事务
+TransactionStatus getTransaction(TransactionDefinition definition) throws TransactionException;
 
-<span class="comment">// 提交事务</span>
-<span class="function"><span class="keyword">void</span> <span class="title">commit</span><span class="params">(TransactionStatus status)</span> <span class="keyword">throws</span> TransactionException</span>;
+// 提交事务
+void commit(TransactionStatus status) throws TransactionException;
 
-<span class="comment">// 回滚事务</span>
-<span class="function"><span class="keyword">void</span> <span class="title">rollback</span><span class="params">(TransactionStatus status)</span> <span class="keyword">throws</span> TransactionException</span>;
+// 回滚事务
+void rollback(TransactionStatus status) throws TransactionException;
 </code></pre><p>其中TransactionDefinition接口表示跟spring兼容的事务属性，比如传播行为、隔离级别、超时时间、是否只读等属性。</p>
 <p>DefaultTransactionDefinition类是一个默认的TransactionDefinition实现，它的传播行为是PROPAGATION_REQUIRED(如果当前没事务，则创建一个，否则加入到当前事务中)，隔离级别是数据库默认级别。</p>
 <p>TransactionStatus接口表示事务的状态，比如事务是否是一个刚构造的事务、事务是否已经完成等状态。</p>
 <p>下面这段代码就是传统事务的常见写法：</p>
-<pre><code>transaction.<span class="keyword">begin</span>();
-<span class="keyword">try</span> {
+<pre><code>transaction.begin();
+try {
     ...
     transaction.commit();
-} <span class="keyword">catch</span>(<span class="built_in">Exception</span> <span class="literal">e</span>) {
+} catch(Exception e) {
     ...
     transaction.rollback();
-} <span class="keyword">finally</span> {
+} finally {
 
 }
 </code></pre><p>由于spring的事务操作被封装到了PlatformTransactionManager接口中，commit和rollback方法对应接口中的方法，begin方法在getTransaction方法中会被调用。</p>
 <p>细心的读者发现文章前面构造事务管理器的时候都会加上这段注解：</p>
-<pre><code>@<span class="function"><span class="title">ConditionalOnMissingBean</span><span class="params">(PlatformTransactionManager.class)</span></span>
+<pre><code>@ConditionalOnMissingBean(PlatformTransactionManager.class)
 </code></pre><p>也就是说如果我们手动配置了事务管理器，Springboot就不会再为我们自动配置事务管理器。</p>
 <p>如果要使用多个事务管理器的话，那么需要手动配置多个：</p>
-<pre><code><span class="annotation">@Configuration</span>
-<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DatabaseConfiguration</span> </span>{
+<pre><code>@Configuration
+public class DatabaseConfiguration {
 
-    <span class="annotation">@Bean</span>
-    <span class="function"><span class="keyword">public</span> PlatformTransactionManager <span class="title">transactionManager1</span><span class="params">(EntityManagerFactory entityManagerFactory)</span> </span>{
-        <span class="keyword">return</span> <span class="keyword">new</span> JpaTransactionManager(entityManagerFactory);
+    @Bean
+    public PlatformTransactionManager transactionManager1(EntityManagerFactory entityManagerFactory) {
+        return new JpaTransactionManager(entityManagerFactory);
     }
 
-    <span class="annotation">@Bean</span>
-    <span class="function"><span class="keyword">public</span> PlatformTransactionManager <span class="title">transactionManager2</span><span class="params">(DataSource dataSource)</span> </span>{
-        <span class="keyword">return</span> <span class="keyword">new</span> DataSourceTransactionManager(dataSource);
+    @Bean
+    public PlatformTransactionManager transactionManager2(DataSource dataSource) {
+        return new DataSourceTransactionManager(dataSource);
     }
 
 }
 </code></pre><p>然后使用Transactional注解的时候需要声明是哪个事务管理器：</p>
-<pre><code><span class="annotation">@Transactional</span>(value=<span class="string">"transactionManager1"</span>)
-<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">save</span><span class="params">()</span> </span>{
+<pre><code>@Transactional(value=&quot;transactionManager1&quot;)
+public void save() {
     doSave();
 }
 </code></pre><p>Spring给我们提供了一个TransactionManagementConfigurer接口，该接口只有一个方法返回PlatformTransactionManager。其中返回的PlatformTransactionManager就表示这是默认的事务处理器，这样在Transactional注解上就不需要声明是使用哪个事务管理器了。</p>

@@ -401,69 +401,69 @@ put：添加元素到队列里，如果容量满了会阻塞直到容量不满
 <p>常用的阻塞队列具体类有ArrayBlockingQueue、LinkedBlockingQueue、PriorityBlockingQueue、LinkedBlockingDeque等。</p>
 <p>本文以ArrayBlockingQueue和LinkedBlockingQueue为例，分析它们的实现原理。</p>
 <a id="more"></a>
-<h2 id="ArrayBlockingQueue">ArrayBlockingQueue</h2><p>ArrayBlockingQueue的原理就是使用一个可重入锁和这个锁生成的两个条件对象进行并发控制(classic two-condition algorithm)。</p>
+<h2 id="ArrayBlockingQueue"><a href="#ArrayBlockingQueue" class="headerlink" title="ArrayBlockingQueue"></a>ArrayBlockingQueue</h2><p>ArrayBlockingQueue的原理就是使用一个可重入锁和这个锁生成的两个条件对象进行并发控制(classic two-condition algorithm)。</p>
 <p>ArrayBlockingQueue是一个带有长度的阻塞队列，初始化的时候必须要指定队列长度，且指定长度之后不允许进行修改。</p>
 <p>它带有的属性如下：</p>
-<pre><code><span class="comment">// 存储队列元素的数组，是个循环数组</span>
-<span class="keyword">final</span> Object[] items;
+<pre><code>// 存储队列元素的数组，是个循环数组
+final Object[] items;
 
-<span class="comment">// 拿数据的索引，用于take，poll，peek，remove方法</span>
-<span class="keyword">int</span> takeIndex;
+// 拿数据的索引，用于take，poll，peek，remove方法
+int takeIndex;
 
-<span class="comment">// 放数据的索引，用于put，offer，add方法</span>
-<span class="keyword">int</span> putIndex;
+// 放数据的索引，用于put，offer，add方法
+int putIndex;
 
-<span class="comment">// 元素个数</span>
-<span class="keyword">int</span> <span class="keyword">count</span>;
+// 元素个数
+int count;
 
-<span class="comment">// 可重入锁</span>
-<span class="keyword">final</span> ReentrantLock lock;
-<span class="comment">// notEmpty条件对象，由lock创建</span>
-<span class="keyword">private</span> <span class="keyword">final</span> Condition notEmpty;
-<span class="comment">// notFull条件对象，由lock创建</span>
-<span class="keyword">private</span> <span class="keyword">final</span> Condition notFull;
-</code></pre><h3 id="数据的添加">数据的添加</h3><p>ArrayBlockingQueue有不同的几个数据添加方法，add、offer、put方法。</p>
+// 可重入锁
+final ReentrantLock lock;
+// notEmpty条件对象，由lock创建
+private final Condition notEmpty;
+// notFull条件对象，由lock创建
+private final Condition notFull;
+</code></pre><h3 id="数据的添加"><a href="#数据的添加" class="headerlink" title="数据的添加"></a>数据的添加</h3><p>ArrayBlockingQueue有不同的几个数据添加方法，add、offer、put方法。</p>
 <p>add方法：</p>
-<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span> </span>{
-    <span class="keyword">if</span> (offer(e))
-        <span class="keyword">return</span> <span class="keyword">true</span>;
-    <span class="keyword">else</span>
-        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Queue full"</span>);
+<pre><code>public boolean add(E e) {
+    if (offer(e))
+        return true;
+    else
+        throw new IllegalStateException(&quot;Queue full&quot;);
 }
 </code></pre><p>add方法内部调用offer方法如下：</p>
-<pre><code><span class="function"><span class="keyword">public</span> boolean <span class="title">offer</span>(<span class="params">E e</span>) </span>{
-    checkNotNull(e); <span class="comment">// 不允许元素为空</span>
-    final ReentrantLock <span class="keyword">lock</span> = <span class="keyword">this</span>.<span class="keyword">lock</span>;
-    <span class="keyword">lock</span>.<span class="keyword">lock</span>(); <span class="comment">// 加锁，保证调用offer方法的时候只有1个线程</span>
-    <span class="keyword">try</span> {
-        <span class="keyword">if</span> (count == items.length) <span class="comment">// 如果队列已满</span>
-            <span class="keyword">return</span> <span class="keyword">false</span>; <span class="comment">// 直接返回false，添加失败</span>
-        <span class="keyword">else</span> {
-            insert(e); <span class="comment">// 数组没满的话调用insert方法</span>
-            <span class="keyword">return</span> <span class="keyword">true</span>; <span class="comment">// 返回true，添加成功</span>
+<pre><code>public boolean offer(E e) {
+    checkNotNull(e); // 不允许元素为空
+    final ReentrantLock lock = this.lock;
+    lock.lock(); // 加锁，保证调用offer方法的时候只有1个线程
+    try {
+        if (count == items.length) // 如果队列已满
+            return false; // 直接返回false，添加失败
+        else {
+            insert(e); // 数组没满的话调用insert方法
+            return true; // 返回true，添加成功
         }
-    } <span class="keyword">finally</span> {
-        <span class="keyword">lock</span>.unlock(); <span class="comment">// 释放锁，让其他线程可以调用offer方法</span>
+    } finally {
+        lock.unlock(); // 释放锁，让其他线程可以调用offer方法
     }
 }
 </code></pre><p>insert方法如下：</p>
-<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">insert</span><span class="params">(E x)</span> </span>{
-    items[putIndex] = x; <span class="comment">// 元素添加到数组里</span>
-    putIndex = inc(putIndex); <span class="comment">// 放数据索引+1，当索引满了变成0</span>
-    ++count; <span class="comment">// 元素个数+1</span>
-    notEmpty.signal(); <span class="comment">// 使用条件对象notEmpty通知，比如使用take方法的时候队列里没有数据，被阻塞。这个时候队列insert了一条数据，需要调用signal进行通知</span>
+<pre><code>private void insert(E x) {
+    items[putIndex] = x; // 元素添加到数组里
+    putIndex = inc(putIndex); // 放数据索引+1，当索引满了变成0
+    ++count; // 元素个数+1
+    notEmpty.signal(); // 使用条件对象notEmpty通知，比如使用take方法的时候队列里没有数据，被阻塞。这个时候队列insert了一条数据，需要调用signal进行通知
 }
 </code></pre><p>put方法：</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span>(<span class="params">E e</span>) throws InterruptedException </span>{
-    checkNotNull(e); <span class="comment">// 不允许元素为空</span>
-    final ReentrantLock <span class="keyword">lock</span> = <span class="keyword">this</span>.<span class="keyword">lock</span>;
-    <span class="keyword">lock</span>.lockInterruptibly(); <span class="comment">// 加锁，保证调用put方法的时候只有1个线程</span>
-    <span class="keyword">try</span> {
-        <span class="keyword">while</span> (count == items.length) <span class="comment">// 如果队列满了，阻塞当前线程，并加入到条件对象notFull的等待队列里</span>
-            notFull.await(); <span class="comment">// 线程阻塞并被挂起，同时释放锁</span>
-        insert(e); <span class="comment">// 调用insert方法</span>
-    } <span class="keyword">finally</span> {
-        <span class="keyword">lock</span>.unlock(); <span class="comment">// 释放锁，让其他线程可以调用put方法</span>
+<pre><code>public void put(E e) throws InterruptedException {
+    checkNotNull(e); // 不允许元素为空
+    final ReentrantLock lock = this.lock;
+    lock.lockInterruptibly(); // 加锁，保证调用put方法的时候只有1个线程
+    try {
+        while (count == items.length) // 如果队列满了，阻塞当前线程，并加入到条件对象notFull的等待队列里
+            notFull.await(); // 线程阻塞并被挂起，同时释放锁
+        insert(e); // 调用insert方法
+    } finally {
+        lock.unlock(); // 释放锁，让其他线程可以调用put方法
     }
 }
 </code></pre><p>ArrayBlockingQueue的添加数据方法有add，put，offer这3个方法，总结如下：</p>
@@ -471,78 +471,78 @@ put：添加元素到队列里，如果容量满了会阻塞直到容量不满
 <p>offer方法如果队列满了，返回false，否则返回true</p>
 <p>add方法和offer方法不会阻塞线程，put方法如果队列满了会阻塞线程，直到有线程消费了队列里的数据才有可能被唤醒。</p>
 <p>这3个方法内部都会使用可重入锁保证原子性。</p>
-<h3 id="数据的删除">数据的删除</h3><p>ArrayBlockingQueue有不同的几个数据删除方法，poll、take、remove方法。</p>
+<h3 id="数据的删除"><a href="#数据的删除" class="headerlink" title="数据的删除"></a>数据的删除</h3><p>ArrayBlockingQueue有不同的几个数据删除方法，poll、take、remove方法。</p>
 <p>poll方法：</p>
-<pre><code><span class="function"><span class="keyword">public</span> E <span class="title">poll</span>(<span class="params"></span>) </span>{
-    final ReentrantLock <span class="keyword">lock</span> = <span class="keyword">this</span>.<span class="keyword">lock</span>;
-    <span class="keyword">lock</span>.<span class="keyword">lock</span>(); <span class="comment">// 加锁，保证调用poll方法的时候只有1个线程</span>
-    <span class="keyword">try</span> {
-        <span class="keyword">return</span> (count == <span class="number">0</span>) ? <span class="keyword">null</span> : extract(); <span class="comment">// 如果队列里没元素了，返回null，否则调用extract方法</span>
-    } <span class="keyword">finally</span> {
-        <span class="keyword">lock</span>.unlock(); <span class="comment">// 释放锁，让其他线程可以调用poll方法</span>
+<pre><code>public E poll() {
+    final ReentrantLock lock = this.lock;
+    lock.lock(); // 加锁，保证调用poll方法的时候只有1个线程
+    try {
+        return (count == 0) ? null : extract(); // 如果队列里没元素了，返回null，否则调用extract方法
+    } finally {
+        lock.unlock(); // 释放锁，让其他线程可以调用poll方法
     }
 }
 </code></pre><p>poll方法内部调用extract方法：</p>
-<pre><code><span class="keyword">private</span> <span class="function">E <span class="title">extract</span><span class="params">()</span> </span>{
-    <span class="keyword">final</span> Object[] items = <span class="keyword">this</span>.items;
-    E x = <span class="keyword">this</span>.&lt;E&gt;cast(items[takeIndex]); <span class="comment">// 得到取索引位置上的元素</span>
-    items[takeIndex] = <span class="keyword">null</span>; <span class="comment">// 对应取索引上的数据清空</span>
-    takeIndex = inc(takeIndex); <span class="comment">// 取数据索引+1，当索引满了变成0</span>
-    --count; <span class="comment">// 元素个数-1</span>
-    notFull.signal(); <span class="comment">// 使用条件对象notFull通知，比如使用put方法放数据的时候队列已满，被阻塞。这个时候消费了一条数据，队列没满了，就需要调用signal进行通知</span>
-    <span class="keyword">return</span> x; <span class="comment">// 返回元素</span>
+<pre><code>private E extract() {
+    final Object[] items = this.items;
+    E x = this.&lt;E&gt;cast(items[takeIndex]); // 得到取索引位置上的元素
+    items[takeIndex] = null; // 对应取索引上的数据清空
+    takeIndex = inc(takeIndex); // 取数据索引+1，当索引满了变成0
+    --count; // 元素个数-1
+    notFull.signal(); // 使用条件对象notFull通知，比如使用put方法放数据的时候队列已满，被阻塞。这个时候消费了一条数据，队列没满了，就需要调用signal进行通知
+    return x; // 返回元素
 }
 </code></pre><p>take方法：</p>
-<pre><code><span class="function"><span class="keyword">public</span> E <span class="title">take</span>(<span class="params"></span>) throws InterruptedException </span>{
-    final ReentrantLock <span class="keyword">lock</span> = <span class="keyword">this</span>.<span class="keyword">lock</span>;
-    <span class="keyword">lock</span>.lockInterruptibly(); <span class="comment">// 加锁，保证调用take方法的时候只有1个线程</span>
-    <span class="keyword">try</span> {
-        <span class="keyword">while</span> (count == <span class="number">0</span>) <span class="comment">// 如果队列空，阻塞当前线程，并加入到条件对象notEmpty的等待队列里</span>
-            notEmpty.await(); <span class="comment">// 线程阻塞并被挂起，同时释放锁</span>
-        <span class="keyword">return</span> extract(); <span class="comment">// 调用extract方法</span>
-    } <span class="keyword">finally</span> {
-        <span class="keyword">lock</span>.unlock(); <span class="comment">// 释放锁，让其他线程可以调用take方法</span>
+<pre><code>public E take() throws InterruptedException {
+    final ReentrantLock lock = this.lock;
+    lock.lockInterruptibly(); // 加锁，保证调用take方法的时候只有1个线程
+    try {
+        while (count == 0) // 如果队列空，阻塞当前线程，并加入到条件对象notEmpty的等待队列里
+            notEmpty.await(); // 线程阻塞并被挂起，同时释放锁
+        return extract(); // 调用extract方法
+    } finally {
+        lock.unlock(); // 释放锁，让其他线程可以调用take方法
     }
 }
 </code></pre><p>remove方法：</p>
-<pre><code><span class="function"><span class="keyword">public</span> boolean <span class="title">remove</span>(<span class="params">Object o</span>) </span>{
-    <span class="keyword">if</span> (o == <span class="keyword">null</span>) <span class="keyword">return</span> <span class="keyword">false</span>;
-    final Object[] items = <span class="keyword">this</span>.items;
-    final ReentrantLock <span class="keyword">lock</span> = <span class="keyword">this</span>.<span class="keyword">lock</span>;
-    <span class="keyword">lock</span>.<span class="keyword">lock</span>(); <span class="comment">// 加锁，保证调用remove方法的时候只有1个线程</span>
-    <span class="keyword">try</span> {
-        <span class="keyword">for</span> (<span class="keyword">int</span> i = takeIndex, k = count; k &gt; <span class="number">0</span>; i = inc(i), k--) { <span class="comment">// 遍历元素</span>
-            <span class="keyword">if</span> (o.equals(items[i])) { <span class="comment">// 两个对象相等的话</span>
-                removeAt(i); <span class="comment">// 调用removeAt方法</span>
-                <span class="keyword">return</span> <span class="keyword">true</span>; <span class="comment">// 删除成功，返回true</span>
+<pre><code>public boolean remove(Object o) {
+    if (o == null) return false;
+    final Object[] items = this.items;
+    final ReentrantLock lock = this.lock;
+    lock.lock(); // 加锁，保证调用remove方法的时候只有1个线程
+    try {
+        for (int i = takeIndex, k = count; k &gt; 0; i = inc(i), k--) { // 遍历元素
+            if (o.equals(items[i])) { // 两个对象相等的话
+                removeAt(i); // 调用removeAt方法
+                return true; // 删除成功，返回true
             }
         }
-        <span class="keyword">return</span> <span class="keyword">false</span>; <span class="comment">// 删除成功，返回false</span>
-    } <span class="keyword">finally</span> {
-        <span class="keyword">lock</span>.unlock(); <span class="comment">// 释放锁，让其他线程可以调用remove方法</span>
+        return false; // 删除成功，返回false
+    } finally {
+        lock.unlock(); // 释放锁，让其他线程可以调用remove方法
     }
 }
 </code></pre><p>removeAt方法：</p>
-<pre><code><span class="function"><span class="keyword">void</span> <span class="title">removeAt</span><span class="params">(<span class="keyword">int</span> i)</span> </span>{
-    <span class="keyword">final</span> Object[] items = <span class="keyword">this</span>.items;
-    <span class="keyword">if</span> (i == takeIndex) { <span class="comment">// 如果要删除数据的索引是取索引位置，直接删除取索引位置上的数据，然后取索引+1即可</span>
-        items[takeIndex] = <span class="keyword">null</span>;
+<pre><code>void removeAt(int i) {
+    final Object[] items = this.items;
+    if (i == takeIndex) { // 如果要删除数据的索引是取索引位置，直接删除取索引位置上的数据，然后取索引+1即可
+        items[takeIndex] = null;
         takeIndex = inc(takeIndex);
-    } <span class="keyword">else</span> { <span class="comment">// 如果要删除数据的索引不是取索引位置，移动元素元素，更新取索引和放索引的值</span>
-        <span class="keyword">for</span> (;;) {
-            <span class="keyword">int</span> nexti = inc(i);
-            <span class="keyword">if</span> (nexti != putIndex) {
+    } else { // 如果要删除数据的索引不是取索引位置，移动元素元素，更新取索引和放索引的值
+        for (;;) {
+            int nexti = inc(i);
+            if (nexti != putIndex) {
                 items[i] = items[nexti];
                 i = nexti;
-            } <span class="keyword">else</span> {
-                items[i] = <span class="keyword">null</span>;
+            } else {
+                items[i] = null;
                 putIndex = i;
-                <span class="keyword">break</span>;
+                break;
             }
         }
     }
-    --count; <span class="comment">// 元素个数-1</span>
-    notFull.signal(); <span class="comment">// 使用条件对象notFull通知，比如使用put方法放数据的时候队列已满，被阻塞。这个时候消费了一条数据，队列没满了，就需要调用signal进行通知 </span>
+    --count; // 元素个数-1
+    notFull.signal(); // 使用条件对象notFull通知，比如使用put方法放数据的时候队列已满，被阻塞。这个时候消费了一条数据，队列没满了，就需要调用signal进行通知 
 }
 </code></pre><p>ArrayBlockingQueue的删除数据方法有poll，take，remove这3个方法，总结如下：</p>
 <p>poll方法对于队列为空的情况，返回null，否则返回队列头部元素。</p>
@@ -550,146 +550,146 @@ put：添加元素到队列里，如果容量满了会阻塞直到容量不满
 <p>poll方法和remove方法不会阻塞线程。</p>
 <p>take方法对于队列为空的情况，会阻塞并挂起当前线程，直到有数据加入到队列中。</p>
 <p>这3个方法内部都会调用notFull.signal方法通知正在等待队列满情况下的阻塞线程。</p>
-<h2 id="LinkedBlockingQueue">LinkedBlockingQueue</h2><p>LinkedBlockingQueue是一个使用链表完成队列操作的阻塞队列。链表是单向链表，而不是双向链表。</p>
+<h2 id="LinkedBlockingQueue"><a href="#LinkedBlockingQueue" class="headerlink" title="LinkedBlockingQueue"></a>LinkedBlockingQueue</h2><p>LinkedBlockingQueue是一个使用链表完成队列操作的阻塞队列。链表是单向链表，而不是双向链表。</p>
 <p>内部使用放锁和拿锁，这两个锁实现阻塞(“two lock queue” algorithm)。</p>
 <p>它带有的属性如下：</p>
-<pre><code><span class="comment">// 容量大小</span>
-<span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> capacity;
+<pre><code>// 容量大小
+private final int capacity;
 
-<span class="comment">// 元素个数，因为有2个锁，存在竞态条件，使用AtomicInteger</span>
-<span class="keyword">private</span> <span class="keyword">final</span> AtomicInteger <span class="keyword">count</span> = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);
+// 元素个数，因为有2个锁，存在竞态条件，使用AtomicInteger
+private final AtomicInteger count = new AtomicInteger(0);
 
-<span class="comment">// 头结点</span>
-<span class="keyword">private</span> <span class="keyword">transient</span> Node&lt;E&gt; head;
+// 头结点
+private transient Node&lt;E&gt; head;
 
-<span class="comment">// 尾节点</span>
-<span class="keyword">private</span> <span class="keyword">transient</span> Node&lt;E&gt; last;
+// 尾节点
+private transient Node&lt;E&gt; last;
 
-<span class="comment">// 拿锁</span>
-<span class="keyword">private</span> <span class="keyword">final</span> ReentrantLock takeLock = <span class="keyword">new</span> ReentrantLock();
+// 拿锁
+private final ReentrantLock takeLock = new ReentrantLock();
 
-<span class="comment">// 拿锁的条件对象</span>
-<span class="keyword">private</span> <span class="keyword">final</span> Condition notEmpty = takeLock.newCondition();
+// 拿锁的条件对象
+private final Condition notEmpty = takeLock.newCondition();
 
-<span class="comment">// 放锁</span>
-<span class="keyword">private</span> <span class="keyword">final</span> ReentrantLock putLock = <span class="keyword">new</span> ReentrantLock();
+// 放锁
+private final ReentrantLock putLock = new ReentrantLock();
 
-<span class="comment">// 放锁的条件对象</span>
-<span class="keyword">private</span> <span class="keyword">final</span> Condition notFull = putLock.newCondition();
+// 放锁的条件对象
+private final Condition notFull = putLock.newCondition();
 </code></pre><p>ArrayBlockingQueue只有1个锁，添加数据和删除数据的时候只能有1个被执行，不允许并行执行。</p>
 <p>而LinkedBlockingQueue有2个锁，放锁和拿锁，添加数据和删除数据是可以并行进行的，当然添加数据和删除数据的时候只能有1个线程各自执行。</p>
-<h3 id="数据的添加-1">数据的添加</h3><p>LinkedBlockingQueue有不同的几个数据添加方法，add、offer、put方法。</p>
+<h3 id="数据的添加-1"><a href="#数据的添加-1" class="headerlink" title="数据的添加"></a>数据的添加</h3><p>LinkedBlockingQueue有不同的几个数据添加方法，add、offer、put方法。</p>
 <p>add方法内部调用offer方法：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">boolean</span> offer(E e) {
-    <span class="keyword">if</span> (e == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException(); <span class="comment">// 不允许空元素</span>
-    <span class="keyword">final</span> AtomicInteger <span class="keyword">count</span> = <span class="keyword">this</span>.<span class="keyword">count</span>;
-    <span class="keyword">if</span> (<span class="keyword">count</span>.get() == capacity) <span class="comment">// 如果容量满了，返回false</span>
-        <span class="keyword">return</span> <span class="keyword">false</span>;
-    <span class="keyword">int</span> c = -<span class="number">1</span>;
-    Node&lt;E&gt; node = <span class="keyword">new</span> Node(e); <span class="comment">// 容量没满，以新元素构造节点</span>
-    <span class="keyword">final</span> ReentrantLock putLock = <span class="keyword">this</span>.putLock;
-    putLock.lock(); <span class="comment">// 放锁加锁，保证调用offer方法的时候只有1个线程</span>
-    <span class="keyword">try</span> {
-        <span class="keyword">if</span> (<span class="keyword">count</span>.get() &lt; capacity) { <span class="comment">// 再次判断容量是否已满，因为可能拿锁在进行消费数据，没满的话继续执行</span>
-            enqueue(node); <span class="comment">// 节点添加到链表尾部</span>
-            c = <span class="keyword">count</span>.getAndIncrement(); <span class="comment">// 元素个数+1</span>
-            <span class="keyword">if</span> (c + <span class="number">1</span> &lt; capacity) <span class="comment">// 如果容量还没满</span>
-                notFull.signal(); <span class="comment">// 在放锁的条件对象notFull上唤醒正在等待的线程，表示可以再次往队列里面加数据了，队列还没满</span>
+<pre><code>public boolean offer(E e) {
+    if (e == null) throw new NullPointerException(); // 不允许空元素
+    final AtomicInteger count = this.count;
+    if (count.get() == capacity) // 如果容量满了，返回false
+        return false;
+    int c = -1;
+    Node&lt;E&gt; node = new Node(e); // 容量没满，以新元素构造节点
+    final ReentrantLock putLock = this.putLock;
+    putLock.lock(); // 放锁加锁，保证调用offer方法的时候只有1个线程
+    try {
+        if (count.get() &lt; capacity) { // 再次判断容量是否已满，因为可能拿锁在进行消费数据，没满的话继续执行
+            enqueue(node); // 节点添加到链表尾部
+            c = count.getAndIncrement(); // 元素个数+1
+            if (c + 1 &lt; capacity) // 如果容量还没满
+                notFull.signal(); // 在放锁的条件对象notFull上唤醒正在等待的线程，表示可以再次往队列里面加数据了，队列还没满
         }
-    } <span class="keyword">finally</span> {
-        putLock.unlock(); <span class="comment">// 释放放锁，让其他线程可以调用offer方法</span>
+    } finally {
+        putLock.unlock(); // 释放放锁，让其他线程可以调用offer方法
     }
-    <span class="keyword">if</span> (c == <span class="number">0</span>) <span class="comment">// 由于存在放锁和拿锁，这里可能拿锁一直在消费数据，count会变化。这里的if条件表示如果队列中还有1条数据</span>
-        signalNotEmpty(); <span class="comment">// 在拿锁的条件对象notEmpty上唤醒正在等待的1个线程，表示队列里还有1条数据，可以进行消费</span>
-    <span class="keyword">return</span> c &gt;= <span class="number">0</span>; <span class="comment">// 添加成功返回true，否则返回false</span>
+    if (c == 0) // 由于存在放锁和拿锁，这里可能拿锁一直在消费数据，count会变化。这里的if条件表示如果队列中还有1条数据
+        signalNotEmpty(); // 在拿锁的条件对象notEmpty上唤醒正在等待的1个线程，表示队列里还有1条数据，可以进行消费
+    return c &gt;= 0; // 添加成功返回true，否则返回false
 }
 </code></pre><p>put方法：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">void</span> put(E e) <span class="keyword">throws</span> InterruptedException {
-    <span class="keyword">if</span> (e == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException(); <span class="comment">// 不允许空元素</span>
-    <span class="keyword">int</span> c = -<span class="number">1</span>;
-    Node&lt;E&gt; node = <span class="keyword">new</span> Node(e); <span class="comment">// 以新元素构造节点</span>
-    <span class="keyword">final</span> ReentrantLock putLock = <span class="keyword">this</span>.putLock;
-    <span class="keyword">final</span> AtomicInteger <span class="keyword">count</span> = <span class="keyword">this</span>.<span class="keyword">count</span>;
-    putLock.lockInterruptibly(); <span class="comment">// 放锁加锁，保证调用put方法的时候只有1个线程</span>
-    <span class="keyword">try</span> {
-        <span class="keyword">while</span> (<span class="keyword">count</span>.get() == capacity) { <span class="comment">// 如果容量满了</span>
-            notFull.await(); <span class="comment">// 阻塞并挂起当前线程</span>
+<pre><code>public void put(E e) throws InterruptedException {
+    if (e == null) throw new NullPointerException(); // 不允许空元素
+    int c = -1;
+    Node&lt;E&gt; node = new Node(e); // 以新元素构造节点
+    final ReentrantLock putLock = this.putLock;
+    final AtomicInteger count = this.count;
+    putLock.lockInterruptibly(); // 放锁加锁，保证调用put方法的时候只有1个线程
+    try {
+        while (count.get() == capacity) { // 如果容量满了
+            notFull.await(); // 阻塞并挂起当前线程
         }
-        enqueue(node); <span class="comment">// 节点添加到链表尾部</span>
-        c = <span class="keyword">count</span>.getAndIncrement(); <span class="comment">// 元素个数+1</span>
-        <span class="keyword">if</span> (c + <span class="number">1</span> &lt; capacity) <span class="comment">// 如果容量还没满</span>
-            notFull.signal(); <span class="comment">// 在放锁的条件对象notFull上唤醒正在等待的线程，表示可以再次往队列里面加数据了，队列还没满</span>
-    } <span class="keyword">finally</span> {
-        putLock.unlock(); <span class="comment">// 释放放锁，让其他线程可以调用put方法</span>
+        enqueue(node); // 节点添加到链表尾部
+        c = count.getAndIncrement(); // 元素个数+1
+        if (c + 1 &lt; capacity) // 如果容量还没满
+            notFull.signal(); // 在放锁的条件对象notFull上唤醒正在等待的线程，表示可以再次往队列里面加数据了，队列还没满
+    } finally {
+        putLock.unlock(); // 释放放锁，让其他线程可以调用put方法
     }
-    <span class="keyword">if</span> (c == <span class="number">0</span>) <span class="comment">// 由于存在放锁和拿锁，这里可能拿锁一直在消费数据，count会变化。这里的if条件表示如果队列中还有1条数据</span>
-        signalNotEmpty(); <span class="comment">// 在拿锁的条件对象notEmpty上唤醒正在等待的1个线程，表示队列里还有1条数据，可以进行消费</span>
+    if (c == 0) // 由于存在放锁和拿锁，这里可能拿锁一直在消费数据，count会变化。这里的if条件表示如果队列中还有1条数据
+        signalNotEmpty(); // 在拿锁的条件对象notEmpty上唤醒正在等待的1个线程，表示队列里还有1条数据，可以进行消费
 }
 </code></pre><p>LinkedBlockingQueue的添加数据方法add，put，offer跟ArrayBlockingQueue一样，不同的是它们的底层实现不一样。</p>
 <p>ArrayBlockingQueue中放入数据阻塞的时候，需要消费数据才能唤醒。</p>
 <p>而LinkedBlockingQueue中放入数据阻塞的时候，因为它内部有2个锁，可以并行执行放入数据和消费数据，不仅在消费数据的时候进行唤醒插入阻塞的线程，同时在插入的时候如果容量还没满，也会唤醒插入阻塞的线程。</p>
-<h3 id="数据的删除-1">数据的删除</h3><p>LinkedBlockingQueue有不同的几个数据删除方法，poll、take、remove方法。</p>
+<h3 id="数据的删除-1"><a href="#数据的删除-1" class="headerlink" title="数据的删除"></a>数据的删除</h3><p>LinkedBlockingQueue有不同的几个数据删除方法，poll、take、remove方法。</p>
 <p>poll方法：</p>
-<pre><code><span class="keyword">public</span> E poll() {
-    <span class="keyword">final</span> AtomicInteger <span class="keyword">count</span> = <span class="keyword">this</span>.<span class="keyword">count</span>;
-    <span class="keyword">if</span> (<span class="keyword">count</span>.get() == <span class="number">0</span>) <span class="comment">// 如果元素个数为0</span>
-        <span class="keyword">return</span> <span class="keyword">null</span>; <span class="comment">// 返回null</span>
-    E x = <span class="keyword">null</span>;
-    <span class="keyword">int</span> c = -<span class="number">1</span>;
-    <span class="keyword">final</span> ReentrantLock takeLock = <span class="keyword">this</span>.takeLock;
-    takeLock.lock(); <span class="comment">// 拿锁加锁，保证调用poll方法的时候只有1个线程</span>
-    <span class="keyword">try</span> {
-        <span class="keyword">if</span> (<span class="keyword">count</span>.get() &gt; <span class="number">0</span>) { <span class="comment">// 判断队列里是否还有数据</span>
-            x = dequeue(); <span class="comment">// 删除头结点</span>
-            c = <span class="keyword">count</span>.getAndDecrement(); <span class="comment">// 元素个数-1</span>
-            <span class="keyword">if</span> (c &gt; <span class="number">1</span>) <span class="comment">// 如果队列里还有元素</span>
-                notEmpty.signal(); <span class="comment">// 在拿锁的条件对象notEmpty上唤醒正在等待的线程，表示队列里还有数据，可以再次消费</span>
+<pre><code>public E poll() {
+    final AtomicInteger count = this.count;
+    if (count.get() == 0) // 如果元素个数为0
+        return null; // 返回null
+    E x = null;
+    int c = -1;
+    final ReentrantLock takeLock = this.takeLock;
+    takeLock.lock(); // 拿锁加锁，保证调用poll方法的时候只有1个线程
+    try {
+        if (count.get() &gt; 0) { // 判断队列里是否还有数据
+            x = dequeue(); // 删除头结点
+            c = count.getAndDecrement(); // 元素个数-1
+            if (c &gt; 1) // 如果队列里还有元素
+                notEmpty.signal(); // 在拿锁的条件对象notEmpty上唤醒正在等待的线程，表示队列里还有数据，可以再次消费
         }
-    } <span class="keyword">finally</span> {
-        takeLock.unlock(); <span class="comment">// 释放拿锁，让其他线程可以调用poll方法</span>
+    } finally {
+        takeLock.unlock(); // 释放拿锁，让其他线程可以调用poll方法
     }
-    <span class="keyword">if</span> (c == capacity) <span class="comment">// 由于存在放锁和拿锁，这里可能放锁一直在添加数据，count会变化。这里的if条件表示如果队列中还可以再插入数据</span>
-        signalNotFull(); <span class="comment">// 在放锁的条件对象notFull上唤醒正在等待的1个线程，表示队列里还能再次添加数据</span>
-                <span class="keyword">return</span> x;
+    if (c == capacity) // 由于存在放锁和拿锁，这里可能放锁一直在添加数据，count会变化。这里的if条件表示如果队列中还可以再插入数据
+        signalNotFull(); // 在放锁的条件对象notFull上唤醒正在等待的1个线程，表示队列里还能再次添加数据
+                return x;
 }
 </code></pre><p>take方法：</p>
-<pre><code><span class="keyword">public</span> <span class="type">E</span> take() <span class="keyword">throws</span> <span class="type">InterruptedException</span> {
-    <span class="type">E</span> x;
-    int <span class="built_in">c</span> = -<span class="number">1</span>;
-    <span class="keyword">final</span> <span class="type">AtomicInteger</span> <span class="built_in">count</span> = this.<span class="built_in">count</span>;
-    <span class="keyword">final</span> <span class="type">ReentrantLock</span> takeLock = this.takeLock;
-    takeLock.lockInterruptibly(); <span class="comment">// 拿锁加锁，保证调用take方法的时候只有1个线程</span>
-    <span class="keyword">try</span> {
-        <span class="keyword">while</span> (<span class="built_in">count</span>.<span class="keyword">get</span>() == <span class="number">0</span>) { <span class="comment">// 如果队列里已经没有元素了</span>
-            notEmpty.await(); <span class="comment">// 阻塞并挂起当前线程</span>
+<pre><code>public E take() throws InterruptedException {
+    E x;
+    int c = -1;
+    final AtomicInteger count = this.count;
+    final ReentrantLock takeLock = this.takeLock;
+    takeLock.lockInterruptibly(); // 拿锁加锁，保证调用take方法的时候只有1个线程
+    try {
+        while (count.get() == 0) { // 如果队列里已经没有元素了
+            notEmpty.await(); // 阻塞并挂起当前线程
         }
-        x = dequeue(); <span class="comment">// 删除头结点</span>
-        <span class="built_in">c</span> = <span class="built_in">count</span>.getAndDecrement(); <span class="comment">// 元素个数-1</span>
-        <span class="keyword">if</span> (<span class="built_in">c</span> &gt; <span class="number">1</span>) <span class="comment">// 如果队列里还有元素</span>
-            notEmpty.signal(); <span class="comment">// 在拿锁的条件对象notEmpty上唤醒正在等待的线程，表示队列里还有数据，可以再次消费</span>
+        x = dequeue(); // 删除头结点
+        c = count.getAndDecrement(); // 元素个数-1
+        if (c &gt; 1) // 如果队列里还有元素
+            notEmpty.signal(); // 在拿锁的条件对象notEmpty上唤醒正在等待的线程，表示队列里还有数据，可以再次消费
     } finally {
-        takeLock.unlock(); <span class="comment">// 释放拿锁，让其他线程可以调用take方法</span>
+        takeLock.unlock(); // 释放拿锁，让其他线程可以调用take方法
     }
-    <span class="keyword">if</span> (<span class="built_in">c</span> == capacity) <span class="comment">// 由于存在放锁和拿锁，这里可能放锁一直在添加数据，count会变化。这里的if条件表示如果队列中还可以再插入数据</span>
-        signalNotFull(); <span class="comment">// 在放锁的条件对象notFull上唤醒正在等待的1个线程，表示队列里还能再次添加数据</span>
-    <span class="keyword">return</span> x;
+    if (c == capacity) // 由于存在放锁和拿锁，这里可能放锁一直在添加数据，count会变化。这里的if条件表示如果队列中还可以再插入数据
+        signalNotFull(); // 在放锁的条件对象notFull上唤醒正在等待的1个线程，表示队列里还能再次添加数据
+    return x;
 }
 </code></pre><p>remove方法：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">boolean</span> remove(Object o) {
-    <span class="keyword">if</span> (o == <span class="keyword">null</span>) <span class="keyword">return</span> <span class="keyword">false</span>;
-    fullyLock(); <span class="comment">// remove操作要移动的位置不固定，2个锁都需要加锁</span>
-    <span class="keyword">try</span> {
-        <span class="keyword">for</span> (Node&lt;E&gt; trail = head, p = trail.<span class="keyword">next</span>; <span class="comment">// 从链表头结点开始遍历</span>
-             p != <span class="keyword">null</span>;
-             trail = p, p = p.<span class="keyword">next</span>) {
-            <span class="keyword">if</span> (o.equals(p.item)) { <span class="comment">// 判断是否找到对象</span>
-                unlink(p, trail); <span class="comment">// 修改节点的链接信息，同时调用notFull的signal方法</span>
-                <span class="keyword">return</span> <span class="keyword">true</span>;
+<pre><code>public boolean remove(Object o) {
+    if (o == null) return false;
+    fullyLock(); // remove操作要移动的位置不固定，2个锁都需要加锁
+    try {
+        for (Node&lt;E&gt; trail = head, p = trail.next; // 从链表头结点开始遍历
+             p != null;
+             trail = p, p = p.next) {
+            if (o.equals(p.item)) { // 判断是否找到对象
+                unlink(p, trail); // 修改节点的链接信息，同时调用notFull的signal方法
+                return true;
             }
         }
-        <span class="keyword">return</span> <span class="keyword">false</span>;
-    } <span class="keyword">finally</span> {
-        fullyUnlock(); <span class="comment">// 2个锁解锁</span>
+        return false;
+    } finally {
+        fullyUnlock(); // 2个锁解锁
     }
 }
 </code></pre><p>LinkedBlockingQueue的take方法对于没数据的情况下会阻塞，poll方法删除链表头结点，remove方法删除指定的对象。</p>

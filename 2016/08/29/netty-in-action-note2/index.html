@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="netty,nio," />
+  <meta name="keywords" content="nio,netty," />
 
 
 
@@ -100,6 +100,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Netty in Action笔记(二)">
 <meta name="twitter:description" content="主要记录ChannelHandler、Codec以及Bootstrap的作用，还有Netty内置的一些ChannelHandler、Codec，以及Bootstrap的分类。">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/netty03.png">
 
 
 
@@ -374,8 +375,8 @@
       
         <p>主要记录ChannelHandler、Codec以及Bootstrap的作用，还有Netty内置的一些ChannelHandler、Codec，以及Bootstrap的分类。</p>
 <a id="more"></a>
-<h2 id="第六章">第六章</h2><p>介绍Netty中的Channel、ChannelHandler、ChannelHandlerContext以及ChannelPipeline。</p>
-<h3 id="Channel">Channel</h3><p>定义：一个Channel表示一个通道，跟io中的stream的角色一样，但是有几点不同。 1. stream是单向的，只支持读或者写，channel是双向的，既支持读也支持写。2. stream是阻塞的，channel是并行的。</p>
+<h2 id="第六章"><a href="#第六章" class="headerlink" title="第六章"></a>第六章</h2><p>介绍Netty中的Channel、ChannelHandler、ChannelHandlerContext以及ChannelPipeline。</p>
+<h3 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h3><p>定义：一个Channel表示一个通道，跟io中的stream的角色一样，但是有几点不同。 1. stream是单向的，只支持读或者写，channel是双向的，既支持读也支持写。2. stream是阻塞的，channel是并行的。</p>
 <p>其中Channel的生命周期状态如下：</p>
 <table>
 <thead>
@@ -407,13 +408,13 @@
 <p>channelRegistered -&gt; channelActice -&gt; channelInactive -&gt; channelUnregistered</p>
 <p>在另外一种特殊情况下，会发生多次channelRegistered和channelUnregistered，这是因为用户可以从EventLoop上取消注册Channel来阻止事件的执行并在之后重新注册。状态变化如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty03.png" alt=""></p>
-<h3 id="ChannelHandler">ChannelHandler</h3><p>ChannelHandler有2种类型：</p>
+<h3 id="ChannelHandler"><a href="#ChannelHandler" class="headerlink" title="ChannelHandler"></a>ChannelHandler</h3><p>ChannelHandler有2种类型：</p>
 <ol>
 <li>Inbound Handler: 处理inbound数据(接收到的数据)以及所有类型的channel状态修改事件</li>
 <li>Outbound Handler: 处理outbound数据(发送出去的数据)并且可以拦截各种操作，比如bind、connect、disconnect、close、write等操作</li>
 </ol>
 <p>Inbound和Outbound Handler都属于ChannelHandler，它们都可以被添加到ChannelPipeline中，它们内部也提供了handlerAdded、handlerRemoved这两种方法分别在ChannelHandler添加到ChannelPipeline和ChannelHandler从ChannelPipeline中被删除的时候触发。</p>
-<h4 id="ChannelInboundHandler">ChannelInboundHandler</h4><p>ChannelInboundHandler方法在两种情况下触发：channel状态的改变和channel接收到数据。</p>
+<h4 id="ChannelInboundHandler"><a href="#ChannelInboundHandler" class="headerlink" title="ChannelInboundHandler"></a>ChannelInboundHandler</h4><p>ChannelInboundHandler方法在两种情况下触发：channel状态的改变和channel接收到数据。</p>
 <p>一些方法说明：</p>
 <table>
 <thead>
@@ -455,15 +456,15 @@
 </table>
 <p>ChannelInboundHandler有一个实现ChannelInboundHandlerAdapter，它实现了所有的方法，我们只需要继承这个类然后复写需要的方法即可。</p>
 <p>ChannelInboundHandler中的channelRead方法中有读取的ByteBuf。由于Netty在ByteBuf的使用上使用了池的概念，当不需要这个ByteBuf的时候需要进行资源的释放以减少内存的消耗。</p>
-<pre><code><span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">channelRead</span><span class="params">(ChannelHandlerContext ctx, Object msg)</span> </span>{
-      <span class="comment">// do something</span>
+<pre><code>@Override
+public void channelRead(ChannelHandlerContext ctx, Object msg) {
+      // do something
       ReferenceCountUtil.release(msg);
 }
 </code></pre><p>Netty内部提供了一个SimpleChannelInboundHandler类，这个类读取数据会自动释放资源。它继承ChannelInboundHandlerAdapter并复写了channelRead方法，在channelRead方法里面finally代码里会自动release资源，并提供了channelRead0方法：</p>
-<pre><code><span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">channelRead0</span><span class="params">(ChannelHandlerContext ctx, Object msg)</span> </span>{
-      <span class="comment">// do something, do not need release</span>
+<pre><code>@Override
+public void channelRead0(ChannelHandlerContext ctx, Object msg) {
+      // do something, do not need release
 }
 </code></pre><p>所以一般使用ChannelInboundHandler的话，有3种方法。 </p>
 <ol>
@@ -472,7 +473,7 @@
 <li>继承SimpleChannelInboundHandler</li>
 </ol>
 <p>第1种基本不用，第3种用来处理接收消息，第2种用来处理事件状态的改变</p>
-<h4 id="ChannelOutboundHandler">ChannelOutboundHandler</h4><p>ChannelOutboundHandler方法在两种情况下触发：发送数据和拦截操作。</p>
+<h4 id="ChannelOutboundHandler"><a href="#ChannelOutboundHandler" class="headerlink" title="ChannelOutboundHandler"></a>ChannelOutboundHandler</h4><p>ChannelOutboundHandler方法在两种情况下触发：发送数据和拦截操作。</p>
 <p>ChannelOutboundHandler有一个强大的功能，可以按需推迟一个操作，这使得处理请求可以用到更为复杂的策略。比如，如果写数据到远端被暂停，你可以推迟flush操作，稍后再试。</p>
 <p>一些方法说明：</p>
 <table>
@@ -520,29 +521,29 @@
 <p>ChannelOutboundHandler有一个实现ChannelOutboundHandlerAdapter，它实现了所有的方法，我们只需要继承这个类然后复写需要的方法即可。</p>
 <p>在outboundhandler中有时候也需要释放资源，当消息被消费并且不再需要传递给下一个outbound handler的时候，调用ReferenceCountUtil.release(message)释放消息。</p>
 <p>当消息被写回去或者channel关闭的时候，这个消息的资源会被自动释放，所以没有一个类似SimpleChannelInboundHandler的概念。</p>
-<h3 id="ChannelHandlerContext">ChannelHandlerContext</h3><p>当ChannelHandler被添加到ChannelPipeline中的时候，ChannelHandlerContext会被创建。<br>所以说ChannelHandlerContext属于ChannelHandler。</p>
+<h3 id="ChannelHandlerContext"><a href="#ChannelHandlerContext" class="headerlink" title="ChannelHandlerContext"></a>ChannelHandlerContext</h3><p>当ChannelHandler被添加到ChannelPipeline中的时候，ChannelHandlerContext会被创建。<br>所以说ChannelHandlerContext属于ChannelHandler。</p>
 <p>可以通过ChannelHandlerContext的channel方法得到Channel和pipeline方法得到ChannelPipeline。</p>
 <p>ChannelHandlerContext可以被保留下来并且在其他地方进行调用，比如在其他线程，或者在handler外部进行调用。</p>
 <p>可以使用以下方法保留ChannelHandlerContext：</p>
-<pre><code><span class="class"><span class="keyword">class</span> <span class="title">WriterHandler</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">ChannelHandlerAdapter</span> {</span>
-  <span class="keyword">private</span> <span class="type">ChannelHandlerContext</span> ctx;
+<pre><code>class WriterHandler extends ChannelHandlerAdapter {
+  private ChannelHandlerContext ctx;
 
-  <span class="annotation">@Override</span>
-  public void handlerAdded(<span class="type">ChannelHandlerContext</span> ctx) <span class="keyword">throws</span> <span class="type">Exception</span> {
-      <span class="keyword">this</span>.ctx = ctx;
+  @Override
+  public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+      this.ctx = ctx;
   }
 
-  public void send(<span class="type">String</span> msg) {
+  public void send(String msg) {
       ctx.write(msg);
   }
 }
 </code></pre><p>Netty中提供了一个@Sharable注解用来将一个实例的ChannelHandler添加到多个ChannelPipeline中，如果不加上这个注解，被多个ChannelPipeline使用的话会抛出异常。</p>
-<h3 id="ChannelPipeline">ChannelPipeline</h3><p>多个ChannelHandler可以组成一个ChannelPipeline，里面的每个ChannelHandler可以转发给下一个ChannelHandler。</p>
+<h3 id="ChannelPipeline"><a href="#ChannelPipeline" class="headerlink" title="ChannelPipeline"></a>ChannelPipeline</h3><p>多个ChannelHandler可以组成一个ChannelPipeline，里面的每个ChannelHandler可以转发给下一个ChannelHandler。</p>
 <p>ChannelPipeline内部的所有ChannelHandler的处理流程图：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty01.png" alt=""></p>
 <p>ChannelPipeline提供了多种方法用于添加或删除或代替ChannelHandler，比如addLast, addFirst, remove, replace等方法。</p>
-<h2 id="第七章">第七章</h2><p>介绍Netty中的编码器、解码器。我们知道网络中传输的是字节-ByteBuf。我们需要对ByteBuf进行一些解码用于解码成熟悉的POJO，对ByteBuf进行编码用于网络传输。</p>
-<h3 id="Decoder">Decoder</h3><p>解码器，针对的是inbound的数据，也就是读取数据的解码。</p>
+<h2 id="第七章"><a href="#第七章" class="headerlink" title="第七章"></a>第七章</h2><p>介绍Netty中的编码器、解码器。我们知道网络中传输的是字节-ByteBuf。我们需要对ByteBuf进行一些解码用于解码成熟悉的POJO，对ByteBuf进行编码用于网络传输。</p>
+<h3 id="Decoder"><a href="#Decoder" class="headerlink" title="Decoder"></a>Decoder</h3><p>解码器，针对的是inbound的数据，也就是读取数据的解码。</p>
 <p>2种类型：</p>
 <ol>
 <li>bytes到message的解码(ByteToMessageDecoder和ReplayingDecoder)</li>
@@ -551,9 +552,9 @@
 <p>decoders的作用是把inbound中读取的数据从一种格式转换成另一种格式，由于decoders处理的是inbound中的数据，所以它也是ChannelInboundHandler的一种实现类。</p>
 <p>ByteToMessageDecoder和ReplayingDecoder属于bytes到message的解码。</p>
 <p>一个ByteToMessageDecoder例子，将byte转换成integer：</p>
-<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">ToIntegerDecoder</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">ByteToMessageDecoder</span> {</span>
-    <span class="annotation">@Override</span>  <span class="keyword">protected</span> void decode(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">ByteBuf</span> in,     <span class="type">List</span>&lt;<span class="type">Object</span>&gt; out) <span class="keyword">throws</span> <span class="type">Exception</span> {
-        <span class="keyword">if</span>(in.readableBytes() &gt;= <span class="number">4</span>) {
+<pre><code>public class ToIntegerDecoder extends ByteToMessageDecoder {
+    @Override  protected void decode(ChannelHandlerContext ctx, ByteBuf in,     List&lt;Object&gt; out) throws Exception {
+        if(in.readableBytes() &gt;= 4) {
             out.add(in.readInt());
         }
     }    
@@ -561,22 +562,22 @@
 </code></pre><p>处理流程图如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty04.png" alt=""></p>
 <p>如果使用ReplayingDecoder，不需要进行可读字节的判断，直接添加到List里即可。跟ToIntegerDecoder实现一样的功能，ReplayingDecoder只需要这样即可。(但是有一定的局限性：1.不是所有的操作都被ByteBuf支持 2.ByteBuf.readableBytes方法大部分时间不会返回期望的值)</p>
-<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">ToIntegerDecoder2</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">ReplayingDecoder&lt;Void&gt;</span> {</span>
-    <span class="annotation">@Override</span>
-    <span class="keyword">protected</span> void decode(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">ByteBuf</span> in, <span class="type">List</span>&lt;<span class="type">Object</span>&gt;     out) <span class="keyword">throws</span> <span class="type">Exception</span> {
+<pre><code>public class ToIntegerDecoder2 extends ReplayingDecoder&lt;Void&gt; {
+    @Override
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List&lt;Object&gt;     out) throws Exception {
         out.add(in.readInt());
     }
 }
 </code></pre><p>一个MessageToMessageDecoder例子，将integer转换成string：</p>
-<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">IntegerToStringDecoder</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">MessageToMessageDecoder&lt;Integer&gt;</span> {</span>
-    <span class="annotation">@Override</span>
-    <span class="keyword">protected</span> void decode(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">Integer</span> msg, <span class="type">List</span>&lt;<span class="type">Object</span>&gt; out) <span class="keyword">throws</span> <span class="type">Exception</span> {
-        out.add(<span class="type">String</span>.valueOf(msg));
+<pre><code>public class IntegerToStringDecoder extends MessageToMessageDecoder&lt;Integer&gt; {
+    @Override
+    protected void decode(ChannelHandlerContext ctx, Integer msg, List&lt;Object&gt; out) throws Exception {
+        out.add(String.valueOf(msg));
     }
 }
 </code></pre><p>处理流程图如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty05.png" alt=""></p>
-<h3 id="Encoder">Encoder</h3><p>编码器，针对的是outbound的数据，也就是发送出去的数据的编码。</p>
+<h3 id="Encoder"><a href="#Encoder" class="headerlink" title="Encoder"></a>Encoder</h3><p>编码器，针对的是outbound的数据，也就是发送出去的数据的编码。</p>
 <p>2种类型：</p>
 <ol>
 <li>message到message的编码(MessageToMessageEncoder)</li>
@@ -584,46 +585,46 @@
 </ol>
 <p>decoders的作用是把outbound中发送出去的数据从一种格式转换成另一种格式，由于eecoders处理的是outbound中的数据，所以它也是ChannelOutboundHandler的一种实现类。</p>
 <p>一个MessageToByteEncoder例子，将integer转换成byte：</p>
-<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">IntegerToByteEncoder</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">MessageToByteEncoder&lt;Integer&gt;</span> {</span>
-    <span class="annotation">@Override</span>
-    <span class="keyword">protected</span> void encode(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">Integer</span> msg, <span class="type">ByteBuf</span> out) <span class="keyword">throws</span> <span class="type">Exception</span> {
+<pre><code>public class IntegerToByteEncoder extends MessageToByteEncoder&lt;Integer&gt; {
+    @Override
+    protected void encode(ChannelHandlerContext ctx, Integer msg, ByteBuf out) throws Exception {
         out.writeInt(msg);
     }
 }
 </code></pre><p>处理流程图如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty06.png" alt=""></p>
 <p>一个MessageToMessageEncoder例子，将integer转换成string：</p>
-<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">IntegerToStringEncoder</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">MessageToMessageEncoder&lt;Integer&gt;</span> {</span>
-    <span class="annotation">@Override</span>
-    <span class="keyword">protected</span> void encode(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">Integer</span> msg, <span class="type">List</span>&lt;<span class="type">Object</span>&gt; out) <span class="keyword">throws</span> <span class="type">Exception</span> {
-        out.add(<span class="type">String</span>.valueOf(msg));
+<pre><code>public class IntegerToStringEncoder extends MessageToMessageEncoder&lt;Integer&gt; {
+    @Override
+    protected void encode(ChannelHandlerContext ctx, Integer msg, List&lt;Object&gt; out) throws Exception {
+        out.add(String.valueOf(msg));
     }
 }
 </code></pre><p>处理流程图如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty07.png" alt=""></p>
-<h3 id="Codec">Codec</h3><p>编解码器，既支持编码器的功能，也支持解码器的功能。</p>
+<h3 id="Codec"><a href="#Codec" class="headerlink" title="Codec"></a>Codec</h3><p>编解码器，既支持编码器的功能，也支持解码器的功能。</p>
 <p>2种类型：</p>
 <ol>
 <li>ByteToMessageCodec：message到byte的编解码</li>
 <li>MessageToMessageCodec：message到message的编解码</li>
 </ol>
-<h3 id="CombinedChannelDuplexHandler">CombinedChannelDuplexHandler</h3><p>结合解码器和编码器在一起可能会牺牲可重用性。为了避免这种方式，可以使用CombinedChannelDuplexHandler。</p>
+<h3 id="CombinedChannelDuplexHandler"><a href="#CombinedChannelDuplexHandler" class="headerlink" title="CombinedChannelDuplexHandler"></a>CombinedChannelDuplexHandler</h3><p>结合解码器和编码器在一起可能会牺牲可重用性。为了避免这种方式，可以使用CombinedChannelDuplexHandler。</p>
 <p>CombinedChannelDuplexHandler也就是codec的另外一种方式，如果已经有个encoder和decoder，不需要重新写了codec，直接使用CombinedChannelDuplexHandler整合这个encoder和decoder即可。</p>
 <p>上面的ToIntegerDecoder和IntegerToByteEncoder就可以构成一个编解码器，直接使用CombinedChannelDuplexHandler即可。</p>
-<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">CombinedByteIntegerCodec</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">CombinedChannelDuplexHandler&lt;ToIntegerDecoder</span>, <span class="title">IntegerToByteEncoder&gt;</span> {</span>
-    public <span class="type">CombinedByteIntegerCodec</span>() {
-        <span class="keyword">super</span>(<span class="keyword">new</span> <span class="type">ToIntegerDecoder</span>(), <span class="keyword">new</span> <span class="type">IntegerToByteEncoder</span>());
+<pre><code>public class CombinedByteIntegerCodec extends CombinedChannelDuplexHandler&lt;ToIntegerDecoder, IntegerToByteEncoder&gt; {
+    public CombinedByteIntegerCodec() {
+        super(new ToIntegerDecoder(), new IntegerToByteEncoder());
     }
 }
-</code></pre><h2 id="第八章">第八章</h2><p>主要说明jetty内置的一些ChannelHandler和Codec。</p>
+</code></pre><h2 id="第八章"><a href="#第八章" class="headerlink" title="第八章"></a>第八章</h2><p>主要说明jetty内置的一些ChannelHandler和Codec。</p>
 <p>使用SSL/TLS加密Netty程序的话，可以使用内置的SslHandler。</p>
 <p>要构建Http应用的话，可以使用HttpClientCodec/HttpServerCodec(http客户端和服务端的编解码)以及HttpObjectAggregator(Http的消息聚合)。</p>
 <p>可以使用HttpContentDecompressor和HttpContentCompressor对http的内容进行解压和压缩。</p>
 <p>还有一些WebSocket、SPDY，一些空置链接、超时链接等处理的内置解决方案。</p>
-<h2 id="第九章">第九章</h2><p>主要讲解Bootstrap中Netty中的作用。</p>
+<h2 id="第九章"><a href="#第九章" class="headerlink" title="第九章"></a>第九章</h2><p>主要讲解Bootstrap中Netty中的作用。</p>
 <p>之前分析过各种ChannelHandler，各种Codec，以及把这两个东西添加到Channel 的ChannelPipeline中。有了这些东西之后，该用什么把他们整合起来呢，那就是Bootstrap。</p>
 <p>Bootstrap分别ServerBootstrap(服务端)和Bootstrap(客户端)，它们都继承AbstractBootstrap。</p>
-<h3 id="Bootstrap">Bootstrap</h3><p>客户端服务启动类，内部提供的一些方法如下：</p>
+<h3 id="Bootstrap"><a href="#Bootstrap" class="headerlink" title="Bootstrap"></a>Bootstrap</h3><p>客户端服务启动类，内部提供的一些方法如下：</p>
 <table>
 <thead>
 <tr>
@@ -675,7 +676,7 @@
 </tbody>
 </table>
 <p>需要注意的是如果EventLoopGroup选择的是NioEventLoopGroup，那么对应的channel需要选择NioSocketChannel，否则会抛出兼容性的错误异常。</p>
-<h3 id="ServerBootstrap">ServerBootstrap</h3><p>服务端服务启动类，内部提供的一些方法如下：</p>
+<h3 id="ServerBootstrap"><a href="#ServerBootstrap" class="headerlink" title="ServerBootstrap"></a>ServerBootstrap</h3><p>服务端服务启动类，内部提供的一些方法如下：</p>
 <table>
 <thead>
 <tr>
@@ -730,7 +731,7 @@
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty08.png" alt=""></p>
 <p>ServerBootstrap调用bind绑定地址和端口的时候，会创建ServerChannel。这个ServerChannel会接收客户的各个链接，针对各个链接创建Channel。</p>
 <p>handler方法就是为ServerChannel服务的，而childHandler是给被ServerChannel接收的Channel服务器的。所以说只要服务器已起来，handler中的ChannelHandler就会触发，而有链接被ServerChannel接收之后childHandler中的ChannelHandler才会触发。</p>
-<h3 id="从一个已经存在的Channel中使用Bootstrap启动客户端">从一个已经存在的Channel中使用Bootstrap启动客户端</h3><p>在ServerBootstrap接收到新的Channel的时候准备启动Bootstrap客户端的时候，可以使用一个全新的EventLoop用于处理Channel的IO模型。</p>
+<h3 id="从一个已经存在的Channel中使用Bootstrap启动客户端"><a href="#从一个已经存在的Channel中使用Bootstrap启动客户端" class="headerlink" title="从一个已经存在的Channel中使用Bootstrap启动客户端"></a>从一个已经存在的Channel中使用Bootstrap启动客户端</h3><p>在ServerBootstrap接收到新的Channel的时候准备启动Bootstrap客户端的时候，可以使用一个全新的EventLoop用于处理Channel的IO模型。</p>
 <p>但是没有必要，可以跟ServerBootstrap共享同一个EventLoop，因为一个EventLoop是跟一个线程绑定的，如果使用了多个EventLoop的话，那就相当于需要进行线程的上下文切换，需要消耗一定的资源。</p>
 <p>1个在ServerBootstrap接收到链接之后，使用Bootstrap链接另外一个地址的处理过程：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty09.png" alt=""></p>
@@ -755,9 +756,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/netty/" rel="tag">#netty</a>
-          
             <a href="/tags/nio/" rel="tag">#nio</a>
+          
+            <a href="/tags/netty/" rel="tag">#netty</a>
           
         </div>
       

@@ -102,6 +102,7 @@ NavigableSet接口继承自SortedSet接口，So">
 HashSet内部使用的HashMap，LinkedHashSet继承HashSet，内部使用的是LinkedHashMap。
 TreeSet实现的是NavigableSet接口，而不是HashSet和LinkedHashSet实现的Set接口。
 NavigableSet接口继承自SortedSet接口，So">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/treeset01.jpg">
 
 
 
@@ -380,59 +381,59 @@ NavigableSet接口继承自SortedSet接口，So">
 <p>NavigableSet接口继承自SortedSet接口，SortedSet接口继承自Set接口。</p>
 <p>NavigableSet接口比Set更方便，可以使用firstKey[最小关键字]，lastKey[最大关键字]，pollFirstEntry[最小键值对]，pollLastEntry[最大键值对]，higherEntry[比参数关键字要大的键值对]，lowerEntry[比参数关键字要小的键值对]等等方便方法，可以使用这些方法方便地获取期望位置上的键值对。</p>
 <a id="more"></a>
-<h2 id="TreeSet原理分析">TreeSet原理分析</h2><p>TreeSet跟HashSet一样，内部都使用Map，HashSet内部使用的是HashMap，但是TreeSet使用的是NavigableMap。</p>
+<h2 id="TreeSet原理分析"><a href="#TreeSet原理分析" class="headerlink" title="TreeSet原理分析"></a>TreeSet原理分析</h2><p>TreeSet跟HashSet一样，内部都使用Map，HashSet内部使用的是HashMap，但是TreeSet使用的是NavigableMap。</p>
 <p>TreeSet的几个构造方法会构造NavigableMap，如果使用没有参数的构造函数，NavigableMap是TreeMap：</p>
 <pre><code>TreeSet(NavigableMap&lt;E,Object&gt; m) {
-    <span class="keyword">this</span>.m = m;
+    this.m = m;
 }
 
-<span class="function"><span class="keyword">public</span> <span class="title">TreeSet</span><span class="params">()</span> </span>{
-    <span class="keyword">this</span>(<span class="keyword">new</span> TreeMap&lt;E,Object&gt;());
+public TreeSet() {
+    this(new TreeMap&lt;E,Object&gt;());
 }
 
-<span class="function"><span class="keyword">public</span> <span class="title">TreeSet</span><span class="params">(Comparator&lt;? <span class="keyword">super</span> E&gt; comparator)</span> </span>{
-    <span class="keyword">this</span>(<span class="keyword">new</span> TreeMap&lt;&gt;(comparator));
+public TreeSet(Comparator&lt;? super E&gt; comparator) {
+    this(new TreeMap&lt;&gt;(comparator));
 }
 </code></pre><p>add方法调用Map的put方法：</p>
-<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span> </span>{
-    <span class="keyword">return</span> m.put(e, PRESENT)==<span class="keyword">null</span>;
+<pre><code>public boolean add(E e) {
+    return m.put(e, PRESENT)==null;
 }
 </code></pre><p>remove方法调用Map的remove方法：</p>
-<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">remove</span><span class="params">(Object o)</span> </span>{
-    <span class="keyword">return</span> m.remove(o)==PRESENT;
+<pre><code>public boolean remove(Object o) {
+    return m.remove(o)==PRESENT;
 }
 </code></pre><p>原理基本跟HashSet一样。</p>
-<pre><code><span class="comment">// 最小的关键字</span>
-public <span class="keyword">E</span> first() {
-    <span class="keyword">return</span> <span class="keyword">m</span>.firstKey();
+<pre><code>// 最小的关键字
+public E first() {
+    return m.firstKey();
 }
 
-<span class="comment">// 最大的关键字</span>
-public <span class="keyword">E</span> last() {
-    <span class="keyword">return</span> <span class="keyword">m</span>.lastKey();
+// 最大的关键字
+public E last() {
+    return m.lastKey();
 }
 
-<span class="comment">// 比参数小的关键字</span>
-public <span class="keyword">E</span> <span class="literal">lower</span>(<span class="keyword">E</span> <span class="keyword">e</span>) {
-    <span class="keyword">return</span> <span class="keyword">m</span>.lowerKey(<span class="keyword">e</span>);
+// 比参数小的关键字
+public E lower(E e) {
+    return m.lowerKey(e);
 }
-</code></pre><h2 id="一个TreeSet例子">一个TreeSet例子</h2><p>使用没有参数的TreeMap构造函数，内部的Map使用TreeMap红黑树：</p>
-<pre><code>TreeSet&lt;<span class="keyword">String</span>&gt; <span class="built_in">set</span> = <span class="keyword">new</span> TreeSet&lt;<span class="keyword">String</span>&gt;();
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"1:语文"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"2:数学"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"3:英语"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"4:政治"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"5:物理"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"6:化学"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"7:生物"</span>);
-<span class="built_in">set</span>.<span class="built_in">add</span>(<span class="string">"8:体育"</span>);
+</code></pre><h2 id="一个TreeSet例子"><a href="#一个TreeSet例子" class="headerlink" title="一个TreeSet例子"></a>一个TreeSet例子</h2><p>使用没有参数的TreeMap构造函数，内部的Map使用TreeMap红黑树：</p>
+<pre><code>TreeSet&lt;String&gt; set = new TreeSet&lt;String&gt;();
+set.add(&quot;1:语文&quot;);
+set.add(&quot;2:数学&quot;);
+set.add(&quot;3:英语&quot;);
+set.add(&quot;4:政治&quot;);
+set.add(&quot;5:物理&quot;);
+set.add(&quot;6:化学&quot;);
+set.add(&quot;7:生物&quot;);
+set.add(&quot;8:体育&quot;);
 </code></pre><p>内部红黑树结构如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/treeset01.jpg" alt=""></p>
 <p>还可以调用TreeSet的其他方法：</p>
-<pre><code><span class="built_in">set</span>.<span class="keyword">first</span>();<span class="comment"> // 1:语文</span>
-<span class="built_in">set</span>.<span class="keyword">last</span>();<span class="comment"> // 8:体育</span>
-<span class="built_in">set</span>.higher(<span class="string">"5:物理"</span>);<span class="comment"> // 6:化学</span>
-<span class="built_in">set</span>.<span class="built_in">lower</span>(<span class="string">"5:物理"</span>);<span class="comment"> // 4:政治</span>
+<pre><code>set.first(); // 1:语文
+set.last(); // 8:体育
+set.higher(&quot;5:物理&quot;); // 6:化学
+set.lower(&quot;5:物理&quot;); // 4:政治
 </code></pre>
       
     </div>

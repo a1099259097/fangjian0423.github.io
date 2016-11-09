@@ -367,85 +367,85 @@
         <p>Flume的介绍以及它的架构之前已经分析过。本文分析flume的Source组件。</p>
 <p>Flume内置了很多Source，比如Avro Source，Spooling Directory Source，NetCat Source，Kafka Source等。</p>
 <p>以源码的角度分析Source组件。</p>
-<h2 id="Source接口">Source接口</h2><p>Source接口的定义：</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Source</span> <span class="keyword">extends</span> <span class="title">LifecycleAware</span>, <span class="title">NamedComponent</span> </span>{
+<h2 id="Source接口"><a href="#Source接口" class="headerlink" title="Source接口"></a>Source接口</h2><p>Source接口的定义：</p>
+<pre><code>public interface Source extends LifecycleAware, NamedComponent {
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setChannelProcessor</span><span class="params">(ChannelProcessor channelProcessor)</span></span>;
+  public void setChannelProcessor(ChannelProcessor channelProcessor);
 
-  <span class="function"><span class="keyword">public</span> ChannelProcessor <span class="title">getChannelProcessor</span><span class="params">()</span></span>;
+  public ChannelProcessor getChannelProcessor();
 
 }
 </code></pre><p>Source接口只有2个方法，分别是setChannelProcessor和getChannelProcessor。ChannelProcessor是一个Channel处理器，会暴露一些操作用来将事件存储到channel中。</p>
 <p>Source接口继承了LifecycleAware和NamedComponent接口。</p>
 <p>LifecycleAware接口表示实现了该接口的类是具有状态的，有生命周期的特性。</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">LifecycleAware</span> {
+<pre><code>public interface LifecycleAware {
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span>(<span class="params"></span>)</span>; <span class="comment">// 启动一个服务或组件</span>
+  public void start(); // 启动一个服务或组件
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">stop</span>(<span class="params"></span>)</span>; <span class="comment">// 关闭一个服务或组件</span>
+  public void stop(); // 关闭一个服务或组件
 
-  <span class="function"><span class="keyword">public</span> LifecycleState <span class="title">getLifecycleState</span>(<span class="params"></span>)</span>; <span class="comment">// 得到当前组件或服务的状态</span>
+  public LifecycleState getLifecycleState(); // 得到当前组件或服务的状态
 
 }
 </code></pre><p>NamedComponent接口是一个可以让组件拥有名字的接口，这样组件可以在配置中被引用。</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">NamedComponent</span> {
+<pre><code>public interface NamedComponent {
 
-  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span>(<span class="params">String name</span>)</span>;
+  public void setName(String name);
 
-  <span class="function"><span class="keyword">public</span> String <span class="title">getName</span>(<span class="params"></span>)</span>;
+  public String getName();
 
 }
 </code></pre><p>Source接口的实现类AbstractSource，基本上所有的Source都会继承这个AbstractSource：</p>
 <p>AbstractSource属性：</p>
-<pre><code><span class="keyword">private</span> ChannelProcessor channelProcessor;
-<span class="keyword">private</span> <span class="keyword">String</span> name;
-<span class="keyword">private</span> LifecycleState lifecycleState;
+<pre><code>private ChannelProcessor channelProcessor;
+private String name;
+private LifecycleState lifecycleState;
 </code></pre><p>这3个属性是都是都会在Source接口的方法中被使用到。</p>
-<pre><code><span class="annotation">@Override</span>
-  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>{
-    Preconditions.checkState(channelProcessor != <span class="keyword">null</span>,
-        <span class="string">"No channel processor configured"</span>);
+<pre><code>@Override
+  public synchronized void start() {
+    Preconditions.checkState(channelProcessor != null,
+        &quot;No channel processor configured&quot;);
 
     lifecycleState = LifecycleState.START;
   }
 
-  <span class="annotation">@Override</span>
-  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">stop</span><span class="params">()</span> </span>{
+  @Override
+  public synchronized void stop() {
     lifecycleState = LifecycleState.STOP;
   }
 
-  <span class="annotation">@Override</span>
-  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">setChannelProcessor</span><span class="params">(ChannelProcessor cp)</span> </span>{
+  @Override
+  public synchronized void setChannelProcessor(ChannelProcessor cp) {
     channelProcessor = cp;
   }
 
-  <span class="annotation">@Override</span>
-  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function">ChannelProcessor <span class="title">getChannelProcessor</span><span class="params">()</span> </span>{
-    <span class="keyword">return</span> channelProcessor;
+  @Override
+  public synchronized ChannelProcessor getChannelProcessor() {
+    return channelProcessor;
   }
 
-  <span class="annotation">@Override</span>
-  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function">LifecycleState <span class="title">getLifecycleState</span><span class="params">()</span> </span>{
-    <span class="keyword">return</span> lifecycleState;
+  @Override
+  public synchronized LifecycleState getLifecycleState() {
+    return lifecycleState;
   }
 
-  <span class="annotation">@Override</span>
-  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function"><span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>{
-    <span class="keyword">this</span>.name = name;
+  @Override
+  public synchronized void setName(String name) {
+    this.name = name;
   }
 
-  <span class="annotation">@Override</span>
-  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="function">String <span class="title">getName</span><span class="params">()</span> </span>{
-    <span class="keyword">return</span> name;
+  @Override
+  public synchronized String getName() {
+    return name;
   }
-</code></pre><h2 id="Flume内置的Source例子">Flume内置的Source例子</h2><h3 id="NetCat_Source">NetCat Source</h3><p>首先看最简单的NetCat Source。</p>
+</code></pre><h2 id="Flume内置的Source例子"><a href="#Flume内置的Source例子" class="headerlink" title="Flume内置的Source例子"></a>Flume内置的Source例子</h2><h3 id="NetCat-Source"><a href="#NetCat-Source" class="headerlink" title="NetCat Source"></a>NetCat Source</h3><p>首先看最简单的NetCat Source。</p>
 <p>NetCat Source配置如下：</p>
-<pre><code>a1<span class="class">.sources</span><span class="class">.r1</span><span class="class">.type</span> = netcat
-a1<span class="class">.sources</span><span class="class">.r1</span><span class="class">.bind</span> = localhost
-a1<span class="class">.sources</span><span class="class">.r1</span><span class="class">.port</span> = <span class="number">44444</span>
+<pre><code>a1.sources.r1.type = netcat
+a1.sources.r1.bind = localhost
+a1.sources.r1.port = 44444
 </code></pre><p>NetCat Source对应的Source类是NetcatSource，定义如下：</p>
-<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">NetcatSource</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">AbstractSource</span> <span class="title">implements</span> <span class="title">Configurable</span>,
-</span>        <span class="type">EventDrivenSource</span>
+<pre><code>public class NetcatSource extends AbstractSource implements Configurable,
+        EventDrivenSource
 </code></pre><p>EventDrivenSource接口表示这个Source不需要外部驱动来收集event，而是自身会实现。这个接口只是一个标识，没有任何方法。</p>
 <p>Configurable接口提供了一个public void configure(Context context);方法，会使用以下Context进行一些数据的配置。</p>
 <p>NetcatSource覆盖了AbstractSource的start和stop方法，也实现了Configurable中的configure方法。</p>
@@ -456,33 +456,33 @@ a1<span class="class">.sources</span><span class="class">.r1</span><span class="
 <p>覆盖stop方法：</p>
 <p>关闭ServerSocketChannel。</p>
 <p>start方法内部会用线程池起一个新的进程来监听数据，其中有个processEvents方法，processEvents方法内部会读取Socket发来的数据，有段代码：</p>
-<pre><code>Event <span class="keyword">event</span> = EventBuilder.withBody(body);
-<span class="comment">// process event</span>
-ChannelException ex = <span class="keyword">null</span>;
-<span class="keyword">try</span> {
-  source.getChannelProcessor().processEvent(<span class="keyword">event</span>);
-} <span class="keyword">catch</span> (ChannelException chEx) {
+<pre><code>Event event = EventBuilder.withBody(body);
+// process event
+ChannelException ex = null;
+try {
+  source.getChannelProcessor().processEvent(event);
+} catch (ChannelException chEx) {
   ex = chEx;
 }
 </code></pre><p>这段代码就会处理socket读取的数据并构造成一个Event，然后放到ChannelProcessor里，这个ChannelProcessor是在AbstractSource中定义的。</p>
-<h3 id="Kafka_Source">Kafka Source</h3><p>Kafka Source也是Flume内置的一个Source之一，配置如下：</p>
-<pre><code>tier1<span class="class">.sources</span><span class="class">.source1</span><span class="class">.type</span> = org<span class="class">.apache</span><span class="class">.flume</span><span class="class">.source</span><span class="class">.kafka</span><span class="class">.KafkaSource</span>
-tier1<span class="class">.sources</span><span class="class">.source1</span><span class="class">.channels</span> = channel1
-tier1<span class="class">.sources</span><span class="class">.source1</span><span class="class">.zookeeperConnect</span> = localhost:<span class="number">2181</span>
-tier1<span class="class">.sources</span><span class="class">.source1</span><span class="class">.topic</span> = test1
-tier1<span class="class">.sources</span><span class="class">.source1</span><span class="class">.groupId</span> = flume
-tier1<span class="class">.sources</span><span class="class">.source1</span><span class="class">.kafka</span><span class="class">.consumer</span><span class="class">.timeout</span><span class="class">.ms</span> = <span class="number">100</span>
+<h3 id="Kafka-Source"><a href="#Kafka-Source" class="headerlink" title="Kafka Source"></a>Kafka Source</h3><p>Kafka Source也是Flume内置的一个Source之一，配置如下：</p>
+<pre><code>tier1.sources.source1.type = org.apache.flume.source.kafka.KafkaSource
+tier1.sources.source1.channels = channel1
+tier1.sources.source1.zookeeperConnect = localhost:2181
+tier1.sources.source1.topic = test1
+tier1.sources.source1.groupId = flume
+tier1.sources.source1.kafka.consumer.timeout.ms = 100
 </code></pre><p>对应的Source类是KafkaSource：</p>
-<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">KafkaSource</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">AbstractSource</span>
-</span>    implements <span class="type">Configurable</span>, <span class="type">PollableSource</span>
+<pre><code>public class KafkaSource extends AbstractSource
+    implements Configurable, PollableSource
 </code></pre><p>PollableSource接口表示Source需要自己去查询数据(poll)。</p>
-<pre><code>public interface <span class="constant">PollableSource</span> extends <span class="constant">Source</span> {
+<pre><code>public interface PollableSource extends Source {
 
-  <span class="regexp">//</span> process方法的返回值是个<span class="constant">Status</span>，有<span class="number">2</span>个状态，分别是<span class="constant">READY</span>和<span class="constant">BACKOFF</span>
-  public <span class="constant">Status</span> process() throws <span class="constant">EventDeliveryException</span>;
+  // process方法的返回值是个Status，有2个状态，分别是READY和BACKOFF
+  public Status process() throws EventDeliveryException;
 
-  public static <span class="class"><span class="keyword">enum</span> <span class="title">Status</span> {</span>
-    <span class="constant">READY</span>, <span class="constant">BACKOFF</span>
+  public static enum Status {
+    READY, BACKOFF
   }
 }
 </code></pre><p>KafkaSource的configure方法同样是读取配置文件信息。KafkaSource有几个特殊的配置，zookeeperConnect，groupId，topic都是kafka本身需要的配置。batchSize和batchDurationMillis是批处理的配置。batchSize表示批次数，每batchSize个event需要写入到Channel中，默认值是1000。batchDurationMillis是处理Kafka对i读取数据的时间，默认是1000毫秒，比如批次个数没有到1000，但是batchDurationMillis到了的话还是会丢到channel里。</p>
@@ -490,51 +490,51 @@ tier1<span class="class">.sources</span><span class="class">.source1</span><span
 <p>stop方法关闭Kafka的ConsumerConnector，同理stop也会调用父类的stop方法。</p>
 <p>process方法是PollableSource接口的方法，KafkaSource需要我们自己去查询数据。</p>
 <p>process部分源码如下：</p>
-<pre><code><span class="keyword">long</span> batchStartTime = System.currentTimeMillis();
-<span class="keyword">long</span> batchEndTime = System.currentTimeMillis() + timeUpperLimit;
-<span class="keyword">try</span> {
-  <span class="built_in">boolean</span> iterStatus = <span class="keyword">false</span>;
-  <span class="comment">// 批次个数和处理时间全部符合才会进行处理</span>
-  <span class="keyword">while</span> (eventList.<span class="built_in">size</span>() &lt; batchUpperLimit &amp;&amp;
+<pre><code>long batchStartTime = System.currentTimeMillis();
+long batchEndTime = System.currentTimeMillis() + timeUpperLimit;
+try {
+  boolean iterStatus = false;
+  // 批次个数和处理时间全部符合才会进行处理
+  while (eventList.size() &lt; batchUpperLimit &amp;&amp;
           System.currentTimeMillis() &lt; batchEndTime) {
     iterStatus = hasNext();
-    <span class="keyword">if</span> (iterStatus) {
-      <span class="comment">// kafka队列存在数据的话，提取数据，构造Event，放到eventList里，eventList是KafkaSource里的一个属性</span>
-      MessageAndMetadata&lt;<span class="built_in">byte</span>[], <span class="built_in">byte</span>[]&gt; messageAndMetadata = it.next();
+    if (iterStatus) {
+      // kafka队列存在数据的话，提取数据，构造Event，放到eventList里，eventList是KafkaSource里的一个属性
+      MessageAndMetadata&lt;byte[], byte[]&gt; messageAndMetadata = it.next();
       kafkaMessage = messageAndMetadata.message();
-      kafkaKey = messageAndMetadata.<span class="variable">key</span>();
+      kafkaKey = messageAndMetadata.key();
 
-      headers = <span class="keyword">new</span> <span class="keyword">HashMap</span>&lt;<span class="keyword">String</span>, <span class="keyword">String</span>&gt;();
+      headers = new HashMap&lt;String, String&gt;();
       headers.put(KafkaSourceConstants.TIMESTAMP,
-              <span class="keyword">String</span>.valueOf(System.currentTimeMillis()));
+              String.valueOf(System.currentTimeMillis()));
       headers.put(KafkaSourceConstants.TOPIC, topic);
-      headers.put(KafkaSourceConstants.KEY, <span class="keyword">new</span> <span class="keyword">String</span>(kafkaKey));
+      headers.put(KafkaSourceConstants.KEY, new String(kafkaKey));
 
       event = EventBuilder.withBody(kafkaMessage, headers);
-      eventList.<span class="built_in">add</span>(event);
+      eventList.add(event);
     }
 
   }
-  <span class="keyword">if</span> (eventList.<span class="built_in">size</span>() &gt; <span class="number">0</span>) {
-    <span class="comment">// eventList列表里有数据的话，将数据丢到channel里，清空eventList。代码执行到这里说明要么读取了1000条数据，要么处理时间到了</span>
+  if (eventList.size() &gt; 0) {
+    // eventList列表里有数据的话，将数据丢到channel里，清空eventList。代码执行到这里说明要么读取了1000条数据，要么处理时间到了
     getChannelProcessor().processEventBatch(eventList);
-    eventList.<span class="built_in">clear</span>();
+    eventList.clear();
 
-    <span class="keyword">if</span> (!kafkaAutoCommitEnabled) {
+    if (!kafkaAutoCommitEnabled) {
       consumer.commitOffsets();
     }
   }
-  <span class="comment">// kafka队列没有数据的话返回BACKOFF状态</span>
-  <span class="keyword">if</span> (!iterStatus) {
-    <span class="keyword">return</span> Status.BACKOFF;
+  // kafka队列没有数据的话返回BACKOFF状态
+  if (!iterStatus) {
+    return Status.BACKOFF;
   }
-  <span class="comment">// kafka队列还有数据的话返回READY状态</span>
-  <span class="keyword">return</span> Status.READY;
-} <span class="keyword">catch</span> (Exception e) {
-  <span class="built_in">log</span>.error(<span class="string">"KafkaSource EXCEPTION, {}"</span>, e);
-  <span class="keyword">return</span> Status.BACKOFF;
+  // kafka队列还有数据的话返回READY状态
+  return Status.READY;
+} catch (Exception e) {
+  log.error(&quot;KafkaSource EXCEPTION, {}&quot;, e);
+  return Status.BACKOFF;
 }
-</code></pre><h3 id="编写自定义的Source">编写自定义的Source</h3><p>Flume尽管已经提供了不少Source，但始终无法满足所有的需求。 比如数据库中的数据想使用Flume写入了其他渠道。</p>
+</code></pre><h3 id="编写自定义的Source"><a href="#编写自定义的Source" class="headerlink" title="编写自定义的Source"></a>编写自定义的Source</h3><p>Flume尽管已经提供了不少Source，但始终无法满足所有的需求。 比如数据库中的数据想使用Flume写入了其他渠道。</p>
 <p>编写SQLSource只需要继承AbstractSource，且实现Configurable和PollableSource接口，SQLSource跟KafkaSource一样都需要自身去查询数据，所以都得实现PollableSource接口。</p>
 <p>SQLSource在github上已经有人实现过了: <a href="https://github.com/keedio/flume-ng-sql-source" target="_blank" rel="external">https://github.com/keedio/flume-ng-sql-source</a></p>
 
@@ -754,7 +754,7 @@ tier1<span class="class">.sources</span><span class="class">.source1</span><span
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Source接口"><span class="nav-number">1.</span> <span class="nav-text">Source接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Flume内置的Source例子"><span class="nav-number">2.</span> <span class="nav-text">Flume内置的Source例子</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#NetCat_Source"><span class="nav-number">2.1.</span> <span class="nav-text">NetCat Source</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kafka_Source"><span class="nav-number">2.2.</span> <span class="nav-text">Kafka Source</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编写自定义的Source"><span class="nav-number">2.3.</span> <span class="nav-text">编写自定义的Source</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Source接口"><span class="nav-number">1.</span> <span class="nav-text">Source接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Flume内置的Source例子"><span class="nav-number">2.</span> <span class="nav-text">Flume内置的Source例子</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#NetCat-Source"><span class="nav-number">2.1.</span> <span class="nav-text">NetCat Source</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kafka-Source"><span class="nav-number">2.2.</span> <span class="nav-text">Kafka Source</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编写自定义的Source"><span class="nav-number">2.3.</span> <span class="nav-text">编写自定义的Source</span></a></li></ol></li></ol></div>
             
           </div>
         </section>

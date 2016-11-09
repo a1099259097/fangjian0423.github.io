@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="elasticsearch,kibana,logstash," />
+  <meta name="keywords" content="elasticsearch,logstash,kibana," />
 
 
 
@@ -96,6 +96,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="logstash搭建日志追踪系统">
 <meta name="twitter:description" content="logstash是一个用来管理事件和日志的工具，它的作用是收集日志，解析日志，存储日志为以后使用 ...">
+<meta name="twitter:image" content="http://format-blog-image.qiniudn.com/logstash1.png">
 
 
 
@@ -368,29 +369,29 @@
       
 
       
-        <h2 id="前言">前言</h2><p>开始博客之前，首先看个问题：<br>作为一只程序猿，写的代码的过程需要加入一些日志信息，这些日志信息包括debug调试信息，异常记录日志等。  Java猿一般都是使用log4j，logback等第三方库记录日志。 那么问题来了，挖掘机到底哪家强？……  扯个淡，那么问题来了，如果我们想看日志信息，怎么办， ssh到服务器上，vim然后查询。每次都这样，是不是很蛋疼 = =； 还有另外一个问题，如果我们想分析、追踪日志，或者找关键字(分词后的关键字)，这样简简单单看日志文件是不可能的。 因此，我们就需要开源力量了！</p>
-<h2 id="logstash介绍">logstash介绍</h2><p>摘自官网上的一句话：<a href="http://logstash.net/" target="_blank" rel="external">logstash</a> is a tool for managing events and logs. You can use it to collect logs, parse them, and store them for later use (like, for searching)。logstash是一个用来管理事件和日志的工具，它的作用是收集日志，解析日志，存储日志为以后使用。</p>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>开始博客之前，首先看个问题：<br>作为一只程序猿，写的代码的过程需要加入一些日志信息，这些日志信息包括debug调试信息，异常记录日志等。  Java猿一般都是使用log4j，logback等第三方库记录日志。 那么问题来了，挖掘机到底哪家强？……  扯个淡，那么问题来了，如果我们想看日志信息，怎么办， ssh到服务器上，vim然后查询。每次都这样，是不是很蛋疼 = =； 还有另外一个问题，如果我们想分析、追踪日志，或者找关键字(分词后的关键字)，这样简简单单看日志文件是不可能的。 因此，我们就需要开源力量了！</p>
+<h2 id="logstash介绍"><a href="#logstash介绍" class="headerlink" title="logstash介绍"></a>logstash介绍</h2><p>摘自官网上的一句话：<a href="http://logstash.net/" target="_blank" rel="external">logstash</a> is a tool for managing events and logs. You can use it to collect logs, parse them, and store them for later use (like, for searching)。logstash是一个用来管理事件和日志的工具，它的作用是收集日志，解析日志，存储日志为以后使用。</p>
 <p>官网上有<a href="http://logstash.net/docs/1.4.2/tutorials/getting-started-with-logstash" target="_blank" rel="external">tutorials</a>。 本文也就是对tutorials做一个总结。</p>
-<h2 id="logstash日志追踪系统搭建过程">logstash日志追踪系统搭建过程</h2><p>要搭建logstash日志追踪系统需要以下几个环境：</p>
+<h2 id="logstash日志追踪系统搭建过程"><a href="#logstash日志追踪系统搭建过程" class="headerlink" title="logstash日志追踪系统搭建过程"></a>logstash日志追踪系统搭建过程</h2><p>要搭建logstash日志追踪系统需要以下几个环境：</p>
 <ol>
 <li>JDK</li>
 <li>logstash</li>
 <li><a href="http://www.elasticsearch.org" target="_blank" rel="external">elasticsearch</a></li>
 </ol>
 <p>没有JDK的小伙伴首先先去<a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html?ssSourceSiteId=ocomen" target="_blank" rel="external">下载</a>吧。 logstash和elasticsearch都先下载过来吧~。</p>
-<h3 id="logstash环境搭建">logstash环境搭建</h3><p>首先先进入logstash的bin目录建立一个logstash.conf配置文件：</p>
+<h3 id="logstash环境搭建"><a href="#logstash环境搭建" class="headerlink" title="logstash环境搭建"></a>logstash环境搭建</h3><p>首先先进入logstash的bin目录建立一个logstash.conf配置文件：</p>
 <pre><code>input { stdin { } }
 output {
   stdout { codec =&gt; rubydebug }
 }
 </code></pre><p>然后执行：</p>
-<pre><code>./logstash -f logstash<span class="class">.conf</span>     
+<pre><code>./logstash -f logstash.conf     
 </code></pre><p>这时控制台等待输入内容，我们输入hello world，这个时候控制台会打印出：</p>
 <pre><code>{
-   <span class="string">"message"</span> =&gt; <span class="string">"hello world"</span>,
-   <span class="string">"@version"</span> =&gt; <span class="string">"1"</span>,
-   <span class="string">"@timestamp"</span> =&gt; <span class="string">"2014-11-01T12:38:17.217Z"</span>,
-      <span class="string">"host"</span> =&gt; <span class="string">"format-2.local"</span>
+   &quot;message&quot; =&gt; &quot;hello world&quot;,
+   &quot;@version&quot; =&gt; &quot;1&quot;,
+   &quot;@timestamp&quot; =&gt; &quot;2014-11-01T12:38:17.217Z&quot;,
+      &quot;host&quot; =&gt; &quot;format-2.local&quot;
 }
 </code></pre><p>这个说明我们的logstash本地配置成功了。</p>
 <p><strong>配置文件有2个内容组成，input和output，其实还有2个配置：filter和codec。</strong><br>这就是logstash内部的一个叫做<strong>事件处理管道(pipeline)</strong>的核心概念的3大组成部分：<br>input：<br>生成事件(logstash中的事件是由队列实现的，这个队列由ruby的SizedQueue实现)的数据来源，常见的有file(文件)、syslog(系统日志)、redis(缓存系统)、<a href="https://github.com/elasticsearch/logstash-forwarder" target="_blank" rel="external">lumberjack(lumberjack协议)</a>。</p>
@@ -398,74 +399,74 @@ output {
 <p>output：<br>展现结果，常见的有elasticsearch(搜索引擎)、file、graphite、statsd</p>
 <p>codec：<br>可以作为input或output的一部分，主要用来处理日志过程中产生的消息，常见的codec有json、rubydebug</p>
 <p>现在我们回过头看来我们的logstash.conf配置文件，只配置了input和output，其中input由一个stdin组成，这个stdin没有任何参数，output由stdout组成，这个stdout由codec参数，且使用了rebydebug，因此控制台打印出的信息是reby的对象格式。  我们把codec改成json的话，将会打印出以下内容：</p>
-<pre><code>{"<span class="attribute">message</span>":<span class="value"><span class="string">"hello world"</span></span>,"<span class="attribute">@version</span>":<span class="value"><span class="string">"1"</span></span>,"<span class="attribute">@timestamp</span>":<span class="value"><span class="string">"2014-11-01T13:16:38.221Z"</span></span>,"<span class="attribute">host</span>":<span class="value"><span class="string">"format-2.local"</span></span>}
-</code></pre><h3 id="elasticsearch环境搭建">elasticsearch环境搭建</h3><p>elasticsearch的环境搭建比较简单，download elasticsearch之后进入bin目录，执行：</p>
+<pre><code>{&quot;message&quot;:&quot;hello world&quot;,&quot;@version&quot;:&quot;1&quot;,&quot;@timestamp&quot;:&quot;2014-11-01T13:16:38.221Z&quot;,&quot;host&quot;:&quot;format-2.local&quot;}
+</code></pre><h3 id="elasticsearch环境搭建"><a href="#elasticsearch环境搭建" class="headerlink" title="elasticsearch环境搭建"></a>elasticsearch环境搭建</h3><p>elasticsearch的环境搭建比较简单，download elasticsearch之后进入bin目录，执行：</p>
 <pre><code>./elasticsearch
 </code></pre><p>之后打开浏览器进入<a href="http://localhost:9200/，发现有一串json文本就表示elasticsearch服务器已启。" target="_blank" rel="external">http://localhost:9200/，发现有一串json文本就表示elasticsearch服务器已启。</a> 但是貌似没有发现什么界面，是不是很不友好= =。</p>
 <p>elasticsearch支持插件功能，我们使用<a href="http://www.elasticsearch.org/overview/kibana/" target="_blank" rel="external">kibana插件</a>，下载之后修改config.js文件，把elasticsearch对应的地址改成elasticsearch服务器地址，然后把kibana解压出来的所有文件放到$elasticsearch<em>home/plugins</em>/kibana/_site/目录中。<br>之后打开<a href="http://localhost:9200/_plugin/kibana" target="_blank" rel="external">http://localhost:9200/_plugin/kibana</a></p>
 <p><img src="http://format-blog-image.qiniudn.com/logstash1.png" alt=""><br><img src="http://format-blog-image.qiniudn.com/logstash2.png" alt=""></p>
-<h3 id="logstash整合elasticsearch">logstash整合elasticsearch</h3><p>配置完logstash和elasticsearch之后，整合一下这两个框架。<br>logstash配置文件(input、output可以配置多个)：</p>
-<pre><code><span class="name">input</span> { stdin { } }
-<span class="name">output</span> {
+<h3 id="logstash整合elasticsearch"><a href="#logstash整合elasticsearch" class="headerlink" title="logstash整合elasticsearch"></a>logstash整合elasticsearch</h3><p>配置完logstash和elasticsearch之后，整合一下这两个框架。<br>logstash配置文件(input、output可以配置多个)：</p>
+<pre><code>input { stdin { } }
+output {
   stdout { codec =&gt; json }
-  <span class="name">elasticsearch</span> { host =&gt; localhost }
+  elasticsearch { host =&gt; localhost }
 }
 </code></pre><p>然后重新启动logstash，控制台输入hello elasticsearch，刷新kibana页面：<br><img src="http://format-blog-image.qiniudn.com/logstash3.png" alt=""></p>
 <p>logstash日志追踪系统搭建完毕。</p>
-<h2 id="logstash的实际应用">logstash的实际应用</h2><p>以log4j为例。</p>
+<h2 id="logstash的实际应用"><a href="#logstash的实际应用" class="headerlink" title="logstash的实际应用"></a>logstash的实际应用</h2><p>以log4j为例。</p>
 <p>logstash配置：</p>
-<pre><code><span class="name">input</span> {
+<pre><code>input {
   stdin { }
-  <span class="name">log4j</span> {
-     mode =&gt; <span class="string">"server"</span>
-     host  =&gt; <span class="string">"127.0.0.1"</span>
-     port =&gt; <span class="number">56789</span>
-     type =&gt; <span class="string">"log4j"</span>
+  log4j {
+     mode =&gt; &quot;server&quot;
+     host  =&gt; &quot;127.0.0.1&quot;
+     port =&gt; 56789
+     type =&gt; &quot;log4j&quot;
   }
 }
-<span class="name">output</span> {
+output {
   stdout { codec =&gt; rubydebug }
-  <span class="name">elasticsearch</span> { host =&gt; localhost }
+  elasticsearch { host =&gt; localhost }
 }
 </code></pre><p>测试类：</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LogTest</span> </span>{
+<pre><code>public class LogTest {
 
-    <span class="keyword">private</span> Logger logger = Logger.getLogger(DebugLogger.class);
+    private Logger logger = Logger.getLogger(DebugLogger.class);
 
-    <span class="annotation">@Before</span>
-    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">setUp</span><span class="params">()</span> </span>{
-        PropertyConfigurator.configure(LogTest.class.getClassLoader().getResourceAsStream(<span class="string">"log4j.properties"</span>));
+    @Before
+    public void setUp() {
+        PropertyConfigurator.configure(LogTest.class.getClassLoader().getResourceAsStream(&quot;log4j.properties&quot;));
     }
 
-    <span class="annotation">@Test</span>
-    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">testLog</span><span class="params">()</span> </span>{
-        logger.debug(<span class="string">"hello logstash, this is a message from log4j"</span>);
+    @Test
+    public void testLog() {
+        logger.debug(&quot;hello logstash, this is a message from log4j&quot;);
     }
 
-    <span class="annotation">@Test</span>
-    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">testException</span><span class="params">()</span> </span>{
-        logger.<span class="keyword">error</span>(<span class="string">"error"</span>, <span class="keyword">new</span> TestException(<span class="string">"sorry, error"</span>));
+    @Test
+    public void testException() {
+        logger.error(&quot;error&quot;, new TestException(&quot;sorry, error&quot;));
     }
 </code></pre><p>}</p>
 <p>log4j配置：</p>
 <pre><code>log4j.appender.stdout=org.apache.log4j.ConsoleAppender
-log4j.appender.stdout.<span class="keyword">layout</span>=org.apache.log4j.PatternLayout
-log4j.appender.stdout.<span class="keyword">layout</span>.ConversionPattern=<span class="variable">%d</span> <span class="variable">%p</span> <span class="variable">%t</span> <span class="variable">%c</span> : <span class="variable">%m</span><span class="variable">%n</span>
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d %p %t %c : %m%n
 
-log4j.appender.<span class="keyword">file</span>=org.apache.log4j.RollingFileAppender
-log4j.appender.<span class="keyword">file</span>.<span class="keyword">file</span>=/Users/fangjian/Develop/log_file/test_log.<span class="keyword">log</span>
-log4j.appender.<span class="keyword">file</span>.maxFileSize=<span class="number">1024</span>
-log4j.appender.<span class="keyword">file</span>.<span class="keyword">layout</span>=org.apache.log4j.PatternLayout
-log4j.appender.<span class="keyword">file</span>.<span class="keyword">layout</span>.ConversionPattern=<span class="variable">%d</span> <span class="variable">%p</span> <span class="variable">%t</span> <span class="variable">%c</span> : <span class="variable">%m</span><span class="variable">%n</span>
+log4j.appender.file=org.apache.log4j.RollingFileAppender
+log4j.appender.file.file=/Users/fangjian/Develop/log_file/test_log.log
+log4j.appender.file.maxFileSize=1024
+log4j.appender.file.layout=org.apache.log4j.PatternLayout
+log4j.appender.file.layout.ConversionPattern=%d %p %t %c : %m%n
 
 # logstash配置
 log4j.appender.logstash=org.apache.log4j.net.SocketAppender
-log4j.appender.logstash.port=<span class="number">56789</span>
-log4j.appender.logstash.remoteHost=<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>
+log4j.appender.logstash.port=56789
+log4j.appender.logstash.remoteHost=127.0.0.1
 
-log4j.rootLogger=debug,stdout,<span class="keyword">file</span>,logstash
+log4j.rootLogger=debug,stdout,file,logstash
 </code></pre><p>2个test方法跑完之后，刷新kibana界面：<br><img src="http://format-blog-image.qiniudn.com/logstash4.png" alt=""></p>
-<h2 id="总结">总结</h2><p>本文仅仅只是对logstash的搭建做一个总结，包括logstash内部的结构，还有一些配置语言的介绍都没有非常详细的解释，如果读者有兴趣，可以自行查阅相关资料。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文仅仅只是对logstash的搭建做一个总结，包括logstash内部的结构，还有一些配置语言的介绍都没有非常详细的解释，如果读者有兴趣，可以自行查阅相关资料。</p>
 <p>参考资料：<br><a href="http://logstash.net/" target="_blank" rel="external">http://logstash.net/</a><br><a href="http://blog.yeradis.com/2013/10/logstash-and-apache-log4j-or-how-to.html" target="_blank" rel="external">http://blog.yeradis.com/2013/10/logstash-and-apache-log4j-or-how-to.html</a><br><a href="http://www.cnblogs.com/buzzlight/p/logstash_elasticsearch_kibana_log.html" target="_blank" rel="external">http://www.cnblogs.com/buzzlight/p/logstash_elasticsearch_kibana_log.html</a></p>
 
       
@@ -489,9 +490,9 @@ log4j.rootLogger=debug,stdout,<span class="keyword">file</span>,logstash
           
             <a href="/tags/elasticsearch/" rel="tag">#elasticsearch</a>
           
-            <a href="/tags/kibana/" rel="tag">#kibana</a>
-          
             <a href="/tags/logstash/" rel="tag">#logstash</a>
+          
+            <a href="/tags/kibana/" rel="tag">#kibana</a>
           
         </div>
       

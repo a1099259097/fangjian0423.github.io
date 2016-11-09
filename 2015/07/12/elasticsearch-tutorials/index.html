@@ -368,127 +368,127 @@
 <p><a href="https://www.elastic.co/products/elasticsearch" target="_blank" rel="external">Elasticsearch</a>是一个基于Lucene的搜索服务器。它提供了一个分布式多用户能力的全文搜索引擎，使用RESTful web暴露接口。</p>
 <p>它有许多特性，比如以下几个属性：</p>
 <p>1.实时数据<br>2.实时分析<br>3.分布式设计<br>4.高可用性<br>5.全文搜索<br>6.面向文档</p>
-<h2 id="索引">索引</h2><p>索引Index是es中的一个存储数据的地方。相当于关系型数据库中的数据库。</p>
+<h2 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h2><p>索引Index是es中的一个存储数据的地方。相当于关系型数据库中的数据库。</p>
 <p>创建一个员工索引的例子如下，创建索引还有很多选项，就不一一说明了：</p>
-<pre><code>POST <span class="variable">$HOST</span>/employee
+<pre><code>POST $HOST/employee
 
 {
-  <span class="string">"mappings"</span>: {
-    <span class="string">"employee"</span>: {
-      <span class="string">"_ttl"</span>: {
-        <span class="string">"enabled"</span>: true,
-        <span class="string">"default"</span>: <span class="string">"5d"</span>
+  &quot;mappings&quot;: {
+    &quot;employee&quot;: {
+      &quot;_ttl&quot;: {
+        &quot;enabled&quot;: true,
+        &quot;default&quot;: &quot;5d&quot;
       },
-      <span class="string">"_timestamp"</span>: {
-        <span class="string">"enabled"</span>: true,
-        <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span>
+      &quot;_timestamp&quot;: {
+        &quot;enabled&quot;: true,
+        &quot;format&quot;: &quot;yyyy-MM-dd HH:mm:ss&quot;
       },
-      <span class="string">"properties"</span>: {
-        <span class="string">"name"</span>: {
-          <span class="string">"type"</span>: <span class="string">"string"</span>,
-          <span class="string">"store"</span>: <span class="string">"no"</span>,
-          <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
-          <span class="string">"index_options"</span>: <span class="string">"docs"</span>
+      &quot;properties&quot;: {
+        &quot;name&quot;: {
+          &quot;type&quot;: &quot;string&quot;,
+          &quot;store&quot;: &quot;no&quot;,
+          &quot;index&quot;: &quot;not_analyzed&quot;,
+          &quot;index_options&quot;: &quot;docs&quot;
         },
-        <span class="string">"birth_date"</span>: {
-          <span class="string">"type"</span>: <span class="string">"date"</span>,
-          <span class="string">"store"</span>: <span class="string">"no"</span>,
-          <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
-          <span class="string">"index_options"</span>: <span class="string">"docs"</span>,
-          <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span>
+        &quot;birth_date&quot;: {
+          &quot;type&quot;: &quot;date&quot;,
+          &quot;store&quot;: &quot;no&quot;,
+          &quot;index&quot;: &quot;not_analyzed&quot;,
+          &quot;index_options&quot;: &quot;docs&quot;,
+          &quot;format&quot;: &quot;yyyy-MM-dd HH:mm:ss&quot;
         },
-        <span class="string">"age"</span>: {
-          <span class="string">"type"</span>: <span class="string">"date"</span>,
-          <span class="string">"store"</span>: <span class="string">"no"</span>,
-          <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
-          <span class="string">"index_options"</span>: <span class="string">"docs"</span>,
-          <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span>
+        &quot;age&quot;: {
+          &quot;type&quot;: &quot;date&quot;,
+          &quot;store&quot;: &quot;no&quot;,
+          &quot;index&quot;: &quot;not_analyzed&quot;,
+          &quot;index_options&quot;: &quot;docs&quot;,
+          &quot;format&quot;: &quot;yyyy-MM-dd HH:mm:ss&quot;
         }
       }
     }
   }
 }
 </code></pre><p>索引创建完之后还可以修改(添加一个hobby属性)，需要注意的是，修改mapping不允许修改属性的类型：</p>
-<pre><code>PUT <span class="variable">$HOST</span>/employee/employee/_mapping
+<pre><code>PUT $HOST/employee/employee/_mapping
 
 {
-<span class="string">"employee"</span>: {
-    <span class="string">"properties"</span>: {
-        <span class="string">"name"</span>: {
-            <span class="string">"type"</span>: <span class="string">"string"</span>,
-            <span class="string">"store"</span>: <span class="string">"no"</span>,
-            <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
-            <span class="string">"index_options"</span>: <span class="string">"docs"</span>
+&quot;employee&quot;: {
+    &quot;properties&quot;: {
+        &quot;name&quot;: {
+            &quot;type&quot;: &quot;string&quot;,
+            &quot;store&quot;: &quot;no&quot;,
+            &quot;index&quot;: &quot;not_analyzed&quot;,
+            &quot;index_options&quot;: &quot;docs&quot;
         },
-        <span class="string">"birth_date"</span>: {
-            <span class="string">"type"</span>: <span class="string">"date"</span>,
-            <span class="string">"store"</span>: <span class="string">"no"</span>,
-            <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
-            <span class="string">"index_options"</span>: <span class="string">"docs"</span>,
-            <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span>
+        &quot;birth_date&quot;: {
+            &quot;type&quot;: &quot;date&quot;,
+            &quot;store&quot;: &quot;no&quot;,
+            &quot;index&quot;: &quot;not_analyzed&quot;,
+            &quot;index_options&quot;: &quot;docs&quot;,
+            &quot;format&quot;: &quot;yyyy-MM-dd HH:mm:ss&quot;
         },
-        <span class="string">"age"</span>: {
-            <span class="string">"type"</span>: <span class="string">"date"</span>,
-            <span class="string">"store"</span>: <span class="string">"no"</span>,
-            <span class="string">"index"</span>: <span class="string">"not_analyzed"</span>,
-            <span class="string">"index_options"</span>: <span class="string">"docs"</span>,
-            <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span>
+        &quot;age&quot;: {
+            &quot;type&quot;: &quot;date&quot;,
+            &quot;store&quot;: &quot;no&quot;,
+            &quot;index&quot;: &quot;not_analyzed&quot;,
+            &quot;index_options&quot;: &quot;docs&quot;,
+            &quot;format&quot;: &quot;yyyy-MM-dd HH:mm:ss&quot;
         },
-        <span class="string">"hobby"</span> : {
-            <span class="string">"type"</span> : <span class="string">"string"</span>,
-            <span class="string">"index_options"</span>: <span class="string">"docs"</span>
+        &quot;hobby&quot; : {
+            &quot;type&quot; : &quot;string&quot;,
+            &quot;index_options&quot;: &quot;docs&quot;
         }
     }
 }
 }
-</code></pre><h2 id="文档">文档</h2><p>es存储的数据叫做文档，文档存储在索引中。 每个文档都有4个元数据，分别是_id, _type，_index和_version。</p>
+</code></pre><h2 id="文档"><a href="#文档" class="headerlink" title="文档"></a>文档</h2><p>es存储的数据叫做文档，文档存储在索引中。 每个文档都有4个元数据，分别是_id, _type，_index和_version。</p>
 <p>_id代表文档的唯一标识符。</p>
 <p>_type表示文档代表的对象种类。</p>
 <p>_index表示文档存储在哪个索引。</p>
 <p>_version表示文档的版本，文档被修改过一次，_version就会+1。</p>
 <p>在员工索引中创建文档：</p>
-<pre><code>POST <span class="variable">$HOST</span>/employee/employee
+<pre><code>POST $HOST/employee/employee
 
 {
-    <span class="string">"name"</span>: <span class="string">"format"</span>,
-    <span class="string">"age"</span>: <span class="number">100</span>,
-    <span class="string">"birth_date"</span>: <span class="string">"1900-01-01 00:00:00"</span>
+    &quot;name&quot;: &quot;format&quot;,
+    &quot;age&quot;: 100,
+    &quot;birth_date&quot;: &quot;1900-01-01 00:00:00&quot;
 }
 </code></pre><p>返回：</p>
 <pre><code>{
-    "<span class="attribute">_index</span>": <span class="value"><span class="string">"employee"</span></span>,
-    "<span class="attribute">_type</span>": <span class="value"><span class="string">"employee"</span></span>,
-    "<span class="attribute">_id</span>": <span class="value"><span class="string">"AU5-epuwslU6QVfs_UoX"</span></span>,
-    "<span class="attribute">_version</span>": <span class="value"><span class="number">1</span></span>,
-    "<span class="attribute">created</span>": <span class="value"><span class="literal">true</span>
-</span>}
+    &quot;_index&quot;: &quot;employee&quot;,
+    &quot;_type&quot;: &quot;employee&quot;,
+    &quot;_id&quot;: &quot;AU5-epuwslU6QVfs_UoX&quot;,
+    &quot;_version&quot;: 1,
+    &quot;created&quot;: true
+}
 </code></pre><p>修改文档：</p>
-<pre><code>POST <span class="variable">$HOST</span>/employee/employee/AU5-epuwslU6QVfs_UoX
+<pre><code>POST $HOST/employee/employee/AU5-epuwslU6QVfs_UoX
 
 {
-    <span class="string">"name"</span>: <span class="string">"format"</span>,
-    <span class="string">"age"</span>: <span class="number">200</span>,
-    <span class="string">"birth_date"</span>: <span class="string">"1900-01-01 00:00:00"</span>
+    &quot;name&quot;: &quot;format&quot;,
+    &quot;age&quot;: 200,
+    &quot;birth_date&quot;: &quot;1900-01-01 00:00:00&quot;
 }
 </code></pre><p>返回：</p>
 <pre><code>{
-    "<span class="attribute">_index</span>": <span class="value"><span class="string">"employee"</span></span>,
-    "<span class="attribute">_type</span>": <span class="value"><span class="string">"employee"</span></span>,
-    "<span class="attribute">_id</span>": <span class="value"><span class="string">"AU5-epuwslU6QVfs_UoX"</span></span>,
-    "<span class="attribute">_version</span>": <span class="value"><span class="number">2</span></span>,
-    "<span class="attribute">created</span>": <span class="value"><span class="literal">false</span>
-</span>}
+    &quot;_index&quot;: &quot;employee&quot;,
+    &quot;_type&quot;: &quot;employee&quot;,
+    &quot;_id&quot;: &quot;AU5-epuwslU6QVfs_UoX&quot;,
+    &quot;_version&quot;: 2,
+    &quot;created&quot;: false
+}
 </code></pre><p>删除文档：</p>
-<pre><code>DELETE <span class="variable">$HOST</span>/employee/employee/AU5-epuwslU6QVfs_UoX
+<pre><code>DELETE $HOST/employee/employee/AU5-epuwslU6QVfs_UoX
 </code></pre><p>返回：</p>
 <pre><code>{
-    "<span class="attribute">found</span>": <span class="value"><span class="literal">true</span></span>,
-    "<span class="attribute">_index</span>": <span class="value"><span class="string">"employee"</span></span>,
-    "<span class="attribute">_type</span>": <span class="value"><span class="string">"employee"</span></span>,
-    "<span class="attribute">_id</span>": <span class="value"><span class="string">"AU5-epuwslU6QVfs_UoX"</span></span>,
-    "<span class="attribute">_version</span>": <span class="value"><span class="number">3</span>
-</span>}
-</code></pre><h2 id="总结">总结</h2><p>写了篇水文记录一下es，es还有很多很强大的功能，比如一些query，filter，aggregations等。官方文档上已经写的非常清楚了。这里就不讲了。  - -||</p>
+    &quot;found&quot;: true,
+    &quot;_index&quot;: &quot;employee&quot;,
+    &quot;_type&quot;: &quot;employee&quot;,
+    &quot;_id&quot;: &quot;AU5-epuwslU6QVfs_UoX&quot;,
+    &quot;_version&quot;: 3
+}
+</code></pre><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>写了篇水文记录一下es，es还有很多很强大的功能，比如一些query，filter，aggregations等。官方文档上已经写的非常清楚了。这里就不讲了。  - -||</p>
 
       
     </div>

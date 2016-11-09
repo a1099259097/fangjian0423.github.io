@@ -93,6 +93,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Scala集合相关知识">
 <meta name="twitter:description" content="Scala各个集合类都会有两种类型，分别是可变的(mutable)和不可变的(immutable)">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/scala_collection1.png">
 
 
 
@@ -367,99 +368,99 @@
       
         <p>Scala各个集合类都会有两种类型，分别是可变的(mutable)和不可变的(immutable)。</p>
 <p>比如列表集合List，不可变的类型是List，可变的类型为ListBuffer：</p>
-<pre><code><span class="comment">// 不可变集合，集合添加元素后会产生一个新的集合</span>
-val immutableList = scala<span class="class">.collection</span><span class="class">.immutable</span><span class="class">.List</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)
-<span class="function"><span class="title">immutableList</span><span class="params">(<span class="number">1</span>)</span></span> = <span class="number">3</span> <span class="comment">// =号底层会调用update方法，immutable.List没有这个update方法</span>
+<pre><code>// 不可变集合，集合添加元素后会产生一个新的集合
+val immutableList = scala.collection.immutable.List(1, 2, 3)
+immutableList(1) = 3 // =号底层会调用update方法，immutable.List没有这个update方法
 
-val mutableList = scala<span class="class">.collection</span><span class="class">.mutable</span><span class="class">.ListBuffer</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)
-<span class="function"><span class="title">mutableList</span><span class="params">(<span class="number">1</span>)</span></span> = <span class="number">3</span> <span class="comment">// ListBuffer(1, 3, 3), ListBuffer有update方法</span>
+val mutableList = scala.collection.mutable.ListBuffer(1, 2, 3)
+mutableList(1) = 3 // ListBuffer(1, 3, 3), ListBuffer有update方法
 </code></pre><p>Scala集合中3个主要的集合类的继承结构如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/scala_collection1.png" alt=""></p>
 <p>Traversable是所有集合类的父类，它会提供一些很基础有用的方法，如下：</p>
 <p>1.size: 返回集合元素的个数</p>
-<pre><code><span class="function"><span class="title">List</span><span class="params">(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>)</span></span><span class="class">.size</span> <span class="comment">// 3</span>
+<pre><code>List(1,2,3).size // 3
 </code></pre><p>2.++方法：合并两个集合</p>
-<pre><code>List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>) ++ List(<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>) <span class="comment">// List(1, 2, 3, 4, 5, 6)</span>
+<pre><code>List(1, 2, 3) ++ List(4, 5, 6) // List(1, 2, 3, 4, 5, 6)
 </code></pre><p>3.map方法：使用函数作用于集合中的各个元素，生成新的集合</p>
-<pre><code>List(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>).<span class="built_in">map</span> { _ + <span class="number">1</span> } <span class="comment">// List(2, 3, 4)</span>
+<pre><code>List(1,2,3).map { _ + 1 } // List(2, 3, 4)
 </code></pre><p>4.flatMap方法：跟map方法类似，只不过flatMap整合的是集合，会生成新的集合</p>
-<pre><code>List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>).flatMap { x =&gt; List(x + <span class="number">1</span>, x + <span class="number">2</span>) } List(<span class="number">2</span>, <span class="number">3</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">4</span>, <span class="number">5</span>)
+<pre><code>List(1, 2, 3).flatMap { x =&gt; List(x + 1, x + 2) } List(2, 3, 3, 4, 4, 5)
 </code></pre><p>5.filter方法：使用函数过滤出符合条件的元素，生成新的集合</p>
-<pre><code>List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>).filter { _ &lt; <span class="number">2</span> }  <span class="comment">// List(1)</span>
+<pre><code>List(1, 2, 3).filter { _ &lt; 2 }  // List(1)
 </code></pre><p>6.find方法：找出第一个符合条件的符合，并得到这个元素。返回值的类型是个Option</p>
-<pre><code>List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>).find { _ &lt; <span class="number">3</span> } <span class="comment">// Option[Int] = Some(1)</span>
-List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>).find { _ &gt; <span class="number">3</span> } <span class="comment">// Option[Int] = None</span>
+<pre><code>List(1, 2, 3).find { _ &lt; 3 } // Option[Int] = Some(1)
+List(1, 2, 3).find { _ &gt; 3 } // Option[Int] = None
 </code></pre><p>7./:方法，/:即foldLeft。foleLeft方法类似reduce方法，只不过多了一个初始值，reduce是从左边开始进行的</p>
-<pre><code>List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>).foldLeft(<span class="number">10</span>) { _ + _ } <span class="comment">// 16</span>
+<pre><code>List(1, 2, 3).foldLeft(10) { _ + _ } // 16
 
-(<span class="number">10</span> /: List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)) { _ + _ } <span class="comment">// 16</span>
+(10 /: List(1, 2, 3)) { _ + _ } // 16
 </code></pre><p>8.:\方法，:\即foldRight。跟foldLeft相反，reduce是从右边开始进行的</p>
-<pre><code>List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>).foldRight(<span class="number">10</span>) { _ + _ } <span class="comment">// 16</span>
+<pre><code>List(1, 2, 3).foldRight(10) { _ + _ } // 16
 
-(List(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>) :\ <span class="number">10</span>) { _ + _ } <span class="comment">// 16</span>
+(List(1, 2, 3) :\ 10) { _ + _ } // 16
 </code></pre><p>9.head方法：集合的第一个元素</p>
-<pre><code><span class="function"><span class="title">List</span><span class="params">(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)</span></span><span class="class">.head</span> <span class="comment">// 1</span>
+<pre><code>List(1, 2, 3).head // 1
 </code></pre><p>10.tail方法：除了集合的第一个元素之外的其他元素的集合</p>
-<pre><code><span class="function"><span class="title">List</span><span class="params">(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)</span></span><span class="class">.tail</span> <span class="comment">// List(2, 3)</span>
+<pre><code>List(1, 2, 3).tail // List(2, 3)
 </code></pre><p>11.mkString方法：使用字符串连接集合中的各个元素</p>
-<pre><code><span class="function"><span class="title">List</span><span class="params">(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)</span></span>.<span class="function"><span class="title">mkString</span><span class="params">(<span class="string">"="</span>)</span></span> <span class="comment">// 1=2=3</span>
-<span class="function"><span class="title">List</span><span class="params">(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)</span></span>.<span class="function"><span class="title">mkString</span><span class="params">(<span class="string">"==="</span>)</span></span> <span class="comment">// 1===2===3</span>
-</code></pre><h2 id="Set集合">Set集合</h2><p>Set也分两种集合，可变的Set和不可变的Set。</p>
+<pre><code>List(1, 2, 3).mkString(&quot;=&quot;) // 1=2=3
+List(1, 2, 3).mkString(&quot;===&quot;) // 1===2===3
+</code></pre><h2 id="Set集合"><a href="#Set集合" class="headerlink" title="Set集合"></a>Set集合</h2><p>Set也分两种集合，可变的Set和不可变的Set。</p>
 <p>不可变的Set的全名是scala.collection.immutable.Set<br>可变的Set全名为scala.collection.mutable.Set</p>
 <p>Set常用的一些方法如下：</p>
 <p>1.contains方法，查看元素是否存在</p>
-<pre><code><span class="function"><span class="title">Set</span><span class="params">(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>)</span></span>.<span class="function"><span class="title">contains</span><span class="params">(<span class="number">2</span>)</span></span> <span class="comment">// true</span>
-<span class="function"><span class="title">Set</span><span class="params">(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>)</span></span>.<span class="function"><span class="title">contains</span><span class="params">(<span class="number">4</span>)</span></span> <span class="comment">// false</span>
-<span class="comment">// 可以直接调用set对象，相当于是contains方法</span>
-<span class="function"><span class="title">Set</span><span class="params">(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>)</span><span class="params">(<span class="number">4</span>)</span></span> <span class="comment">// false， 相当于 val s = Set(1,2,3), a(4) false</span>
+<pre><code>Set(1,2,3).contains(2) // true
+Set(1,2,3).contains(4) // false
+// 可以直接调用set对象，相当于是contains方法
+Set(1,2,3)(4) // false， 相当于 val s = Set(1,2,3), a(4) false
 </code></pre><p>2.++方法，合并2个集合</p>
-<pre><code>Set(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>) ++ Set(<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>) <span class="comment">// Set(1,2,3,4,5)</span>
+<pre><code>Set(1,2,3) ++ Set(3,4,5) // Set(1,2,3,4,5)
 </code></pre><p>3.&amp;方法，交集</p>
-<pre><code>Set(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>) &amp; Set(<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>) <span class="comment">// Set(2,3)</span>
+<pre><code>Set(1,2,3) &amp; Set(2,3,4) // Set(2,3)
 </code></pre><p>4.|方法，并集</p>
-<pre><code>Set(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>) | Set(<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>) <span class="comment">// Set(1,2,3,4)</span>
+<pre><code>Set(1,2,3) | Set(2,3,4) // Set(1,2,3,4)
 </code></pre><p>5.&amp;~方法，差集</p>
-<pre><code>Set(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>) &amp;~ Set(<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>) <span class="comment">// Set(1)</span>
+<pre><code>Set(1,2,3) &amp;~ Set(2,3,4) // Set(1)
 </code></pre><p>6.+=方法，集合内部添加元素，只能在mutable.Set中使用</p>
-<pre><code>val set1 = scala<span class="class">.collection</span><span class="class">.immutable</span><span class="class">.Set</span>(<span class="number">1</span>)
-set1 += <span class="number">2</span> <span class="comment">// 报错</span>
-val set2 = scala<span class="class">.collection</span><span class="class">.mutable</span><span class="class">.Set</span>(<span class="number">1</span>)
-set2 += <span class="number">2</span> <span class="comment">// set2: Set(1,2)</span>
+<pre><code>val set1 = scala.collection.immutable.Set(1)
+set1 += 2 // 报错
+val set2 = scala.collection.mutable.Set(1)
+set2 += 2 // set2: Set(1,2)
 </code></pre><p>7.update方法，添加，删除元素，只能在mutable.Set中使用。 用法： set.update(value, true | false)</p>
-<pre><code>val <span class="built_in">set</span> = scala.collection.<span class="keyword">mutable</span>.Set(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>)
-<span class="built_in">set</span>.update(<span class="number">4</span>, <span class="literal">true</span>) <span class="comment">// set: Set(1,2,3,4)</span>
-<span class="built_in">set</span>.update(<span class="number">10</span>, <span class="literal">true</span>) <span class="comment">// set: Set(1,2,3,10,4)</span>
-<span class="built_in">set</span>.update(<span class="number">10</span>, <span class="literal">false</span>) <span class="comment">// set: Set(1,2,3,4)</span>
+<pre><code>val set = scala.collection.mutable.Set(1,2,3)
+set.update(4, true) // set: Set(1,2,3,4)
+set.update(10, true) // set: Set(1,2,3,10,4)
+set.update(10, false) // set: Set(1,2,3,4)
 </code></pre><p>8.clear方法，只能在mutable.Set中使用，清除集合中的所有元素</p>
 <p>SortedSet: 跟Set一样，唯一的区别是SortedSet会记录插入的顺序。</p>
-<h2 id="Map和Tuple">Map和Tuple</h2><p>Scala中Map中的每一项都是一个scala.Tuple2，也就是1个带有2个变量的元组。</p>
+<h2 id="Map和Tuple"><a href="#Map和Tuple" class="headerlink" title="Map和Tuple"></a>Map和Tuple</h2><p>Scala中Map中的每一项都是一个scala.Tuple2，也就是1个带有2个变量的元组。</p>
 <p>Map可以这样定义：</p>
-<pre><code>val map1 = <span class="function"><span class="title">Map</span><span class="params">(<span class="number">1</span> -&gt; <span class="string">"one"</span>, <span class="number">2</span> -&gt; <span class="string">"two"</span>)</span></span>
-val map2 = <span class="function"><span class="title">Map</span><span class="params">((<span class="number">1</span>, <span class="string">"one"</span>)</span></span>, (<span class="number">2</span>, <span class="string">"two"</span>))
+<pre><code>val map1 = Map(1 -&gt; &quot;one&quot;, 2 -&gt; &quot;two&quot;)
+val map2 = Map((1, &quot;one&quot;), (2, &quot;two&quot;))
 </code></pre><p>获得对应键的值：</p>
-<pre><code><span class="function"><span class="title">map1</span><span class="params">(<span class="number">1</span>)</span></span> <span class="comment">// "one"</span>
-<span class="function"><span class="title">map1</span><span class="params">(<span class="number">3</span>)</span></span> <span class="comment">// 报错。没有对应的值的话会报错    </span>
+<pre><code>map1(1) // &quot;one&quot;
+map1(3) // 报错。没有对应的值的话会报错    
 </code></pre><p>使用Map的get方法可以避免这个问题，get方法返回的是Option，如果有值，返回Some，否则返回None：</p>
-<pre><code>map1.<span class="function"><span class="title">get</span><span class="params">(<span class="number">1</span>)</span></span> <span class="comment">// Some</span>
-map1.<span class="function"><span class="title">get</span><span class="params">(<span class="number">3</span>)</span></span> <span class="comment">// None</span>
-map1.<span class="function"><span class="title">get</span><span class="params">(<span class="number">1</span>)</span></span>.<span class="function"><span class="title">getOrElse</span><span class="params">(<span class="number">999</span>)</span></span> <span class="comment">// "one"</span>
-map1.<span class="function"><span class="title">get</span><span class="params">(<span class="number">3</span>)</span></span>.<span class="function"><span class="title">getOrElse</span><span class="params">(<span class="number">999</span>)</span></span> <span class="comment">// 999</span>
+<pre><code>map1.get(1) // Some
+map1.get(3) // None
+map1.get(1).getOrElse(999) // &quot;one&quot;
+map1.get(3).getOrElse(999) // 999
 </code></pre><p>Map常用的方法如下：</p>
 <p>1.getOrElse(k, d)，获得键值为k的对应的值，不存在的话使用默认值d</p>
-<pre><code>map1.<span class="function"><span class="title">getOrElse</span><span class="params">(<span class="number">3</span>, <span class="string">"None"</span>)</span></span> <span class="comment">// "None"</span>
+<pre><code>map1.getOrElse(3, &quot;None&quot;) // &quot;None&quot;
 </code></pre><p>2.+方法， map + (k -&gt; v)，给map添加一个新的项，返回一个新的map</p>
-<pre><code>map1 + (<span class="number">3</span> -&gt; <span class="string">"three"</span>) <span class="comment">// 返回一个数3个项的新的map</span>
+<pre><code>map1 + (3 -&gt; &quot;three&quot;) // 返回一个数3个项的新的map
 </code></pre><p>3.++方法，合并2个map</p>
-<pre><code><span class="function"><span class="title">Map</span><span class="params">(<span class="number">1</span> -&gt; <span class="string">"one"</span>)</span></span> ++ <span class="function"><span class="title">Map</span><span class="params">(<span class="number">2</span> -&gt; <span class="string">"two"</span>)</span></span>
+<pre><code>Map(1 -&gt; &quot;one&quot;) ++ Map(2 -&gt; &quot;two&quot;)
 </code></pre><p>4.filterByKey，根据key进行过滤</p>
-<pre><code>map1.filterByKey { <span class="variable">key</span> =&gt; <span class="variable">key</span> == <span class="number">1</span> }
+<pre><code>map1.filterByKey { key =&gt; key == 1 }
 </code></pre><p>5.mapValues，遍历所有的value值</p>
-<pre><code>map1.mapValues { <span class="keyword">value</span> =&gt; println(<span class="keyword">value</span>) }
+<pre><code>map1.mapValues { value =&gt; println(value) }
 </code></pre><p>6.update方法，修改map中的数据。只适用于mutable.Map</p>
-<pre><code>map1.<span class="function"><span class="title">update</span><span class="params">(<span class="number">1</span>, <span class="string">"oneone"</span>)</span></span>
+<pre><code>map1.update(1, &quot;oneone&quot;)
 </code></pre><p>7.clear方法，清空map数据。只适用于mutable.Map</p>
 <p>Map中的每一个都是一个Tuple2，Tuple2取第一个元素可以使用_1获得，第二个元素使用_2获得。</p>
-<pre><code><span class="label">map1.foreach</span> { <span class="keyword">item </span>=&gt; println(<span class="keyword">item._1 </span>+ <span class="string">","</span> + <span class="keyword">item._2) </span>}
+<pre><code>map1.foreach { item =&gt; println(item._1 + &quot;,&quot; + item._2) }
 </code></pre>
       
     </div>

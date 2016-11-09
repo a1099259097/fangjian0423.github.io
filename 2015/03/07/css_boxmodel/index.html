@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="boxmodel,css," />
+  <meta name="keywords" content="css,boxmodel," />
 
 
 
@@ -95,6 +95,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="css 盒子模型">
 <meta name="twitter:description" content="盒子模型由margin, border, padding和元素内部的内容(Content)组成 ...">
+<meta name="twitter:image" content="http://format-blog-image.qiniudn.com/css_boxmodel1.gif">
 
 
 
@@ -376,12 +377,12 @@
 <p>以下就是一个box model的样子。</p>
 <p><img src="http://format-blog-image.qiniudn.com/css_boxmodel1.gif" alt=""></p>
 <p>接下来看一个div的css：</p>
-<pre><code><span class="tag">div</span> <span class="rules">{
-    <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">300px</span></span></span>;
-    <span class="rule"><span class="attribute">padding</span>:<span class="value"> <span class="number">25px</span></span></span>;
-    <span class="rule"><span class="attribute">border</span>:<span class="value"> <span class="number">25px</span> solid navy</span></span>;
-    <span class="rule"><span class="attribute">margin</span>:<span class="value"> <span class="number">25px</span></span></span>;
-}</span>
+<pre><code>div {
+    width: 300px;
+    padding: 25px;
+    border: 25px solid navy;
+    margin: 25px;
+}
 </code></pre><p>这样一个div在页面上是这样的：</p>
 <p><img src="http://format-blog-image.qiniudn.com/css_boxmodel2.png" alt=""></p>
 <p>通过chrome的console看到它的盒子模型：</p>
@@ -414,9 +415,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/boxmodel/" rel="tag">#boxmodel</a>
-          
             <a href="/tags/css/" rel="tag">#css</a>
+          
+            <a href="/tags/boxmodel/" rel="tag">#boxmodel</a>
           
         </div>
       

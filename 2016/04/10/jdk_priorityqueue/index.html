@@ -103,6 +103,7 @@ jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优�
 <meta name="twitter:description" content="优先队列跟普通的队列不一样，普通队列是一种遵循FIFO规则的队列，拿数据的时候按照加入队列的顺序拿取。   而优先队列每次拿数据的时候都会拿出优先级最高的数据。
 优先队列内部维护着一个堆，每次取数据的时候都从堆顶拿数据，这就是优先队列的原理。
 jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优先级规则。">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10">
 
 
 
@@ -379,200 +380,200 @@ jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优�
 <p>优先队列内部维护着一个堆，每次取数据的时候都从堆顶拿数据，这就是优先队列的原理。</p>
 <p>jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优先级规则。</p>
 <a id="more"></a>
-<h2 id="一个PriorityQueue例子">一个PriorityQueue例子</h2><p>定义一个Task类，有2个属性name和level。这个类放到PriorityQueue里，level越大优先级越高：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> Task {
+<h2 id="一个PriorityQueue例子"><a href="#一个PriorityQueue例子" class="headerlink" title="一个PriorityQueue例子"></a>一个PriorityQueue例子</h2><p>定义一个Task类，有2个属性name和level。这个类放到PriorityQueue里，level越大优先级越高：</p>
+<pre><code>private static class Task {
     String name;
-    <span class="keyword">int</span> level;
+    int level;
 
-    <span class="function"><span class="keyword">public</span> <span class="title">Task</span><span class="params">(String name, <span class="keyword">int</span> level)</span> </span>{
-        <span class="keyword">this</span>.name = name;
-        <span class="keyword">this</span>.level = level;
+    public Task(String name, int level) {
+        this.name = name;
+        this.level = level;
     }
 
-    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>{
-        <span class="keyword">return</span> name;
+    public String getName() {
+        return name;
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>{
-        <span class="keyword">this</span>.name = name;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getLevel</span><span class="params">()</span> </span>{
-        <span class="keyword">return</span> level;
+    public int getLevel() {
+        return level;
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setLevel</span><span class="params">(<span class="keyword">int</span> level)</span> </span>{
-        <span class="keyword">this</span>.level = level;
+    public void setLevel(int level) {
+        this.level = level;
     }
 
-    @<span class="function">Override
-    <span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>{
-        <span class="keyword">return</span> <span class="string">"Task{"</span> +
-                <span class="string">"name='"</span> + name + <span class="string">'\''</span> +
-                <span class="string">", level="</span> + level +
-                <span class="string">'}'</span>;
+    @Override
+    public String toString() {
+        return &quot;Task{&quot; +
+                &quot;name=&apos;&quot; + name + &apos;\&apos;&apos; +
+                &quot;, level=&quot; + level +
+                &apos;}&apos;;
     }
 }
 
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-    PriorityQueue&lt;Task&gt; <span class="built_in">queue</span> = <span class="keyword">new</span> PriorityQueue&lt;Task&gt;(<span class="number">6</span>, <span class="keyword">new</span> Comparator&lt;Task&gt;() {
-        @<span class="function">Override
-        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compare</span><span class="params">(Task t1, Task t2)</span> </span>{
-            <span class="keyword">return</span> t2.getLevel() - t1.getLevel();
+public static void main(String[] args) {
+    PriorityQueue&lt;Task&gt; queue = new PriorityQueue&lt;Task&gt;(6, new Comparator&lt;Task&gt;() {
+        @Override
+        public int compare(Task t1, Task t2) {
+            return t2.getLevel() - t1.getLevel();
         }
     });
-    <span class="built_in">queue</span>.add(<span class="keyword">new</span> Task(<span class="string">"游戏"</span>, <span class="number">20</span>));
-    <span class="built_in">queue</span>.add(<span class="keyword">new</span> Task(<span class="string">"吃饭"</span>, <span class="number">100</span>));
-    <span class="built_in">queue</span>.add(<span class="keyword">new</span> Task(<span class="string">"睡觉"</span>, <span class="number">90</span>));
-    <span class="built_in">queue</span>.add(<span class="keyword">new</span> Task(<span class="string">"看书"</span>, <span class="number">70</span>));
-    <span class="built_in">queue</span>.add(<span class="keyword">new</span> Task(<span class="string">"工作"</span>, <span class="number">80</span>));
-    <span class="built_in">queue</span>.add(<span class="keyword">new</span> Task(<span class="string">"撩妹"</span>, <span class="number">10</span>));
-    <span class="keyword">while</span>(!<span class="built_in">queue</span>.isEmpty()) {
-        System.out.println(<span class="built_in">queue</span>.poll());
+    queue.add(new Task(&quot;游戏&quot;, 20));
+    queue.add(new Task(&quot;吃饭&quot;, 100));
+    queue.add(new Task(&quot;睡觉&quot;, 90));
+    queue.add(new Task(&quot;看书&quot;, 70));
+    queue.add(new Task(&quot;工作&quot;, 80));
+    queue.add(new Task(&quot;撩妹&quot;, 10));
+    while(!queue.isEmpty()) {
+        System.out.println(queue.poll());
     }
 }
 </code></pre><p>输出结果：</p>
-<pre><code><span class="keyword">Task</span>{name=<span class="string">'吃饭'</span>, level=<span class="number">100</span>}
-<span class="keyword">Task</span>{name=<span class="string">'睡觉'</span>, level=<span class="number">90</span>}
-<span class="keyword">Task</span>{name=<span class="string">'工作'</span>, level=<span class="number">80</span>}
-<span class="keyword">Task</span>{name=<span class="string">'看书'</span>, level=<span class="number">70</span>}
-<span class="keyword">Task</span>{name=<span class="string">'游戏'</span>, level=<span class="number">20</span>}
-<span class="keyword">Task</span>{name=<span class="string">'撩妹'</span>, level=<span class="number">10</span>}
+<pre><code>Task{name=&apos;吃饭&apos;, level=100}
+Task{name=&apos;睡觉&apos;, level=90}
+Task{name=&apos;工作&apos;, level=80}
+Task{name=&apos;看书&apos;, level=70}
+Task{name=&apos;游戏&apos;, level=20}
+Task{name=&apos;撩妹&apos;, level=10}
 </code></pre><p>add过程其实就是在最大堆里添加新的元素，添加之后再进行调整：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
 <p>出队相当于每次都是堆顶出堆，堆顶出堆之后然后重新调整：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue02.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<h2 id="PriorityQueue原理分析">PriorityQueue原理分析</h2><p>首先看下PriorityQueue的属性：</p>
-<pre><code><span class="keyword">transient</span> <span class="keyword">Object</span>[] queue; <span class="comment">// 堆</span>
-<span class="keyword">private</span> <span class="built_in">int</span> <span class="built_in">size</span> = <span class="number">0</span>; <span class="comment">// 元素个数</span>
-<span class="keyword">private</span> <span class="keyword">final</span> Comparator&lt;? <span class="keyword">super</span> E&gt; comparator; <span class="comment">// 比较器，如果是null，使用元素自身的比较器</span>
+<h2 id="PriorityQueue原理分析"><a href="#PriorityQueue原理分析" class="headerlink" title="PriorityQueue原理分析"></a>PriorityQueue原理分析</h2><p>首先看下PriorityQueue的属性：</p>
+<pre><code>transient Object[] queue; // 堆
+private int size = 0; // 元素个数
+private final Comparator&lt;? super E&gt; comparator; // 比较器，如果是null，使用元素自身的比较器
 </code></pre><p>接下来是PriorityQueue的几个方法介绍。</p>
 <p>add，添加元素：</p>
-<pre><code><span class="function"><span class="keyword">public</span> boolean <span class="title">add</span><span class="params">(E e)</span> </span>{
-    <span class="keyword">return</span> offer(e); <span class="comment">// add方法内部调用offer方法</span>
+<pre><code>public boolean add(E e) {
+    return offer(e); // add方法内部调用offer方法
 }
 
-<span class="function"><span class="keyword">public</span> boolean <span class="title">offer</span><span class="params">(E e)</span> </span>{
-    <span class="keyword">if</span> (e == null) <span class="comment">// 元素为空的话，抛出NullPointerException异常</span>
-        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();
+public boolean offer(E e) {
+    if (e == null) // 元素为空的话，抛出NullPointerException异常
+        throw new NullPointerException();
     modCount++;
-    <span class="keyword">int</span> i = size;
-    <span class="keyword">if</span> (i &gt;= <span class="built_in">queue</span>.length) <span class="comment">// 如果当前用堆表示的数组已经满了，调用grow方法扩容</span>
-        grow(i + <span class="number">1</span>); <span class="comment">// 扩容</span>
-    size = i + <span class="number">1</span>; <span class="comment">// 元素个数+1</span>
-    <span class="keyword">if</span> (i == <span class="number">0</span>) <span class="comment">// 堆还没有元素的情况</span>
-        <span class="built_in">queue</span>[<span class="number">0</span>] = e; <span class="comment">// 直接给堆顶赋值元素</span>
-    <span class="keyword">else</span> <span class="comment">// 堆中已有元素的情况</span>
-        siftUp(i, e); <span class="comment">// 重新调整堆，从下往上调整，因为新增元素是加到最后一个叶子节点</span>
-    <span class="keyword">return</span> <span class="literal">true</span>;
+    int i = size;
+    if (i &gt;= queue.length) // 如果当前用堆表示的数组已经满了，调用grow方法扩容
+        grow(i + 1); // 扩容
+    size = i + 1; // 元素个数+1
+    if (i == 0) // 堆还没有元素的情况
+        queue[0] = e; // 直接给堆顶赋值元素
+    else // 堆中已有元素的情况
+        siftUp(i, e); // 重新调整堆，从下往上调整，因为新增元素是加到最后一个叶子节点
+    return true;
 }
 
-<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">siftUp</span><span class="params">(<span class="keyword">int</span> k, E x)</span> </span>{
-    <span class="keyword">if</span> (comparator != null)  <span class="comment">// 比较器存在的情况下</span>
-        siftUpUsingComparator(k, x); <span class="comment">// 使用比较器调整</span>
-    <span class="keyword">else</span> <span class="comment">// 比较器不存在的情况下</span>
-        siftUpComparable(k, x); <span class="comment">// 使用元素自身的比较器调整</span>
+private void siftUp(int k, E x) {
+    if (comparator != null)  // 比较器存在的情况下
+        siftUpUsingComparator(k, x); // 使用比较器调整
+    else // 比较器不存在的情况下
+        siftUpComparable(k, x); // 使用元素自身的比较器调整
 }
 
-<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">siftUpUsingComparator</span><span class="params">(<span class="keyword">int</span> k, E x)</span> </span>{
-    <span class="keyword">while</span> (k &gt; <span class="number">0</span>) { <span class="comment">// 一直循环直到父节点还存在</span>
-        <span class="keyword">int</span> parent = (k - <span class="number">1</span>) &gt;&gt;&gt; <span class="number">1</span>; <span class="comment">// 找到父节点索引</span>
-        Object e = <span class="built_in">queue</span>[parent]; <span class="comment">// 赋值父节点元素</span>
-        <span class="keyword">if</span> (comparator.compare(x, (E) e) &gt;= <span class="number">0</span>) <span class="comment">// 新元素与父元素进行比较，如果满足比较器结果，直接跳出，否则进行调整</span>
-            <span class="keyword">break</span>;
-        <span class="built_in">queue</span>[k] = e; <span class="comment">// 进行调整，新位置的元素变成了父元素</span>
-        k = parent; <span class="comment">// 新位置索引变成父元素索引，进行递归操作</span>
+private void siftUpUsingComparator(int k, E x) {
+    while (k &gt; 0) { // 一直循环直到父节点还存在
+        int parent = (k - 1) &gt;&gt;&gt; 1; // 找到父节点索引
+        Object e = queue[parent]; // 赋值父节点元素
+        if (comparator.compare(x, (E) e) &gt;= 0) // 新元素与父元素进行比较，如果满足比较器结果，直接跳出，否则进行调整
+            break;
+        queue[k] = e; // 进行调整，新位置的元素变成了父元素
+        k = parent; // 新位置索引变成父元素索引，进行递归操作
     }
-    <span class="built_in">queue</span>[k] = x; <span class="comment">// 新添加的元素添加到堆中</span>
+    queue[k] = x; // 新添加的元素添加到堆中
 }
 </code></pre><p>siftUp方法调用过程如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue03.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
 <p>poll，出队方法：</p>
-<pre><code><span class="function"><span class="keyword">public</span> E <span class="title">poll</span><span class="params">()</span> </span>{
-    <span class="keyword">if</span> (size == <span class="number">0</span>)
-        <span class="keyword">return</span> null;
-    <span class="keyword">int</span> s = --size; <span class="comment">// 元素个数-1</span>
+<pre><code>public E poll() {
+    if (size == 0)
+        return null;
+    int s = --size; // 元素个数-1
     modCount++;
-    E result = (E) <span class="built_in">queue</span>[<span class="number">0</span>]; <span class="comment">// 得到堆顶元素</span>
-    E x = (E) <span class="built_in">queue</span>[s]; <span class="comment">// 最后一个叶子节点</span>
-    <span class="built_in">queue</span>[s] = null; <span class="comment">// 最后1个叶子节点置空</span>
-    <span class="keyword">if</span> (s != <span class="number">0</span>)
-        siftDown(<span class="number">0</span>, x); <span class="comment">// 从上往下调整，因为删除元素是删除堆顶的元素</span>
-    <span class="keyword">return</span> result;
+    E result = (E) queue[0]; // 得到堆顶元素
+    E x = (E) queue[s]; // 最后一个叶子节点
+    queue[s] = null; // 最后1个叶子节点置空
+    if (s != 0)
+        siftDown(0, x); // 从上往下调整，因为删除元素是删除堆顶的元素
+    return result;
 }
 
-<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">siftDown</span><span class="params">(<span class="keyword">int</span> k, E x)</span> </span>{
-    <span class="keyword">if</span> (comparator != null) <span class="comment">// 比较器存在的情况下</span>
-        siftDownUsingComparator(k, x); <span class="comment">// 使用比较器调整</span>
-    <span class="keyword">else</span> <span class="comment">// 比较器不存在的情况下</span>
-        siftDownComparable(k, x); <span class="comment">// 使用元素自身的比较器调整</span>
+private void siftDown(int k, E x) {
+    if (comparator != null) // 比较器存在的情况下
+        siftDownUsingComparator(k, x); // 使用比较器调整
+    else // 比较器不存在的情况下
+        siftDownComparable(k, x); // 使用元素自身的比较器调整
 }
 
-<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">siftDownUsingComparator</span><span class="params">(<span class="keyword">int</span> k, E x)</span> </span>{
-    <span class="keyword">int</span> half = size &gt;&gt;&gt; <span class="number">1</span>; <span class="comment">// 只需循环节点个数的一般即可</span>
-    <span class="keyword">while</span> (k &lt; half) {
-        <span class="keyword">int</span> child = (k &lt;&lt; <span class="number">1</span>) + <span class="number">1</span>; <span class="comment">// 得到父节点的左子节点索引</span>
-        Object c = <span class="built_in">queue</span>[child]; <span class="comment">// 得到左子元素</span>
-        <span class="keyword">int</span> right = child + <span class="number">1</span>; <span class="comment">// 得到父节点的右子节点索引</span>
-        <span class="keyword">if</span> (right &lt; size &amp;&amp;
-            comparator.compare((E) c, (E) <span class="built_in">queue</span>[right]) &gt; <span class="number">0</span>) <span class="comment">// 左子节点跟右子节点比较，取更大的值</span>
-            c = <span class="built_in">queue</span>[child = right];
-        <span class="keyword">if</span> (comparator.compare(x, (E) c) &lt;= <span class="number">0</span>)  <span class="comment">// 然后这个更大的值跟最后一个叶子节点比较</span>
+private void siftDownUsingComparator(int k, E x) {
+    int half = size &gt;&gt;&gt; 1; // 只需循环节点个数的一般即可
+    while (k &lt; half) {
+        int child = (k &lt;&lt; 1) + 1; // 得到父节点的左子节点索引
+        Object c = queue[child]; // 得到左子元素
+        int right = child + 1; // 得到父节点的右子节点索引
+        if (right &lt; size &amp;&amp;
+            comparator.compare((E) c, (E) queue[right]) &gt; 0) // 左子节点跟右子节点比较，取更大的值
+            c = queue[child = right];
+        if (comparator.compare(x, (E) c) &lt;= 0)  // 然后这个更大的值跟最后一个叶子节点比较
 
-            <span class="keyword">break</span>;
-        <span class="built_in">queue</span>[k] = c; <span class="comment">// 新位置使用更大的值</span>
-        k = child; <span class="comment">// 新位置索引变成子元素索引，进行递归操作</span>
+            break;
+        queue[k] = c; // 新位置使用更大的值
+        k = child; // 新位置索引变成子元素索引，进行递归操作
     }
-    <span class="built_in">queue</span>[k] = x; <span class="comment">// 最后一个叶子节点添加到合适的位置</span>
+    queue[k] = x; // 最后一个叶子节点添加到合适的位置
 }
 </code></pre><p>siftDown方法调用过程如下：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue04.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
 <p>grow扩容方法：</p>
-<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">grow</span><span class="params">(<span class="keyword">int</span> minCapacity)</span> </span>{
-    <span class="keyword">int</span> oldCapacity = <span class="built_in">queue</span>.length;
-    <span class="comment">// 新容量</span>
-    <span class="comment">// 如果老容量小于64 新容量 = 老容量 + 老容量 + 2</span>
-    <span class="comment">// 如果老容量大于等于64 老容量 = 老容量 + 老容量/2</span>
-    <span class="keyword">int</span> newCapacity = oldCapacity + ((oldCapacity &lt; <span class="number">64</span>) ?
-                                     (oldCapacity + <span class="number">2</span>) :
-                                     (oldCapacity &gt;&gt; <span class="number">1</span>));
-    <span class="comment">// 溢出处理</span>
-    <span class="keyword">if</span> (newCapacity - MAX_ARRAY_SIZE &gt; <span class="number">0</span>)
+<pre><code>private void grow(int minCapacity) {
+    int oldCapacity = queue.length;
+    // 新容量
+    // 如果老容量小于64 新容量 = 老容量 + 老容量 + 2
+    // 如果老容量大于等于64 老容量 = 老容量 + 老容量/2
+    int newCapacity = oldCapacity + ((oldCapacity &lt; 64) ?
+                                     (oldCapacity + 2) :
+                                     (oldCapacity &gt;&gt; 1));
+    // 溢出处理
+    if (newCapacity - MAX_ARRAY_SIZE &gt; 0)
         newCapacity = hugeCapacity(minCapacity);
-    <span class="comment">// 使用新容量</span>
-    <span class="built_in">queue</span> = Arrays.copyOf(<span class="built_in">queue</span>, newCapacity);
+    // 使用新容量
+    queue = Arrays.copyOf(queue, newCapacity);
 }
 </code></pre><p>remove，删除队列元素操作：</p>
-<pre><code><span class="function"><span class="keyword">public</span> boolean <span class="title">remove</span><span class="params">(Object o)</span> </span>{
-    <span class="keyword">int</span> i = indexOf(o); <span class="comment">// 找到数据对应的索引</span>
-    <span class="keyword">if</span> (i == -<span class="number">1</span>) <span class="comment">// 不存在的话返回false</span>
-        <span class="keyword">return</span> <span class="literal">false</span>;
-    <span class="keyword">else</span> { <span class="comment">// 存在的话调用removeAt方法，返回true</span>
+<pre><code>public boolean remove(Object o) {
+    int i = indexOf(o); // 找到数据对应的索引
+    if (i == -1) // 不存在的话返回false
+        return false;
+    else { // 存在的话调用removeAt方法，返回true
         removeAt(i);
-        <span class="keyword">return</span> <span class="literal">true</span>;
+        return true;
     }
 }
 
-<span class="function"><span class="keyword">private</span> E <span class="title">removeAt</span><span class="params">(<span class="keyword">int</span> i)</span> </span>{
+private E removeAt(int i) {
     modCount++;
-    <span class="keyword">int</span> s = --size; <span class="comment">// 元素个数-1</span>
-    <span class="keyword">if</span> (s == i) <span class="comment">// 如果是删除最后一个叶子节点</span>
-        <span class="built_in">queue</span>[i] = null; <span class="comment">// 直接置空，删除即可，堆还是保持特质，不需要调整</span>
-    <span class="keyword">else</span> { <span class="comment">// 如果是删除的不是最后一个叶子节点</span>
-        E moved = (E) <span class="built_in">queue</span>[s]; <span class="comment">// 获得最后1个叶子节点元素</span>
-        <span class="built_in">queue</span>[s] = null; <span class="comment">// 最后1个叶子节点置空</span>
-        siftDown(i, moved); <span class="comment">// 从上往下调整</span>
-        <span class="keyword">if</span> (<span class="built_in">queue</span>[i] == moved) { <span class="comment">// 如果从上往下调整完毕之后发现元素位置没变，从下往上调整</span>
-            siftUp(i, moved); <span class="comment">// 从下往上调整</span>
-            <span class="keyword">if</span> (<span class="built_in">queue</span>[i] != moved)
-                <span class="keyword">return</span> moved;
+    int s = --size; // 元素个数-1
+    if (s == i) // 如果是删除最后一个叶子节点
+        queue[i] = null; // 直接置空，删除即可，堆还是保持特质，不需要调整
+    else { // 如果是删除的不是最后一个叶子节点
+        E moved = (E) queue[s]; // 获得最后1个叶子节点元素
+        queue[s] = null; // 最后1个叶子节点置空
+        siftDown(i, moved); // 从上往下调整
+        if (queue[i] == moved) { // 如果从上往下调整完毕之后发现元素位置没变，从下往上调整
+            siftUp(i, moved); // 从下往上调整
+            if (queue[i] != moved)
+                return moved;
         }
     }
-    <span class="keyword">return</span> null;
+    return null;
 }
 </code></pre><p>下图这个堆如果删除红色节点100的时候，siftDown之后元素位置没变，所以还得siftUp：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue05.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<h2 id="总结">总结</h2><ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
 <li>jdk内置的优先队列PriorityQueue内部使用一个堆维护数据，每当有数据add进来或者poll出去的时候会对堆做从下往上的调整和从上往下的调整</li>
 <li>PriorityQueue不是一个线程安全的类，如果要在多线程环境下使用，可以使用PriorityBlockingQueue这个优先阻塞队列</li>
 </ol>

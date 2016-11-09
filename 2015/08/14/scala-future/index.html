@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="concurrent,scala," />
+  <meta name="keywords" content="scala,concurrent," />
 
 
 
@@ -366,89 +366,89 @@
       
         <p>Future这个概念其实java里也已经有了， 表示一个未来的意思。 某线程执行一项操作，这个操作有延迟的话，Future会提供一系列方法来处理这个线程过程，可取消，可操作完成后执行其他操作等等。</p>
 <p>使用Future是非阻塞的，在Future中可以使用回调函数可以避免阻塞操作。 Scala在Future中提供了flatMap，foreach，filter等方法。</p>
-<h2 id="Future概念">Future概念</h2><p>Future的状态：</p>
+<h2 id="Future概念"><a href="#Future概念" class="headerlink" title="Future概念"></a>Future概念</h2><p>Future的状态：</p>
 <p>1.未完成：线程操作还未结束<br>2.已完成：操作操作完成，并且有返回值或者有异常。 当一个Future完成的时候，它就变成了一个不可变对象，永远不会被重写</p>
 <p>构造Future最简单的方法是使用Future这个object提供的apply方法：</p>
-<pre><code><span class="tag">Future</span> {
+<pre><code>Future {
     ...
 }
 </code></pre><p>来看一个最简单的Future操作， 计算和：</p>
-<pre><code>import <span class="keyword">scala</span>.concurrent.ExecutionContext.Implicits.<span class="keyword">global</span>
-import <span class="keyword">scala</span>.concurrent.duration.Duration
-import <span class="keyword">scala</span>.concurrent.{Await, Future}
+<pre><code>import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 val sumFuture = Future[Int] {
-  <span class="keyword">var</span> <span class="keyword">sum</span> = 0
-  <span class="keyword">for</span>(i &lt;- <span class="keyword">Range</span>(1,100000)) <span class="keyword">sum</span> = <span class="keyword">sum</span> + <span class="literal">i</span>
-  <span class="literal">sum</span>
+  var sum = 0
+  for(i &lt;- Range(1,100000)) sum = sum + i
+  sum
 }
 
 sumFuture.onSuccess {
-  case <span class="keyword">sum</span> =&gt; println(<span class="keyword">sum</span>)
+  case sum =&gt; println(sum)
 }
 
-Await.result(sumFuture, Duration.<span class="keyword">Inf</span>)
+Await.result(sumFuture, Duration.Inf)
 </code></pre><p>Await的作用是阻断Future等待Future的执行结果。 import scala.concurrent.ExecutionContext.Implicits.global 这个global表示一个ExecutionContext，类似线程池，所有线程的提交都得交给ExecutionContext。如果没有import这个global对象，那么执行的时候会报错。</p>
 <p>文本文件中找关键字的例子，读io文件的时候如果文件很大，肯定会阻塞。使用Future完成，可以更有效率，等关键字索引找到的时候再去拿数据。这段时间完成可以去做其他事情：</p>
-<pre><code><span class="variable"><span class="keyword">val</span> keywordIndex</span> = Future[<span class="typename">Int</span>] {
-  <span class="variable"><span class="keyword">val</span> source</span> = scala.io.Source.fromFile(<span class="string">"intro.txx"</span>)
-  source.toSeq.indexOfSlice(<span class="string">"format"</span>)
+<pre><code>val keywordIndex = Future[Int] {
+  val source = scala.io.Source.fromFile(&quot;intro.txx&quot;)
+  source.toSeq.indexOfSlice(&quot;format&quot;)
 }
-</code></pre><h2 id="回调">回调</h2><p>Future提供了3种Callback，分别是 onComplete，onFailure，onSuccess。</p>
+</code></pre><h2 id="回调"><a href="#回调" class="headerlink" title="回调"></a>回调</h2><p>Future提供了3种Callback，分别是 onComplete，onFailure，onSuccess。</p>
 <p>onComplete回调表示Future执行完毕了。需要1个Try[T] =&gt; U类型的参数，如果执行成功且没发生一次，那么匹配Success类型，否则匹配Failure类型。</p>
 <p>onComplete例子：</p>
-<pre><code>val calFuture = <span class="type">Future</span>[<span class="type">Int</span>] {
-  val a = <span class="number">1</span> / <span class="number">1</span>
+<pre><code>val calFuture = Future[Int] {
+  val a = 1 / 1
   a
 }
 
 calFuture.onComplete {
-  <span class="keyword">case</span> <span class="type">Success</span>(<span class="literal">result</span>) =&gt; println(<span class="literal">result</span>)
-  <span class="keyword">case</span> <span class="type">Failure</span>(e) =&gt; println(<span class="string">"error: "</span> + e.getMessage)
+  case Success(result) =&gt; println(result)
+  case Failure(e) =&gt; println(&quot;error: &quot; + e.getMessage)
 }
 </code></pre><p>onFailure回调表示Future已经执行完成，但是出错了。</p>
 <pre><code>val errorFuture = Future[Unit] {
-  <span class="number">1</span> / <span class="number">0</span>
+  1 / 0
 }
 
 errorFuture.onFailure {
-  <span class="keyword">case</span> e =&gt; println(e.getMessage)
+  case e =&gt; println(e.getMessage)
 }
 </code></pre><p>onSuccess回调表示Future已经执行完成，而且执行成功了。</p>
 <pre><code>val successFuture = Future[Int] {
-  <span class="number">1000</span>
+  1000
 }
 
 successFuture.onSuccess {
-  <span class="keyword">case</span> <span class="built_in">num</span> =&gt; println(<span class="built_in">num</span>)
+  case num =&gt; println(num)
 }
-</code></pre><h2 id="Future的组合">Future的组合</h2><p>使用map方法可以组合Future：</p>
-<pre><code>val firstValFuture = <span class="type">Future</span>[<span class="type">Int</span>] {
-  <span class="number">1</span>
+</code></pre><h2 id="Future的组合"><a href="#Future的组合" class="headerlink" title="Future的组合"></a>Future的组合</h2><p>使用map方法可以组合Future：</p>
+<pre><code>val firstValFuture = Future[Int] {
+  1
 }
 
 val secondFuture = firstValFuture.map { num =&gt;
-  println(<span class="string">"firstFuture: "</span> + num)
-  num + <span class="string">"111"</span>
+  println(&quot;firstFuture: &quot; + num)
+  num + &quot;111&quot;
 }
 
 secondFuture.onSuccess {
-  <span class="keyword">case</span> <span class="literal">result</span> =&gt; println(<span class="literal">result</span>)
+  case result =&gt; println(result)
 }
 </code></pre><p>flapMap方法也可以组合Future，map方法和flatMap方法唯一的区别是flatMap内部需要返回Future，而map不是。</p>
-<pre><code>val firstValFuture = <span class="type">Future</span>[<span class="type">Int</span>] {
-  <span class="number">1</span>
+<pre><code>val firstValFuture = Future[Int] {
+  1
 }
 
 val secondFuture = firstValFuture.flatMap { num =&gt;
-  println(<span class="string">"firstFuture: "</span> + num)
-  <span class="type">Future</span> {
-    num + <span class="string">"111"</span>
+  println(&quot;firstFuture: &quot; + num)
+  Future {
+    num + &quot;111&quot;
   }
 }
 
 secondFuture.onSuccess {
-  <span class="keyword">case</span> <span class="literal">result</span> =&gt; println(<span class="literal">result</span>)
+  case result =&gt; println(result)
 }
 </code></pre><p>其他资料参考<a href="http://docs.scala-lang.org/overviews/core/futures.html" target="_blank" rel="external">Scala的官方文档</a>即可。</p>
 
@@ -471,9 +471,9 @@ secondFuture.onSuccess {
       
         <div class="post-tags">
           
-            <a href="/tags/concurrent/" rel="tag">#concurrent</a>
-          
             <a href="/tags/scala/" rel="tag">#scala</a>
+          
+            <a href="/tags/concurrent/" rel="tag">#concurrent</a>
           
         </div>
       

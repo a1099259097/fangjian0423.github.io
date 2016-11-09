@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="netty,nio," />
+  <meta name="keywords" content="nio,netty," />
 
 
 
@@ -380,129 +380,129 @@ Netty内部直接提供了Http协议的Codec组件用于编解码Http协议。
 <p>Netty内部直接提供了Http协议的Codec组件用于编解码Http协议。</p>
 <p>在开发过程中，有时候我们需要构建一些适应自己业务的应用层协议，Netty可以很方便地实现自定义协议。</p>
 <p>比如我们的自定义协议CucstomProtocol结构如下：</p>
-<pre><code>|<span class="string"> version </span>|<span class="string"> header </span>|<span class="string"> content </span>|
+<pre><code>| version | header | content |
 </code></pre><p>其中version表示版本号，long类型；header是一个uuid，string类型，content则是具体的内容，string类型。</p>
 <a id="more"></a>
 <p>对应的POJO如下：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CustomProtocol {
-    <span class="keyword">private</span> <span class="built_in">long</span> <span class="keyword">version</span>; <span class="comment">// 版本</span>
-    <span class="keyword">private</span> String header; <span class="comment">// 头信息(UUID)</span>
-    <span class="keyword">private</span> String content; <span class="comment">// 具体内容</span>
-    <span class="comment">// GET SET ...</span>
-    <span class="keyword">@Override</span>
-    <span class="keyword">public</span> String toString() {
-        <span class="keyword">return</span> <span class="string">"CustomProtocol{"</span> +
-                <span class="string">"version="</span> + <span class="keyword">version</span> +
-                <span class="string">", header='"</span> + header + <span class="string">'\''</span> +
-                <span class="string">", content='"</span> + content + <span class="string">'\''</span> +
-                <span class="string">'}'</span>;
+<pre><code>public class CustomProtocol {
+    private long version; // 版本
+    private String header; // 头信息(UUID)
+    private String content; // 具体内容
+    // GET SET ...
+    @Override
+    public String toString() {
+        return &quot;CustomProtocol{&quot; +
+                &quot;version=&quot; + version +
+                &quot;, header=&apos;&quot; + header + &apos;\&apos;&apos; +
+                &quot;, content=&apos;&quot; + content + &apos;\&apos;&apos; +
+                &apos;}&apos;;
     }
 }
 </code></pre><p>解码器把byte转换成CustomProtocol，在server中使用：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CustomProtocolDecoder extends ByteToMessageDecoder {
-    <span class="keyword">@Override</span>
-    <span class="keyword">protected</span> <span class="keyword">void</span> decode(ChannelHandlerContext ctx, ByteBuf <span class="keyword">in</span>, List&lt;Object&gt; <span class="keyword">out</span>) throws Exception {
-        <span class="built_in">long</span> <span class="keyword">version</span> = <span class="keyword">in</span>.readLong(); <span class="comment">// 读取version</span>
+<pre><code>public class CustomProtocolDecoder extends ByteToMessageDecoder {
+    @Override
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List&lt;Object&gt; out) throws Exception {
+        long version = in.readLong(); // 读取version
 
-        <span class="keyword">byte</span>[] headerBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">36</span>];
-        <span class="keyword">in</span>.readBytes(headerBytes); <span class="comment">// 读取header</span>
+        byte[] headerBytes = new byte[36];
+        in.readBytes(headerBytes); // 读取header
 
-        String header = <span class="keyword">new</span> String(headerBytes);
+        String header = new String(headerBytes);
 
-        <span class="keyword">byte</span>[] contentBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="keyword">in</span>.readableBytes()]; <span class="comment">// 读取content</span>
-        <span class="keyword">in</span>.readBytes(contentBytes);
+        byte[] contentBytes = new byte[in.readableBytes()]; // 读取content
+        in.readBytes(contentBytes);
 
-        <span class="keyword">out</span>.add(<span class="keyword">new</span> CustomProtocol(<span class="keyword">version</span>, header, <span class="keyword">new</span> String(contentBytes)));
+        out.add(new CustomProtocol(version, header, new String(contentBytes)));
     }
 }
 </code></pre><p>编码器把CustomProtocol转换成byte，在client中使用：</p>
-<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">CustomProtocolEncoder</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">MessageToByteEncoder&lt;CustomProtocol&gt;</span> {</span>
-    <span class="annotation">@Override</span>
-    <span class="keyword">protected</span> void encode(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">CustomProtocol</span> msg, <span class="type">ByteBuf</span> out) <span class="keyword">throws</span> <span class="type">Exception</span> {
+<pre><code>public class CustomProtocolEncoder extends MessageToByteEncoder&lt;CustomProtocol&gt; {
+    @Override
+    protected void encode(ChannelHandlerContext ctx, CustomProtocol msg, ByteBuf out) throws Exception {
         out.writeLong(msg.getVersion());
         out.writeBytes(msg.getHeader().getBytes());
         out.writeBytes(msg.getContent().getBytes());
     }
 }
 </code></pre><p>server代码：</p>
-<pre><code>ServerBootstrap serverBootstrap = <span class="keyword">new</span> ServerBootstrap();
-EventLoopGroup eventLoopGroup = <span class="keyword">new</span> NioEventLoopGroup();
-EventLoopGroup childEventLoopGroup = <span class="keyword">new</span> NioEventLoopGroup();
+<pre><code>ServerBootstrap serverBootstrap = new ServerBootstrap();
+EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+EventLoopGroup childEventLoopGroup = new NioEventLoopGroup();
 
-<span class="keyword">try</span> {
+try {
     serverBootstrap
             .group(eventLoopGroup, childEventLoopGroup)
             .channel(NioServerSocketChannel.class)
-            .childHandler(<span class="keyword">new</span> ChannelInitializer&lt;Channel&gt;() {
-                <span class="annotation">@Override</span>
-                <span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(Channel ch)</span> <span class="keyword">throws</span> Exception </span>{
-                    ch.pipeline().addLast(<span class="keyword">new</span> CustomProtocolDecoder()); <span class="comment">// 解码器</span>
-                    ch.pipeline().addLast(<span class="keyword">new</span> ServerHandler()); <span class="comment">// 打印数据</span>
+            .childHandler(new ChannelInitializer&lt;Channel&gt;() {
+                @Override
+                protected void initChannel(Channel ch) throws Exception {
+                    ch.pipeline().addLast(new CustomProtocolDecoder()); // 解码器
+                    ch.pipeline().addLast(new ServerHandler()); // 打印数据
                 }
             });
 
-    ChannelFuture future = serverBootstrap.bind(<span class="string">"localhost"</span>, <span class="number">9999</span>).sync();
+    ChannelFuture future = serverBootstrap.bind(&quot;localhost&quot;, 9999).sync();
 
     future.channel().closeFuture().sync();
-} <span class="keyword">catch</span> (Exception e) {
+} catch (Exception e) {
     e.printStackTrace();
-} <span class="keyword">finally</span> {
-    <span class="keyword">try</span> {
+} finally {
+    try {
         eventLoopGroup.shutdownGracefully().sync();
         childEventLoopGroup.shutdownGracefully().sync();
-    } <span class="keyword">catch</span> (Exception e1) {
+    } catch (Exception e1) {
         e1.printStackTrace();
     }
 }
 </code></pre><p>ServerHandler用于打印接收到的数据，并写数据回去给客户端表示接收到了数据：</p>
-<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">ServerHandler</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SimpleChannelInboundHandler&lt;CustomProtocol&gt;</span> {</span>
-    <span class="annotation">@Override</span>
-    <span class="keyword">protected</span> void channelRead0(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">CustomProtocol</span> msg) <span class="keyword">throws</span> <span class="type">Exception</span> {
-        <span class="type">System</span>.out.println(<span class="string">"server receive: "</span> + msg);
-        ctx.writeAndFlush(<span class="type">Unpooled</span>.copiedBuffer(<span class="string">"server get"</span>, <span class="type">CharsetUtil</span>.<span class="type">UTF_8</span>)).addListener(<span class="type">ChannelFutureListener</span>.<span class="type">CLOSE</span>);
+<pre><code>public class ServerHandler extends SimpleChannelInboundHandler&lt;CustomProtocol&gt; {
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, CustomProtocol msg) throws Exception {
+        System.out.println(&quot;server receive: &quot; + msg);
+        ctx.writeAndFlush(Unpooled.copiedBuffer(&quot;server get&quot;, CharsetUtil.UTF_8)).addListener(ChannelFutureListener.CLOSE);
     }
 }
 </code></pre><p>client代码：</p>
-<pre><code>Bootstrap bootstrap = <span class="keyword">new</span> Bootstrap();
+<pre><code>Bootstrap bootstrap = new Bootstrap();
 
-EventLoopGroup eventLoopGroup = <span class="keyword">new</span> NioEventLoopGroup();
+EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
-<span class="keyword">try</span> {
+try {
     bootstrap
             .group(eventLoopGroup)
             .channel(NioSocketChannel.class)
-            .<span class="keyword">handler</span>(<span class="keyword">new</span> ChannelInitializer&lt;Channel&gt;() {
-                <span class="annotation">@Override</span>
-                <span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(Channel ch)</span> <span class="keyword">throws</span> Exception </span>{
-                    ch.pipeline().addLast(<span class="keyword">new</span> CustomProtocolEncoder()); <span class="comment">// 编码器</span>
-                    ch.pipeline().addLast(<span class="keyword">new</span> ClientHandler()); <span class="comment">// 接收服务端数据</span>
+            .handler(new ChannelInitializer&lt;Channel&gt;() {
+                @Override
+                protected void initChannel(Channel ch) throws Exception {
+                    ch.pipeline().addLast(new CustomProtocolEncoder()); // 编码器
+                    ch.pipeline().addLast(new ClientHandler()); // 接收服务端数据
                 }
             });
-    ChannelFuture channelFuture = bootstrap.connect(<span class="string">"localhost"</span>, <span class="number">9999</span>).sync();
+    ChannelFuture channelFuture = bootstrap.connect(&quot;localhost&quot;, 9999).sync();
 
-    channelFuture.channel().writeAndFlush(<span class="keyword">new</span> CustomProtocol(<span class="number">1024</span>l, UUID.randomUUID().toString(), <span class="string">"content detail"</span>));
+    channelFuture.channel().writeAndFlush(new CustomProtocol(1024l, UUID.randomUUID().toString(), &quot;content detail&quot;));
 
     channelFuture.channel().closeFuture().sync();
-} <span class="keyword">catch</span> (Exception e) {
+} catch (Exception e) {
     e.printStackTrace();
-} <span class="keyword">finally</span> {
-    <span class="keyword">try</span> {
+} finally {
+    try {
         eventLoopGroup.shutdownGracefully().sync();
-    } <span class="keyword">catch</span> (InterruptedException e) {
+    } catch (InterruptedException e) {
         e.printStackTrace();
     }
 }
 </code></pre><p>ClientHandler用于接收服务端返回回来的数据：</p>
-<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">ClientHandler</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SimpleChannelInboundHandler&lt;ByteBuf&gt;</span> {</span>
-    <span class="annotation">@Override</span>
-    <span class="keyword">protected</span> void channelRead0(<span class="type">ChannelHandlerContext</span> ctx, <span class="type">ByteBuf</span> msg) <span class="keyword">throws</span> <span class="type">Exception</span> {
-        <span class="type">System</span>.out.println(<span class="string">"send success, response is: "</span> + msg.toString(<span class="type">CharsetUtil</span>.<span class="type">UTF_8</span>));
+<pre><code>public class ClientHandler extends SimpleChannelInboundHandler&lt;ByteBuf&gt; {
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+        System.out.println(&quot;send success, response is: &quot; + msg.toString(CharsetUtil.UTF_8));
     }
 }
 </code></pre><p>启动服务端和客户端之后，服务端收到客户端发来的CustomProtocol：</p>
-<pre><code><span class="keyword">server</span> receive: CustomProtocol{version=<span class="number">1024</span>, header=<span class="string">'6ed7fa3d-7d54-4add-9081-d659d4b37d3f'</span>, content=<span class="string">'content detail'</span>}
+<pre><code>server receive: CustomProtocol{version=1024, header=&apos;6ed7fa3d-7d54-4add-9081-d659d4b37d3f&apos;, content=&apos;content detail&apos;}
 </code></pre><p>之后客户端也收到服务端成功接收数据的反馈：</p>
-<pre><code>send success, <span class="built_in">response</span> <span class="keyword">is</span>: <span class="built_in">server</span> <span class="keyword">get</span>
+<pre><code>send success, response is: server get
 </code></pre>
       
     </div>
@@ -523,9 +523,9 @@ EventLoopGroup eventLoopGroup = <span class="keyword">new</span> NioEventLoopGro
       
         <div class="post-tags">
           
-            <a href="/tags/netty/" rel="tag">#netty</a>
-          
             <a href="/tags/nio/" rel="tag">#nio</a>
+          
+            <a href="/tags/netty/" rel="tag">#netty</a>
           
         </div>
       

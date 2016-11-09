@@ -93,6 +93,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="记录Flume使用KafkaSource的时候Channel队列满了之后发生的怪异问题">
 <meta name="twitter:description" content="记录Flume使用KafkaSource的时候Channel队列满了之后发生的怪异问题。数据量暴增，Channel队列爆满 ...">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/flume-channel-full01.png">
 
 
 
@@ -370,98 +371,98 @@
 <p>Flume的Source用的是KafkaSource，Sink用的是Custom Sink，由于这个Custom Sink写的有一点小问题，比如batchSize是5000次，第4000条就会发生exception，这样每次都会写入4000条数据。Sink处理的时候都会发生异常，每次都会rollback，rollback方面的知识可以参考<a href="http://fangjian0423.github.io/2016/01/03/flume-transaction/">Flume Transaction介绍</a>。</p>
 <p>这样造成的后果有3个：</p>
 <p>1.Channel中的数据满了。会发生以下异常：</p>
-<pre><code>Caused by: org.apache.flume.ChannelFullException: Space <span class="keyword">for</span> commit <span class="keyword">to</span> queue couldn<span class="attribute">'t</span> be acquired. Sinks are likely <span class="keyword">not</span> keeping up <span class="keyword">with</span> sources, <span class="keyword">or</span> the <span class="keyword">buffer</span> size <span class="keyword">is</span> too tight
+<pre><code>Caused by: org.apache.flume.ChannelFullException: Space for commit to queue couldn&apos;t be acquired. Sinks are likely not keeping up with sources, or the buffer size is too tight
 </code></pre><p>2.Sink会一直写数据，造成数据量暴增。</p>
 <p>3.如果用了interceptor，且修改了event中的数据，那么会重复处理这些修改完后的event数据。</p>
 <p>前面2个很容易理解，Sink发生异常，transaction rollback，导致channel中的队列满了。</p>
 <p>关键是第三点，很让人费解。</p>
 <p>以一段伪需求和伪代码为例，TestInterceptor的intercept方法：</p>
 <p>比如处理一段json：</p>
-<pre><code>{"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">languages</span>": <span class="value">[<span class="string">"java"</span>, <span class="string">"scala"</span>, <span class="string">"javascript"</span>]</span>}
+<pre><code>{&quot;name&quot;: &quot;format&quot;, &quot;languages&quot;: [&quot;java&quot;, &quot;scala&quot;, &quot;javascript&quot;]}
 </code></pre><p>使用interceptor处理成:</p>
-<pre><code>[{"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">language</span>": <span class="value"><span class="string">"java"</span></span>}, {"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">language</span>": <span class="value"><span class="string">"scala"</span></span>}, {"<span class="attribute">name</span>": <span class="value"><span class="string">"format"</span></span>, "<span class="attribute">language</span>": <span class="value"><span class="string">"javascript"</span></span>}]
+<pre><code>[{&quot;name&quot;: &quot;format&quot;, &quot;language&quot;: &quot;java&quot;}, {&quot;name&quot;: &quot;format&quot;, &quot;language&quot;: &quot;scala&quot;}, {&quot;name&quot;: &quot;format&quot;, &quot;language&quot;: &quot;javascript&quot;}]
 </code></pre><p>interceptor代码如下：</p>
-<pre><code><span class="function"><span class="keyword">public</span> Event <span class="title">intercept</span>(<span class="params">Event <span class="keyword">event</span></span>) </span>{
-    Model model = <span class="keyword">null</span>;
-    String jsonStr = <span class="keyword">new</span> String(<span class="keyword">event</span>.getBody(), <span class="string">"UTF-8"</span>);
-    <span class="keyword">try</span> {
+<pre><code>public Event intercept(Event event) {
+    Model model = null;
+    String jsonStr = new String(event.getBody(), &quot;UTF-8&quot;);
+    try {
         model = parseJsonStr(jsonStr);
-    } <span class="keyword">catch</span> (Exception e) {
-        log.error(<span class="string">"convert json data error"</span>);
+    } catch (Exception e) {
+        log.error(&quot;convert json data error&quot;);
     }
-    <span class="keyword">event</span>.setBody(model.getJsonString().getBytes());
-    <span class="keyword">return</span> <span class="keyword">event</span>;
+    event.setBody(model.getJsonString().getBytes());
+    return event;
 }
 </code></pre><p>当Channel中的队列已经满了以后，上述代码会打印出convert json data error，而且jsonStr的内容居然是转换后的数据，这一点一开始让我十分费解，误以为transaction rollback之后会修改source中的数据。后来debug源码发现错误在Source中。</p>
 <p>后来发现并不是这样的。</p>
 <p>KafkaSource中有一个属性eventList，是个ArrayList。用来接收kafka consume的message。</p>
 <p>直接说明KafkaSource的process方法源码：</p>
-<pre><code><span class="keyword">public</span> Status process() <span class="keyword">throws</span> EventDeliveryException {
+<pre><code>public Status process() throws EventDeliveryException {
 
-  <span class="built_in">byte</span>[] kafkaMessage;
-  <span class="built_in">byte</span>[] kafkaKey;
+  byte[] kafkaMessage;
+  byte[] kafkaKey;
   Event event;
-  Map&lt;<span class="keyword">String</span>, <span class="keyword">String</span>&gt; headers;
-  <span class="keyword">long</span> batchStartTime = System.currentTimeMillis();
-  <span class="keyword">long</span> batchEndTime = System.currentTimeMillis() + timeUpperLimit;
-  <span class="keyword">try</span> {
+  Map&lt;String, String&gt; headers;
+  long batchStartTime = System.currentTimeMillis();
+  long batchEndTime = System.currentTimeMillis() + timeUpperLimit;
+  try {
 
-    <span class="comment">/** 这里读取kafka中的message **/</span>
-    <span class="built_in">boolean</span> iterStatus = <span class="keyword">false</span>;
-    <span class="keyword">while</span> (eventList.<span class="built_in">size</span>() &lt; batchUpperLimit &amp;&amp;
+    /** 这里读取kafka中的message **/
+    boolean iterStatus = false;
+    while (eventList.size() &lt; batchUpperLimit &amp;&amp;
             System.currentTimeMillis() &lt; batchEndTime) {
       iterStatus = hasNext();
-      <span class="keyword">if</span> (iterStatus) {
-        <span class="comment">// get next message</span>
-        MessageAndMetadata&lt;<span class="built_in">byte</span>[], <span class="built_in">byte</span>[]&gt; messageAndMetadata = it.next();
+      if (iterStatus) {
+        // get next message
+        MessageAndMetadata&lt;byte[], byte[]&gt; messageAndMetadata = it.next();
         kafkaMessage = messageAndMetadata.message();
-        kafkaKey = messageAndMetadata.<span class="variable">key</span>();
+        kafkaKey = messageAndMetadata.key();
 
-        <span class="comment">// Add headers to event (topic, timestamp, and key)</span>
-        headers = <span class="keyword">new</span> <span class="keyword">HashMap</span>&lt;<span class="keyword">String</span>, <span class="keyword">String</span>&gt;();
+        // Add headers to event (topic, timestamp, and key)
+        headers = new HashMap&lt;String, String&gt;();
         headers.put(KafkaSourceConstants.TIMESTAMP,
-                <span class="keyword">String</span>.valueOf(System.currentTimeMillis()));
+                String.valueOf(System.currentTimeMillis()));
         headers.put(KafkaSourceConstants.TOPIC, topic);
-        headers.put(KafkaSourceConstants.KEY, <span class="keyword">new</span> <span class="keyword">String</span>(kafkaKey));
-        <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
-          <span class="built_in">log</span>.debug(<span class="string">"Message: {}"</span>, <span class="keyword">new</span> <span class="keyword">String</span>(kafkaMessage));
+        headers.put(KafkaSourceConstants.KEY, new String(kafkaKey));
+        if (log.isDebugEnabled()) {
+          log.debug(&quot;Message: {}&quot;, new String(kafkaMessage));
         }
         event = EventBuilder.withBody(kafkaMessage, headers);
-        eventList.<span class="built_in">add</span>(event);
+        eventList.add(event);
       }
-      <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
-        <span class="built_in">log</span>.debug(<span class="string">"Waited: {} "</span>, System.currentTimeMillis() - batchStartTime);
-        <span class="built_in">log</span>.debug(<span class="string">"Event #: {}"</span>, eventList.<span class="built_in">size</span>());
+      if (log.isDebugEnabled()) {
+        log.debug(&quot;Waited: {} &quot;, System.currentTimeMillis() - batchStartTime);
+        log.debug(&quot;Event #: {}&quot;, eventList.size());
       }
     }
-    <span class="comment">/** 这里读取kafka中的message **/</span>
+    /** 这里读取kafka中的message **/
 
-    <span class="comment">// If we have events, send events to channel</span>
-    <span class="comment">// clear the event list</span>
-    <span class="comment">// and commit if Kafka doesn't auto-commit</span>
-    <span class="keyword">if</span> (eventList.<span class="built_in">size</span>() &gt; <span class="number">0</span>) {
-      <span class="comment">// 使用ChannelProcess将Source中读取的数据给各个Channel</span>
-      <span class="comment">// 如果getChannelProcessor().processEventBatch(eventList);发生了异常，eventList不会被清空，而且processEventBatch方法会调用Interceptor处理event中的数据，event中的数据已经被转换。所以下一次会将转换后的event数据再次传给Interceptor。</span>
+    // If we have events, send events to channel
+    // clear the event list
+    // and commit if Kafka doesn&apos;t auto-commit
+    if (eventList.size() &gt; 0) {
+      // 使用ChannelProcess将Source中读取的数据给各个Channel
+      // 如果getChannelProcessor().processEventBatch(eventList);发生了异常，eventList不会被清空，而且processEventBatch方法会调用Interceptor处理event中的数据，event中的数据已经被转换。所以下一次会将转换后的event数据再次传给Interceptor。
       getChannelProcessor().processEventBatch(eventList);
-      eventList.<span class="built_in">clear</span>();
-      <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
-        <span class="built_in">log</span>.debug(<span class="string">"Wrote {} events to channel"</span>, eventList.<span class="built_in">size</span>());
+      eventList.clear();
+      if (log.isDebugEnabled()) {
+        log.debug(&quot;Wrote {} events to channel&quot;, eventList.size());
       }
-      <span class="keyword">if</span> (!kafkaAutoCommitEnabled) {
-        <span class="comment">// commit the read transactions to Kafka to avoid duplicates</span>
+      if (!kafkaAutoCommitEnabled) {
+        // commit the read transactions to Kafka to avoid duplicates
         consumer.commitOffsets();
       }
     }
-    <span class="keyword">if</span> (!iterStatus) {
-      <span class="keyword">if</span> (<span class="built_in">log</span>.isDebugEnabled()) {
-        <span class="built_in">log</span>.debug(<span class="string">"Returning with backoff. No more data to read"</span>);
+    if (!iterStatus) {
+      if (log.isDebugEnabled()) {
+        log.debug(&quot;Returning with backoff. No more data to read&quot;);
       }
-      <span class="keyword">return</span> Status.BACKOFF;
+      return Status.BACKOFF;
     }
-    <span class="keyword">return</span> Status.READY;
-  } <span class="keyword">catch</span> (Exception e) {
-    <span class="built_in">log</span>.error(<span class="string">"KafkaSource EXCEPTION, {}"</span>, e);
-    <span class="keyword">return</span> Status.BACKOFF;
+    return Status.READY;
+  } catch (Exception e) {
+    log.error(&quot;KafkaSource EXCEPTION, {}&quot;, e);
+    return Status.BACKOFF;
   }
 }
 </code></pre><p>上述代码已经加了备注，再重申一下：ChannelProcess的processEventBatch方法会调用Interceptor处理event中的数据。所以如果Channel中的队列满了，那么processEventBatch方法会发生异常，发生异常之后eventList中的没有进入channel的数据已经被Interceptor修改，且不会被清空。因此下次还是会使用这些数据，所以会发生convert json data error错误。</p>

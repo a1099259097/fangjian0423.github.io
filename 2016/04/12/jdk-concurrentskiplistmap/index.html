@@ -112,6 +112,7 @@
 如果在普通的顺序链表中查询一个元素，需要从链表头部开始一个一个节点进行遍历，然后找到节点，如下图所示，要查找234元素的话需要从5元素节点开始一个一个节点进行遍历，这样的效率是非常低的。
 
 跳表可以解决这种查询时间过长的问题：">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10">
 
 
 
@@ -404,101 +405,101 @@
 <a id="more"></a>
 <p>下图是一个级别更高的跳表：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist03.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<h2 id="跳表的查询">跳表的查询</h2><p>比如要在下面这个跳表中查找93元素，过程如下：</p>
+<h2 id="跳表的查询"><a href="#跳表的查询" class="headerlink" title="跳表的查询"></a>跳表的查询</h2><p>比如要在下面这个跳表中查找93元素，过程如下：</p>
 <ol>
 <li>从head节点(最上层的第一个节点)开始找，发现5比93小，继续同一层(Level3)的下一个节点150进行比较</li>
 <li>发现105比93大，往下一层(Level2)走，然后找Level2的5元素的下一个节点67，发现67比93小，继续同一层(Level2)的下一个节点150进行比较</li>
 <li>发现105比93大，往下一层(Level1)走，然后找Level1的67元素的下一个节点93，找到，返回</li>
 </ol>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist04.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<h2 id="跳表新增元素">跳表新增元素</h2><p>跳表中新增元素的话首先会确定Level层，在这个Level以及这个Level以下的层中都加入新的元素，具体的Level层数是通过一个通过一种随机算法获取的，比如之前这个跳表在Level2和Level1中插入666元素：</p>
+<h2 id="跳表新增元素"><a href="#跳表新增元素" class="headerlink" title="跳表新增元素"></a>跳表新增元素</h2><p>跳表中新增元素的话首先会确定Level层，在这个Level以及这个Level以下的层中都加入新的元素，具体的Level层数是通过一个通过一种随机算法获取的，比如之前这个跳表在Level2和Level1中插入666元素：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist05.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
 <p>如果Level大于目前跳表的层数，那么会添加新的一层。</p>
-<h2 id="跳表删除元素">跳表删除元素</h2><p>在各个层中找到对应的元素并删除即可。</p>
-<h2 id="ConcurrentSkipListMap分析">ConcurrentSkipListMap分析</h2><p>ConcurrentSkipListMap对跳表中的几个概念做了一层封装，如下：</p>
-<pre><code><span class="comment">// 每个节点的封装，跟层数没有关系</span>
-static <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Node&lt;K</span>,<span class="title">V&gt;</span> {</span>
-    <span class="keyword">final</span> <span class="type">K</span> key; <span class="comment">// 节点的关键字</span>
-    volatile <span class="type">Object</span> value; <span class="comment">// 节点的值</span>
-    volatile <span class="type">Node</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; next; <span class="comment">// 节点的next节点引用</span>
+<h2 id="跳表删除元素"><a href="#跳表删除元素" class="headerlink" title="跳表删除元素"></a>跳表删除元素</h2><p>在各个层中找到对应的元素并删除即可。</p>
+<h2 id="ConcurrentSkipListMap分析"><a href="#ConcurrentSkipListMap分析" class="headerlink" title="ConcurrentSkipListMap分析"></a>ConcurrentSkipListMap分析</h2><p>ConcurrentSkipListMap对跳表中的几个概念做了一层封装，如下：</p>
+<pre><code>// 每个节点的封装，跟层数没有关系
+static final class Node&lt;K,V&gt; {
+    final K key; // 节点的关键字
+    volatile Object value; // 节点的值
+    volatile Node&lt;K,V&gt; next; // 节点的next节点引用
     ...
 }
 
-<span class="comment">// 每一层节点的封装，叫做索引</span>
-static <span class="class"><span class="keyword">class</span> <span class="title">Index&lt;K</span>,<span class="title">V&gt;</span> {</span>
-    <span class="keyword">final</span> <span class="type">Node</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; node; <span class="comment">// 对应的节点</span>
-    <span class="keyword">final</span> <span class="type">Index</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; down; <span class="comment">// 下一层索引</span>
-    volatile <span class="type">Index</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; right; <span class="comment">// 同一层的下一个索引</span>
+// 每一层节点的封装，叫做索引
+static class Index&lt;K,V&gt; {
+    final Node&lt;K,V&gt; node; // 对应的节点
+    final Index&lt;K,V&gt; down; // 下一层索引
+    volatile Index&lt;K,V&gt; right; // 同一层的下一个索引
     ...
 }
 
-<span class="comment">// 每一层的头索引</span>
-static <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">HeadIndex&lt;K</span>,<span class="title">V&gt;</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Index&lt;K</span>,<span class="title">V&gt;</span> {</span>
-    <span class="keyword">final</span> int level; <span class="comment">// Level 级别</span>
-    <span class="type">HeadIndex</span>(<span class="type">Node</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; node, <span class="type">Index</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; down, <span class="type">Index</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; right, int level) {
-        <span class="keyword">super</span>(node, down, right);
-        <span class="keyword">this</span>.level = level;
+// 每一层的头索引
+static final class HeadIndex&lt;K,V&gt; extends Index&lt;K,V&gt; {
+    final int level; // Level 级别
+    HeadIndex(Node&lt;K,V&gt; node, Index&lt;K,V&gt; down, Index&lt;K,V&gt; right, int level) {
+        super(node, down, right);
+        this.level = level;
     }
     ...
 }
 </code></pre><p>简单分析下ConcurrentSkipListMap的get方法：</p>
-<pre><code><span class="keyword">private</span> V doGet(<span class="keyword">Object</span> <span class="variable">key</span>) {
-    <span class="keyword">if</span> (<span class="variable">key</span> == <span class="keyword">null</span>)
-        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();
-    Comparator&lt;? <span class="keyword">super</span> K&gt; cmp = comparator;
-    outer: <span class="keyword">for</span> (;;) {
-        <span class="comment">// findPredecessor方法表示找到最接近要查找节点的节点，并且这个节点在最下面那一层，这样就保证会遍历所有节点</span>
-        <span class="keyword">for</span> (Node&lt;K,V&gt; b = findPredecessor(<span class="variable">key</span>, cmp), n = b.next;;) {
-            <span class="keyword">Object</span> v; <span class="built_in">int</span> c;
-            <span class="keyword">if</span> (n == <span class="keyword">null</span>) <span class="comment">// 已经遍历节点到最后还是没有找到，break，返回null</span>
-                <span class="keyword">break</span> outer;
+<pre><code>private V doGet(Object key) {
+    if (key == null)
+        throw new NullPointerException();
+    Comparator&lt;? super K&gt; cmp = comparator;
+    outer: for (;;) {
+        // findPredecessor方法表示找到最接近要查找节点的节点，并且这个节点在最下面那一层，这样就保证会遍历所有节点
+        for (Node&lt;K,V&gt; b = findPredecessor(key, cmp), n = b.next;;) {
+            Object v; int c;
+            if (n == null) // 已经遍历节点到最后还是没有找到，break，返回null
+                break outer;
             Node&lt;K,V&gt; f = n.next;
-            <span class="keyword">if</span> (n != b.next) <span class="comment">// 判断比较下一个节点是否发生了变化，如果发生变化break重新开始死循环</span>
-                <span class="keyword">break</span>;
-            <span class="keyword">if</span> ((v = n.value) == <span class="keyword">null</span>) {    <span class="comment">// 如果下一个节点已经被删除了</span>
+            if (n != b.next) // 判断比较下一个节点是否发生了变化，如果发生变化break重新开始死循环
+                break;
+            if ((v = n.value) == null) {    // 如果下一个节点已经被删除了
                 n.helpDelete(b, f);
-                <span class="keyword">break</span>;
+                break;
             }
-            <span class="keyword">if</span> (b.value == <span class="keyword">null</span> || v == n)  <span class="comment">// b is deleted</span>
-                <span class="keyword">break</span>;
-            <span class="keyword">if</span> ((c = cpr(cmp, <span class="variable">key</span>, n.<span class="variable">key</span>)) == <span class="number">0</span>) {  <span class="comment">// 比较并且找到了，直接返回</span>
-                @SuppressWarnings(<span class="string">"unchecked"</span>) V vv = (V)v;
-                <span class="keyword">return</span> vv;
+            if (b.value == null || v == n)  // b is deleted
+                break;
+            if ((c = cpr(cmp, key, n.key)) == 0) {  // 比较并且找到了，直接返回
+                @SuppressWarnings(&quot;unchecked&quot;) V vv = (V)v;
+                return vv;
             }
-            <span class="keyword">if</span> (c &lt; <span class="number">0</span>) <span class="comment">// 找过头了，说明没有对应节点了，跳出循环，返回null</span>
-                <span class="keyword">break</span> outer;
-            b = n; <span class="comment">// 继续遍历</span>
-            n = f; <span class="comment">// 继续遍历</span>
+            if (c &lt; 0) // 找过头了，说明没有对应节点了，跳出循环，返回null
+                break outer;
+            b = n; // 继续遍历
+            n = f; // 继续遍历
         }
     }
-    <span class="keyword">return</span> <span class="keyword">null</span>;
+    return null;
 }
 
-<span class="keyword">private</span> Node&lt;K,V&gt; findPredecessor(<span class="keyword">Object</span> <span class="variable">key</span>, Comparator&lt;? <span class="keyword">super</span> K&gt; cmp) {
-    <span class="keyword">if</span> (<span class="variable">key</span> == <span class="keyword">null</span>)
-        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException(); <span class="comment">// don't postpone errors</span>
-    <span class="keyword">for</span> (;;) { <span class="comment">// 一个死循环内部套着另外一个循环</span>
-        <span class="keyword">for</span> (Index&lt;K,V&gt; q = head, r = q.right, d;;) { <span class="comment">// head表示最顶层的第一个索引，从这个索引开始找</span>
-            <span class="keyword">if</span> (r != <span class="keyword">null</span>) { <span class="comment">// 如果索引的同一层下一个索引不为null</span>
+private Node&lt;K,V&gt; findPredecessor(Object key, Comparator&lt;? super K&gt; cmp) {
+    if (key == null)
+        throw new NullPointerException(); // don&apos;t postpone errors
+    for (;;) { // 一个死循环内部套着另外一个循环
+        for (Index&lt;K,V&gt; q = head, r = q.right, d;;) { // head表示最顶层的第一个索引，从这个索引开始找
+            if (r != null) { // 如果索引的同一层下一个索引不为null
                 Node&lt;K,V&gt; n = r.node;
-                K k = n.<span class="variable">key</span>;
-                <span class="keyword">if</span> (n.value == <span class="keyword">null</span>) { <span class="comment">// 如果是个已删除节点</span>
-                    <span class="keyword">if</span> (!q.unlink(r)) <span class="comment">// 使用cas把已删除节点从跳表上删除掉</span>
-                        <span class="keyword">break</span>;           <span class="comment">// 已删除节点从跳表上删除失败，跳出重新循环</span>
-                    r = q.right;         <span class="comment">// 继续遍历</span>
-                    <span class="keyword">continue</span>;
+                K k = n.key;
+                if (n.value == null) { // 如果是个已删除节点
+                    if (!q.unlink(r)) // 使用cas把已删除节点从跳表上删除掉
+                        break;           // 已删除节点从跳表上删除失败，跳出重新循环
+                    r = q.right;         // 继续遍历
+                    continue;
                 }
-                <span class="keyword">if</span> (cpr(cmp, <span class="variable">key</span>, k) &gt; <span class="number">0</span>) { <span class="comment">// 使用cas比较要找的关键字和索引内节点的关键字，如果满足比较条件</span>
-                    q = r; <span class="comment">// 当前所在索引变成同一层下一个索引</span>
-                    r = r.right;  <span class="comment">// 当前所在索引的下一个索引变成下下个索引，继续遍历</span>
-                    <span class="keyword">continue</span>;
+                if (cpr(cmp, key, k) &gt; 0) { // 使用cas比较要找的关键字和索引内节点的关键字，如果满足比较条件
+                    q = r; // 当前所在索引变成同一层下一个索引
+                    r = r.right;  // 当前所在索引的下一个索引变成下下个索引，继续遍历
+                    continue;
                 }
             }
-            <span class="comment">// 直到找出上一层满足不了条件的那个索引</span>
-            <span class="keyword">if</span> ((d = q.down) == <span class="keyword">null</span>) <span class="comment">// 找到下一层的索引</span>
-                <span class="keyword">return</span> q.node; <span class="comment">// 如果下一层没有索引了，返回找到的最接近的节点</span>
-            q = d; <span class="comment">// 下一层开始做相同的操作</span>
-            r = d.right; <span class="comment">// 下一层开始做相同的操作</span>
+            // 直到找出上一层满足不了条件的那个索引
+            if ((d = q.down) == null) // 找到下一层的索引
+                return q.node; // 如果下一层没有索引了，返回找到的最接近的节点
+            q = d; // 下一层开始做相同的操作
+            r = d.right; // 下一层开始做相同的操作
         }
     }
 }

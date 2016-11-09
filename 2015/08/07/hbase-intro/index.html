@@ -364,14 +364,14 @@
       
 
       
-        <h2 id="前言">前言</h2><p>HBase在公司已经用过一段时间，在Flume中添加一个HBase sink将一些数据存储到HBase里。</p>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>HBase在公司已经用过一段时间，在Flume中添加一个HBase sink将一些数据存储到HBase里。</p>
 <p>当时HBase也没学，看了看几个例子，了解了它是基于列的表设计之后，就马上上手了，而且也把东西做出来了。 现在记录一下HBase的一些学习笔记。</p>
-<h2 id="HBase简介">HBase简介</h2><p>HBase是什么？</p>
+<h2 id="HBase简介"><a href="#HBase简介" class="headerlink" title="HBase简介"></a>HBase简介</h2><p>HBase是什么？</p>
 <p>HBase是运行在hadoop上的数据库，是一个分布式的，扩展性高的，存储大数据的数据库。</p>
 <p>HBase也是开源的，非关系型数据库。基于Google的Bigtable设计。</p>
 <p>什么时候需要使用HBase？</p>
 <p>需要实时地读写大数据。HBase的目的就是管理亿级的数据。</p>
-<h2 id="HBase基本概念">HBase基本概念</h2><p>HBase是基于列设计的，那什么是基于列呢？</p>
+<h2 id="HBase基本概念"><a href="#HBase基本概念" class="headerlink" title="HBase基本概念"></a>HBase基本概念</h2><p>HBase是基于列设计的，那什么是基于列呢？</p>
 <p>首先看下关系型数据库的表结构，第一行是table的所有列，第二行开始就是各个列对应的值：</p>
 <table>
 <thead>
@@ -439,94 +439,94 @@
 <p>TimeStamp：时间戳，创建数据的时间戳，hbase默认会自动生成</p>
 <p>ColumnFamily：列的前缀，一列可以存储多条数据，具体存储什么类型的数据还需要另外一个标示符qualify，上面那个例子中，contents和names就是两个Column Family</p>
 <p>ColumnFamily qualify：列前缀后的标识符，一个ColumnFamily可以有多个qualify。上面那个例子中format和title就是contents这个ColumnFamily的qualify。gogogo是names这个ColumnFamily的qualify</p>
-<h2 id="HBase的启动">HBase的启动</h2><p>HBase下载完之后解压，解压后使用以下命令启动hbase：</p>
-<pre><code>$ ./bin/<span class="literal">start</span>-hbase.sh
+<h2 id="HBase的启动"><a href="#HBase的启动" class="headerlink" title="HBase的启动"></a>HBase的启动</h2><p>HBase下载完之后解压，解压后使用以下命令启动hbase：</p>
+<pre><code>$ ./bin/start-hbase.sh
 </code></pre><p>启动之前注意，机器要装好jdk，并且启动hadoop。因为hbase底层数据是存储在hdfs上的。</p>
-<h2 id="HBase的基本操作">HBase的基本操作</h2><h3 id="表的创建">表的创建</h3><p>创建一个表名位tableName，ColumnFamily有contents和names的表，qualify不需要声明，每次添加数据随意指定qualify即可：</p>
-<pre><code><span class="built_in">create</span> <span class="string">'tableName'</span>,[<span class="string">'contents'</span>, <span class="string">'names'</span>]
-</code></pre><h3 id="表的删除">表的删除</h3><p>删除表的所有数据：</p>
-<pre><code>truncate <span class="built_in">table</span> <span class="built_in">table</span>Name
+<h2 id="HBase的基本操作"><a href="#HBase的基本操作" class="headerlink" title="HBase的基本操作"></a>HBase的基本操作</h2><h3 id="表的创建"><a href="#表的创建" class="headerlink" title="表的创建"></a>表的创建</h3><p>创建一个表名位tableName，ColumnFamily有contents和names的表，qualify不需要声明，每次添加数据随意指定qualify即可：</p>
+<pre><code>create &apos;tableName&apos;,[&apos;contents&apos;, &apos;names&apos;]
+</code></pre><h3 id="表的删除"><a href="#表的删除" class="headerlink" title="表的删除"></a>表的删除</h3><p>删除表的所有数据：</p>
+<pre><code>truncate table tableName
 </code></pre><p>删除表，删除之前需要先disable表，然后才可删除：</p>
-<pre><code><span class="built_in">disable</span> <span class="string">'tableName'</span>
-drop <span class="string">'tableName'</span>
-</code></pre><h3 id="数据查询">数据查询</h3><p>查询tableName表数据：</p>
-<pre><code><span class="built_in">scan</span> tableName
+<pre><code>disable &apos;tableName&apos;
+drop &apos;tableName&apos;
+</code></pre><h3 id="数据查询"><a href="#数据查询" class="headerlink" title="数据查询"></a>数据查询</h3><p>查询tableName表数据：</p>
+<pre><code>scan tableName
 </code></pre><p>返回：</p>
 <pre><code>ROW                                         COLUMN+CELL
- me.<span class="keyword">format</span>.hbase                            column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438875060466</span>, <span class="keyword">value</span>=format1
-</code></pre><h3 id="数据删除">数据删除</h3><p>比如，表tableName里有如下数据：</p>
+ me.format.hbase                            column=contents:format, timestamp=1438875060466, value=format1
+</code></pre><h3 id="数据删除"><a href="#数据删除" class="headerlink" title="数据删除"></a>数据删除</h3><p>比如，表tableName里有如下数据：</p>
 <pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875566613</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=names:gogogo, timestamp=<span class="number">1438875597592</span>, value=data1
+ me.format.hbase                            column=contents:format, timestamp=1438875566613, value=format1
+ me.format.hbase                            column=contents:title, timestamp=1438875577687, value=title1
+ me.format.hbase                            column=names:gogogo, timestamp=1438875597592, value=data1
 </code></pre><p>进行删除操作，删除ColumnFamily qulify为contents:format的数据：</p>
-<pre><code>delete <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:format'
-</code></pre><h3 id="数据修改">数据修改</h3><p>HBase没有直接的update操作，只有put操作，put操作如果对应的地方有值，会覆盖：</p>
-<pre><code>put <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:format', <span class="symbol">'format111'</span>
-</code></pre><h3 id="添加数据">添加数据</h3><p>在tableName表里插入一个Row Key为me.format.hbase, ColumnFamily为contents，qualify为format，值的format1的数据：</p>
-<pre><code>put <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:format', <span class="symbol">'format1'</span>
-</code></pre><h3 id="计数器">计数器</h3><p>HBase提供了一种计数器的概念，每次可以对某个值进行incr操作：</p>
-<pre><code>incr <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">1</span>
+<pre><code>delete &apos;tableName&apos;, &apos;me.format.hbase&apos;, &apos;contents:format&apos;
+</code></pre><h3 id="数据修改"><a href="#数据修改" class="headerlink" title="数据修改"></a>数据修改</h3><p>HBase没有直接的update操作，只有put操作，put操作如果对应的地方有值，会覆盖：</p>
+<pre><code>put &apos;tableName&apos;, &apos;me.format.hbase&apos;, &apos;contents:format&apos;, &apos;format111&apos;
+</code></pre><h3 id="添加数据"><a href="#添加数据" class="headerlink" title="添加数据"></a>添加数据</h3><p>在tableName表里插入一个Row Key为me.format.hbase, ColumnFamily为contents，qualify为format，值的format1的数据：</p>
+<pre><code>put &apos;tableName&apos;, &apos;me.format.hbase&apos;, &apos;contents:format&apos;, &apos;format1&apos;
+</code></pre><h3 id="计数器"><a href="#计数器" class="headerlink" title="计数器"></a>计数器</h3><p>HBase提供了一种计数器的概念，每次可以对某个值进行incr操作：</p>
+<pre><code>incr &apos;tableName&apos;, &apos;me.format.hbase&apos;, &apos;contents:num&apos;, 1
 </code></pre><p>查询数据：</p>
-<pre><code>me.format.hbase                            column=contents:num, timestamp=1438875837362, value=<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>00<span class="command">\x</span>01
+<pre><code>me.format.hbase                            column=contents:num, timestamp=1438875837362, value=\x00\x00\x00\x00\x00\x00\x00\x01
 </code></pre><p>可以使用get_counter命令获得计数器的值：</p>
-<pre><code>get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">0</span>
+<pre><code>get_counter &apos;tableName&apos;,&apos;me.format.hbase&apos;, &apos;contents:num&apos;, 0
 </code></pre><p>返回：</p>
-<pre><code>COUNTER VALUE = <span class="number">1</span>
+<pre><code>COUNTER VALUE = 1
 </code></pre><p>再次修改：</p>
-<pre><code>incr <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">100</span>
+<pre><code>incr &apos;tableName&apos;, &apos;me.format.hbase&apos;, &apos;contents:num&apos;, 100
 
-get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">0</span>
+get_counter &apos;tableName&apos;,&apos;me.format.hbase&apos;, &apos;contents:num&apos;, 0
 
-<span class="type">COUNTER</span> <span class="type">VALUE</span> = <span class="number">101</span>
+COUNTER VALUE = 101
 
-incr <span class="symbol">'tableName'</span>, <span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', -<span class="number">102</span>
+incr &apos;tableName&apos;, &apos;me.format.hbase&apos;, &apos;contents:num&apos;, -102
 
-get_counter <span class="symbol">'tableName'</span>,<span class="symbol">'me</span>.format.hbase', <span class="symbol">'contents</span>:num', <span class="number">0</span>
+get_counter &apos;tableName&apos;,&apos;me.format.hbase&apos;, &apos;contents:num&apos;, 0
 
-<span class="type">COUNTER</span> <span class="type">VALUE</span> = -<span class="number">1</span>
-</code></pre><h3 id="带条件的数据查询">带条件的数据查询</h3><p>scan查询可以带几个参数。</p>
+COUNTER VALUE = -1
+</code></pre><h3 id="带条件的数据查询"><a href="#带条件的数据查询" class="headerlink" title="带条件的数据查询"></a>带条件的数据查询</h3><p>scan查询可以带几个参数。</p>
 <p>COLUMNS： ColumnFamily和qualify的值<br>LIMIT：展示的个数<br>FILTER：过滤条件</p>
 <p>比如有以下数据：</p>
 <pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875707700</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:num, timestamp=<span class="number">1438876106259</span>, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=names:gogogo, timestamp=<span class="number">1438875597592</span>, value=data1
- me<span class="class">.format</span><span class="class">.hbase1</span>                           column=contents:format, timestamp=<span class="number">1438877417358</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase2</span>                           column=contents:format, timestamp=<span class="number">1438877422756</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase3</span>                           column=contents:format, timestamp=<span class="number">1438877427312</span>, value=format1
+ me.format.hbase                            column=contents:format, timestamp=1438875707700, value=format1
+ me.format.hbase                            column=contents:num, timestamp=1438876106259, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
+ me.format.hbase                            column=contents:title, timestamp=1438875577687, value=title1
+ me.format.hbase                            column=names:gogogo, timestamp=1438875597592, value=data1
+ me.format.hbase1                           column=contents:format, timestamp=1438877417358, value=format1
+ me.format.hbase2                           column=contents:format, timestamp=1438877422756, value=format1
+ me.format.hbase3                           column=contents:format, timestamp=1438877427312, value=format1
 </code></pre><p>查询ColumnFamily，qualify为contents:format的数据：</p>
-<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents:format"</span>, LIMIT =&gt; <span class="number">10</span> }
+<pre><code>scan &apos;tableName&apos;, { COLUMNS =&gt; &quot;contents:format&quot;, LIMIT =&gt; 10 }
 </code></pre><p>结果：</p>
 <pre><code>ROW                                         COLUMN+CELL
- me.<span class="keyword">format</span>.hbase                            column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438875707700</span>, <span class="keyword">value</span>=format1
- me.<span class="keyword">format</span>.hbase1                           column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438877417358</span>, <span class="keyword">value</span>=format1
- me.<span class="keyword">format</span>.hbase2                           column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438877422756</span>, <span class="keyword">value</span>=format1
- me.<span class="keyword">format</span>.hbase3                           column=contents:<span class="keyword">format</span>, timestamp=<span class="number">1438877427312</span>, <span class="keyword">value</span>=format1
+ me.format.hbase                            column=contents:format, timestamp=1438875707700, value=format1
+ me.format.hbase1                           column=contents:format, timestamp=1438877417358, value=format1
+ me.format.hbase2                           column=contents:format, timestamp=1438877422756, value=format1
+ me.format.hbase3                           column=contents:format, timestamp=1438877427312, value=format1
 </code></pre><p>查询ColumnFamily未contents的数据：</p>
-<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents"</span>, LIMIT =&gt; <span class="number">10</span> }
+<pre><code>scan &apos;tableName&apos;, { COLUMNS =&gt; &quot;contents&quot;, LIMIT =&gt; 10 }
 </code></pre><p>结果：</p>
 <pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875707700</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:num, timestamp=<span class="number">1438876106259</span>, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
- me<span class="class">.format</span><span class="class">.hbase1</span>                           column=contents:format, timestamp=<span class="number">1438877417358</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase2</span>                           column=contents:format, timestamp=<span class="number">1438877422756</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase3</span>                           column=contents:format, timestamp=<span class="number">1438877427312</span>, value=format1
+ me.format.hbase                            column=contents:format, timestamp=1438875707700, value=format1
+ me.format.hbase                            column=contents:num, timestamp=1438876106259, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
+ me.format.hbase                            column=contents:title, timestamp=1438875577687, value=title1
+ me.format.hbase1                           column=contents:format, timestamp=1438877417358, value=format1
+ me.format.hbase2                           column=contents:format, timestamp=1438877422756, value=format1
+ me.format.hbase3                           column=contents:format, timestamp=1438877427312, value=format1
 </code></pre><p>查询ColumnFamily未contents的数据，并只展示2行数据：</p>
-<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents"</span>, LIMIT =&gt; <span class="number">2</span> }
+<pre><code>scan &apos;tableName&apos;, { COLUMNS =&gt; &quot;contents&quot;, LIMIT =&gt; 2 }
 </code></pre><p>结果：</p>
 <pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:format, timestamp=<span class="number">1438875707700</span>, value=format1
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:num, timestamp=<span class="number">1438876106259</span>, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
- me<span class="class">.format</span><span class="class">.hbase1</span>                           column=contents:format, timestamp=<span class="number">1438877417358</span>, value=format1
+ me.format.hbase                            column=contents:format, timestamp=1438875707700, value=format1
+ me.format.hbase                            column=contents:num, timestamp=1438876106259, value=\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
+ me.format.hbase                            column=contents:title, timestamp=1438875577687, value=title1
+ me.format.hbase1                           column=contents:format, timestamp=1438877417358, value=format1
 </code></pre><p>查询ColumnFamily未contents的数据，并只展示2行数据：</p>
-<pre><code>scan <span class="string">'tableName'</span>, { COLUMNS =&gt; <span class="string">"contents"</span>, FILTER =&gt; <span class="string">"ValueFilter( =, 'binaryprefix:title' )"</span> }
+<pre><code>scan &apos;tableName&apos;, { COLUMNS =&gt; &quot;contents&quot;, FILTER =&gt; &quot;ValueFilter( =, &apos;binaryprefix:title&apos; )&quot; }
 </code></pre><p>结果：</p>
 <pre><code>ROW                                         COLUMN+CELL
- me<span class="class">.format</span><span class="class">.hbase</span>                            column=contents:title, timestamp=<span class="number">1438875577687</span>, value=title1
+ me.format.hbase                            column=contents:title, timestamp=1438875577687, value=title1
 </code></pre><p>scan命令具体其他的参数就不一一列举了，可查询文档解决。</p>
 
       

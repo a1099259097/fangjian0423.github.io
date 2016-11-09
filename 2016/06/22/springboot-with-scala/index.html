@@ -384,143 +384,143 @@
 <a id="more"></a>
 <p>1.使用sbt作为构建工具，由于springboot官方只有基于maven或者gradle的构建方法，所以我们只能自己写了。</p>
 <p>参考了springboot的maven配置，比如要开发web应用，需要1个spring-boot-starter-web模块，这个spring-boot-starter-web模块内地又引用了spring-boot-starter模块，spring-boot-starter模块是一个基础的starter模块，内部的依赖如下：</p>
-<pre><code><span class="tag">&lt;<span class="title">dependencies</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
-        <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
-        <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
-    <span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
-        <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
-        <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-autoconfigure<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
-    <span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
-        <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
-        <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-boot-starter-logging<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
-    <span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
-        <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
-        <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-core<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
-        <span class="tag">&lt;<span class="title">exclusions</span>&gt;</span>
-            <span class="tag">&lt;<span class="title">exclusion</span>&gt;</span>
-                <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>commons-logging<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
-                <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>commons-logging<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
-            <span class="tag">&lt;/<span class="title">exclusion</span>&gt;</span>
-        <span class="tag">&lt;/<span class="title">exclusions</span>&gt;</span>
-    <span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
-        <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.yaml<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
-        <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>snakeyaml<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
-        <span class="tag">&lt;<span class="title">scope</span>&gt;</span>runtime<span class="tag">&lt;/<span class="title">scope</span>&gt;</span>
-    <span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">dependencies</span>&gt;</span>
+<pre><code>&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-autoconfigure&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-logging&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-core&lt;/artifactId&gt;
+        &lt;exclusions&gt;
+            &lt;exclusion&gt;
+                &lt;groupId&gt;commons-logging&lt;/groupId&gt;
+                &lt;artifactId&gt;commons-logging&lt;/artifactId&gt;
+            &lt;/exclusion&gt;
+        &lt;/exclusions&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.yaml&lt;/groupId&gt;
+        &lt;artifactId&gt;snakeyaml&lt;/artifactId&gt;
+        &lt;scope&gt;runtime&lt;/scope&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
 </code></pre><p>其中springb-boot模块内部使用了spring的依赖，spring-boot-autoconfigure模块内部有很多自动化配置的类，spring-boot-starter-web模块内部使用了spring的web模块，一些tomcat模块等。</p>
 <p>我们将这3个模块加入到sbt中：</p>
-<pre><code><span class="title">libraryDependencies</span> += <span class="string">"org.springframework.boot"</span> % <span class="string">"spring-boot"</span> % <span class="string">"1.3.5.RELEASE"</span>
-libraryDependencies += <span class="string">"org.springframework.boot"</span> % <span class="string">"spring-boot-autoconfigure"</span> % <span class="string">"1.3.5.RELEASE"</span>
-libraryDependencies += <span class="string">"org.springframework.boot"</span> % <span class="string">"spring-boot-starter-web"</span> % <span class="string">"1.3.5.RELEASE"</span>
+<pre><code>libraryDependencies += &quot;org.springframework.boot&quot; % &quot;spring-boot&quot; % &quot;1.3.5.RELEASE&quot;
+libraryDependencies += &quot;org.springframework.boot&quot; % &quot;spring-boot-autoconfigure&quot; % &quot;1.3.5.RELEASE&quot;
+libraryDependencies += &quot;org.springframework.boot&quot; % &quot;spring-boot-starter-web&quot; % &quot;1.3.5.RELEASE&quot;
 </code></pre><p>再加入jpa的依赖：</p>
-<pre><code><span class="title">libraryDependencies</span> += <span class="string">"org.springframework.boot"</span> % <span class="string">"spring-boot-starter-data-jpa"</span> % <span class="string">"1.3.5.RELEASE"</span>
-libraryDependencies += <span class="string">"com.h2database"</span> % <span class="string">"h2"</span> % <span class="string">"1.4.192"</span>
+<pre><code>libraryDependencies += &quot;org.springframework.boot&quot; % &quot;spring-boot-starter-data-jpa&quot; % &quot;1.3.5.RELEASE&quot;
+libraryDependencies += &quot;com.h2database&quot; % &quot;h2&quot; % &quot;1.4.192&quot;
 </code></pre><p>2.编写domain，使用BeanProperty可以自动给field加入get，set方法。</p>
-<pre><code><span class="annotation">@Entity</span>
-<span class="class"><span class="keyword">class</span> <span class="title">Person</span>(</span>pName: <span class="type">String</span>, pAge: <span class="type">Int</span>) {
+<pre><code>@Entity
+class Person(pName: String, pAge: Int) {
 
-  <span class="annotation">@Id</span>
-  <span class="annotation">@GeneratedValue</span>
-  <span class="annotation">@BeanProperty</span>
-  <span class="keyword">var</span> id: <span class="type">Long</span> = _
+  @Id
+  @GeneratedValue
+  @BeanProperty
+  var id: Long = _
 
-  <span class="annotation">@BeanProperty</span>
-  <span class="keyword">var</span> name: <span class="type">String</span> = pName
+  @BeanProperty
+  var name: String = pName
 
-  <span class="annotation">@BeanProperty</span>
-  <span class="keyword">var</span> age: <span class="type">Int</span> = pAge
+  @BeanProperty
+  var age: Int = pAge
 
-  <span class="function"><span class="keyword">def</span> <span class="title">this</span>(</span>) = <span class="keyword">this</span>(<span class="string">"unknown"</span>, -<span class="number">1</span>)
+  def this() = this(&quot;unknown&quot;, -1)
 
 }
 
-<span class="class"><span class="keyword">object</span> <span class="title">Person</span> {</span>
-  <span class="function"><span class="keyword">def</span> <span class="title">apply</span>(</span>name: <span class="type">String</span>, age: <span class="type">Int</span>) = <span class="keyword">new</span> <span class="type">Person</span>(name, age)
+object Person {
+  def apply(name: String, age: Int) = new Person(name, age)
 }
 </code></pre><p>3.编写Repository，由于scala中没有接口这个概念，我们使用trait代替。</p>
-<pre><code><span class="annotation">@Repository</span>
-<span class="class"><span class="keyword">trait</span> <span class="title">PersonRepository</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">CrudRepository</span>[</span><span class="type">Person</span>, <span class="type">Long</span>]
+<pre><code>@Repository
+trait PersonRepository extends CrudRepository[Person, Long]
 </code></pre><p>4.编写Controller。利用构造器依赖注入将PersonRepository注入到属性里。</p>
-<pre><code><span class="variable">@RestController</span>
-<span class="class"><span class="keyword">class</span> <span class="title">PersonController</span> @<span class="title">Autowired</span>() (</span>
-  private val <span class="symbol">personRepository:</span> <span class="constant">PersonRepository</span>
+<pre><code>@RestController
+class PersonController @Autowired() (
+  private val personRepository: PersonRepository
 ) {
 
-  <span class="variable">@RequestMapping</span>(value = <span class="constant">Array</span>(<span class="string">"/index"</span>))
-  <span class="function"><span class="keyword">def</span> <span class="title">index</span><span class="params">()</span>: <span class="title">String</span> = {</span>
-    <span class="string">"hello springboot"</span>
+  @RequestMapping(value = Array(&quot;/index&quot;))
+  def index(): String = {
+    &quot;hello springboot&quot;
   }
 
-  <span class="variable">@RequestMapping</span>(value = <span class="constant">Array</span>(<span class="string">"/add"</span>))
-  <span class="function"><span class="keyword">def</span> <span class="title">add</span><span class="params">(<span class="symbol">req:</span> <span class="constant">HttpServletRequest</span>)</span>: <span class="title">String</span> = {</span>
-    val p = <span class="constant">Person</span>(req.getParameter(<span class="string">"name"</span>), <span class="constant">Some</span>(req.getParameter(<span class="string">"age"</span>).toInt).getOrElse(-<span class="number">1</span>))
+  @RequestMapping(value = Array(&quot;/add&quot;))
+  def add(req: HttpServletRequest): String = {
+    val p = Person(req.getParameter(&quot;name&quot;), Some(req.getParameter(&quot;age&quot;).toInt).getOrElse(-1))
     personRepository.save(p)
-    <span class="string">"ok"</span>
+    &quot;ok&quot;
   }
 
-  <span class="variable">@RequestMapping</span>(value = <span class="constant">Array</span>(<span class="string">"/getAll"</span>))
-  <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(<span class="symbol">req:</span> <span class="constant">HttpServletRequest</span>)</span>: <span class="title">java</span>.<span class="title">util</span>.<span class="title">List</span>[<span class="title">Person</span>] = {</span>
+  @RequestMapping(value = Array(&quot;/getAll&quot;))
+  def get(req: HttpServletRequest): java.util.List[Person] = {
     personRepository.findAll().toList
   }
 
-  <span class="variable">@RequestMapping</span>(value = <span class="constant">Array</span>(<span class="string">"/get/{id}"</span>))
-  <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(<span class="variable">@PathVariable</span>()</span> <span class="title">id</span>: <span class="title">Long</span>): <span class="title">Person</span> = {</span>
+  @RequestMapping(value = Array(&quot;/get/{id}&quot;))
+  def get(@PathVariable() id: Long): Person = {
     personRepository.findOne(id)
   }
 
 }
 </code></pre><p>5.使用CommandLineRunner做一些初始化工作。</p>
-<pre><code><span class="variable">@SpringBootApplication</span>
-<span class="class"><span class="keyword">class</span> <span class="title">MainClass</span> {</span>
+<pre><code>@SpringBootApplication
+class MainClass {
 
-  <span class="variable">@Bean</span>
-  <span class="function"><span class="keyword">def</span> <span class="title">init</span><span class="params">(<span class="symbol">personRepository:</span> <span class="constant">PersonRepository</span>)</span>: <span class="title">CommandLineRunner</span> = {</span>
-    <span class="keyword">return</span> new <span class="constant">CommandLineRunner</span> {
-      override <span class="function"><span class="keyword">def</span> <span class="title">run</span><span class="params">(<span class="symbol">strings:</span> <span class="constant">String</span>*)</span>: <span class="title">Unit</span> = {</span>
-        personRepository.save(<span class="constant">Person</span>(<span class="string">"jim"</span>, <span class="number">1</span>))
-        personRepository.save(<span class="constant">Person</span>(<span class="string">"tom"</span>, <span class="number">2</span>))
-        personRepository.save(<span class="constant">Person</span>(<span class="string">"jerry"</span>, <span class="number">3</span>))
+  @Bean
+  def init(personRepository: PersonRepository): CommandLineRunner = {
+    return new CommandLineRunner {
+      override def run(strings: String*): Unit = {
+        personRepository.save(Person(&quot;jim&quot;, 1))
+        personRepository.save(Person(&quot;tom&quot;, 2))
+        personRepository.save(Person(&quot;jerry&quot;, 3))
       }
     }
   }
 
 }
 </code></pre><p>6.配置文件application.properties中加入以下配置。</p>
-<pre><code><span class="keyword">spring</span>.datasource.url=jdbc:h2:mem:AZ;DB_CLOSE_DELAY=-<span class="number">1</span>;DB_CLOSE_ON_EXIT=FALSE
-<span class="keyword">spring</span>.datasource.driverClassName=org.h2.Driver
-<span class="keyword">spring</span>.datasource.username=sa
-<span class="keyword">spring</span>.datasource.password=
-<span class="keyword">spring</span>.jpa.database-platform=org.hibernate.dialect.H2Dialect
+<pre><code>spring.datasource.url=jdbc:h2:mem:AZ;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
 </code></pre><p>7.写一个入口对象启动应用。</p>
-<pre><code><span class="class"><span class="keyword">object</span> <span class="title">Application</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">App</span> {</span>
-  <span class="type">SpringApplication</span>.run(classOf[<span class="type">MainClass</span>]);
+<pre><code>object Application extends App {
+  SpringApplication.run(classOf[MainClass]);
 }
 </code></pre><p>测试：</p>
-<pre><code>curl http:<span class="comment">//localhost:8080/index</span>
+<pre><code>curl http://localhost:8080/index
 
 hello springboot
 
-curl http:<span class="comment">//localhost:8080/getPersons</span>
+curl http://localhost:8080/getPersons
 
-[{<span class="string">"id"</span>:<span class="number">1</span>,<span class="string">"name"</span>:<span class="string">"jim"</span>,<span class="string">"age"</span>:<span class="number">1</span>},{<span class="string">"id"</span>:<span class="number">2</span>,<span class="string">"name"</span>:<span class="string">"tom"</span>,<span class="string">"age"</span>:<span class="number">2</span>},{<span class="string">"id"</span>:<span class="number">3</span>,<span class="string">"name"</span>:<span class="string">"jerry"</span>,<span class="string">"age"</span>:<span class="number">3</span>}]
+[{&quot;id&quot;:1,&quot;name&quot;:&quot;jim&quot;,&quot;age&quot;:1},{&quot;id&quot;:2,&quot;name&quot;:&quot;tom&quot;,&quot;age&quot;:2},{&quot;id&quot;:3,&quot;name&quot;:&quot;jerry&quot;,&quot;age&quot;:3}]
 
-curl http:<span class="comment">//localhost:8080/get/1</span>
+curl http://localhost:8080/get/1
 
-{<span class="string">"id"</span>:<span class="number">1</span>,<span class="string">"name"</span>:<span class="string">"jim"</span>,<span class="string">"age"</span>:<span class="number">1</span>}
+{&quot;id&quot;:1,&quot;name&quot;:&quot;jim&quot;,&quot;age&quot;:1}
 
-curl http:<span class="comment">//localhost:8080/add\?name\=format\&amp;age\=4</span>
+curl http://localhost:8080/add\?name\=format\&amp;age\=4
 
 ok
 
-curl http:<span class="comment">//localhost:8080/getPersons</span>
+curl http://localhost:8080/getPersons
 
-[{<span class="string">"id"</span>:<span class="number">1</span>,<span class="string">"name"</span>:<span class="string">"jim"</span>,<span class="string">"age"</span>:<span class="number">1</span>},{<span class="string">"id"</span>:<span class="number">2</span>,<span class="string">"name"</span>:<span class="string">"tom"</span>,<span class="string">"age"</span>:<span class="number">2</span>},{<span class="string">"id"</span>:<span class="number">3</span>,<span class="string">"name"</span>:<span class="string">"jerry"</span>,<span class="string">"age"</span>:<span class="number">3</span>},{<span class="string">"id"</span>:<span class="number">4</span>,<span class="string">"name"</span>:<span class="string">"format"</span>,<span class="string">"age"</span>:<span class="number">4</span>}]
+[{&quot;id&quot;:1,&quot;name&quot;:&quot;jim&quot;,&quot;age&quot;:1},{&quot;id&quot;:2,&quot;name&quot;:&quot;tom&quot;,&quot;age&quot;:2},{&quot;id&quot;:3,&quot;name&quot;:&quot;jerry&quot;,&quot;age&quot;:3},{&quot;id&quot;:4,&quot;name&quot;:&quot;format&quot;,&quot;age&quot;:4}]
 </code></pre>
       
     </div>

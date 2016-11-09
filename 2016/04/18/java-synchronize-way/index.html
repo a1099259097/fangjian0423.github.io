@@ -96,6 +96,7 @@
 <meta name="twitter:title" content="Java实现同步的几种方式">
 <meta name="twitter:description" content="Java提供了很多同步操作，比如synchronized关键字、wait/notifyAll、ReentrantLock、Condition、一些并发包下的工具类、Semaphore，ThreadLocal、AbstractQueuedSynchronizer等。
 本文简单说明一下这几种方式的使用。">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/synchronize-way.jpeg">
 
 
 
@@ -372,37 +373,37 @@
 <p>本文简单说明一下这几种方式的使用。</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/synchronize-way.jpeg" alt=""></p>
 <a id="more"></a>
-<h2 id="ReentrantLock可重入锁">ReentrantLock可重入锁</h2><p>ReentrantLock可重入锁是jdk内置的一个锁对象，可以用来实现同步，基本使用方法如下：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ReentrantLockTest</span> {
+<h2 id="ReentrantLock可重入锁"><a href="#ReentrantLock可重入锁" class="headerlink" title="ReentrantLock可重入锁"></a>ReentrantLock可重入锁</h2><p>ReentrantLock可重入锁是jdk内置的一个锁对象，可以用来实现同步，基本使用方法如下：</p>
+<pre><code>public class ReentrantLockTest {
 
-    <span class="keyword">private</span> ReentrantLock <span class="keyword">lock</span> = <span class="keyword">new</span> ReentrantLock();
+    private ReentrantLock lock = new ReentrantLock();
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span>(<span class="params"></span>) </span>{
-        <span class="keyword">lock</span>.<span class="keyword">lock</span>();
-        <span class="keyword">try</span> {
-            System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" do something synchronize"</span>);
-            <span class="keyword">try</span> {
-                Thread.sleep(<span class="number">5000</span>l);
-            } <span class="keyword">catch</span> (InterruptedException e) {
-                System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+    public void execute() {
+        lock.lock();
+        try {
+            System.out.println(Thread.currentThread().getName() + &quot; do something synchronize&quot;);
+            try {
+                Thread.sleep(5000l);
+            } catch (InterruptedException e) {
+                System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
                 Thread.currentThread().interrupt();
             }
-        } <span class="keyword">finally</span> {
-            <span class="keyword">lock</span>.unlock();
+        } finally {
+            lock.unlock();
         }
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
-        ReentrantLockTest reentrantLockTest = <span class="keyword">new</span> ReentrantLockTest();
-        Thread thread1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-            @<span class="function">Override
-            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+    public static void main(String[] args) {
+        ReentrantLockTest reentrantLockTest = new ReentrantLockTest();
+        Thread thread1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
                 reentrantLockTest.execute();
             }
         });
-        Thread thread2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-            @<span class="function">Override
-            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+        Thread thread2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
                 reentrantLockTest.execute();
             }
         });
@@ -412,71 +413,71 @@
 
 }
 </code></pre><p>输出：</p>
-<pre><code>Thread-<span class="number">0</span> <span class="keyword">do</span> something synchronize
-<span class="comment">// 隔了5秒钟 输入下面</span>
-Thread-<span class="number">1</span> <span class="keyword">do</span> something synchronize
+<pre><code>Thread-0 do something synchronize
+// 隔了5秒钟 输入下面
+Thread-1 do something synchronize
 </code></pre><p>这个例子表示同一时间段只能有1个线程执行execute方法。</p>
 <p>可重入锁中可重入表示的意义在于<strong>对于同一个线程，可以继续调用加锁的方法，而不会被挂起</strong>。可重入锁内部维护一个计数器，对于同一个线程调用lock方法，计数器+1，调用unlock方法，计数器-1。</p>
 <p>举个例子再次说明一下可重入的意思，在一个加锁方法execute中调用另外一个加锁方法anotherLock并不会被挂起，可以直接调用(调用execute方法时计数器+1，然后内部又调用了anotherLock方法，计数器+1，变成了2)：</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span>(<span class="params"></span>) </span>{
-    <span class="keyword">lock</span>.<span class="keyword">lock</span>();
-    <span class="keyword">try</span> {
-        System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" do something synchronize"</span>);
-        <span class="keyword">try</span> {
+<pre><code>public void execute() {
+    lock.lock();
+    try {
+        System.out.println(Thread.currentThread().getName() + &quot; do something synchronize&quot;);
+        try {
             anotherLock();
-            Thread.sleep(<span class="number">5000</span>l);
-        } <span class="keyword">catch</span> (InterruptedException e) {
-            System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+            Thread.sleep(5000l);
+        } catch (InterruptedException e) {
+            System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
             Thread.currentThread().interrupt();
         }
-    } <span class="keyword">finally</span> {
-        <span class="keyword">lock</span>.unlock();
+    } finally {
+        lock.unlock();
     }
 }
 
-<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">anotherLock</span>(<span class="params"></span>) </span>{
-    <span class="keyword">lock</span>.<span class="keyword">lock</span>();
-    <span class="keyword">try</span> {
-        System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" invoke anotherLock"</span>);
-    } <span class="keyword">finally</span> {
-        <span class="keyword">lock</span>.unlock();
+public void anotherLock() {
+    lock.lock();
+    try {
+        System.out.println(Thread.currentThread().getName() + &quot; invoke anotherLock&quot;);
+    } finally {
+        lock.unlock();
     }
 }
 </code></pre><p>输出：</p>
 <pre><code>Thread-0 do something synchronize
-Thread-0<span class="instruction"> invoke </span>anotherLock
+Thread-0 invoke anotherLock
 // 隔了5秒钟 输入下面
 Thread-1 do something synchronize
-Thread-1<span class="instruction"> invoke </span>anotherLock
-</code></pre><h2 id="synchronized关键字">synchronized关键字</h2><p>synchronized关键跟ReentrantLock一样，也支持可重入锁。但是它是一个关键字，是一种语法级别的同步方式，称为内置锁：</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SynchronizedKeyWordTest</span> </span>{
+Thread-1 invoke anotherLock
+</code></pre><h2 id="synchronized关键字"><a href="#synchronized关键字" class="headerlink" title="synchronized关键字"></a>synchronized关键字</h2><p>synchronized关键跟ReentrantLock一样，也支持可重入锁。但是它是一个关键字，是一种语法级别的同步方式，称为内置锁：</p>
+<pre><code>public class SynchronizedKeyWordTest {
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">()</span> </span>{
-            System.out.println(Thread.currentThread().getName() + <span class="string">" do something synchronize"</span>);
-        <span class="keyword">try</span> {
+    public synchronized void execute() {
+            System.out.println(Thread.currentThread().getName() + &quot; do something synchronize&quot;);
+        try {
             anotherLock();
-            Thread.sleep(<span class="number">5000l</span>);
-        } <span class="keyword">catch</span> (InterruptedException e) {
-            System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+            Thread.sleep(5000l);
+        } catch (InterruptedException e) {
+            System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
             Thread.currentThread().interrupt();
         }
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">anotherLock</span><span class="params">()</span> </span>{
-        System.out.println(Thread.currentThread().getName() + <span class="string">" invoke anotherLock"</span>);
+    public synchronized void anotherLock() {
+        System.out.println(Thread.currentThread().getName() + &quot; invoke anotherLock&quot;);
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-        SynchronizedKeyWordTest reentrantLockTest = <span class="keyword">new</span> SynchronizedKeyWordTest();
-        Thread thread1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-            <span class="annotation">@Override</span>
-            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+    public static void main(String[] args) {
+        SynchronizedKeyWordTest reentrantLockTest = new SynchronizedKeyWordTest();
+        Thread thread1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
                 reentrantLockTest.execute();
             }
         });
-        Thread thread2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-            <span class="annotation">@Override</span>
-            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+        Thread thread2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
                 reentrantLockTest.execute();
             }
         });
@@ -494,47 +495,47 @@ Thread-1<span class="instruction"> invoke </span>anotherLock
 <li>ReentrantLock可以选择公平锁和非公平锁</li>
 <li>ReentrantLock可以获得正在等待线程的个数，计数器等</li>
 </ol>
-<h2 id="Condition条件对象">Condition条件对象</h2><p>条件对象的意义在于对于一个已经获取锁的线程，如果还需要等待其他条件才能继续执行的情况下，才会使用Condition条件对象。</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ConditionTest</span> {
+<h2 id="Condition条件对象"><a href="#Condition条件对象" class="headerlink" title="Condition条件对象"></a>Condition条件对象</h2><p>条件对象的意义在于对于一个已经获取锁的线程，如果还需要等待其他条件才能继续执行的情况下，才会使用Condition条件对象。</p>
+<pre><code>public class ConditionTest {
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
-        ReentrantLock <span class="keyword">lock</span> = <span class="keyword">new</span> ReentrantLock();
-        Condition condition = <span class="keyword">lock</span>.newCondition();
-        Thread thread1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-            @<span class="function">Override
-            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
-                <span class="keyword">lock</span>.<span class="keyword">lock</span>();
-                <span class="keyword">try</span> {
-                    System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" run"</span>);
-                    System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" wait for condition"</span>);
-                    <span class="keyword">try</span> {
+    public static void main(String[] args) {
+        ReentrantLock lock = new ReentrantLock();
+        Condition condition = lock.newCondition();
+        Thread thread1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                lock.lock();
+                try {
+                    System.out.println(Thread.currentThread().getName() + &quot; run&quot;);
+                    System.out.println(Thread.currentThread().getName() + &quot; wait for condition&quot;);
+                    try {
                         condition.await();
-                        System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" continue"</span>);
-                    } <span class="keyword">catch</span> (InterruptedException e) {
-                        System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+                        System.out.println(Thread.currentThread().getName() + &quot; continue&quot;);
+                    } catch (InterruptedException e) {
+                        System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
                         Thread.currentThread().interrupt();
                     }
-                } <span class="keyword">finally</span> {
-                    <span class="keyword">lock</span>.unlock();
+                } finally {
+                    lock.unlock();
                 }
             }
         });
-        Thread thread2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-            @<span class="function">Override
-            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
-                <span class="keyword">lock</span>.<span class="keyword">lock</span>();
-                <span class="keyword">try</span> {
-                    System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" run"</span>);
-                    System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" sleep 5 secs"</span>);
-                    <span class="keyword">try</span> {
-                        Thread.sleep(<span class="number">5000</span>l);
-                    } <span class="keyword">catch</span> (InterruptedException e) {
-                        System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+        Thread thread2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                lock.lock();
+                try {
+                    System.out.println(Thread.currentThread().getName() + &quot; run&quot;);
+                    System.out.println(Thread.currentThread().getName() + &quot; sleep 5 secs&quot;);
+                    try {
+                        Thread.sleep(5000l);
+                    } catch (InterruptedException e) {
+                        System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
                         Thread.currentThread().interrupt();
                     }
                     condition.signalAll();
-                } <span class="keyword">finally</span> {
-                    <span class="keyword">lock</span>.unlock();
+                } finally {
+                    lock.unlock();
                 }
             }
         });
@@ -545,46 +546,46 @@ Thread-1<span class="instruction"> invoke </span>anotherLock
 }
 </code></pre><p>这个例子中thread1执行到condition.await()时，当前线程会被挂起，直到thread2调用了condition.signalAll()方法之后，thread1才会重新被激活执行。</p>
 <p>这里需要注意的是thread1调用Condition的await方法之后，thread1线程释放锁，然后马上加入到Condition的等待队列，由于thread1释放了锁，thread2获得锁并执行，thread2执行signalAll方法之后，Condition中的等待队列thread1被取出并加入到AQS中，接下来thread2执行完毕之后释放锁，由于thread1已经在AQS的等待队列中，所以thread1被唤醒，继续执行。</p>
-<h2 id="wait/notifyAll_方式">wait/notifyAll 方式</h2><p>wait/notifyAll方式跟ReentrantLock/Condition方式的原理是一样的。</p>
+<h2 id="wait-notifyAll-方式"><a href="#wait-notifyAll-方式" class="headerlink" title="wait/notifyAll 方式"></a>wait/notifyAll 方式</h2><p>wait/notifyAll方式跟ReentrantLock/Condition方式的原理是一样的。</p>
 <p>Java中每个对象都拥有一个内置锁，在内置锁中调用wait，notify方法相当于调用锁的Condition条件对象的await和signalAll方法。</p>
 <p>使用wait/notifyAll实现上面的那个Condition例子：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">WaitNotifyAllTest</span> {
+<pre><code>public class WaitNotifyAllTest {
 
-    <span class="function"><span class="keyword">public</span> synchronized <span class="keyword">void</span> <span class="title">doWait</span>(<span class="params"></span>) </span>{
-        System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" run"</span>);
-        System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" wait for condition"</span>);
-        <span class="keyword">try</span> {
-            <span class="keyword">this</span>.wait();
-            System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" continue"</span>);
-        } <span class="keyword">catch</span> (InterruptedException e) {
-            System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+    public synchronized void doWait() {
+        System.out.println(Thread.currentThread().getName() + &quot; run&quot;);
+        System.out.println(Thread.currentThread().getName() + &quot; wait for condition&quot;);
+        try {
+            this.wait();
+            System.out.println(Thread.currentThread().getName() + &quot; continue&quot;);
+        } catch (InterruptedException e) {
+            System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
             Thread.currentThread().interrupt();
         }
     }
 
-    <span class="function"><span class="keyword">public</span> synchronized <span class="keyword">void</span> <span class="title">doNotify</span>(<span class="params"></span>) </span>{
-        <span class="keyword">try</span> {
-            System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" run"</span>);
-            System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" sleep 5 secs"</span>);
-            Thread.sleep(<span class="number">5000</span>l);
-            <span class="keyword">this</span>.notifyAll();
-        } <span class="keyword">catch</span> (InterruptedException e) {
-            System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+    public synchronized void doNotify() {
+        try {
+            System.out.println(Thread.currentThread().getName() + &quot; run&quot;);
+            System.out.println(Thread.currentThread().getName() + &quot; sleep 5 secs&quot;);
+            Thread.sleep(5000l);
+            this.notifyAll();
+        } catch (InterruptedException e) {
+            System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
             Thread.currentThread().interrupt();
         }
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
-        WaitNotifyAllTest waitNotifyAllTest = <span class="keyword">new</span> WaitNotifyAllTest();
-        Thread thread1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-            @<span class="function">Override
-            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+    public static void main(String[] args) {
+        WaitNotifyAllTest waitNotifyAllTest = new WaitNotifyAllTest();
+        Thread thread1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
                 waitNotifyAllTest.doWait();
             }
         });
-        Thread thread2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-            @<span class="function">Override
-            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+        Thread thread2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
                 waitNotifyAllTest.doNotify();
             }
         });
@@ -594,30 +595,30 @@ Thread-1<span class="instruction"> invoke </span>anotherLock
 
 }
 </code></pre><p>这里需要注意的是由于Condition是由锁创建的，所以调用wait/notifyAll方法的时候需要获得当前线程的锁，否则会发生IllegalMonitorStateException异常。</p>
-<h2 id="ThreadLocal">ThreadLocal</h2><p>ThreadLocal是一种把变量放到线程本地的方式来实现线程同步的。</p>
+<h2 id="ThreadLocal"><a href="#ThreadLocal" class="headerlink" title="ThreadLocal"></a>ThreadLocal</h2><p>ThreadLocal是一种把变量放到线程本地的方式来实现线程同步的。</p>
 <p>比如SimpleDateFormat不是一个线程安全的类，可以使用ThreadLocal实现同步。</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ThreadLocalTest</span> {
+<pre><code>public class ThreadLocalTest {
 
-    <span class="keyword">private</span> <span class="keyword">static</span> ThreadLocal&lt;SimpleDateFormat&gt; dateFormatThreadLocal = <span class="keyword">new</span> ThreadLocal&lt;SimpleDateFormat&gt;() {
-        @<span class="function">Override
-        <span class="keyword">protected</span> SimpleDateFormat <span class="title">initialValue</span>(<span class="params"></span>) </span>{
-            <span class="keyword">return</span> <span class="keyword">new</span> SimpleDateFormat(<span class="string">"yyyy-MM-dd HH:mm:ss"</span>);
+    private static ThreadLocal&lt;SimpleDateFormat&gt; dateFormatThreadLocal = new ThreadLocal&lt;SimpleDateFormat&gt;() {
+        @Override
+        protected SimpleDateFormat initialValue() {
+            return new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);
         }
     };
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
-        Thread thread1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-            @<span class="function">Override
-            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
-                Date date = <span class="keyword">new</span> Date();
-                System.<span class="keyword">out</span>.println(dateFormatThreadLocal.<span class="keyword">get</span>().format(date));
+    public static void main(String[] args) {
+        Thread thread1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Date date = new Date();
+                System.out.println(dateFormatThreadLocal.get().format(date));
             }
         });
-        Thread thread2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-            @<span class="function">Override
-            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
-                Date date = <span class="keyword">new</span> Date();
-                System.<span class="keyword">out</span>.println(dateFormatThreadLocal.<span class="keyword">get</span>().format(date));
+        Thread thread2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Date date = new Date();
+                System.out.println(dateFormatThreadLocal.get().format(date));
             }
         });
         thread1.start();
@@ -625,23 +626,23 @@ Thread-1<span class="instruction"> invoke </span>anotherLock
     }
 
 }
-</code></pre><h2 id="Semaphore信号量">Semaphore信号量</h2><p>Semaphore信号量被用于控制特定资源在同一个时间被访问的个数。类似连接池的概念，保证资源可以被合理的使用。可以使用构造器初始化资源个数：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> SemaphoreTest {
+</code></pre><h2 id="Semaphore信号量"><a href="#Semaphore信号量" class="headerlink" title="Semaphore信号量"></a>Semaphore信号量</h2><p>Semaphore信号量被用于控制特定资源在同一个时间被访问的个数。类似连接池的概念，保证资源可以被合理的使用。可以使用构造器初始化资源个数：</p>
+<pre><code>public class SemaphoreTest {
 
-    <span class="keyword">private</span> <span class="keyword">static</span> Semaphore semaphore = <span class="keyword">new</span> Semaphore(<span class="number">2</span>);
+    private static Semaphore semaphore = new Semaphore(2);
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i ++) {
-            <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-                @<span class="function">Override
-                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-                    <span class="keyword">try</span> {
+    public static void main(String[] args) {
+        for(int i = 0; i &lt; 5; i ++) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
                         semaphore.acquire();
-                        System.out.println(Thread.currentThread().getName() + <span class="string">" "</span> + <span class="keyword">new</span> Date());
-                        Thread.sleep(<span class="number">5000l</span>);
+                        System.out.println(Thread.currentThread().getName() + &quot; &quot; + new Date());
+                        Thread.sleep(5000l);
                         semaphore.release();
-                    } <span class="keyword">catch</span> (InterruptedException e) {
-                        System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+                    } catch (InterruptedException e) {
+                        System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
                     }
                 }
             }).start();
@@ -650,71 +651,71 @@ Thread-1<span class="instruction"> invoke </span>anotherLock
 
 }
 </code></pre><p>输出：</p>
-<pre><code>Thread-<span class="number">1</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">03</span>:<span class="number">46</span> CST <span class="number">2016</span>
-Thread-<span class="number">0</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">03</span>:<span class="number">46</span> CST <span class="number">2016</span>
-Thread-<span class="number">3</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">03</span>:<span class="number">51</span> CST <span class="number">2016</span>
-Thread-<span class="number">2</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">03</span>:<span class="number">51</span> CST <span class="number">2016</span>
-Thread-<span class="number">4</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">03</span>:<span class="number">56</span> CST <span class="number">2016</span>
-</code></pre><h2 id="并发包下的工具类">并发包下的工具类</h2><p>一般情况下，我们不会使用wait/notifyAll或者ReentrantLock这种比较底层的类，而是使用并发包下提供的一些工具类。</p>
-<h3 id="CountDownLatch">CountDownLatch</h3><p>CountDownLatch是一个计数器，它的构造方法中需要设置一个数值，用来设定计数的次数。每次调用countDown()方法之后，这个计数器都会减去1，CountDownLatch会一直阻塞着调用await()方法的线程，直到计数器的值变为0。</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CountDownLatchTest {
+<pre><code>Thread-1 Mon Apr 18 18:03:46 CST 2016
+Thread-0 Mon Apr 18 18:03:46 CST 2016
+Thread-3 Mon Apr 18 18:03:51 CST 2016
+Thread-2 Mon Apr 18 18:03:51 CST 2016
+Thread-4 Mon Apr 18 18:03:56 CST 2016
+</code></pre><h2 id="并发包下的工具类"><a href="#并发包下的工具类" class="headerlink" title="并发包下的工具类"></a>并发包下的工具类</h2><p>一般情况下，我们不会使用wait/notifyAll或者ReentrantLock这种比较底层的类，而是使用并发包下提供的一些工具类。</p>
+<h3 id="CountDownLatch"><a href="#CountDownLatch" class="headerlink" title="CountDownLatch"></a>CountDownLatch</h3><p>CountDownLatch是一个计数器，它的构造方法中需要设置一个数值，用来设定计数的次数。每次调用countDown()方法之后，这个计数器都会减去1，CountDownLatch会一直阻塞着调用await()方法的线程，直到计数器的值变为0。</p>
+<pre><code>public class CountDownLatchTest {
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-        CountDownLatch countDownLatch = <span class="keyword">new</span> CountDownLatch(<span class="number">5</span>);
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i ++) {
-            <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-                @<span class="function">Override
-                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-                    System.out.println(Thread.currentThread().getName() + <span class="string">" "</span> + <span class="keyword">new</span> Date() + <span class="string">" run"</span>);
-                    <span class="keyword">try</span> {
-                        Thread.sleep(<span class="number">5000l</span>);
-                    } <span class="keyword">catch</span> (InterruptedException e) {
+    public static void main(String[] args) {
+        CountDownLatch countDownLatch = new CountDownLatch(5);
+        for(int i = 0; i &lt; 5; i ++) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println(Thread.currentThread().getName() + &quot; &quot; + new Date() + &quot; run&quot;);
+                    try {
+                        Thread.sleep(5000l);
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     countDownLatch.countDown();
                 }
             }).start();
         }
-        <span class="keyword">try</span> {
+        try {
             countDownLatch.await();
-        } <span class="keyword">catch</span> (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println(<span class="string">"all thread over"</span>);
+        System.out.println(&quot;all thread over&quot;);
     }
 
 }
 </code></pre><p>输出：</p>
-<pre><code>Thread-<span class="number">2</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">18</span>:<span class="number">30</span> CST <span class="number">2016</span> run
-Thread-<span class="number">3</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">18</span>:<span class="number">30</span> CST <span class="number">2016</span> run
-Thread-<span class="number">4</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">18</span>:<span class="number">30</span> CST <span class="number">2016</span> run
-Thread-<span class="number">0</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">18</span>:<span class="number">30</span> CST <span class="number">2016</span> run
-Thread-<span class="number">1</span> Mon Apr <span class="number">18</span> <span class="number">18</span>:<span class="number">18</span>:<span class="number">30</span> CST <span class="number">2016</span> run
+<pre><code>Thread-2 Mon Apr 18 18:18:30 CST 2016 run
+Thread-3 Mon Apr 18 18:18:30 CST 2016 run
+Thread-4 Mon Apr 18 18:18:30 CST 2016 run
+Thread-0 Mon Apr 18 18:18:30 CST 2016 run
+Thread-1 Mon Apr 18 18:18:30 CST 2016 run
 all thread over
-</code></pre><h3 id="CyclicBarrier">CyclicBarrier</h3><p>CyclicBarrier阻塞调用的线程，直到条件满足时，阻塞的线程同时被打开。</p>
+</code></pre><h3 id="CyclicBarrier"><a href="#CyclicBarrier" class="headerlink" title="CyclicBarrier"></a>CyclicBarrier</h3><p>CyclicBarrier阻塞调用的线程，直到条件满足时，阻塞的线程同时被打开。</p>
 <p>调用await()方法的时候，这个线程就会被阻塞，当调用await()的线程数量到达屏障数的时候，主线程就会取消所有被阻塞线程的状态。</p>
 <p>在CyclicBarrier的构造方法中，还可以设置一个barrierAction。</p>
 <p>在所有的屏障都到达之后，会启动一个线程来运行这里面的代码。</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CyclicBarrierTest {
+<pre><code>public class CyclicBarrierTest {
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-        Random random = <span class="keyword">new</span> Random();
-        CyclicBarrier cyclicBarrier = <span class="keyword">new</span> CyclicBarrier(<span class="number">5</span>);
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i ++) {
-            <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-                @<span class="function">Override
-                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-                    <span class="keyword">int</span> secs = random.nextInt(<span class="number">5</span>);
-                    System.out.println(Thread.currentThread().getName() + <span class="string">" "</span> + <span class="keyword">new</span> Date() + <span class="string">" run, sleep "</span> + secs + <span class="string">" secs"</span>);
-                    <span class="keyword">try</span> {
-                        Thread.sleep(secs * <span class="number">1000</span>);
+    public static void main(String[] args) {
+        Random random = new Random();
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(5);
+        for(int i = 0; i &lt; 5; i ++) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    int secs = random.nextInt(5);
+                    System.out.println(Thread.currentThread().getName() + &quot; &quot; + new Date() + &quot; run, sleep &quot; + secs + &quot; secs&quot;);
+                    try {
+                        Thread.sleep(secs * 1000);
                         cyclicBarrier.await();
-                    } <span class="keyword">catch</span> (InterruptedException e) {
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
-                    } <span class="keyword">catch</span> (BrokenBarrierException e) {
+                    } catch (BrokenBarrierException e) {
                         e.printStackTrace();
                     }
-                    System.out.println(Thread.currentThread().getName() + <span class="string">" "</span> + <span class="keyword">new</span> Date() + <span class="string">" runs over"</span>);
+                    System.out.println(Thread.currentThread().getName() + &quot; &quot; + new Date() + &quot; runs over&quot;);
                 }
             }).start();
         }
@@ -722,62 +723,62 @@ all thread over
 
 }
 </code></pre><p>相比CountDownLatch，CyclicBarrier是可以被循环使用的，而且遇到线程中断等情况时，还可以利用reset()方法，重置计数器，从这些方面来说，CyclicBarrier会比CountDownLatch更加灵活一些。        </p>
-<h2 id="AbstractQueuedSynchronizer">AbstractQueuedSynchronizer</h2><p>AQS是很多同步工具类的基础，比如ReentrentLock里的公平锁和非公平锁，Semaphore里的公平锁和非公平锁，CountDownLatch里的锁等他们的底层都是使用AbstractQueuedSynchronizer完成的。</p>
+<h2 id="AbstractQueuedSynchronizer"><a href="#AbstractQueuedSynchronizer" class="headerlink" title="AbstractQueuedSynchronizer"></a>AbstractQueuedSynchronizer</h2><p>AQS是很多同步工具类的基础，比如ReentrentLock里的公平锁和非公平锁，Semaphore里的公平锁和非公平锁，CountDownLatch里的锁等他们的底层都是使用AbstractQueuedSynchronizer完成的。</p>
 <p>基于AbstractQueuedSynchronizer自定义实现一个独占锁：</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MySynchronizer</span> <span class="keyword">extends</span> <span class="title">AbstractQueuedSynchronizer</span> </span>{
+<pre><code>public class MySynchronizer extends AbstractQueuedSynchronizer {
 
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">tryAcquire</span><span class="params">(<span class="keyword">int</span> arg)</span> </span>{
-        <span class="keyword">if</span>(compareAndSetState(<span class="number">0</span>, <span class="number">1</span>)) {
+    @Override
+    protected boolean tryAcquire(int arg) {
+        if(compareAndSetState(0, 1)) {
             setExclusiveOwnerThread(Thread.currentThread());
-            <span class="keyword">return</span> <span class="keyword">true</span>;
+            return true;
         }
-        <span class="keyword">return</span> <span class="keyword">false</span>;
+        return false;
     }
 
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">tryRelease</span><span class="params">(<span class="keyword">int</span> arg)</span> </span>{
-        setState(<span class="number">0</span>);
-        setExclusiveOwnerThread(<span class="keyword">null</span>);
-        <span class="keyword">return</span> <span class="keyword">true</span>;
+    @Override
+    protected boolean tryRelease(int arg) {
+        setState(0);
+        setExclusiveOwnerThread(null);
+        return true;
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lock</span><span class="params">()</span> </span>{
-        acquire(<span class="number">1</span>);
+    public void lock() {
+        acquire(1);
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span><span class="params">()</span> </span>{
-        release(<span class="number">1</span>);
+    public void unlock() {
+        release(1);
     }
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-        MySynchronizer mySynchronizer = <span class="keyword">new</span> MySynchronizer();
-        Thread thread1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-            <span class="annotation">@Override</span>
-            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+    public static void main(String[] args) {
+        MySynchronizer mySynchronizer = new MySynchronizer();
+        Thread thread1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
                 mySynchronizer.lock();
-                <span class="keyword">try</span> {
-                    System.out.println(Thread.currentThread().getName() + <span class="string">" run"</span>);
-                    System.out.println(Thread.currentThread().getName() + <span class="string">" will sleep 5 secs"</span>);
-                    <span class="keyword">try</span> {
-                        Thread.sleep(<span class="number">5000l</span>);
-                        System.out.println(Thread.currentThread().getName() + <span class="string">" continue"</span>);
-                    } <span class="keyword">catch</span> (InterruptedException e) {
-                        System.err.println(Thread.currentThread().getName() + <span class="string">" interrupted"</span>);
+                try {
+                    System.out.println(Thread.currentThread().getName() + &quot; run&quot;);
+                    System.out.println(Thread.currentThread().getName() + &quot; will sleep 5 secs&quot;);
+                    try {
+                        Thread.sleep(5000l);
+                        System.out.println(Thread.currentThread().getName() + &quot; continue&quot;);
+                    } catch (InterruptedException e) {
+                        System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
                         Thread.currentThread().interrupt();
                     }
-                } <span class="keyword">finally</span> {
+                } finally {
                     mySynchronizer.unlock();
                 }
             }
         });
-        Thread thread2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-            <span class="annotation">@Override</span>
-            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+        Thread thread2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
                 mySynchronizer.lock();
-                <span class="keyword">try</span> {
-                    System.out.println(Thread.currentThread().getName() + <span class="string">" run"</span>);
-                } <span class="keyword">finally</span> {
+                try {
+                    System.out.println(Thread.currentThread().getName() + &quot; run&quot;);
+                } finally {
                     mySynchronizer.unlock();
                 }
             }
@@ -1003,7 +1004,7 @@ all thread over
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ReentrantLock可重入锁"><span class="nav-number">1.</span> <span class="nav-text">ReentrantLock可重入锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#synchronized关键字"><span class="nav-number">2.</span> <span class="nav-text">synchronized关键字</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Condition条件对象"><span class="nav-number">3.</span> <span class="nav-text">Condition条件对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#wait/notifyAll_方式"><span class="nav-number">4.</span> <span class="nav-text">wait/notifyAll 方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ThreadLocal"><span class="nav-number">5.</span> <span class="nav-text">ThreadLocal</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Semaphore信号量"><span class="nav-number">6.</span> <span class="nav-text">Semaphore信号量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#并发包下的工具类"><span class="nav-number">7.</span> <span class="nav-text">并发包下的工具类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CountDownLatch"><span class="nav-number">7.1.</span> <span class="nav-text">CountDownLatch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CyclicBarrier"><span class="nav-number">7.2.</span> <span class="nav-text">CyclicBarrier</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AbstractQueuedSynchronizer"><span class="nav-number">8.</span> <span class="nav-text">AbstractQueuedSynchronizer</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ReentrantLock可重入锁"><span class="nav-number">1.</span> <span class="nav-text">ReentrantLock可重入锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#synchronized关键字"><span class="nav-number">2.</span> <span class="nav-text">synchronized关键字</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Condition条件对象"><span class="nav-number">3.</span> <span class="nav-text">Condition条件对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#wait-notifyAll-方式"><span class="nav-number">4.</span> <span class="nav-text">wait/notifyAll 方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ThreadLocal"><span class="nav-number">5.</span> <span class="nav-text">ThreadLocal</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Semaphore信号量"><span class="nav-number">6.</span> <span class="nav-text">Semaphore信号量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#并发包下的工具类"><span class="nav-number">7.</span> <span class="nav-text">并发包下的工具类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CountDownLatch"><span class="nav-number">7.1.</span> <span class="nav-text">CountDownLatch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CyclicBarrier"><span class="nav-number">7.2.</span> <span class="nav-text">CyclicBarrier</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AbstractQueuedSynchronizer"><span class="nav-number">8.</span> <span class="nav-text">AbstractQueuedSynchronizer</span></a></li></ol></div>
             
           </div>
         </section>

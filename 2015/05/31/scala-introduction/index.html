@@ -364,50 +364,50 @@
       
 
       
-        <h2 id="Scala简介">Scala简介</h2><p>Scala是一门可以运行的jvm上的动态语言，其他可以运行在jvm上的动态语言还有groovy,clojure等。</p>
+        <h2 id="Scala简介"><a href="#Scala简介" class="headerlink" title="Scala简介"></a>Scala简介</h2><p>Scala是一门可以运行的jvm上的动态语言，其他可以运行在jvm上的动态语言还有groovy,clojure等。</p>
 <p>Scala是一种面向对象编程语言，同时又无缝结合了命令式和函数式的编程风格。</p>
-<h2 id="变量的定义以及赋值">变量的定义以及赋值</h2><p>使用var或val定义变量。 var表示这个变量可变，val则表示这个变量不可变(类似java中的final关键字)。</p>
-<pre><code>var a = <span class="number">1</span>; a = <span class="number">2</span>
-val a = <span class="number">1</span>; a = <span class="number">1</span> <span class="comment">// 报错，a不可变</span>
-</code></pre><h2 id="基础类型">基础类型</h2><p>scala有8种基础类型，分别是Byte, Short, Int, Long, Float, Double, Boolean, Char。</p>
-<pre><code><span class="tag">var</span> <span class="tag">a</span>: Int = <span class="number">1</span> <span class="comment">// 指定变量a的类型为Int，不指定的话scala会自动根据上下文得出变量的类型</span>
-<span class="tag">var</span> str = <span class="string">"a test string"</span>
-<span class="tag">var</span> ten = <span class="string">"10"</span><span class="class">.toInt</span> <span class="comment">// string类型有toInt方法可以转换成Int类型</span>
-</code></pre><h2 id="函数的定义">函数的定义</h2><p>函数的定义语法如下：</p>
-<pre><code><span class="function"><span class="keyword">def</span> 函数名<span class="params">(参数名: 参数类型)</span>:</span> 函数返回类型 = 函数体
+<h2 id="变量的定义以及赋值"><a href="#变量的定义以及赋值" class="headerlink" title="变量的定义以及赋值"></a>变量的定义以及赋值</h2><p>使用var或val定义变量。 var表示这个变量可变，val则表示这个变量不可变(类似java中的final关键字)。</p>
+<pre><code>var a = 1; a = 2
+val a = 1; a = 1 // 报错，a不可变
+</code></pre><h2 id="基础类型"><a href="#基础类型" class="headerlink" title="基础类型"></a>基础类型</h2><p>scala有8种基础类型，分别是Byte, Short, Int, Long, Float, Double, Boolean, Char。</p>
+<pre><code>var a: Int = 1 // 指定变量a的类型为Int，不指定的话scala会自动根据上下文得出变量的类型
+var str = &quot;a test string&quot;
+var ten = &quot;10&quot;.toInt // string类型有toInt方法可以转换成Int类型
+</code></pre><h2 id="函数的定义"><a href="#函数的定义" class="headerlink" title="函数的定义"></a>函数的定义</h2><p>函数的定义语法如下：</p>
+<pre><code>def 函数名(参数名: 参数类型): 函数返回类型 = 函数体
 </code></pre><p>1个简单的函数:</p>
-<pre><code><span class="function"><span class="keyword">def</span> <span class="title">scalaFunc</span><span class="params">(name: String)</span>:</span> Unit = println(<span class="string">"welcome to use scala function: "</span> + name)
+<pre><code>def scalaFunc(name: String): Unit = println(&quot;welcome to use scala function: &quot; + name)
 
    // 函数调用
-scalaFunc(<span class="string">"format"</span>) // 打印出 welcome to use scala cuntion: format
-</code></pre><h2 id="if语法">if语法</h2><p>if语法跟其他语言类似</p>
-<pre><code><span class="keyword">if</span>(some condition) <span class="keyword">value</span><span class="number">1</span> <span class="keyword">else</span> <span class="keyword">value</span><span class="number">2</span>
-</code></pre><h2 id="for语法">for语法</h2><p>基本使用：</p>
-<pre><code>val range = <span class="number">1</span> to <span class="number">10</span>
-<span class="comment">// 打印出1-10数字</span>
-<span class="keyword">for</span>(<span class="keyword">index</span> &lt;- num) {
-    println(<span class="keyword">index</span>)
+scalaFunc(&quot;format&quot;) // 打印出 welcome to use scala cuntion: format
+</code></pre><h2 id="if语法"><a href="#if语法" class="headerlink" title="if语法"></a>if语法</h2><p>if语法跟其他语言类似</p>
+<pre><code>if(some condition) value1 else value2
+</code></pre><h2 id="for语法"><a href="#for语法" class="headerlink" title="for语法"></a>for语法</h2><p>基本使用：</p>
+<pre><code>val range = 1 to 10
+// 打印出1-10数字
+for(index &lt;- num) {
+    println(index)
 }
 </code></pre><p>在for循环中使用yield关键字可返回循环中的各个值并组成一个新的集合</p>
-<pre><code>val range = <span class="number">1</span> <span class="keyword">to</span> <span class="number">10</span>
-<span class="keyword">for</span>(<span class="keyword">index</span> &lt;- range) <span class="keyword">yield</span> <span class="keyword">index</span> <span class="comment">// 得到一个1-10的新的集合</span>
+<pre><code>val range = 1 to 10
+for(index &lt;- range) yield index // 得到一个1-10的新的集合
 </code></pre><p>for循环中可以嵌入其他语法：</p>
 <p>打印出在1-10中所有的偶数:</p>
-<pre><code><span class="keyword">for</span>(index &lt;- <span class="number">1</span> to <span class="number">10</span>) {
-    <span class="keyword">if</span>（index % <span class="number">2</span> == <span class="number">0</span>) println(index)
+<pre><code>for(index &lt;- 1 to 10) {
+    if（index % 2 == 0) println(index)
 }
 </code></pre><p>由于scala可以在for循环中嵌入其他语法，所以可以简化：</p>
-<pre><code><span class="keyword">for</span>(index &lt;- <span class="number">1</span> to <span class="number">10</span>; <span class="keyword">if</span>(index % <span class="number">2</span> == <span class="number">0</span>)) println(index)
-</code></pre><h2 id="List和Array的简单使用">List和Array的简单使用</h2><p>List和Array都支持类型参数化，也就是泛型。</p>
+<pre><code>for(index &lt;- 1 to 10; if(index % 2 == 0)) println(index)
+</code></pre><h2 id="List和Array的简单使用"><a href="#List和Array的简单使用" class="headerlink" title="List和Array的简单使用"></a>List和Array的简单使用</h2><p>List和Array都支持类型参数化，也就是泛型。</p>
 <p>Array的使用：</p>
-<pre><code>val array = new Array[<span class="link_label">String</span>](<span class="link_url">3</span>)
-array(0) = "format01"
-array(1) = "format02"
+<pre><code>val array = new Array[String](3)
+array(0) = &quot;format01&quot;
+array(1) = &quot;format02&quot;
 </code></pre><p>List的使用：</p>
-<pre><code>val <span class="built_in">list</span> = List[Int](<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)
-<span class="built_in">list</span> ++ List(<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>) <span class="comment">// List(1, 2, 3, 4, 5, 6)</span>
-<span class="number">1</span> :: <span class="built_in">list</span> <span class="comment">// list前方加入元素。 List(1, 1, 2, 3)</span>
-<span class="built_in">list</span> :+ <span class="number">1</span> <span class="comment">// list后方加入元素。 List(1, 2, 3, 1)</span>
+<pre><code>val list = List[Int](1, 2, 3)
+list ++ List(4, 5, 6) // List(1, 2, 3, 4, 5, 6)
+1 :: list // list前方加入元素。 List(1, 1, 2, 3)
+list :+ 1 // list后方加入元素。 List(1, 2, 3, 1)
 </code></pre>
       
     </div>

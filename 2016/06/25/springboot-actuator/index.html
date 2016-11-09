@@ -85,7 +85,7 @@
 <meta name="description" content="springboot内部提供了一个模块spring-boot-actuator用于监控和管理springboot应用。
 这个模块内部提供了很多功能，endpoint就是其中一块功能。
 我们在sbt中加入这个模块的依赖：
-libraryDependencies += &quot;org.springframework.boot&quot; % &quot;spring-boot-starter-actuator&quot; % &quot;1.3.">
+libraryDependencies += &amp;quot;org.springframework.boot&amp;quot; % &amp;quot;spring-boot-starter-ac">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SpringBoot的actuator模块">
 <meta property="og:url" content="http://fangjian0423.github.io/2016/06/25/springboot-actuator/index.html">
@@ -93,14 +93,14 @@ libraryDependencies += &quot;org.springframework.boot&quot; % &quot;spring-boot-
 <meta property="og:description" content="springboot内部提供了一个模块spring-boot-actuator用于监控和管理springboot应用。
 这个模块内部提供了很多功能，endpoint就是其中一块功能。
 我们在sbt中加入这个模块的依赖：
-libraryDependencies += &quot;org.springframework.boot&quot; % &quot;spring-boot-starter-actuator&quot; % &quot;1.3.">
+libraryDependencies += &amp;quot;org.springframework.boot&amp;quot; % &amp;quot;spring-boot-starter-ac">
 <meta property="og:updated_time" content="2016-06-25T07:38:28.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SpringBoot的actuator模块">
 <meta name="twitter:description" content="springboot内部提供了一个模块spring-boot-actuator用于监控和管理springboot应用。
 这个模块内部提供了很多功能，endpoint就是其中一块功能。
 我们在sbt中加入这个模块的依赖：
-libraryDependencies += &quot;org.springframework.boot&quot; % &quot;spring-boot-starter-actuator&quot; % &quot;1.3.">
+libraryDependencies += &amp;quot;org.springframework.boot&amp;quot; % &amp;quot;spring-boot-starter-ac">
 
 
 
@@ -376,203 +376,203 @@ libraryDependencies += &quot;org.springframework.boot&quot; % &quot;spring-boot-
         <p>springboot内部提供了一个模块spring-boot-actuator用于监控和管理springboot应用。</p>
 <p>这个模块内部提供了很多功能，endpoint就是其中一块功能。</p>
 <p>我们在sbt中加入这个模块的依赖：</p>
-<pre><code><span class="title">libraryDependencies</span> += <span class="string">"org.springframework.boot"</span> % <span class="string">"spring-boot-starter-actuator"</span> % <span class="string">"1.3.5.RELEASE"</span>
+<pre><code>libraryDependencies += &quot;org.springframework.boot&quot; % &quot;spring-boot-starter-actuator&quot; % &quot;1.3.5.RELEASE&quot;
 </code></pre><p>然后启动项目，访问地址 <a href="http://localhost:8080/health，看到以下页面：" target="_blank" rel="external">http://localhost:8080/health，看到以下页面：</a></p>
-<pre><code><span class="rules">{
-    <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
+<pre><code>{
+    status: &quot;UP&quot;,
     diskSpace: {
-        status: <span class="string">"UP"</span>,
-        total: <span class="number">249779191808</span>,
-        free: <span class="number">22231089152</span>,
-        threshold: <span class="number">10485760</span>
-    </span></span></span>},
-    <span class="tag">db</span>: <span class="rules">{
-        <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
-        database: <span class="string">"H2"</span>,
-        hello: <span class="number">1</span>
-    </span></span></span>}
+        status: &quot;UP&quot;,
+        total: 249779191808,
+        free: 22231089152,
+        threshold: 10485760
+    },
+    db: {
+        status: &quot;UP&quot;,
+        database: &quot;H2&quot;,
+        hello: 1
+    }
 }
 </code></pre><a id="more"></a>
 <p>这个/health endpoint显示了目前应用的一些健康情况。</p>
-<h2 id="Endpoint">Endpoint</h2><p>spring-boot-autoconfigure模块中还提供了其他很多endpoint，比如 /beans(查看spring工厂信息，里面存在哪些bean)、/dump(应用中的所有线程状态)、/env(应用环境信息，比如jvm环境信息、配置文件内容、应用端口等信息)、/mappings(SpringMVC的RequestMapping映射信息)、/configprops(框架配置信息，比如数据源、freemarker、spring的配置信息)、/metrics(度量信息)等等。</p>
+<h2 id="Endpoint"><a href="#Endpoint" class="headerlink" title="Endpoint"></a>Endpoint</h2><p>spring-boot-autoconfigure模块中还提供了其他很多endpoint，比如 /beans(查看spring工厂信息，里面存在哪些bean)、/dump(应用中的所有线程状态)、/env(应用环境信息，比如jvm环境信息、配置文件内容、应用端口等信息)、/mappings(SpringMVC的RequestMapping映射信息)、/configprops(框架配置信息，比如数据源、freemarker、spring的配置信息)、/metrics(度量信息)等等。</p>
 <p>具体其他的endpoint可以查看springboot官方文档上的信息： <a href="http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready-endpoints" target="_blank" rel="external">http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready-endpoints</a></p>
 <p>这些endpoint是如何暴露出来的呢，是通过SpringBoot内部的一个Endpoint接口完成的。</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Endpoint</span>&lt;<span class="title">T</span>&gt; </span>{
-    <span class="function">String <span class="title">getId</span><span class="params">()</span></span>; <span class="comment">// endpoint的唯一标识</span>
-    <span class="function"><span class="keyword">boolean</span> <span class="title">isEnabled</span><span class="params">()</span></span>; <span class="comment">// 是否可用</span>
-    <span class="function"><span class="keyword">boolean</span> <span class="title">isSensitive</span><span class="params">()</span></span>; <span class="comment">// 是否对一般用户可见</span>
-    <span class="function">T <span class="title">invoke</span><span class="params">()</span></span>; <span class="comment">// 具体的执行过程，返回值会被解析成json暴露出口</span>
+<pre><code>public interface Endpoint&lt;T&gt; {
+    String getId(); // endpoint的唯一标识
+    boolean isEnabled(); // 是否可用
+    boolean isSensitive(); // 是否对一般用户可见
+    T invoke(); // 具体的执行过程，返回值会被解析成json暴露出口
 }
 </code></pre><p>这个接口的实现类有DumpEndpoint、BeansEndpoint、InfoEndpoint、HealthEndpoint、RequestMappingEndpoint等等。这些EndPoint实现类就是对应对外暴露的endpoint。BeansEndpoint的代码如下：</p>
-<pre><code><span class="annotation">@ConfigurationProperties</span>(prefix = <span class="string">"endpoints.beans"</span>) <span class="comment">// 配置以endpoints.beans开头，可以覆盖</span>
-<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BeansEndpoint</span> <span class="keyword">extends</span> <span class="title">AbstractEndpoint</span>&lt;<span class="title">List</span>&lt;<span class="title">Object</span>&gt;&gt;
-        <span class="keyword">implements</span> <span class="title">ApplicationContextAware</span> </span>{
+<pre><code>@ConfigurationProperties(prefix = &quot;endpoints.beans&quot;) // 配置以endpoints.beans开头，可以覆盖
+public class BeansEndpoint extends AbstractEndpoint&lt;List&lt;Object&gt;&gt;
+        implements ApplicationContextAware {
 
-    <span class="keyword">private</span> <span class="keyword">final</span> LiveBeansView liveBeansView = <span class="keyword">new</span> LiveBeansView();
+    private final LiveBeansView liveBeansView = new LiveBeansView();
 
-    <span class="keyword">private</span> <span class="keyword">final</span> JsonParser parser = JsonParserFactory.getJsonParser();
+    private final JsonParser parser = JsonParserFactory.getJsonParser();
 
-    <span class="function"><span class="keyword">public</span> <span class="title">BeansEndpoint</span><span class="params">()</span> </span>{
-        <span class="keyword">super</span>(<span class="string">"beans"</span>); <span class="comment">// id为beans</span>
+    public BeansEndpoint() {
+        super(&quot;beans&quot;); // id为beans
     }
 
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setApplicationContext</span><span class="params">(ApplicationContext context)</span> <span class="keyword">throws</span> BeansException </span>{
-        <span class="keyword">if</span> (context.getEnvironment()
-                .getProperty(LiveBeansView.MBEAN_DOMAIN_PROPERTY_NAME) == <span class="keyword">null</span>) {
-            <span class="keyword">this</span>.liveBeansView.setApplicationContext(context);
+    @Override
+    public void setApplicationContext(ApplicationContext context) throws BeansException {
+        if (context.getEnvironment()
+                .getProperty(LiveBeansView.MBEAN_DOMAIN_PROPERTY_NAME) == null) {
+            this.liveBeansView.setApplicationContext(context);
         }
     }
 
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">public</span> List&lt;Object&gt; <span class="title">invoke</span><span class="params">()</span> </span>{
-        <span class="keyword">return</span> <span class="keyword">this</span>.parser.parseList(<span class="keyword">this</span>.liveBeansView.getSnapshotAsJson()); <span class="comment">// 返回值就是最后展示的json数组</span>
+    @Override
+    public List&lt;Object&gt; invoke() {
+        return this.parser.parseList(this.liveBeansView.getSnapshotAsJson()); // 返回值就是最后展示的json数组
     }
 }
 </code></pre><p>可以使用配置覆盖默认的beans endpoint中的信息：</p>
-<pre><code>endpoints.beans.enabled= <span class="comment"># Enable the endpoint.</span>
-endpoints.beans.<span class="property">id</span>= <span class="comment"># Endpoint identifier.</span>
-endpoints.beans.path= <span class="comment"># Endpoint path.</span>
-endpoints.beans.sensitive= <span class="comment"># Mark if the endpoint exposes sensitive information.</span>
-</code></pre><h2 id="Health_Indicator">Health Indicator</h2><p>HealthEndpoint这个endpoint是暴露通过扫描出的HealthIndicator接口的实现类完成的。</p>
+<pre><code>endpoints.beans.enabled= # Enable the endpoint.
+endpoints.beans.id= # Endpoint identifier.
+endpoints.beans.path= # Endpoint path.
+endpoints.beans.sensitive= # Mark if the endpoint exposes sensitive information.
+</code></pre><h2 id="Health-Indicator"><a href="#Health-Indicator" class="headerlink" title="Health Indicator"></a>Health Indicator</h2><p>HealthEndpoint这个endpoint是暴露通过扫描出的HealthIndicator接口的实现类完成的。</p>
 <p>用于查看应用的健康状况。</p>
 <p>在我们的应用中只使用了h2数据库，最终/health显示出来的内容如下(只有硬盘容量和数据库健康状况)：</p>
-<pre><code><span class="rules">{
-    <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
+<pre><code>{
+    status: &quot;UP&quot;,
     diskSpace: {
-        status: <span class="string">"UP"</span>,
-        total: <span class="number">249779191808</span>,
-        free: <span class="number">20595720192</span>,
-        threshold: <span class="number">10485760</span>
-    </span></span></span>},
-    <span class="tag">db</span>: <span class="rules">{
-        <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
-        database: <span class="string">"H2"</span>,
-        hello: <span class="number">1</span>
-    </span></span></span>}
+        status: &quot;UP&quot;,
+        total: 249779191808,
+        free: 20595720192,
+        threshold: 10485760
+    },
+    db: {
+        status: &quot;UP&quot;,
+        database: &quot;H2&quot;,
+        hello: 1
+    }
 }
 </code></pre><p>springboot内置的HealthIndicator有这些：SolrHealthIndicator、RedisHealthIndicator、RabbitHealthIndicator、MongoHealthIndicator、ElasticsearchHealthIndicator、CassandraHealthIndicator、DiskSpaceHealthIndicator、DataSourceHealthIndicator等。</p>
 <p>这些都是springboot内置的，我们也可以编写自定义的health indicator。</p>
 <p>以服务器中某个目录中的文件个数不能超过某个值为健康指标作为需求进行编写health indicator。</p>
 <p>编写HealthIndicator：</p>
-<pre><code><span class="annotation">@Component</span>
-<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TempDirHealthIndicator</span> <span class="keyword">implements</span> <span class="title">HealthIndicator</span> </span>{
+<pre><code>@Component
+public class TempDirHealthIndicator implements HealthIndicator {
 
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="function">Health <span class="title">health</span><span class="params">()</span> </span>{
-        Health.Builder builder = <span class="keyword">new</span> Health.Builder();
-        File file = <span class="keyword">new</span> File(<span class="string">"youdirpath"</span>);
+    @Override
+    public Health health() {
+        Health.Builder builder = new Health.Builder();
+        File file = new File(&quot;youdirpath&quot;);
         File[] fileList = file.listFiles();
-        <span class="keyword">if</span>(fileList.length &gt; <span class="number">10</span>) {
-            builder.down().withDetail(<span class="string">"file num"</span>,fileList.length);
-        } <span class="keyword">else</span> {
+        if(fileList.length &gt; 10) {
+            builder.down().withDetail(&quot;file num&quot;,fileList.length);
+        } else {
             builder.up();
         }
-        <span class="function"><span class="keyword">return</span> builder.<span class="title">build</span><span class="params">()</span></span>;
+        return builder.build();
     }
 
 }
 </code></pre><p>访问 <a href="http://localhost:8080/health" target="_blank" rel="external">http://localhost:8080/health</a></p>
-<pre><code><span class="rules">{
-    <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"DOWN"</span>,
+<pre><code>{
+    status: &quot;DOWN&quot;,
     tempDir: {
-        status: <span class="string">"DOWN"</span>,
-        file num: <span class="number">34</span>
-    </span></span></span>},
-    <span class="tag">diskSpace</span>: <span class="rules">{
-        <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
-        total: <span class="number">249779191808</span>,
-        free: <span class="number">20690649088</span>,
-        threshold: <span class="number">10485760</span>
-    </span></span></span>},
-    <span class="tag">db</span>: <span class="rules">{
-        <span class="rule"><span class="attribute">status</span>:<span class="value"> <span class="string">"UP"</span>,
-        database: <span class="string">"H2"</span>,
-        hello: <span class="number">1</span>
-    </span></span></span>}
+        status: &quot;DOWN&quot;,
+        file num: 34
+    },
+    diskSpace: {
+        status: &quot;UP&quot;,
+        total: 249779191808,
+        free: 20690649088,
+        threshold: 10485760
+    },
+    db: {
+        status: &quot;UP&quot;,
+        database: &quot;H2&quot;,
+        hello: 1
+    }
 }
-</code></pre><h2 id="Metrics">Metrics</h2><p>Metrics服务用来做一些度量支持，springboot提供了两种Metrics，分别是gauge(单一的值)和counter(计数器，自增或自减)。springboot提供了PublicMetrics接口用来支持Metrics服务。</p>
+</code></pre><h2 id="Metrics"><a href="#Metrics" class="headerlink" title="Metrics"></a>Metrics</h2><p>Metrics服务用来做一些度量支持，springboot提供了两种Metrics，分别是gauge(单一的值)和counter(计数器，自增或自减)。springboot提供了PublicMetrics接口用来支持Metrics服务。</p>
 <p>metrics这个endpoint中使用的metrics都是由SystemPublicMetrics完成的：</p>
 <pre><code>{
-    mem: <span class="number">388503</span>,
-    mem.<span class="built_in">free</span>: <span class="number">199992</span>,
-    processors: <span class="number">4</span>,
-    instance.uptime: <span class="number">58260089</span>,
-    uptime: <span class="number">21843805</span>,
-    systemload.average: <span class="number">3.28369140625</span>,
-    heap.committed: <span class="number">320000</span>,
-    heap.init: <span class="number">131072</span>,
-    heap.used: <span class="number">120007</span>,
-    heap: <span class="number">1864192</span>,
-    nonheap.committed: <span class="number">69528</span>,
-    nonheap.init: <span class="number">2496</span>,
-    nonheap.used: <span class="number">68501</span>,
-    nonheap: <span class="number">0</span>,
-    threads.peak: <span class="number">15</span>,
-    threads.daemon: <span class="number">13</span>,
-    threads.totalStarted: <span class="number">20</span>,
-    threads: <span class="number">15</span>,
-    classes: <span class="number">9483</span>,
-    classes.loaded: <span class="number">9484</span>,
-    classes.unloaded: <span class="number">1</span>,
-    gc.ps_scavenge.count: <span class="number">9</span>,
-    gc.ps_scavenge.time: <span class="number">152</span>,
-    gc.ps_marksweep.count: <span class="number">2</span>,
-    gc.ps_marksweep.time: <span class="number">167</span>,
-    httpsessions.max: -<span class="number">1</span>,
-    httpsessions.active: <span class="number">0</span>,
-    datasource.primary.active: <span class="number">0</span>,
-    datasource.primary.usage: <span class="number">0</span>,
-    gauge.response.health: <span class="number">218</span>,
-    gauge.response.star-star.favicon.ico: <span class="number">29</span>,
-    counter.status<span class="number">.200</span>.star-star.favicon.ico: <span class="number">1</span>,
-    counter.status<span class="number">.503</span>.health: <span class="number">1</span>
+    mem: 388503,
+    mem.free: 199992,
+    processors: 4,
+    instance.uptime: 58260089,
+    uptime: 21843805,
+    systemload.average: 3.28369140625,
+    heap.committed: 320000,
+    heap.init: 131072,
+    heap.used: 120007,
+    heap: 1864192,
+    nonheap.committed: 69528,
+    nonheap.init: 2496,
+    nonheap.used: 68501,
+    nonheap: 0,
+    threads.peak: 15,
+    threads.daemon: 13,
+    threads.totalStarted: 20,
+    threads: 15,
+    classes: 9483,
+    classes.loaded: 9484,
+    classes.unloaded: 1,
+    gc.ps_scavenge.count: 9,
+    gc.ps_scavenge.time: 152,
+    gc.ps_marksweep.count: 2,
+    gc.ps_marksweep.time: 167,
+    httpsessions.max: -1,
+    httpsessions.active: 0,
+    datasource.primary.active: 0,
+    datasource.primary.usage: 0,
+    gauge.response.health: 218,
+    gauge.response.star-star.favicon.ico: 29,
+    counter.status.200.star-star.favicon.ico: 1,
+    counter.status.503.health: 1
 }
 </code></pre><p>gauge和counter度量通过GaugeService和CounterService完成。</p>
 <p>比如我们要查看各个Controller中的接口被调用的次数话，可以使用CounterService和aop完成：</p>
-<pre><code><span class="variable">@Aspect</span>
-<span class="variable">@Component</span>
-<span class="class"><span class="keyword">class</span> <span class="title">ControllerAspect</span> @<span class="title">Autowired</span>() (</span>
-  <span class="symbol">counterService:</span> <span class="constant">CounterService</span>
+<pre><code>@Aspect
+@Component
+class ControllerAspect @Autowired() (
+  counterService: CounterService
 ) {
 
-  <span class="variable">@Before</span>(<span class="string">"execution(* me.format.controller.*.*(..))"</span>)
-  <span class="function"><span class="keyword">def</span> <span class="title">controllerCounter</span><span class="params">(<span class="symbol">joinPoint:</span> <span class="constant">JoinPoint</span>)</span>: <span class="title">Unit</span> = {</span>
-    counterService.increment(joinPoint.getSignature.toString + <span class="string">"-invokeNum"</span>)
+  @Before(&quot;execution(* me.format.controller.*.*(..))&quot;)
+  def controllerCounter(joinPoint: JoinPoint): Unit = {
+    counterService.increment(joinPoint.getSignature.toString + &quot;-invokeNum&quot;)
   }
 
 }
 </code></pre><p>启动应用，调用getPersons接口4次，调用get/{long} 2次，查看metrics endpoint，得到以下信息：</p>
-<pre><code>counter<span class="class">.List</span> me<span class="class">.format</span><span class="class">.controller</span><span class="class">.PersonController</span><span class="class">.get</span>(HttpServletRequest)-invokeNum: <span class="number">4</span>,
-counter<span class="class">.Person</span> me<span class="class">.format</span><span class="class">.controller</span><span class="class">.PersonController</span><span class="class">.get</span>(long)-invokeNum: <span class="number">2</span>,
+<pre><code>counter.List me.format.controller.PersonController.get(HttpServletRequest)-invokeNum: 4,
+counter.Person me.format.controller.PersonController.get(long)-invokeNum: 2,
 </code></pre><p>比如我们要查看各个Controller中的接口的延迟情况，可以使用GaugeService和aop完成：</p>
-<pre><code>@<span class="type">Aspect</span>
-@<span class="type">Component</span>
-class <span class="type">ControllerAspect</span> @<span class="type">Autowired</span>() (
-  counterService: <span class="type">CounterService</span>,
-  gaugeService: <span class="type">GaugeService</span>
+<pre><code>@Aspect
+@Component
+class ControllerAspect @Autowired() (
+  counterService: CounterService,
+  gaugeService: GaugeService
 ) {
 
-  @<span class="type">Before</span>(<span class="string">"execution(* me.format.controller.*.*(..))"</span>)
-  def controllerCounter(joinPoint: <span class="type">JoinPoint</span>): <span class="type">Unit</span> = {
-    counterService.increment(joinPoint.getSignature.toString + <span class="string">"-invokeNum"</span>)
+  @Before(&quot;execution(* me.format.controller.*.*(..))&quot;)
+  def controllerCounter(joinPoint: JoinPoint): Unit = {
+    counterService.increment(joinPoint.getSignature.toString + &quot;-invokeNum&quot;)
   }
 
-  @<span class="type">Around</span>(<span class="string">"execution(* me.format.controller.*.*(..))"</span>)
-  def controllerGauge(proceedingJoinPoint: <span class="type">ProceedingJoinPoint</span>): <span class="type">AnyRef</span> = {
-    val st = <span class="type">System</span>.currentTimeMillis()
-    val <span class="literal">result</span> = proceedingJoinPoint.proceed()
-    val et = <span class="type">System</span>.currentTimeMillis()
-    gaugeService.submit(proceedingJoinPoint.getSignature.toString + <span class="string">"-invokeTime"</span>, (et - st))
-    <span class="literal">result</span>
+  @Around(&quot;execution(* me.format.controller.*.*(..))&quot;)
+  def controllerGauge(proceedingJoinPoint: ProceedingJoinPoint): AnyRef = {
+    val st = System.currentTimeMillis()
+    val result = proceedingJoinPoint.proceed()
+    val et = System.currentTimeMillis()
+    gaugeService.submit(proceedingJoinPoint.getSignature.toString + &quot;-invokeTime&quot;, (et - st))
+    result
   }
 
 }
 </code></pre><p>启动应用，调用getPersons接口4次，调用get/{long} 2次，查看metrics endpoint，得到以下信息：</p>
-<pre><code>gauge<span class="class">.List</span> me<span class="class">.format</span><span class="class">.controller</span><span class="class">.PersonController</span><span class="class">.get</span>(HttpServletRequest)-invokeTime: <span class="number">4</span>,
-gauge<span class="class">.Person</span> me<span class="class">.format</span><span class="class">.controller</span><span class="class">.PersonController</span><span class="class">.get</span>(long)-invokeTime: <span class="number">11</span>,
-counter<span class="class">.List</span> me<span class="class">.format</span><span class="class">.controller</span><span class="class">.PersonController</span><span class="class">.get</span>(HttpServletRequest)-invokeNum: <span class="number">4</span>,
-counter<span class="class">.Person</span> me<span class="class">.format</span><span class="class">.controller</span><span class="class">.PersonController</span><span class="class">.get</span>(long)-invokeNum: <span class="number">2</span>,
+<pre><code>gauge.List me.format.controller.PersonController.get(HttpServletRequest)-invokeTime: 4,
+gauge.Person me.format.controller.PersonController.get(long)-invokeTime: 11,
+counter.List me.format.controller.PersonController.get(HttpServletRequest)-invokeNum: 4,
+counter.Person me.format.controller.PersonController.get(long)-invokeNum: 2,
 </code></pre><p>当然，actuator模块提供的功能远不止这些，更多的信息可以查看官方文档。</p>
 <p><a href="http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready" target="_blank" rel="external">http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready</a></p>
 
@@ -792,7 +792,7 @@ counter<span class="class">.Person</span> me<span class="class">.format</span><s
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Endpoint"><span class="nav-number">1.</span> <span class="nav-text">Endpoint</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Health_Indicator"><span class="nav-number">2.</span> <span class="nav-text">Health Indicator</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Metrics"><span class="nav-number">3.</span> <span class="nav-text">Metrics</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Endpoint"><span class="nav-number">1.</span> <span class="nav-text">Endpoint</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Health-Indicator"><span class="nav-number">2.</span> <span class="nav-text">Health Indicator</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Metrics"><span class="nav-number">3.</span> <span class="nav-text">Metrics</span></a></li></ol></div>
             
           </div>
         </section>

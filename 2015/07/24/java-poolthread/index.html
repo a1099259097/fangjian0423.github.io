@@ -366,222 +366,222 @@
       
         <p>目前的工作是接触大数据相关的内容，自己也缺少高并发的知识，刚好前几天看了flume的源码，里面也用到了各种线程池内容，刚好学习一下，做个笔记。</p>
 <p>写这篇博客的时候又刚好想起了当时自己实习的时候遇到的一个问题。1000个爬虫任务使用了多线程的处理方式，比如开5个线程处理这1000个任务，每个线程分200个任务，然后各个线程处理那200个爬虫任务→_→，太笨了。其实更合理的方法是使用阻塞队列+线程池的方法。</p>
-<h2 id="线程池的使用">线程池的使用</h2><p>Java把线程的调用封装成了一个Executor接口，Executor接口中定义了一个execute方法，用来提交线程的执行。</p>
+<h2 id="线程池的使用"><a href="#线程池的使用" class="headerlink" title="线程池的使用"></a>线程池的使用</h2><p>Java把线程的调用封装成了一个Executor接口，Executor接口中定义了一个execute方法，用来提交线程的执行。</p>
 <p>而ExecutorService接口是Executor接口的子接口，用来管理线程的执行。</p>
 <p>ExecutorService的初始化可以使用Executors类的静态方法。</p>
 <p>Executors类是Java提供的一个专门用于创建线程池的类。</p>
 <p>Executors提供了很多方法用来初始化ExecutorService，可以初始化指定数目个线程的线城市或者单个线程的线程池。</p>
 <p>比如构造一个10个线程的线程池，使用了guava的ThreadFactoryBuilder，guava的ThreadFactoryBuilder可以传入一个namFormat参数用户来表示线程的name，它内部会使用数字增量表示%d，比如一下的nameFormat，10个线程，名字分别是thread-call-runner-1，thread-call-runner-2 … thread-call-runner-10:</p>
-<pre><code>Executors.newFixedThreadPool(<span class="number">10</span>, <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"thread-call-runner-%d"</span>).build());
+<pre><code>Executors.newFixedThreadPool(10, new ThreadFactoryBuilder().setNameFormat(&quot;thread-call-runner-%d&quot;).build());
 </code></pre><p>ExecutorService线程池使用线程执行任务例子：</p>
 <p>1.阻塞队列里有10个元素，初始化带有2个线程的线程池，跑2个线程分别去阻塞队列里取数据执行。</p>
-<pre><code>@<span class="function">Test
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test01</span><span class="params">()</span> throws Exception </span>{
-    ExecutorService es = Executors.newFixedThreadPool(<span class="number">2</span>, <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"thread-call-runner-%d"</span>).build());
-    final LinkedBlockingDeque&lt;String&gt; <span class="built_in">deque</span> = <span class="keyword">new</span> LinkedBlockingDeque&lt;String&gt;();
-    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">10</span>; i ++) {
-        <span class="built_in">deque</span>.add(i + <span class="string">""</span>);
+<pre><code>@Test
+public void test01() throws Exception {
+    ExecutorService es = Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat(&quot;thread-call-runner-%d&quot;).build());
+    final LinkedBlockingDeque&lt;String&gt; deque = new LinkedBlockingDeque&lt;String&gt;();
+    for(int i = 1; i &lt;= 10; i ++) {
+        deque.add(i + &quot;&quot;);
     }
-    es.submit(<span class="keyword">new</span> Runnable() {
-        @<span class="function">Override
-        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-            <span class="keyword">while</span>(!<span class="built_in">deque</span>.isEmpty()) {
-                System.out.println(<span class="built_in">deque</span>.poll() + <span class="string">"-"</span> + Thread.currentThread().getName());
+    es.submit(new Runnable() {
+        @Override
+        public void run() {
+            while(!deque.isEmpty()) {
+                System.out.println(deque.poll() + &quot;-&quot; + Thread.currentThread().getName());
             }
         }
     });
-    es.submit(<span class="keyword">new</span> Runnable() {
-        @<span class="function">Override
-        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-            <span class="keyword">while</span>(!<span class="built_in">deque</span>.isEmpty()) {
-                System.out.println(<span class="built_in">deque</span>.poll() + <span class="string">"-"</span> + Thread.currentThread().getName());
+    es.submit(new Runnable() {
+        @Override
+        public void run() {
+            while(!deque.isEmpty()) {
+                System.out.println(deque.poll() + &quot;-&quot; + Thread.currentThread().getName());
             }
         }
     });
-    Thread.sleep(<span class="number">10000l</span>);
+    Thread.sleep(10000l);
 }
 </code></pre><p>打印，2个线程都会执行：</p>
-<pre><code><span class="number">1</span>-thread-call-runner-<span class="number">0</span>
-<span class="number">2</span>-thread-call-runner-<span class="number">0</span>
-<span class="number">3</span>-thread-call-runner-<span class="number">1</span>
-<span class="number">4</span>-thread-call-runner-<span class="number">0</span>
-<span class="number">5</span>-thread-call-runner-<span class="number">0</span>
-<span class="number">6</span>-thread-call-runner-<span class="number">1</span>
-<span class="number">7</span>-thread-call-runner-<span class="number">0</span>
-<span class="number">8</span>-thread-call-runner-<span class="number">1</span>
-<span class="number">9</span>-thread-call-runner-<span class="number">0</span>
-<span class="number">10</span>-thread-call-runner-<span class="number">0</span>
+<pre><code>1-thread-call-runner-0
+2-thread-call-runner-0
+3-thread-call-runner-1
+4-thread-call-runner-0
+5-thread-call-runner-0
+6-thread-call-runner-1
+7-thread-call-runner-0
+8-thread-call-runner-1
+9-thread-call-runner-0
+10-thread-call-runner-0
 </code></pre><p>2.执行Callable线程，Callable线程和Runnable线程的区别就是Callable的线程会有返回值，这个返回值是Future，未来的意思，而且这Future是个接口，提供了几个实用的方法，比如cancel, idDone, isCancelled, get等方法。</p>
-<pre><code>@<span class="type">Test</span>
-public <span class="type">void</span> test02() throws <span class="type">Exception</span> {
-    <span class="type">ExecutorService</span> es = <span class="type">Executors</span>.newFixedThreadPool(<span class="number">2</span>, new <span class="type">ThreadFactoryBuilder</span>().setNameFormat(<span class="string">"thread-call-runner-%d"</span>).build());
-    final <span class="type">LinkedBlockingDeque</span>&lt;<span class="type">String</span>&gt; deque = new <span class="type">LinkedBlockingDeque</span>&lt;<span class="type">String</span>&gt;();
-    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">500</span>; i ++) {
-        deque.add(i + <span class="string">""</span>);
+<pre><code>@Test
+public void test02() throws Exception {
+    ExecutorService es = Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat(&quot;thread-call-runner-%d&quot;).build());
+    final LinkedBlockingDeque&lt;String&gt; deque = new LinkedBlockingDeque&lt;String&gt;();
+    for(int i = 1; i &lt;= 500; i ++) {
+        deque.add(i + &quot;&quot;);
     }
-    <span class="type">Future</span>&lt;<span class="type">String</span>&gt; <span class="literal">result</span> = es.submit(new <span class="type">Callable</span>&lt;<span class="type">String</span>&gt;() {
-        @<span class="type">Override</span>
-        public <span class="type">String</span> call() throws <span class="type">Exception</span> {
-            <span class="keyword">while</span> (!deque.isEmpty()) {
-                <span class="type">System</span>.<span class="keyword">out</span>.println(deque.poll() + <span class="string">"-"</span> + <span class="type">Thread</span>.currentThread().getName());
+    Future&lt;String&gt; result = es.submit(new Callable&lt;String&gt;() {
+        @Override
+        public String call() throws Exception {
+            while (!deque.isEmpty()) {
+                System.out.println(deque.poll() + &quot;-&quot; + Thread.currentThread().getName());
             }
-            <span class="keyword">return</span> <span class="string">"done"</span>;
+            return &quot;done&quot;;
         }
     });
-    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="literal">result</span>.isDone());
+    System.out.println(result.isDone());
     // get方法会阻塞
-    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="literal">result</span>.get());
-    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"exec next"</span>);
+    System.out.println(result.get());
+    System.out.println(&quot;exec next&quot;);
 }
 </code></pre><p>打印：</p>
-<pre><code>先打印出几百个 数字-thread-call-runner-<span class="number">0</span>
-然后打印出 isDone的结果， 是<span class="literal">false</span>
-<span class="type">Future</span>的get是得到<span class="type">Callable</span>线程执行完毕后的结果，该方法会阻塞，直到该<span class="type">Future</span>对应的线程全部执行完才会继续执行下去。这个例子<span class="type">Callable</span>线程执行完返回done，所以get方法也是返回done
+<pre><code>先打印出几百个 数字-thread-call-runner-0
+然后打印出 isDone的结果， 是false
+Future的get是得到Callable线程执行完毕后的结果，该方法会阻塞，直到该Future对应的线程全部执行完才会继续执行下去。这个例子Callable线程执行完返回done，所以get方法也是返回done
 
-get方法还有个重载的方法，带有<span class="number">2</span>个参数，第一个参数是一个long类型的数字，第二个参数是时间单位。<span class="literal">result</span>.get(<span class="number">1</span>, <span class="type">TimeUnit</span>.<span class="type">MILLISECONDS</span>) 就表示<span class="number">1</span>毫秒，等待这个<span class="type">Future</span>的时间为<span class="number">1</span>毫秒，如果时间<span class="number">1</span>毫秒，那么这个get方法的调用会抛出java.util.concurrent.<span class="type">TimeoutException</span>异常，并且线程内部的执行也会停止。注意，但是如果我们catch这个<span class="type">TimeoutException</span>的话，那么线程里的代码还是会被执行完毕。
+get方法还有个重载的方法，带有2个参数，第一个参数是一个long类型的数字，第二个参数是时间单位。result.get(1, TimeUnit.MILLISECONDS) 就表示1毫秒，等待这个Future的时间为1毫秒，如果时间1毫秒，那么这个get方法的调用会抛出java.util.concurrent.TimeoutException异常，并且线程内部的执行也会停止。注意，但是如果我们catch这个TimeoutException的话，那么线程里的代码还是会被执行完毕。
 
-<span class="keyword">try</span> {
-    // catch <span class="type">TimeoutException</span>的话线程里的代码还是会执行下去
-    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="literal">result</span>.get(<span class="number">10</span>, <span class="type">TimeUnit</span>.<span class="type">MILLISECONDS</span>));
-} catch (<span class="type">TimeoutException</span> e) {
+try {
+    // catch TimeoutException的话线程里的代码还是会执行下去
+    System.out.println(result.get(10, TimeUnit.MILLISECONDS));
+} catch (TimeoutException e) {
     e.printStackTrace();
 }
 </code></pre><p>3.Future的cancel方法的使用</p>
-<pre><code>@<span class="type">Test</span>
-public <span class="type">void</span> test03() throws <span class="type">Exception</span> {
-    <span class="type">ExecutorService</span> es = <span class="type">Executors</span>.newFixedThreadPool(<span class="number">2</span>, new <span class="type">ThreadFactoryBuilder</span>().setNameFormat(<span class="string">"thread-call-runner-%d"</span>).build());
-    final <span class="type">LinkedBlockingDeque</span>&lt;<span class="type">String</span>&gt; deque = new <span class="type">LinkedBlockingDeque</span>&lt;<span class="type">String</span>&gt;();
-    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">5000</span>; i ++) {
-        deque.add(i + <span class="string">""</span>);
+<pre><code>@Test
+public void test03() throws Exception {
+    ExecutorService es = Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat(&quot;thread-call-runner-%d&quot;).build());
+    final LinkedBlockingDeque&lt;String&gt; deque = new LinkedBlockingDeque&lt;String&gt;();
+    for(int i = 1; i &lt;= 5000; i ++) {
+        deque.add(i + &quot;&quot;);
     }
-    <span class="type">Future</span>&lt;<span class="type">String</span>&gt; <span class="literal">result</span> = es.submit(new <span class="type">Callable</span>&lt;<span class="type">String</span>&gt;() {
-        @<span class="type">Override</span>
-        public <span class="type">String</span> call() throws <span class="type">Exception</span> {
-            <span class="keyword">while</span> (!deque.isEmpty() &amp;&amp; !<span class="type">Thread</span>.currentThread().isInterrupted()) {
-                <span class="type">System</span>.<span class="keyword">out</span>.println(deque.poll() + <span class="string">"-"</span> + <span class="type">Thread</span>.currentThread().getName());
+    Future&lt;String&gt; result = es.submit(new Callable&lt;String&gt;() {
+        @Override
+        public String call() throws Exception {
+            while (!deque.isEmpty() &amp;&amp; !Thread.currentThread().isInterrupted()) {
+                System.out.println(deque.poll() + &quot;-&quot; + Thread.currentThread().getName());
             }
-            <span class="keyword">return</span> <span class="string">"done"</span>;
+            return &quot;done&quot;;
         }
     });
 
-    <span class="keyword">try</span> {
-        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="literal">result</span>.get(<span class="number">10</span>, <span class="type">TimeUnit</span>.<span class="type">MILLISECONDS</span>));
-    } catch (<span class="type">TimeoutException</span> e) {
-        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"cancel result: "</span> + <span class="literal">result</span>.cancel(<span class="literal">true</span>));
-        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"is cancelled: "</span> + <span class="literal">result</span>.isCancelled());
+    try {
+        System.out.println(result.get(10, TimeUnit.MILLISECONDS));
+    } catch (TimeoutException e) {
+        System.out.println(&quot;cancel result: &quot; + result.cancel(true));
+        System.out.println(&quot;is cancelled: &quot; + result.isCancelled());
     }
-    <span class="type">Thread</span>.sleep(<span class="number">2000</span>l);
+    Thread.sleep(2000l);
 }
 </code></pre><p>打印：</p>
-<pre><code>先打印出几百个 数字-thread-call-runner-<span class="number">0</span>
+<pre><code>先打印出几百个 数字-thread-call-runner-0
 然后打印出
-cancel <span class="literal">result</span>: <span class="literal">true</span>
-<span class="keyword">is</span> cancelled: <span class="literal">true</span>
+cancel result: true
+is cancelled: true
 
-cancel方法用来取消线程的继续执行，它有个boolean类型的返回值，表示是否cancel成功。这里我们使用了get方法，<span class="number">10</span>毫秒处理<span class="number">5000</span>条数据，报了<span class="type">TimeoutException</span>异常，catch之后对<span class="type">Future</span>进行了cancel调用。注意，我们在<span class="type">Callable</span>里执行的代码里加上了
+cancel方法用来取消线程的继续执行，它有个boolean类型的返回值，表示是否cancel成功。这里我们使用了get方法，10毫秒处理5000条数据，报了TimeoutException异常，catch之后对Future进行了cancel调用。注意，我们在Callable里执行的代码里加上了
 
-!<span class="type">Thread</span>.currentThread().isInterrupted()
+!Thread.currentThread().isInterrupted()
 
-如果去掉了这个条件，那么还是会打印出<span class="number">5000</span>条处理数据。cancel方法底层会去interrupted对应的线程，所以才需要加上这个条件的判断。
-</code></pre><h2 id="调度线程池的使用">调度线程池的使用</h2><p>ScheduledExecutorService接口是ExecutorService接口的子类。</p>
+如果去掉了这个条件，那么还是会打印出5000条处理数据。cancel方法底层会去interrupted对应的线程，所以才需要加上这个条件的判断。
+</code></pre><h2 id="调度线程池的使用"><a href="#调度线程池的使用" class="headerlink" title="调度线程池的使用"></a>调度线程池的使用</h2><p>ScheduledExecutorService接口是ExecutorService接口的子类。</p>
 <p>看名字也知道，ScheduledExecutorService是基于调度的线程池。</p>
 <p>1.ScheduledExecutorService的schedule方法例子：</p>
-<pre><code>@<span class="type">Test</span>
-public <span class="type">void</span> test04() throws <span class="type">Exception</span> {
-    <span class="type">ScheduledExecutorService</span> ses = <span class="type">Executors</span>.newScheduledThreadPool(<span class="number">2</span>, new <span class="type">ThreadFactoryBuilder</span>().setNameFormat(<span class="string">"thread-schedule-runner-%d"</span>).build());
-    <span class="type">Future</span>&lt;<span class="type">String</span>&gt; <span class="literal">result</span> = ses.schedule(new <span class="type">Callable</span>&lt;<span class="type">String</span>&gt;() {
-        @<span class="type">Override</span>
-        public <span class="type">String</span> call() throws <span class="type">Exception</span> {
-            <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"exec task"</span>);
-            <span class="keyword">return</span> <span class="string">"ok"</span>;
+<pre><code>@Test
+public void test04() throws Exception {
+    ScheduledExecutorService ses = Executors.newScheduledThreadPool(2, new ThreadFactoryBuilder().setNameFormat(&quot;thread-schedule-runner-%d&quot;).build());
+    Future&lt;String&gt; result = ses.schedule(new Callable&lt;String&gt;() {
+        @Override
+        public String call() throws Exception {
+            System.out.println(&quot;exec task&quot;);
+            return &quot;ok&quot;;
         }
-    }, <span class="number">10</span>, <span class="type">TimeUnit</span>.<span class="type">SECONDS</span>);
-    <span class="type">Thread</span>.sleep(<span class="number">15000</span>);
+    }, 10, TimeUnit.SECONDS);
+    Thread.sleep(15000);
 }
 </code></pre><p>打印：</p>
-<pre><code>执行<span class="number">10</span>秒后打印出  <span class="built_in">exec</span> task
+<pre><code>执行10秒后打印出  exec task
 </code></pre><p>2.cancel在schedule中的使用：</p>
-<pre><code>@<span class="type">Test</span>
-public <span class="type">void</span> test05() throws <span class="type">Exception</span> {
-    <span class="type">ScheduledExecutorService</span> ses = <span class="type">Executors</span>.newScheduledThreadPool(<span class="number">2</span>, new <span class="type">ThreadFactoryBuilder</span>().setNameFormat(<span class="string">"thread-schedule-runner-%d"</span>).build());
-    <span class="type">Future</span>&lt;<span class="type">String</span>&gt; <span class="literal">result</span> = ses.schedule(new <span class="type">Callable</span>&lt;<span class="type">String</span>&gt;() {
-        @<span class="type">Override</span>
-        public <span class="type">String</span> call() throws <span class="type">Exception</span> {
-            <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"exec task"</span>);
-            <span class="keyword">try</span> {
-                <span class="type">Thread</span>.sleep(<span class="number">5000</span>l);
-            } catch (<span class="type">InterruptedException</span> e) {
+<pre><code>@Test
+public void test05() throws Exception {
+    ScheduledExecutorService ses = Executors.newScheduledThreadPool(2, new ThreadFactoryBuilder().setNameFormat(&quot;thread-schedule-runner-%d&quot;).build());
+    Future&lt;String&gt; result = ses.schedule(new Callable&lt;String&gt;() {
+        @Override
+        public String call() throws Exception {
+            System.out.println(&quot;exec task&quot;);
+            try {
+                Thread.sleep(5000l);
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"exec done, take 5 seconds"</span>);
-            <span class="keyword">return</span> <span class="string">"ok"</span>;
+            System.out.println(&quot;exec done, take 5 seconds&quot;);
+            return &quot;ok&quot;;
         }
-    }, <span class="number">10</span>, <span class="type">TimeUnit</span>.<span class="type">SECONDS</span>);
-    <span class="type">Thread</span>.sleep(<span class="number">11000</span>);
-    <span class="literal">result</span>.cancel(<span class="literal">true</span>);
-    <span class="type">Thread</span>.sleep(<span class="number">10000</span>);
+    }, 10, TimeUnit.SECONDS);
+    Thread.sleep(11000);
+    result.cancel(true);
+    Thread.sleep(10000);
 }
 </code></pre><p>打印：</p>
-<pre><code>先打印出exec task，然后抛出InterruptedException异常，异常被<span class="keyword">catch</span>。接着打印出exec done, take <span class="number">5</span> seconds
-因为Callable线程是<span class="number">10</span>秒后执行的，线程会执行<span class="number">5</span>秒，在<span class="number">11</span>秒的时候会调用Future的cancel方法，会取消线程的时候，由于我们<span class="keyword">catch</span>了异常，所以线程会执行完毕。
+<pre><code>先打印出exec task，然后抛出InterruptedException异常，异常被catch。接着打印出exec done, take 5 seconds
+因为Callable线程是10秒后执行的，线程会执行5秒，在11秒的时候会调用Future的cancel方法，会取消线程的时候，由于我们catch了异常，所以线程会执行完毕。
 
-注意一下，cancel方法有个boolean类型的参数mayInterruptIfRunning。上个例子中我们传入了<span class="literal">true</span>，所以会打断正在执行的线程，因此抛出了异常。如果我们传入<span class="literal">false</span>，线程正在执行，所以不会去打断它，因此会打印出exec task，然后再打印出exec done, take <span class="number">5</span> seconds，并且没有异常抛出。
+注意一下，cancel方法有个boolean类型的参数mayInterruptIfRunning。上个例子中我们传入了true，所以会打断正在执行的线程，因此抛出了异常。如果我们传入false，线程正在执行，所以不会去打断它，因此会打印出exec task，然后再打印出exec done, take 5 seconds，并且没有异常抛出。
 </code></pre><p>3.scheduleWithFixedDelay方法，定时器，每隔多少时间执行</p>
-<pre><code>@<span class="function">Test
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test06</span><span class="params">()</span> throws Exception </span>{
-    ScheduledExecutorService sec = Executors.newScheduledThreadPool(<span class="number">2</span>, <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"thread-schedule-runner-%d"</span>).build());
-    sec.scheduleWithFixedDelay(<span class="keyword">new</span> Runnable() {
-        @<span class="function">Override
-        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-            System.out.println(<span class="string">"exec"</span>);
+<pre><code>@Test
+public void test06() throws Exception {
+    ScheduledExecutorService sec = Executors.newScheduledThreadPool(2, new ThreadFactoryBuilder().setNameFormat(&quot;thread-schedule-runner-%d&quot;).build());
+    sec.scheduleWithFixedDelay(new Runnable() {
+        @Override
+        public void run() {
+            System.out.println(&quot;exec&quot;);
         }
-    }, <span class="number">0</span>, <span class="number">5</span>, TimeUnit.SECONDS);
-    Thread.sleep(<span class="number">16000l</span>);
+    }, 0, 5, TimeUnit.SECONDS);
+    Thread.sleep(16000l);
 }
 </code></pre><p>打印：</p>
-<pre><code>打印出<span class="number">4</span>次exec。
-scheduleWithFixedDelay有<span class="number">4</span>个参数，第一个参数是个Runnable接口的实现类，第二个参数是首次执行线程的延迟时间，第三个参数是每隔多少时间再次执行线程时间，第四个参数是时间的单位。
-如果Runnable中执行的代码发生了异常并且没有被<span class="keyword">catch</span>的话，那么发生异常之后，Runnable里的代码就不会再次执行。
+<pre><code>打印出4次exec。
+scheduleWithFixedDelay有4个参数，第一个参数是个Runnable接口的实现类，第二个参数是首次执行线程的延迟时间，第三个参数是每隔多少时间再次执行线程时间，第四个参数是时间的单位。
+如果Runnable中执行的代码发生了异常并且没有被catch的话，那么发生异常之后，Runnable里的代码就不会再次执行。
 </code></pre><p>4.scheduleAtFixedRate方法，scheduleAtFixedRate方法跟scheduleWithFixedDelay类似。唯一的区别是scheduleWithFixedDelay是在线程全部执行完毕之后开始计算时间的，而scheduleAtFixedRate是在线程开始执行的时候计算时间的，所以scheduleAtFixedRate有时会产生不是定时执行的感觉。</p>
 <p>先看scheduleWithFixedDelay：</p>
-<pre><code>@<span class="function">Test
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test07</span><span class="params">()</span> throws Exception </span>{
-    ScheduledExecutorService sec = Executors.newScheduledThreadPool(<span class="number">2</span>, <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"thread-schedule-runner-%d"</span>).build());
-    sec.scheduleWithFixedDelay(<span class="keyword">new</span> Runnable() {
-        @<span class="function">Override
-        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-            System.out.println(<span class="string">"exec"</span>);
-            <span class="keyword">try</span> {
-                Thread.sleep(<span class="number">3000l</span>);
-            } <span class="keyword">catch</span> (Exception e) {
+<pre><code>@Test
+public void test07() throws Exception {
+    ScheduledExecutorService sec = Executors.newScheduledThreadPool(2, new ThreadFactoryBuilder().setNameFormat(&quot;thread-schedule-runner-%d&quot;).build());
+    sec.scheduleWithFixedDelay(new Runnable() {
+        @Override
+        public void run() {
+            System.out.println(&quot;exec&quot;);
+            try {
+                Thread.sleep(3000l);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-    }, <span class="number">0</span>, <span class="number">5</span>, TimeUnit.SECONDS);
-    Thread.sleep(<span class="number">17000l</span>);
+    }, 0, 5, TimeUnit.SECONDS);
+    Thread.sleep(17000l);
 }
 </code></pre><p>打印：</p>
-<pre><code>执行<span class="number">3</span>次exec。Runnable每次执行<span class="number">3</span>秒。第一次是在<span class="number">0</span>秒执行，执行了<span class="number">3</span>秒，第二次是在<span class="number">8</span>秒，执行了<span class="number">3</span>秒。第三次是在<span class="number">16</span>秒执行
+<pre><code>执行3次exec。Runnable每次执行3秒。第一次是在0秒执行，执行了3秒，第二次是在8秒，执行了3秒。第三次是在16秒执行
 </code></pre><p>然后再看scheduleAtFixedRate：</p>
-<pre><code>@<span class="function">Test
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test09</span><span class="params">()</span> throws Exception </span>{
-    ScheduledExecutorService sec = Executors.newScheduledThreadPool(<span class="number">2</span>, <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"thread-schedule-runner-%d"</span>).build());
-    sec.scheduleAtFixedRate(<span class="keyword">new</span> Runnable() {
-        @<span class="function">Override
-        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-            System.out.println(<span class="string">"exec"</span>);
-            <span class="keyword">try</span> {
-                Thread.sleep(<span class="number">3000l</span>);
-            } <span class="keyword">catch</span> (Exception e) {
+<pre><code>@Test
+public void test09() throws Exception {
+    ScheduledExecutorService sec = Executors.newScheduledThreadPool(2, new ThreadFactoryBuilder().setNameFormat(&quot;thread-schedule-runner-%d&quot;).build());
+    sec.scheduleAtFixedRate(new Runnable() {
+        @Override
+        public void run() {
+            System.out.println(&quot;exec&quot;);
+            try {
+                Thread.sleep(3000l);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-    }, <span class="number">0</span>, <span class="number">5</span>, TimeUnit.SECONDS);
-    Thread.sleep(<span class="number">16000l</span>);
+    }, 0, 5, TimeUnit.SECONDS);
+    Thread.sleep(16000l);
 }
 </code></pre><p>打印：</p>
-<pre><code>执行了<span class="number">4</span>次exec，第一次在<span class="number">0</span>秒执行，第二次在<span class="number">5</span>秒，第三次是<span class="number">10</span>秒，第四次在<span class="number">15</span>秒执行
-</code></pre><h2 id="线程池的参数解释">线程池的参数解释</h2><p>Executors类的静态方法中大致有这么几种创建不同类型的线程池：</p>
+<pre><code>执行了4次exec，第一次在0秒执行，第二次在5秒，第三次是10秒，第四次在15秒执行
+</code></pre><h2 id="线程池的参数解释"><a href="#线程池的参数解释" class="headerlink" title="线程池的参数解释"></a>线程池的参数解释</h2><p>Executors类的静态方法中大致有这么几种创建不同类型的线程池：</p>
 <ol>
 <li>newFixedThreadPool</li>
 <li>newSingleThreadExecutor</li>
@@ -591,11 +591,11 @@ scheduleWithFixedDelay有<span class="number">4</span>个参数，第一个参�
 </ol>
 <p>在分析这些方法之前，先解释一下线程池中所使用的一些配置参数。</p>
 <p>比如实例化一个单线程的线程池。源码如下：</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newSingleThreadExecutor</span><span class="params">()</span> </span>{
-    <span class="keyword">return</span> <span class="keyword">new</span> FinalizableDelegatedExecutorService
-        (<span class="keyword">new</span> ThreadPoolExecutor(<span class="number">1</span>, <span class="number">1</span>,
-                                <span class="number">0L</span>, TimeUnit.MILLISECONDS,
-                                <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;()));
+<pre><code>public static ExecutorService newSingleThreadExecutor() {
+    return new FinalizableDelegatedExecutorService
+        (new ThreadPoolExecutor(1, 1,
+                                0L, TimeUnit.MILLISECONDS,
+                                new LinkedBlockingQueue&lt;Runnable&gt;()));
 }
 </code></pre><p>ThreadPoolExecutor是线程池的具体实现类。它的构造函数接受以下这几个重要的参数：</p>
 <ol>
@@ -615,77 +615,77 @@ scheduleWithFixedDelay有<span class="number">4</span>个参数，第一个参�
 <li>判断线程池最大大小是否已满，没满的话直接创建线程执行任务，否则交给饱和策略处理</li>
 </ol>
 <p>以1个例子来说明：</p>
-<pre><code>ThreadPoolExecutor threadPoolExecutor = <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">1</span>, <span class="number">20</span>, <span class="number">10</span>, TimeUnit.SECONDS,<span class="keyword">new</span> LinkedBlockingQueue(<span class="number">10</span>));
+<pre><code>ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(1, 20, 10, TimeUnit.SECONDS,new LinkedBlockingQueue(10));
 
-<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">15</span>; i ++) {
-    threadPoolExecutor.submit(<span class="keyword">new</span> MyThread(i + <span class="number">1</span>));
+for(int i = 0; i &lt; 15; i ++) {
+    threadPoolExecutor.submit(new MyThread(i + 1));
 }
 
-<span class="keyword">static</span> <span class="keyword">class</span> MyThread implements Runnable {
-    <span class="keyword">private</span> <span class="keyword">int</span> index;
-    <span class="function"><span class="keyword">public</span> <span class="title">MyThread</span><span class="params">(<span class="keyword">int</span> index)</span> </span>{
-        <span class="keyword">this</span>.index = index;
+static class MyThread implements Runnable {
+    private int index;
+    public MyThread(int index) {
+        this.index = index;
     }
-    @<span class="function">Override
-    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-        System.out.println(<span class="keyword">this</span>.index);
-        <span class="keyword">try</span> {
-            Thread.sleep(<span class="number">3000</span>);
-        } <span class="keyword">catch</span> (InterruptedException e) {
+    @Override
+    public void run() {
+        System.out.println(this.index);
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 }
 </code></pre><p>输出：</p>
-<pre><code><span class="number">1</span>
-<span class="number">12</span>
-<span class="number">13</span>
-<span class="number">14</span>
-<span class="number">15</span>
-<span class="number">2</span>
-<span class="number">3</span>
-<span class="number">4</span>
-<span class="number">5</span>
-<span class="number">6</span>
-<span class="number">7</span>
-<span class="number">8</span>
-<span class="number">9</span>
-<span class="number">10</span>
-<span class="number">11</span>
+<pre><code>1
+12
+13
+14
+15
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
 </code></pre><p>很明显地看到，线程池基本大小只有1个，所以先输出10，接下来阻塞队列有最多有10个线程等待需要执行，但是多出了12，13，14，15这4个线程，由于最大线程数是20个，所以这4个线程就直接被创建开始执行了。</p>
 <p>下面就分析Executors的静态方法：</p>
 <p>newFixedThreadPool方法:</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newFixedThreadPool</span><span class="params">(<span class="keyword">int</span> nThreads)</span> </span>{
-    <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(nThreads, nThreads,
-                                  <span class="number">0L</span>, TimeUnit.MILLISECONDS,
-                                  <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;());
+<pre><code>public static ExecutorService newFixedThreadPool(int nThreads) {
+    return new ThreadPoolExecutor(nThreads, nThreads,
+                                  0L, TimeUnit.MILLISECONDS,
+                                  new LinkedBlockingQueue&lt;Runnable&gt;());
 }
 </code></pre><p>创建一个基本大小和最大大小都为nThreads，阻塞队列长度为Integer.MAX_VALUE的线程池。</p>
 <p>newSingleThreadExecutor方法：</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newSingleThreadExecutor</span><span class="params">()</span> </span>{
-    <span class="keyword">return</span> <span class="keyword">new</span> FinalizableDelegatedExecutorService
-        (<span class="keyword">new</span> ThreadPoolExecutor(<span class="number">1</span>, <span class="number">1</span>,
-                                <span class="number">0L</span>, TimeUnit.MILLISECONDS,
-                                <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;()));
+<pre><code>public static ExecutorService newSingleThreadExecutor() {
+    return new FinalizableDelegatedExecutorService
+        (new ThreadPoolExecutor(1, 1,
+                                0L, TimeUnit.MILLISECONDS,
+                                new LinkedBlockingQueue&lt;Runnable&gt;()));
 }
 </code></pre><p>创建一个基本大小和最大大小都为1，阻塞队列长度为Integer.MAX_VALUE的线程池。</p>
 <p>newCachedThreadPool方法：</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newCachedThreadPool</span><span class="params">()</span> </span>{
-    <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">0</span>, Integer.MAX_VALUE,
-                                  <span class="number">60L</span>, TimeUnit.SECONDS,
-                                  <span class="keyword">new</span> SynchronousQueue&lt;Runnable&gt;());
+<pre><code>public static ExecutorService newCachedThreadPool() {
+    return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                  60L, TimeUnit.SECONDS,
+                                  new SynchronousQueue&lt;Runnable&gt;());
 }
 </code></pre><p>创建一个基本大小为0，最大大小都为Integer.MAX_VALUE，阻塞队列为无界队列的线程池。</p>
 <p>newScheduledThreadPool方法：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">static</span> <span class="function">ScheduledExecutorService <span class="title">newScheduledThreadPool</span><span class="params">(<span class="keyword">int</span> corePoolSize)</span> </span>{
-    <span class="keyword">return</span> <span class="keyword">new</span> ScheduledThreadPoolExecutor(corePoolSize);
+<pre><code>public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
+    return new ScheduledThreadPoolExecutor(corePoolSize);
 }
 </code></pre><p>创建一个基本大小为corePoolSize，最大大小都为Integer.MAX_VALUE，阻塞队列为DelayedWorkQueue的线程池。</p>
 <p>newSingleThreadScheduledExecutor方法：</p>
 <p>创建一个基本大小为corePoolSize，最大大小都为Integer.MAX_VALUE，阻塞队列为DelayedWorkQueue的线程池。</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ScheduledExecutorService <span class="title">newSingleThreadScheduledExecutor</span><span class="params">()</span> </span>{
-    <span class="keyword">return</span> <span class="keyword">new</span> DelegatedScheduledExecutorService
-        (<span class="keyword">new</span> ScheduledThreadPoolExecutor(<span class="number">1</span>));    
+<pre><code>public static ScheduledExecutorService newSingleThreadScheduledExecutor() {
+    return new DelegatedScheduledExecutorService
+        (new ScheduledThreadPoolExecutor(1));    
 }
 </code></pre><p>创建一个基本大小为1，最大大小都为Integer.MAX_VALUE，阻塞队列为DelayedWorkQueue的线程池。</p>
 

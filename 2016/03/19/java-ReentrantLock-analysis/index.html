@@ -93,6 +93,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java可重入锁ReentrantLock分析">
 <meta name="twitter:description" content="Java中的可重入锁ReentrantLock很常见，可以用它来代替内置锁synchronized，ReentrantLock是语法级别的锁，所以比内置锁更加灵活。">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/ReentrantLock.png">
 
 
 
@@ -368,130 +369,130 @@
         <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/ReentrantLock.png" alt=""><br>Java中的可重入锁ReentrantLock很常见，可以用它来代替内置锁synchronized，ReentrantLock是语法级别的锁，所以比内置锁更加灵活。</p>
 <a id="more"></a>
 <p>下面这段代码是ReentrantLock的一个例子：</p>
-<pre><code><span class="keyword">class</span> <span class="title">Context</span> {
-    <span class="keyword">private</span> ReentrantLock <span class="keyword">lock</span> = <span class="keyword">new</span> ReentrantLock();
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">method</span>(<span class="params"></span>) </span>{
-        <span class="keyword">lock</span>.<span class="keyword">lock</span>();
-        System.<span class="keyword">out</span>.println(<span class="string">"do atomic operation"</span>);
-        <span class="keyword">try</span> {
-            Thread.sleep(<span class="number">3000</span>l);
-        } <span class="keyword">catch</span> (InterruptedException e) {
+<pre><code>class Context {
+    private ReentrantLock lock = new ReentrantLock();
+    public void method() {
+        lock.lock();
+        System.out.println(&quot;do atomic operation&quot;);
+        try {
+            Thread.sleep(3000l);
+        } catch (InterruptedException e) {
             e.printStackTrace();
-        } <span class="keyword">finally</span> {
-            <span class="keyword">lock</span>.unlock();
+        } finally {
+            lock.unlock();
         }
     }
 }
 
-<span class="keyword">class</span> <span class="title">MyThread</span> <span class="title">implements</span> <span class="title">Runnable</span> {
-    <span class="keyword">private</span> Context context;
-    <span class="function"><span class="keyword">public</span> <span class="title">MyThread</span>(<span class="params">Context context</span>) </span>{
-        <span class="keyword">this</span>.context = context;
+class MyThread implements Runnable {
+    private Context context;
+    public MyThread(Context context) {
+        this.context = context;
     }
-    @<span class="function">Override
-    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>{
+    @Override
+    public void run() {
         context.method();
     }
 }
 </code></pre><p>main方法：</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-    Context context = <span class="keyword">new</span> Context();
-    ExecutorService executorService = Executors.newFixedThreadPool(<span class="number">5</span>);
-    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i ++ ) {
-        executorService.submit(<span class="keyword">new</span> MyThread(context));
+<pre><code>public static void main(String[] args) {
+    Context context = new Context();
+    ExecutorService executorService = Executors.newFixedThreadPool(5);
+    for(int i = 0; i &lt; 5; i ++ ) {
+        executorService.submit(new MyThread(context));
     }
 }
 </code></pre><p>输出结果，每隔3秒输出：</p>
-<pre><code><span class="keyword">do</span> atomic operation   
+<pre><code>do atomic operation   
 </code></pre><p>如果没有使用可重入锁的话，那么一次性输出5条 do atomic operation。</p>
 <p>ReentrantLock中有3个内部类，分别是Sync、FairSync和NonfairSync。</p>
 <p>Sync是一个继承AQS的抽象类，使用独占锁，复写了tryRelease方法。tryAcquire方法由它的两个FairSync(公平锁)和NonfairSync(非公平锁)实现。</p>
 <p>AQS相关的内容可以参考文章末尾的参考资料，这篇文章写得非常棒。</p>
 <p>ReentrantLock的lock方法使用sync的lock方法，Sync的lock方法是个抽象方法，由公平锁和非公平锁去实现。unlock方法直接使用AQS的release方法。所以说公平锁和非公平锁的释放锁过程是一样的，不一样的是获取锁过程。</p>
 <p>先来看一下unlock方法，unlock方法调用的AQS的release方法，也就是调用了tryRelease方法，tryRelease方法调完之后恢复第一个挂起的线程：</p>
-<pre><code><span class="keyword">protected</span> <span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">tryRelease</span><span class="params">(<span class="keyword">int</span> releases)</span> </span>{
-    <span class="keyword">int</span> c = getState() - releases; <span class="comment">// 释放</span>
-    <span class="keyword">if</span> (Thread.currentThread() != getExclusiveOwnerThread()) <span class="comment">// 如果当前线程不是独占线程，直接抛出异常</span>
-        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalMonitorStateException();
-    <span class="keyword">boolean</span> free = <span class="keyword">false</span>;
-    <span class="keyword">if</span> (c == <span class="number">0</span>) { <span class="comment">// 由于是可重入锁，需要判断是否全部释放了</span>
-        free = <span class="keyword">true</span>;
-        setExclusiveOwnerThread(<span class="keyword">null</span>); <span class="comment">// 全部释放的话直接把独占线程设置为null</span>
+<pre><code>protected final boolean tryRelease(int releases) {
+    int c = getState() - releases; // 释放
+    if (Thread.currentThread() != getExclusiveOwnerThread()) // 如果当前线程不是独占线程，直接抛出异常
+        throw new IllegalMonitorStateException();
+    boolean free = false;
+    if (c == 0) { // 由于是可重入锁，需要判断是否全部释放了
+        free = true;
+        setExclusiveOwnerThread(null); // 全部释放的话直接把独占线程设置为null
     }
     setState(c);
-    <span class="keyword">return</span> free;
+    return free;
 }
 
-<span class="comment">// 恢复线程</span>
-<span class="keyword">public</span> <span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">release</span><span class="params">(<span class="keyword">int</span> arg)</span> </span>{
-    <span class="keyword">if</span> (tryRelease(arg)) {
-        Node h = head;  <span class="comment">// 恢复第一个挂起的线程</span>
-        <span class="keyword">if</span> (h != <span class="keyword">null</span> &amp;&amp; h.waitStatus != <span class="number">0</span>)
+// 恢复线程
+public final boolean release(int arg) {
+    if (tryRelease(arg)) {
+        Node h = head;  // 恢复第一个挂起的线程
+        if (h != null &amp;&amp; h.waitStatus != 0)
             unparkSuccessor(h);
-        <span class="keyword">return</span> <span class="keyword">true</span>;
+        return true;
     }
-    <span class="keyword">return</span> <span class="keyword">false</span>;
+    return false;
 }
 </code></pre><p>ReentrantLock的lock方法就是获取锁的方法，AQS中线程对锁的的竞争结果只有两种，要么获取到了锁；要么没有获取到锁，没有获取的锁线程被挂起等待被唤醒。</p>
 <p>公平锁FairSync的lock方法：</p>
-<pre><code><span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">lock</span><span class="params">()</span> </span>{
-    <span class="comment">// acquire方法内部调用tryAcquire方法</span>
-    <span class="comment">// 公平锁的获取锁方法，对于没有获取到的线程，会按照队列的方式挂起线程</span>
-    acquire(<span class="number">1</span>);
+<pre><code>final void lock() {
+    // acquire方法内部调用tryAcquire方法
+    // 公平锁的获取锁方法，对于没有获取到的线程，会按照队列的方式挂起线程
+    acquire(1);
 }
 
-<span class="keyword">protected</span> <span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">tryAcquire</span><span class="params">(<span class="keyword">int</span> acquires)</span> </span>{
-    <span class="keyword">final</span> Thread current = Thread.currentThread();
-    <span class="keyword">int</span> c = getState();
-    <span class="keyword">if</span> (c == <span class="number">0</span>) {
-        <span class="comment">// 公平锁这里多了一个!hasQueuedPredecessors()判断，表示是否有线程在队列里等待的时间比当前线程要长，如果有等待时间更长的线程，那么放弃获取锁</span>
-        <span class="keyword">if</span> (!hasQueuedPredecessors() &amp;&amp;
-            compareAndSetState(<span class="number">0</span>, acquires)) {
+protected final boolean tryAcquire(int acquires) {
+    final Thread current = Thread.currentThread();
+    int c = getState();
+    if (c == 0) {
+        // 公平锁这里多了一个!hasQueuedPredecessors()判断，表示是否有线程在队列里等待的时间比当前线程要长，如果有等待时间更长的线程，那么放弃获取锁
+        if (!hasQueuedPredecessors() &amp;&amp;
+            compareAndSetState(0, acquires)) {
             setExclusiveOwnerThread(current);
-            <span class="keyword">return</span> <span class="keyword">true</span>;
+            return true;
         }
     }
-    <span class="keyword">else</span> <span class="keyword">if</span> (current == getExclusiveOwnerThread()) {
-        <span class="keyword">int</span> nextc = c + acquires;
-        <span class="keyword">if</span> (nextc &lt; <span class="number">0</span>)
-            <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Maximum lock count exceeded"</span>);
+    else if (current == getExclusiveOwnerThread()) {
+        int nextc = c + acquires;
+        if (nextc &lt; 0)
+            throw new Error(&quot;Maximum lock count exceeded&quot;);
         setState(nextc);
-        <span class="keyword">return</span> <span class="keyword">true</span>;
+        return true;
     }
-    <span class="keyword">return</span> <span class="keyword">false</span>;
+    return false;
 }
 </code></pre><p>非公平锁NonfairSync的lock方法：</p>
-<pre><code><span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">lock</span><span class="params">()</span> </span>{
-    <span class="comment">// 非公平锁的获取锁</span>
-    <span class="comment">// 跟公平锁的区别就在这里。直接对状态位state进行cas操作，成功就获取锁，这是一种抢占式的方式。不成功跟公平锁一样进入队列挂起线程</span>
-    <span class="keyword">if</span> (compareAndSetState(<span class="number">0</span>, <span class="number">1</span>))
+<pre><code>final void lock() {
+    // 非公平锁的获取锁
+    // 跟公平锁的区别就在这里。直接对状态位state进行cas操作，成功就获取锁，这是一种抢占式的方式。不成功跟公平锁一样进入队列挂起线程
+    if (compareAndSetState(0, 1))
         setExclusiveOwnerThread(Thread.currentThread());
-    <span class="keyword">else</span>
-        acquire(<span class="number">1</span>);
+    else
+        acquire(1);
 }
 
-<span class="comment">// 调用Sync的nonfairTryAcquire方法</span>
-<span class="keyword">protected</span> <span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">tryAcquire</span><span class="params">(<span class="keyword">int</span> acquires)</span> </span>{
-    <span class="function"><span class="keyword">return</span> <span class="title">nonfairTryAcquire</span><span class="params">(acquires)</span></span>;
+// 调用Sync的nonfairTryAcquire方法
+protected final boolean tryAcquire(int acquires) {
+    return nonfairTryAcquire(acquires);
 }
 
-<span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">nonfairTryAcquire</span><span class="params">(<span class="keyword">int</span> acquires)</span> </span>{
-    <span class="keyword">final</span> Thread current = Thread.currentThread();
-    <span class="keyword">int</span> c = getState();
-    <span class="keyword">if</span> (c == <span class="number">0</span>) {
-        <span class="keyword">if</span> (compareAndSetState(<span class="number">0</span>, acquires)) {
+final boolean nonfairTryAcquire(int acquires) {
+    final Thread current = Thread.currentThread();
+    int c = getState();
+    if (c == 0) {
+        if (compareAndSetState(0, acquires)) {
             setExclusiveOwnerThread(current);
-            <span class="keyword">return</span> <span class="keyword">true</span>;
+            return true;
         }
     }
-    <span class="keyword">else</span> <span class="keyword">if</span> (current == getExclusiveOwnerThread()) {
-        <span class="keyword">int</span> nextc = c + acquires;
-        <span class="keyword">if</span> (nextc &lt; <span class="number">0</span>) <span class="comment">// overflow</span>
-            <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Maximum lock count exceeded"</span>);
+    else if (current == getExclusiveOwnerThread()) {
+        int nextc = c + acquires;
+        if (nextc &lt; 0) // overflow
+            throw new Error(&quot;Maximum lock count exceeded&quot;);
         setState(nextc);
-        <span class="keyword">return</span> <span class="keyword">true</span>;
+        return true;
     }
-    <span class="keyword">return</span> <span class="keyword">false</span>;
+    return false;
 }
 </code></pre><p>如上述源码和注释所说，公平锁和非公平锁的最主要区别就是获取锁的方式不一样。</p>
 <p>公平锁获取锁的时候，首先先读取状态位state，然后再做判断，之后使用cas设置状态位。能获取锁的线程就获取锁，不能获取锁的线程被挂起进入队列。之后再来的线程的等待时间没有已经在队列里的线程等待时间长，所以会一直进入等待队列。 公平锁类似于排队买火车票一样，后面来的人没有前面来的人等待时间长，会一直在队尾被加入到队列里。</p>

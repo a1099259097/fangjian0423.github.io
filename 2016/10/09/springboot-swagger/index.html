@@ -85,8 +85,7 @@
 <meta name="description" content="Swagger是一个规范和完整的框架，用于生成、描述、调用和可视化 RESTful 风格的 Web 服务。
 在SpringBoot中要使用Swagger的话，可以使用springfox。
 在sbt中添加依赖即可：
-libraryDependencies += &quot;io.springfox&quot; % &quot;springfox-swagger2&quot; % &quot;2.6.0&quot;
-libraryDependencies +=">
+libraryDependencies += &amp;quot;io.springfox&amp;quot; % &amp;quot;springfox-swagger2&amp;quot; % &amp;quot;2.6.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Swagger在SpringBoot中的使用">
 <meta property="og:url" content="http://fangjian0423.github.io/2016/10/09/springboot-swagger/index.html">
@@ -94,8 +93,7 @@ libraryDependencies +=">
 <meta property="og:description" content="Swagger是一个规范和完整的框架，用于生成、描述、调用和可视化 RESTful 风格的 Web 服务。
 在SpringBoot中要使用Swagger的话，可以使用springfox。
 在sbt中添加依赖即可：
-libraryDependencies += &quot;io.springfox&quot; % &quot;springfox-swagger2&quot; % &quot;2.6.0&quot;
-libraryDependencies +=">
+libraryDependencies += &amp;quot;io.springfox&amp;quot; % &amp;quot;springfox-swagger2&amp;quot; % &amp;quot;2.6.">
 <meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/swagger01.png">
 <meta property="og:updated_time" content="2016-10-09T13:50:09.000Z">
 <meta name="twitter:card" content="summary">
@@ -103,8 +101,8 @@ libraryDependencies +=">
 <meta name="twitter:description" content="Swagger是一个规范和完整的框架，用于生成、描述、调用和可视化 RESTful 风格的 Web 服务。
 在SpringBoot中要使用Swagger的话，可以使用springfox。
 在sbt中添加依赖即可：
-libraryDependencies += &quot;io.springfox&quot; % &quot;springfox-swagger2&quot; % &quot;2.6.0&quot;
-libraryDependencies +=">
+libraryDependencies += &amp;quot;io.springfox&amp;quot; % &amp;quot;springfox-swagger2&amp;quot; % &amp;quot;2.6.">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/swagger01.png">
 
 
 
@@ -380,8 +378,8 @@ libraryDependencies +=">
         <p><a href="http://swagger.io/" target="_blank" rel="external">Swagger</a>是一个规范和完整的框架，用于生成、描述、调用和可视化 RESTful 风格的 Web 服务。</p>
 <p>在SpringBoot中要使用Swagger的话，可以使用<a href="https://github.com/springfox/springfox" target="_blank" rel="external">springfox</a>。</p>
 <p>在sbt中添加依赖即可：</p>
-<pre><code><span class="title">libraryDependencies</span> += <span class="string">"io.springfox"</span> % <span class="string">"springfox-swagger2"</span> % <span class="string">"2.6.0"</span>
-libraryDependencies += <span class="string">"io.springfox"</span> % <span class="string">"springfox-swagger-ui"</span> % <span class="string">"2.6.0"</span>
+<pre><code>libraryDependencies += &quot;io.springfox&quot; % &quot;springfox-swagger2&quot; % &quot;2.6.0&quot;
+libraryDependencies += &quot;io.springfox&quot; % &quot;springfox-swagger-ui&quot; % &quot;2.6.0&quot;
 </code></pre><p>查看springfox-swagger2中的源码，发现springfox并不是通过autoconfigure实现和swagger的整合的，而是基于Spring的方式Import各种bean构造Swagger。</p>
 <p>所以本文指的Swagger在SpringBoot中的使用同样也可以在Spring中使用。</p>
 <a id="more"></a>
@@ -391,23 +389,23 @@ libraryDependencies += <span class="string">"io.springfox"</span> % <span class=
 <li>构造一个Docket</li>
 </ol>
 <p>以下代码就是例子：</p>
-<pre><code><span class="annotation">@EnableSwagger</span>2
-<span class="annotation">@Configuration</span>
-<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SwaggerConfiguration</span> </span>{
+<pre><code>@EnableSwagger2
+@Configuration
+public class SwaggerConfiguration {
 
-    <span class="annotation">@Bean</span>
-    <span class="function"><span class="keyword">public</span> Docket <span class="title">userDocket</span><span class="params">()</span> </span>{
-        ApiInfo apiInfo = <span class="keyword">new</span> ApiInfo(<span class="string">"A Simple of SpringBoot-Swagger"</span>,<span class="comment">// 大标题</span>
-                <span class="string">"two controllers: UserController and DeptController"</span>,<span class="comment">// 小标题</span>
-                <span class="string">"1.0"</span>,<span class="comment">// 版本</span>
-                <span class="string">"NO terms of service"</span>,
-                <span class="keyword">new</span> Contact(<span class="string">"format"</span>, <span class="string">"fangjian0423.github.io"</span>, <span class="string">"fangjian0423@gmail.com"</span>), <span class="comment">// 作者信息</span>
-                <span class="string">"The Apache License, Version 2.0"</span>,<span class="comment">// 开源许可证</span>
-                <span class="string">"http://www.apache.org/licenses/LICENSE-2.0.html"</span><span class="comment">// 许可证详情</span>
+    @Bean
+    public Docket userDocket() {
+        ApiInfo apiInfo = new ApiInfo(&quot;A Simple of SpringBoot-Swagger&quot;,// 大标题
+                &quot;two controllers: UserController and DeptController&quot;,// 小标题
+                &quot;1.0&quot;,// 版本
+                &quot;NO terms of service&quot;,
+                new Contact(&quot;format&quot;, &quot;fangjian0423.github.io&quot;, &quot;fangjian0423@gmail.com&quot;), // 作者信息
+                &quot;The Apache License, Version 2.0&quot;,// 开源许可证
+                &quot;http://www.apache.org/licenses/LICENSE-2.0.html&quot;// 许可证详情
         );
-        <span class="keyword">return</span> <span class="keyword">new</span> Docket(DocumentationType.SWAGGER_2)
+        return new Docket(DocumentationType.SWAGGER_2)
                 .select()
-                .paths(Predicates.or(PathSelectors.regex(<span class="string">"/user/.*"</span>), PathSelectors.regex(<span class="string">"/dept/.*"</span>)))
+                .paths(Predicates.or(PathSelectors.regex(&quot;/user/.*&quot;), PathSelectors.regex(&quot;/dept/.*&quot;)))
                 .build()
                 .apiInfo(apiInfo);
     }
@@ -415,39 +413,39 @@ libraryDependencies += <span class="string">"io.springfox"</span> % <span class=
 }
 </code></pre><p>需要注意的是path方法表示要构造的url，这里使用了or连接了 /user/.*<em> 和 /dept/.*</em> 这2个地址，这里用的是正则的匹配方式。</p>
 <p>UserController：</p>
-<pre><code>@<span class="type">RestController</span>
-@<span class="type">RequestMapping</span>(<span class="type">Array</span>(<span class="string">"/user"</span>))
-class <span class="type">UserController</span> {
+<pre><code>@RestController
+@RequestMapping(Array(&quot;/user&quot;))
+class UserController {
 
-  @<span class="type">ApiOperation</span>(nickname = <span class="string">"test method"</span>, value = <span class="string">"just a test method"</span>)
-  @<span class="type">RequestMapping</span>(value = <span class="type">Array</span>(<span class="string">"/demo"</span>), <span class="keyword">method</span> = <span class="type">Array</span>(<span class="type">RequestMethod</span>.<span class="type">POST</span>, <span class="type">RequestMethod</span>.<span class="type">GET</span>))
-  def demo(): <span class="type">String</span> = {
-    <span class="string">"Hello Swagger"</span>
+  @ApiOperation(nickname = &quot;test method&quot;, value = &quot;just a test method&quot;)
+  @RequestMapping(value = Array(&quot;/demo&quot;), method = Array(RequestMethod.POST, RequestMethod.GET))
+  def demo(): String = {
+    &quot;Hello Swagger&quot;
   }
 
-  @<span class="type">RequestMapping</span>(value = <span class="type">Array</span>(<span class="string">"/get/{id}"</span>), <span class="keyword">method</span> = <span class="type">Array</span>(<span class="type">RequestMethod</span>.<span class="type">GET</span>))
-  def get(@<span class="type">PathVariable</span> id: <span class="type">String</span>): <span class="type">String</span> = {
-    <span class="string">s"get ${id}"</span>
+  @RequestMapping(value = Array(&quot;/get/{id}&quot;), method = Array(RequestMethod.GET))
+  def get(@PathVariable id: String): String = {
+    s&quot;get ${id}&quot;
   }
 
-  @<span class="type">RequestMapping</span>(value = <span class="type">Array</span>(<span class="string">"/delete/{id}"</span>), <span class="keyword">method</span> = <span class="type">Array</span>(<span class="type">RequestMethod</span>.<span class="type">POST</span>))
+  @RequestMapping(value = Array(&quot;/delete/{id}&quot;), method = Array(RequestMethod.POST))
   def delete(
-              @<span class="type">ApiParam</span>(name = <span class="string">"id"</span>, value = <span class="string">"the identity of user"</span>, required = <span class="literal">true</span>)
-              @<span class="type">PathVariable</span> id: <span class="type">String</span>
-              ): <span class="type">String</span> = {
-    <span class="string">s"delete ${id}"</span>
+              @ApiParam(name = &quot;id&quot;, value = &quot;the identity of user&quot;, required = true)
+              @PathVariable id: String
+              ): String = {
+    s&quot;delete ${id}&quot;
   }
 
-  @<span class="type">ApiImplicitParams</span>(
-    <span class="type">Array</span>(
-      new <span class="type">ApiImplicitParam</span>(name = <span class="string">"name"</span>, value = <span class="string">"the name of user"</span>, required = <span class="literal">true</span>, paramType = <span class="string">"form"</span>, dataType = <span class="string">"string"</span>),
-      new <span class="type">ApiImplicitParam</span>(name = <span class="string">"age"</span>, value = <span class="string">"the age of user"</span>, required = <span class="literal">true</span>, paramType = <span class="string">"form"</span>, dataType = <span class="string">"int"</span>)
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(name = &quot;name&quot;, value = &quot;the name of user&quot;, required = true, paramType = &quot;form&quot;, dataType = &quot;string&quot;),
+      new ApiImplicitParam(name = &quot;age&quot;, value = &quot;the age of user&quot;, required = true, paramType = &quot;form&quot;, dataType = &quot;int&quot;)
     )
   )
 
-  @<span class="type">RequestMapping</span>(value = <span class="type">Array</span>(<span class="string">"/add"</span>), <span class="keyword">method</span> = <span class="type">Array</span>(<span class="type">RequestMethod</span>.<span class="type">POST</span>))
-  def add(req: <span class="type">HttpServletRequest</span>): <span class="type">String</span> = {
-    <span class="string">s"${req.getParameter("</span><span class="string">name")}-${req.getParameter("</span><span class="string">age")}"</span>
+  @RequestMapping(value = Array(&quot;/add&quot;), method = Array(RequestMethod.POST))
+  def add(req: HttpServletRequest): String = {
+    s&quot;${req.getParameter(&quot;name&quot;)}-${req.getParameter(&quot;age&quot;)}&quot;
   }
 
 }
@@ -457,14 +455,14 @@ class <span class="type">UserController</span> {
 <p>@ApiImplicitParams注解也用来额外说明参数，当参数不在方法里声明的时候，可以使用这个注解。需要注意的是这个注解只能作用在方法上。</p>
 <p>Swagger还提供了@ApiModel、@ApiResponse、@Example等诸多注解用于说明接口的作用。</p>
 <p>另外一个Controller: </p>
-<pre><code>@<span class="type">RestController</span>
-@<span class="type">RequestMapping</span>(<span class="type">Array</span>(<span class="string">"/dept"</span>))
-class <span class="type">DeptController</span> {
+<pre><code>@RestController
+@RequestMapping(Array(&quot;/dept&quot;))
+class DeptController {
 
-  @<span class="type">ApiOperation</span>(nickname = <span class="string">"dept test method"</span>, value = <span class="string">"dept just a test method"</span>)
-  @<span class="type">RequestMapping</span>(value = <span class="type">Array</span>(<span class="string">"/demo"</span>), <span class="keyword">method</span> = <span class="type">Array</span>(<span class="type">RequestMethod</span>.<span class="type">POST</span>, <span class="type">RequestMethod</span>.<span class="type">GET</span>))
-  def demo(): <span class="type">String</span> = {
-    <span class="string">"Hello Swagger"</span>
+  @ApiOperation(nickname = &quot;dept test method&quot;, value = &quot;dept just a test method&quot;)
+  @RequestMapping(value = Array(&quot;/demo&quot;), method = Array(RequestMethod.POST, RequestMethod.GET))
+  def demo(): String = {
+    &quot;Hello Swagger&quot;
   }
 
 }

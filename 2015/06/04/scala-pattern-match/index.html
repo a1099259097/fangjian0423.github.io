@@ -364,74 +364,74 @@
       
 
       
-        <h2 id="模式匹配介绍">模式匹配介绍</h2><p>模式匹配是一种scala中的一种函数式编程概念，跟java中的switch case类似。</p>
+        <h2 id="模式匹配介绍"><a href="#模式匹配介绍" class="headerlink" title="模式匹配介绍"></a>模式匹配介绍</h2><p>模式匹配是一种scala中的一种函数式编程概念，跟java中的switch case类似。</p>
 <p>java中的switch case比较局限，只支持基本类型和枚举类型；而且switch case如果case不到相应的值，除非在有写default，否则就不会执行。</p>
 <p>模式匹配简单例子：</p>
-<pre><code><span class="number">1</span> match {
-    <span class="keyword">case</span> <span class="number">1</span> =&gt; println(<span class="string">"yeah, it is 1"</span>)
+<pre><code>1 match {
+    case 1 =&gt; println(&quot;yeah, it is 1&quot;)
 }
-</code></pre><h2 id="模式匹配的应用">模式匹配的应用</h2><p>模式匹配可以匹配字符串，复杂值，类型，变量，常量，构造函数，元组。</p>
+</code></pre><h2 id="模式匹配的应用"><a href="#模式匹配的应用" class="headerlink" title="模式匹配的应用"></a>模式匹配的应用</h2><p>模式匹配可以匹配字符串，复杂值，类型，变量，常量，构造函数，元组。</p>
 <p>变量匹配本文介绍的简单例子就可说明。</p>
-<h3 id="字符串匹配">字符串匹配</h3><pre><code>val name = <span class="string">"format"</span>
-name <span class="keyword">match</span> {
-    <span class="keyword">case</span> <span class="string">"format"</span> =&gt; <span class="keyword">println</span>(<span class="string">"my name is format"</span>)
+<h3 id="字符串匹配"><a href="#字符串匹配" class="headerlink" title="字符串匹配"></a>字符串匹配</h3><pre><code>val name = &quot;format&quot;
+name match {
+    case &quot;format&quot; =&gt; println(&quot;my name is format&quot;)
 }
-</code></pre><h3 id="类型匹配">类型匹配</h3><pre><code>def printType(obj: AnyRef) = {
-    <span class="keyword">case</span> s:<span class="built_in">String</span> =&gt; println(<span class="string">"this is String"</span>)
-    <span class="keyword">case</span> l:<span class="built_in">List</span>[_] =&gt; println(<span class="string">"this is List"</span>)
-    <span class="keyword">case</span> a:Array[_] =&gt; println(<span class="string">"this is array"</span>)
-    <span class="keyword">case</span> d:java.util.Date =&gt; println(<span class="string">"this is Date"</span>)
+</code></pre><h3 id="类型匹配"><a href="#类型匹配" class="headerlink" title="类型匹配"></a>类型匹配</h3><pre><code>def printType(obj: AnyRef) = {
+    case s:String =&gt; println(&quot;this is String&quot;)
+    case l:List[_] =&gt; println(&quot;this is List&quot;)
+    case a:Array[_] =&gt; println(&quot;this is array&quot;)
+    case d:java.util.Date =&gt; println(&quot;this is Date&quot;)
 }
 
-printType(<span class="string">"1"</span>) <span class="comment">// this is String</span>
-printType(<span class="built_in">List</span>(<span class="number">1</span>)) <span class="comment">// this is List</span>
-printType(Array(<span class="number">1</span>)) <span class="comment">// this is Array</span>
-printType(<span class="keyword">new</span> java.util.Date()) <span class="comment">// this is Date</span>
-printType(<span class="built_in">Map</span>(<span class="number">1</span> -&gt; <span class="number">2</span>)) <span class="comment">// 报错。scala.MatchError: Map(1 -&gt; 2) (of class scala.collection.immutable.Map$Map1)</span>
-</code></pre><h3 id="构造函数匹配">构造函数匹配</h3><p>之前介绍scala的对象的<a href="http://fangjian0423.github.io/2015/05/31/scala-class-object/#unapply方法">unapply方法</a>的时候提到了这点。 构造函数的模式匹配基于对象的unapply方法。</p>
-<pre><code><span class="function"><span class="keyword">case</span> <span class="keyword">class</span> <span class="title">Person</span><span class="params">(name: String, age: Int)</span>
-val p </span>= <span class="keyword">new</span> Person(<span class="string">"format"</span>, <span class="number">99</span>)
-<span class="comment">// 打印 format,99</span>
+printType(&quot;1&quot;) // this is String
+printType(List(1)) // this is List
+printType(Array(1)) // this is Array
+printType(new java.util.Date()) // this is Date
+printType(Map(1 -&gt; 2)) // 报错。scala.MatchError: Map(1 -&gt; 2) (of class scala.collection.immutable.Map$Map1)
+</code></pre><h3 id="构造函数匹配"><a href="#构造函数匹配" class="headerlink" title="构造函数匹配"></a>构造函数匹配</h3><p>之前介绍scala的对象的<a href="http://fangjian0423.github.io/2015/05/31/scala-class-object/#unapply方法">unapply方法</a>的时候提到了这点。 构造函数的模式匹配基于对象的unapply方法。</p>
+<pre><code>case class Person(name: String, age: Int)
+val p = new Person(&quot;format&quot;, 99)
+// 打印 format,99
 p match {
-    <span class="function"><span class="keyword">case</span> <span class="title">Person</span><span class="params">(name, age)</span> </span>=&gt; println(name + <span class="string">","</span> + age)
+    case Person(name, age) =&gt; println(name + &quot;,&quot; + age)
 }
-</code></pre><h3 id="元组匹配">元组匹配</h3><pre><code><span class="comment">// 打印1,2</span>
-(<span class="number">1</span>,<span class="number">2</span>) match {
-    <span class="keyword">case</span> (a,b) =&gt; println(a+<span class="string">","</span>+b)
-}
-
-<span class="comment">// 打印2</span>
-(<span class="number">1</span>,<span class="number">2</span>) match {
-    <span class="keyword">case</span> (<span class="number">1</span>, b) =&gt; println(b)
+</code></pre><h3 id="元组匹配"><a href="#元组匹配" class="headerlink" title="元组匹配"></a>元组匹配</h3><pre><code>// 打印1,2
+(1,2) match {
+    case (a,b) =&gt; println(a+&quot;,&quot;+b)
 }
 
-<span class="comment">// 打印found</span>
-(<span class="number">1</span>,<span class="number">2</span>) match {
-    <span class="keyword">case</span> (_, <span class="number">2</span>) =&gt; println(<span class="string">"found"</span>)
+// 打印2
+(1,2) match {
+    case (1, b) =&gt; println(b)
 }
-</code></pre><h3 id="特殊的模式匹配">特殊的模式匹配</h3><h4 id="中缀操作符匹配(infix_operation_pattern)">中缀操作符匹配(infix operation pattern)</h4><p>直接看例子：</p>
-<pre><code><span class="comment">// 得到List(1,2)</span>
-<span class="built_in">List</span>(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>) <span class="keyword">match</span> {
-    <span class="keyword">case</span> a <span class="tag">:: b</span> <span class="tag">:: other</span> =&gt; <span class="built_in">List</span>(a, b)
-    <span class="keyword">case</span> _ =&gt; <span class="built_in">List</span>()
+
+// 打印found
+(1,2) match {
+    case (_, 2) =&gt; println(&quot;found&quot;)
+}
+</code></pre><h3 id="特殊的模式匹配"><a href="#特殊的模式匹配" class="headerlink" title="特殊的模式匹配"></a>特殊的模式匹配</h3><h4 id="中缀操作符匹配-infix-operation-pattern"><a href="#中缀操作符匹配-infix-operation-pattern" class="headerlink" title="中缀操作符匹配(infix operation pattern)"></a>中缀操作符匹配(infix operation pattern)</h4><p>直接看例子：</p>
+<pre><code>// 得到List(1,2)
+List(1,2,3,4) match {
+    case a :: b :: other =&gt; List(a, b)
+    case _ =&gt; List()
 }
 </code></pre><p>a和b会被解析成1和2，other会被解析成List(3,4)。 :: 操作符是List的添加操作符。</p>
-<h4 id="带有逻辑判断的模式匹配">带有逻辑判断的模式匹配</h4><p>case里面可以添加部分逻辑代码：</p>
-<pre><code><span class="number">1</span> match {
-    <span class="keyword">case</span> i <span class="keyword">if</span> i &lt; <span class="number">10</span> =&gt; println(<span class="string">"less than 10"</span>)
-    <span class="keyword">case</span> i <span class="keyword">if</span> i &gt;= <span class="number">10</span> =&gt; println(<span class="string">"more than 10"</span>)
+<h4 id="带有逻辑判断的模式匹配"><a href="#带有逻辑判断的模式匹配" class="headerlink" title="带有逻辑判断的模式匹配"></a>带有逻辑判断的模式匹配</h4><p>case里面可以添加部分逻辑代码：</p>
+<pre><code>1 match {
+    case i if i &lt; 10 =&gt; println(&quot;less than 10&quot;)
+    case i if i &gt;= 10 =&gt; println(&quot;more than 10&quot;)
 }
-</code></pre><h2 id="模式匹配要注意的几个地方">模式匹配要注意的几个地方</h2><p>1.没有匹配到的模式匹配会报错</p>
-<pre><code><span class="comment">// 报错， 2没有匹配1</span>
-<span class="number">2</span> match {
-    <span class="keyword">case</span> <span class="number">1</span> =&gt; println(<span class="string">"get one"</span>)
+</code></pre><h2 id="模式匹配要注意的几个地方"><a href="#模式匹配要注意的几个地方" class="headerlink" title="模式匹配要注意的几个地方"></a>模式匹配要注意的几个地方</h2><p>1.没有匹配到的模式匹配会报错</p>
+<pre><code>// 报错， 2没有匹配1
+2 match {
+    case 1 =&gt; println(&quot;get one&quot;)
 }
 </code></pre><p>2.使用 “_” 代替没匹配到的情况</p>
 <p>跟java里的switch case里的default语法一样。</p>
-<pre><code><span class="comment">// error get num</span>
-<span class="number">2</span> <span class="built_in">match</span> {
-    <span class="keyword">case</span> <span class="number">1</span> =&gt; <span class="built_in">println</span>(<span class="string">"get one"</span>)
-    <span class="keyword">case</span> _ =&gt; <span class="built_in">println</span>(<span class="string">"error get num"</span>)
+<pre><code>// error get num
+2 match {
+    case 1 =&gt; println(&quot;get one&quot;)
+    case _ =&gt; println(&quot;error get num&quot;)
 }
 </code></pre>
       
@@ -650,7 +650,7 @@ p match {
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#模式匹配介绍"><span class="nav-number">1.</span> <span class="nav-text">模式匹配介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#模式匹配的应用"><span class="nav-number">2.</span> <span class="nav-text">模式匹配的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#字符串匹配"><span class="nav-number">2.1.</span> <span class="nav-text">字符串匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类型匹配"><span class="nav-number">2.2.</span> <span class="nav-text">类型匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构造函数匹配"><span class="nav-number">2.3.</span> <span class="nav-text">构造函数匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#元组匹配"><span class="nav-number">2.4.</span> <span class="nav-text">元组匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#特殊的模式匹配"><span class="nav-number">2.5.</span> <span class="nav-text">特殊的模式匹配</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#中缀操作符匹配(infix_operation_pattern)"><span class="nav-number">2.5.1.</span> <span class="nav-text">中缀操作符匹配(infix operation pattern)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#带有逻辑判断的模式匹配"><span class="nav-number">2.5.2.</span> <span class="nav-text">带有逻辑判断的模式匹配</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#模式匹配要注意的几个地方"><span class="nav-number">3.</span> <span class="nav-text">模式匹配要注意的几个地方</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#模式匹配介绍"><span class="nav-number">1.</span> <span class="nav-text">模式匹配介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#模式匹配的应用"><span class="nav-number">2.</span> <span class="nav-text">模式匹配的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#字符串匹配"><span class="nav-number">2.1.</span> <span class="nav-text">字符串匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类型匹配"><span class="nav-number">2.2.</span> <span class="nav-text">类型匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构造函数匹配"><span class="nav-number">2.3.</span> <span class="nav-text">构造函数匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#元组匹配"><span class="nav-number">2.4.</span> <span class="nav-text">元组匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#特殊的模式匹配"><span class="nav-number">2.5.</span> <span class="nav-text">特殊的模式匹配</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#中缀操作符匹配-infix-operation-pattern"><span class="nav-number">2.5.1.</span> <span class="nav-text">中缀操作符匹配(infix operation pattern)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#带有逻辑判断的模式匹配"><span class="nav-number">2.5.2.</span> <span class="nav-text">带有逻辑判断的模式匹配</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#模式匹配要注意的几个地方"><span class="nav-number">3.</span> <span class="nav-text">模式匹配要注意的几个地方</span></a></li></ol></div>
             
           </div>
         </section>

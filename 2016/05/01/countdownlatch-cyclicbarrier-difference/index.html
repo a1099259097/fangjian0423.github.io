@@ -102,6 +102,7 @@ Cycl">
 CountDownLatch用于处理一个或多个线程等待其他所有线程完毕之后再继续进行操作。
 比如要处理一个非常耗时的任务，处理完之后需要更新这个任务的状态，需要开多线程去分批次处理任务中的各个子任务，当所有的子任务全部执行完毕之后，就可以更新任务状态了。这个时候就需要使用CountDownLatch。
 Cycl">
+<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/lockqueue01.jpg">
 
 
 
@@ -386,259 +387,259 @@ Cycl">
 <li>CountDownLatch底层使用的是共享锁，CyclicBarrier底层使用的是ReentrantLock和这个lock的条件对象Condition</li>
 </ol>
 <a id="more"></a>
-<h2 id="例子">例子</h2><p>1个CountDownLatch例子，这个例子阻塞3个线程，分别是主线程，Thread1和Thread2。这3个线程会在调用await方法之后阻塞，直到计数器变成0：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CountDownLatchTest {
+<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>1个CountDownLatch例子，这个例子阻塞3个线程，分别是主线程，Thread1和Thread2。这3个线程会在调用await方法之后阻塞，直到计数器变成0：</p>
+<pre><code>public class CountDownLatchTest {
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-        System.out.println(<span class="string">"主任务开始，一共需要进行7个子任务。第1和第2个子任务需要进行后续操作 "</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
-        CountDownLatch countDownLatch = <span class="keyword">new</span> CountDownLatch(<span class="number">5</span>);
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">7</span>; i ++) {
-            final <span class="keyword">int</span> index = i;
-            <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-                @<span class="function">Override
-                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-                    System.out.println(<span class="string">"子任务在线程 "</span> + Thread.currentThread().getName() + <span class="string">" 中运行 "</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
-                    <span class="keyword">if</span>(index == <span class="number">1</span> || index == <span class="number">2</span>) {
-                        <span class="keyword">try</span> {
+    public static void main(String[] args) {
+        System.out.println(&quot;主任务开始，一共需要进行7个子任务。第1和第2个子任务需要进行后续操作 &quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
+        CountDownLatch countDownLatch = new CountDownLatch(5);
+        for(int i = 0; i &lt; 7; i ++) {
+            final int index = i;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println(&quot;子任务在线程 &quot; + Thread.currentThread().getName() + &quot; 中运行 &quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
+                    if(index == 1 || index == 2) {
+                        try {
                             countDownLatch.await();
-                        } <span class="keyword">catch</span> (InterruptedException e) {
+                        } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        System.out.println(<span class="string">"子任务在线程 "</span> + Thread.currentThread().getName() + <span class="string">" 中进行后续操作 "</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
+                        System.out.println(&quot;子任务在线程 &quot; + Thread.currentThread().getName() + &quot; 中进行后续操作 &quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
                     }
-                    <span class="keyword">if</span>(index != <span class="number">1</span> &amp;&amp; index != <span class="number">2</span>) {
-                        <span class="keyword">try</span> {
-                            Thread.sleep(<span class="number">5000l</span>);
-                        } <span class="keyword">catch</span> (InterruptedException e) {
+                    if(index != 1 &amp;&amp; index != 2) {
+                        try {
+                            Thread.sleep(5000l);
+                        } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                         countDownLatch.countDown();
                     }
                 }
-            }, <span class="string">"Thread-"</span> + i).start();
+            }, &quot;Thread-&quot; + i).start();
         }
-        <span class="keyword">try</span> {
+        try {
             countDownLatch.await();
-        } <span class="keyword">catch</span> (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println(<span class="string">"主任务结束 "</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
+        System.out.println(&quot;主任务结束 &quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
     }
 
 }
 </code></pre><p>输出：</p>
-<pre><code>主任务开始，一共需要进行<span class="number">7</span>个子任务。第<span class="number">1</span>和第<span class="number">2</span>个子任务需要进行后续操作 <span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">41</span>:<span class="number">57</span>
-子任务在线程 Thread-<span class="number">1</span> 中运行 <span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">41</span>:<span class="number">57</span>
-子任务在线程 Thread-<span class="number">2</span> 中运行 <span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">41</span>:<span class="number">57</span>
-子任务在线程 Thread-<span class="number">0</span> 中运行 <span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">41</span>:<span class="number">57</span>
-子任务在线程 Thread-<span class="number">3</span> 中运行 <span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">41</span>:<span class="number">57</span>
-子任务在线程 Thread-<span class="number">4</span> 中运行 <span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">41</span>:<span class="number">57</span>
-子任务在线程 Thread-<span class="number">5</span> 中运行 <span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">41</span>:<span class="number">57</span>
-子任务在线程 Thread-<span class="number">6</span> 中运行 <span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">41</span>:<span class="number">57</span>
-子任务在线程 Thread-<span class="number">2</span> 中进行后续操作 <span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">42</span>:<span class="number">02</span>
-主任务结束 <span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">42</span>:<span class="number">02</span>
-子任务在线程 Thread-<span class="number">1</span> 中进行后续操作 <span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">42</span>:<span class="number">02</span>
+<pre><code>主任务开始，一共需要进行7个子任务。第1和第2个子任务需要进行后续操作 2016-05-01 00:41:57
+子任务在线程 Thread-1 中运行 2016-05-01 00:41:57
+子任务在线程 Thread-2 中运行 2016-05-01 00:41:57
+子任务在线程 Thread-0 中运行 2016-05-01 00:41:57
+子任务在线程 Thread-3 中运行 2016-05-01 00:41:57
+子任务在线程 Thread-4 中运行 2016-05-01 00:41:57
+子任务在线程 Thread-5 中运行 2016-05-01 00:41:57
+子任务在线程 Thread-6 中运行 2016-05-01 00:41:57
+子任务在线程 Thread-2 中进行后续操作 2016-05-01 00:42:02
+主任务结束 2016-05-01 00:42:02
+子任务在线程 Thread-1 中进行后续操作 2016-05-01 00:42:02
 </code></pre><p>1个CyclicBarrier例子，模拟抽奖，每个用户都可以抽奖，当所有的用户抽完奖之后才能开始颁发奖项：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CyclicBarrierTest {
+<pre><code>public class CyclicBarrierTest {
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> throws InterruptedException </span>{
-        System.out.println(<span class="string">"5个用户开始抽奖"</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
-        CyclicBarrier cyclicBarrier = <span class="keyword">new</span> CyclicBarrier(<span class="number">5</span>);
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i ++) {
-            final <span class="keyword">int</span> index = i;
-            <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-                @<span class="function">Override
-                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-                    System.out.println(Thread.currentThread().getName() + <span class="string">" 用户开始抽奖，持续"</span>+(index+<span class="number">1</span>)+<span class="string">"秒"</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
-                    <span class="keyword">try</span> {
-                        Thread.sleep((index + <span class="number">1</span>) * <span class="number">1000</span>);
+    public static void main(String[] args) throws InterruptedException {
+        System.out.println(&quot;5个用户开始抽奖&quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(5);
+        for(int i = 0; i &lt; 5; i ++) {
+            final int index = i;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println(Thread.currentThread().getName() + &quot; 用户开始抽奖，持续&quot;+(index+1)+&quot;秒&quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
+                    try {
+                        Thread.sleep((index + 1) * 1000);
                         cyclicBarrier.await();
-                    } <span class="keyword">catch</span> (InterruptedException e) {
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
-                    } <span class="keyword">catch</span> (BrokenBarrierException e) {
+                    } catch (BrokenBarrierException e) {
                         e.printStackTrace();
                     }
-                    System.out.println(<span class="string">"所有用户抽奖完毕，颁发奖项。为用户"</span> + Thread.currentThread().getName() + <span class="string">"颁奖。"</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
+                    System.out.println(&quot;所有用户抽奖完毕，颁发奖项。为用户&quot; + Thread.currentThread().getName() + &quot;颁奖。&quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
                 }
-            }, <span class="string">"Thread-"</span> + i).start();
+            }, &quot;Thread-&quot; + i).start();
         }
     }
 
 }
 </code></pre><p>输出：</p>
-<pre><code><span class="number">5</span>个用户开始抽奖<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">57</span>:<span class="number">16</span>
-Thread-<span class="number">1</span> 用户开始抽奖，持续<span class="number">2</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">57</span>:<span class="number">16</span>
-Thread-<span class="number">2</span> 用户开始抽奖，持续<span class="number">3</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">57</span>:<span class="number">16</span>
-Thread-<span class="number">3</span> 用户开始抽奖，持续<span class="number">4</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">57</span>:<span class="number">16</span>
-Thread-<span class="number">4</span> 用户开始抽奖，持续<span class="number">5</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">57</span>:<span class="number">16</span>
-Thread-<span class="number">0</span> 用户开始抽奖，持续<span class="number">1</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">57</span>:<span class="number">16</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">0</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">57</span>:<span class="number">21</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">2</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">57</span>:<span class="number">21</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">1</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">57</span>:<span class="number">21</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">4</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">57</span>:<span class="number">21</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">3</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">57</span>:<span class="number">21</span>
+<pre><code>5个用户开始抽奖2016-05-01 00:57:16
+Thread-1 用户开始抽奖，持续2秒2016-05-01 00:57:16
+Thread-2 用户开始抽奖，持续3秒2016-05-01 00:57:16
+Thread-3 用户开始抽奖，持续4秒2016-05-01 00:57:16
+Thread-4 用户开始抽奖，持续5秒2016-05-01 00:57:16
+Thread-0 用户开始抽奖，持续1秒2016-05-01 00:57:16
+所有用户抽奖完毕，颁发奖项。为用户Thread-0颁奖。2016-05-01 00:57:21
+所有用户抽奖完毕，颁发奖项。为用户Thread-2颁奖。2016-05-01 00:57:21
+所有用户抽奖完毕，颁发奖项。为用户Thread-1颁奖。2016-05-01 00:57:21
+所有用户抽奖完毕，颁发奖项。为用户Thread-4颁奖。2016-05-01 00:57:21
+所有用户抽奖完毕，颁发奖项。为用户Thread-3颁奖。2016-05-01 00:57:21
 </code></pre><p>CyclicBarrier中的计数器到0之后，可以重用：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> CyclicBarrierTest2 {
+<pre><code>public class CyclicBarrierTest2 {
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> throws InterruptedException </span>{
-        System.out.println(<span class="string">"5个用户开始抽奖"</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
-        CyclicBarrier cyclicBarrier = <span class="keyword">new</span> CyclicBarrier(<span class="number">5</span>);
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i ++) {
-            final <span class="keyword">int</span> index = i;
-            <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-                @<span class="function">Override
-                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-                    System.out.println(Thread.currentThread().getName() + <span class="string">" 用户开始抽奖，持续"</span>+(index+<span class="number">1</span>)+<span class="string">"秒"</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
-                    <span class="keyword">try</span> {
-                        Thread.sleep((index + <span class="number">1</span>) * <span class="number">1000</span>);
+    public static void main(String[] args) throws InterruptedException {
+        System.out.println(&quot;5个用户开始抽奖&quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(5);
+        for(int i = 0; i &lt; 5; i ++) {
+            final int index = i;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println(Thread.currentThread().getName() + &quot; 用户开始抽奖，持续&quot;+(index+1)+&quot;秒&quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
+                    try {
+                        Thread.sleep((index + 1) * 1000);
                         cyclicBarrier.await();
-                    } <span class="keyword">catch</span> (InterruptedException e) {
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
-                    } <span class="keyword">catch</span> (BrokenBarrierException e) {
+                    } catch (BrokenBarrierException e) {
                         e.printStackTrace();
                     }
-                    System.out.println(<span class="string">"所有用户抽奖完毕，颁发奖项。为用户"</span> + Thread.currentThread().getName() + <span class="string">"颁奖。"</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
+                    System.out.println(&quot;所有用户抽奖完毕，颁发奖项。为用户&quot; + Thread.currentThread().getName() + &quot;颁奖。&quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
                 }
-            }, <span class="string">"Thread-"</span> + i).start();
+            }, &quot;Thread-&quot; + i).start();
         }
-        Thread.sleep(<span class="number">5000l</span>);
-        System.out.println(<span class="string">"下一轮抽奖开始"</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i ++) {
-            final <span class="keyword">int</span> index = i;
-            <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() {
-                @<span class="function">Override
-                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-                    System.out.println(Thread.currentThread().getName() + <span class="string">" 用户开始抽奖，持续"</span>+(index+<span class="number">1</span>)+<span class="string">"秒"</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
-                    <span class="keyword">try</span> {
-                        Thread.sleep((index + <span class="number">1</span>) * <span class="number">1000</span>);
+        Thread.sleep(5000l);
+        System.out.println(&quot;下一轮抽奖开始&quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
+        for(int i = 0; i &lt; 5; i ++) {
+            final int index = i;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println(Thread.currentThread().getName() + &quot; 用户开始抽奖，持续&quot;+(index+1)+&quot;秒&quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
+                    try {
+                        Thread.sleep((index + 1) * 1000);
                         cyclicBarrier.await();
-                    } <span class="keyword">catch</span> (InterruptedException e) {
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
-                    } <span class="keyword">catch</span> (BrokenBarrierException e) {
+                    } catch (BrokenBarrierException e) {
                         e.printStackTrace();
                     }
-                    System.out.println(<span class="string">"所有用户抽奖完毕，颁发奖项。为用户"</span> + Thread.currentThread().getName() + <span class="string">"颁奖。"</span> + DateFormatUtils.format(<span class="keyword">new</span> Date(), <span class="string">"yyyy-MM-dd HH:mm:ss"</span>));
+                    System.out.println(&quot;所有用户抽奖完毕，颁发奖项。为用户&quot; + Thread.currentThread().getName() + &quot;颁奖。&quot; + DateFormatUtils.format(new Date(), &quot;yyyy-MM-dd HH:mm:ss&quot;));
                 }
-            }, <span class="string">"Thread-"</span> + i).start();
+            }, &quot;Thread-&quot; + i).start();
         }
     }
 
 }
 </code></pre><p>输出：</p>
-<pre><code><span class="number">5</span>个用户开始抽奖<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">40</span>
-Thread-<span class="number">1</span> 用户开始抽奖，持续<span class="number">2</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">40</span>
-Thread-<span class="number">2</span> 用户开始抽奖，持续<span class="number">3</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">40</span>
-Thread-<span class="number">3</span> 用户开始抽奖，持续<span class="number">4</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">40</span>
-Thread-<span class="number">4</span> 用户开始抽奖，持续<span class="number">5</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">40</span>
-Thread-<span class="number">0</span> 用户开始抽奖，持续<span class="number">1</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">40</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">4</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">45</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">0</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">45</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">1</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">45</span>
-下一轮抽奖开始<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">45</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">3</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">45</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">2</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">45</span>
-Thread-<span class="number">1</span> 用户开始抽奖，持续<span class="number">2</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">45</span>
-Thread-<span class="number">0</span> 用户开始抽奖，持续<span class="number">1</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">45</span>
-Thread-<span class="number">2</span> 用户开始抽奖，持续<span class="number">3</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">45</span>
-Thread-<span class="number">3</span> 用户开始抽奖，持续<span class="number">4</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">45</span>
-Thread-<span class="number">4</span> 用户开始抽奖，持续<span class="number">5</span>秒<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">45</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">1</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">50</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">2</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">50</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">0</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">50</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">4</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">50</span>
-所有用户抽奖完毕，颁发奖项。为用户Thread-<span class="number">3</span>颁奖。<span class="number">2016</span>-<span class="number">05</span>-<span class="number">01</span> <span class="number">00</span>:<span class="number">59</span>:<span class="number">50</span>
-</code></pre><h2 id="底层分析">底层分析</h2><h3 id="CountDownLatch">CountDownLatch</h3><p>CountDownLatch底层使用的是共享锁，它有个内部类Sync，这个Sync继承AQS，实现了共享锁。</p>
+<pre><code>5个用户开始抽奖2016-05-01 00:59:40
+Thread-1 用户开始抽奖，持续2秒2016-05-01 00:59:40
+Thread-2 用户开始抽奖，持续3秒2016-05-01 00:59:40
+Thread-3 用户开始抽奖，持续4秒2016-05-01 00:59:40
+Thread-4 用户开始抽奖，持续5秒2016-05-01 00:59:40
+Thread-0 用户开始抽奖，持续1秒2016-05-01 00:59:40
+所有用户抽奖完毕，颁发奖项。为用户Thread-4颁奖。2016-05-01 00:59:45
+所有用户抽奖完毕，颁发奖项。为用户Thread-0颁奖。2016-05-01 00:59:45
+所有用户抽奖完毕，颁发奖项。为用户Thread-1颁奖。2016-05-01 00:59:45
+下一轮抽奖开始2016-05-01 00:59:45
+所有用户抽奖完毕，颁发奖项。为用户Thread-3颁奖。2016-05-01 00:59:45
+所有用户抽奖完毕，颁发奖项。为用户Thread-2颁奖。2016-05-01 00:59:45
+Thread-1 用户开始抽奖，持续2秒2016-05-01 00:59:45
+Thread-0 用户开始抽奖，持续1秒2016-05-01 00:59:45
+Thread-2 用户开始抽奖，持续3秒2016-05-01 00:59:45
+Thread-3 用户开始抽奖，持续4秒2016-05-01 00:59:45
+Thread-4 用户开始抽奖，持续5秒2016-05-01 00:59:45
+所有用户抽奖完毕，颁发奖项。为用户Thread-1颁奖。2016-05-01 00:59:50
+所有用户抽奖完毕，颁发奖项。为用户Thread-2颁奖。2016-05-01 00:59:50
+所有用户抽奖完毕，颁发奖项。为用户Thread-0颁奖。2016-05-01 00:59:50
+所有用户抽奖完毕，颁发奖项。为用户Thread-4颁奖。2016-05-01 00:59:50
+所有用户抽奖完毕，颁发奖项。为用户Thread-3颁奖。2016-05-01 00:59:50
+</code></pre><h2 id="底层分析"><a href="#底层分析" class="headerlink" title="底层分析"></a>底层分析</h2><h3 id="CountDownLatch"><a href="#CountDownLatch" class="headerlink" title="CountDownLatch"></a>CountDownLatch</h3><p>CountDownLatch底层使用的是共享锁，它有个内部类Sync，这个Sync继承AQS，实现了共享锁。</p>
 <p>简单画了一下共享锁的实现。</p>
 <p>比如有4个线程在等待队列里，并且节点类型都是共享锁。 会唤醒head节点的下一节点中的线程Thread1。head节点就变成了之前head节点的下个节点，然后再做重复操作。 这个过程是一个传播过程，会依次唤醒各个共享节点中的线程。</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/lockqueue01.jpg" alt=""></p>
 <p>并发包下的另外一个工具类Semaphore底层也是使用共享锁实现的。但是它跟CountDownLatch唯一的区别就是它不会唤醒所有的共享节点中的线程，而是唤醒它能唤醒的最大线程数(由信号量可用大小决定)。</p>
-<h3 id="CyclicBarrier">CyclicBarrier</h3><p>CyclicBarrier底层使用的是ReentrantLock和这个lock的条件对象Condition。</p>
+<h3 id="CyclicBarrier"><a href="#CyclicBarrier" class="headerlink" title="CyclicBarrier"></a>CyclicBarrier</h3><p>CyclicBarrier底层使用的是ReentrantLock和这个lock的条件对象Condition。</p>
 <p>它拥有的属性如下：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Generation</span> </span>{
-    <span class="keyword">boolean</span> broken = <span class="keyword">false</span>;
+<pre><code>private static class Generation {
+    boolean broken = false;
 }
 
-<span class="keyword">private</span> <span class="keyword">final</span> ReentrantLock lock = <span class="keyword">new</span> ReentrantLock(); <span class="comment">// 可重入锁</span>
-<span class="keyword">private</span> <span class="keyword">final</span> Condition trip = lock.newCondition(); <span class="comment">// 可重入锁的条件对象</span>
-<span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> parties; <span class="comment">// 计数器原始值，永远不会变</span>
-<span class="keyword">private</span> <span class="keyword">final</span> Runnable barrierCommand; <span class="comment">// 计数器到了之后需要执行的Runnable，可为空</span>
-<span class="keyword">private</span> Generation generation = <span class="keyword">new</span> Generation(); <span class="comment">// 一个Generation对象的实例，当计数器为0的时候这个实例将会重新被构造</span>
-<span class="keyword">private</span> <span class="keyword">int</span> <span class="keyword">count</span>; <span class="comment">// 计数器当前的值</span>
+private final ReentrantLock lock = new ReentrantLock(); // 可重入锁
+private final Condition trip = lock.newCondition(); // 可重入锁的条件对象
+private final int parties; // 计数器原始值，永远不会变
+private final Runnable barrierCommand; // 计数器到了之后需要执行的Runnable，可为空
+private Generation generation = new Generation(); // 一个Generation对象的实例，当计数器为0的时候这个实例将会重新被构造
+private int count; // 计数器当前的值
 </code></pre><p>await方法：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">int</span> dowait(<span class="keyword">boolean</span> timed, <span class="keyword">long</span> nanos)
+<pre><code>private int dowait(boolean timed, long nanos)
     throws InterruptedException, BrokenBarrierException,
            TimeoutException {
-    <span class="keyword">final</span> ReentrantLock lock = <span class="keyword">this</span>.lock;
-    lock.lock(); <span class="comment">// 加锁，确保每次只有1个线程调用</span>
-    <span class="keyword">try</span> {
-        <span class="keyword">final</span> Generation g = generation;
+    final ReentrantLock lock = this.lock;
+    lock.lock(); // 加锁，确保每次只有1个线程调用
+    try {
+        final Generation g = generation;
 
-        <span class="keyword">if</span> (g.broken) <span class="comment">// 查看generation是否已经损坏</span>
-            <span class="keyword">throw</span> <span class="keyword">new</span> BrokenBarrierException();
+        if (g.broken) // 查看generation是否已经损坏
+            throw new BrokenBarrierException();
 
-        <span class="keyword">if</span> (Thread.interrupted()) {
+        if (Thread.interrupted()) {
             breakBarrier();
-            <span class="keyword">throw</span> <span class="keyword">new</span> InterruptedException();
+            throw new InterruptedException();
         }
 
-        <span class="keyword">int</span> <span class="keyword">index</span> = --<span class="keyword">count</span>; <span class="comment">// 计数器减一</span>
-        <span class="keyword">if</span> (<span class="keyword">index</span> == <span class="number">0</span>) {  <span class="comment">// 如果计数器为0</span>
-            <span class="keyword">boolean</span> ranAction = <span class="keyword">false</span>;
-            <span class="keyword">try</span> {
-                <span class="keyword">final</span> Runnable command = barrierCommand;
-                <span class="keyword">if</span> (command != <span class="keyword">null</span>) <span class="comment">// 如果Runnable不为空，执行run方法。注意，这里是直接调用run方法，而不是启动1个新的线程</span>
+        int index = --count; // 计数器减一
+        if (index == 0) {  // 如果计数器为0
+            boolean ranAction = false;
+            try {
+                final Runnable command = barrierCommand;
+                if (command != null) // 如果Runnable不为空，执行run方法。注意，这里是直接调用run方法，而不是启动1个新的线程
                     command.run();
-                ranAction = <span class="keyword">true</span>;
-                nextGeneration(); <span class="comment">// 一个过程结束，重新开始</span>
-                <span class="keyword">return</span> <span class="number">0</span>;
-            } <span class="keyword">finally</span> {
-                <span class="keyword">if</span> (!ranAction)
+                ranAction = true;
+                nextGeneration(); // 一个过程结束，重新开始
+                return 0;
+            } finally {
+                if (!ranAction)
                     breakBarrier();
             }
         }
 
 
-        <span class="keyword">for</span> (;;) {
-            <span class="keyword">try</span> {
-                <span class="keyword">if</span> (!timed)
-                    trip.await(); <span class="comment">// 放到Conditon的等待队列里，同时释放锁，让其他线程执行await方法</span>
-                <span class="keyword">else</span> <span class="keyword">if</span> (nanos &gt; <span class="number">0</span>L)
+        for (;;) {
+            try {
+                if (!timed)
+                    trip.await(); // 放到Conditon的等待队列里，同时释放锁，让其他线程执行await方法
+                else if (nanos &gt; 0L)
                     nanos = trip.awaitNanos(nanos);
-            } <span class="keyword">catch</span> (InterruptedException ie) {
-                <span class="keyword">if</span> (g == generation &amp;&amp; ! g.broken) {
+            } catch (InterruptedException ie) {
+                if (g == generation &amp;&amp; ! g.broken) {
                     breakBarrier();
-                    <span class="keyword">throw</span> ie;
-                } <span class="keyword">else</span> {
-                    <span class="comment">// We're about to finish waiting even if we had not</span>
-                    <span class="comment">// been interrupted, so this interrupt is deemed to</span>
-                    <span class="comment">// "belong" to subsequent execution.</span>
+                    throw ie;
+                } else {
+                    // We&apos;re about to finish waiting even if we had not
+                    // been interrupted, so this interrupt is deemed to
+                    // &quot;belong&quot; to subsequent execution.
                     Thread.currentThread().interrupt();
                 }
             }
 
-            <span class="keyword">if</span> (g.broken)
-                <span class="keyword">throw</span> <span class="keyword">new</span> BrokenBarrierException();
+            if (g.broken)
+                throw new BrokenBarrierException();
 
-            <span class="keyword">if</span> (g != generation) <span class="comment">// 说明执行了nextGeneration方法，计数器到了0</span>
-                <span class="keyword">return</span> <span class="keyword">index</span>;
+            if (g != generation) // 说明执行了nextGeneration方法，计数器到了0
+                return index;
 
-            <span class="keyword">if</span> (timed &amp;&amp; nanos &lt;= <span class="number">0</span>L) {
+            if (timed &amp;&amp; nanos &lt;= 0L) {
                 breakBarrier();
-                <span class="keyword">throw</span> <span class="keyword">new</span> TimeoutException();
+                throw new TimeoutException();
             }
         }
-    } <span class="keyword">finally</span> {
-        lock.unlock(); <span class="comment">// 解锁</span>
+    } finally {
+        lock.unlock(); // 解锁
     }
 }
 
-<span class="keyword">private</span> <span class="keyword">void</span> nextGeneration() {
-    <span class="comment">// 唤醒Conditon等待队列上的所有线程</span>
+private void nextGeneration() {
+    // 唤醒Conditon等待队列上的所有线程
     trip.signalAll();
-    <span class="comment">// 计数器值变成原始值，重新开始</span>
-    <span class="keyword">count</span> = parties;
-    <span class="comment">// generation被重新构造</span>
-    generation = <span class="keyword">new</span> Generation();
+    // 计数器值变成原始值，重新开始
+    count = parties;
+    // generation被重新构造
+    generation = new Generation();
 }
 </code></pre><p>执行过程解释：</p>
 <p>比如Thread1执行了await方法，这个时候await方法加锁，确保其他线程不能再次调用await方法。</p>

@@ -27,7 +27,9 @@
 
 
 
-  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
 
 
 
@@ -55,6 +57,8 @@
     
     <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
   
+
+
 
 
 
@@ -114,16 +118,20 @@ Cycl">
     fancybox: true,
     motion: true,
     duoshuo: {
-      userId: 0,
+      userId: '0',
       author: '博主'
     }
   };
 </script>
 
+
+
+
+
   <title> CountDownLatch和CyclicBarrier的区别 | Format's Notes </title>
 </head>
 
-<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
 
   
 
@@ -163,7 +171,7 @@ Cycl">
   <div class="container one-collumn sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
-    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
       <div class="header-inner"><div class="site-meta ">
   
 
@@ -195,7 +203,7 @@ Cycl">
         <li class="menu-item menu-item-home">
           <a href="/" rel="section">
             
-              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
             首页
           </a>
@@ -205,7 +213,7 @@ Cycl">
         <li class="menu-item menu-item-categories">
           <a href="/categories" rel="section">
             
-              <i class="menu-item-icon fa fa-th fa-fw"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
             
             分类
           </a>
@@ -215,7 +223,7 @@ Cycl">
         <li class="menu-item menu-item-about">
           <a href="/about" rel="section">
             
-              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
             
             关于
           </a>
@@ -225,7 +233,7 @@ Cycl">
         <li class="menu-item menu-item-archives">
           <a href="/archives" rel="section">
             
-              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
             归档
           </a>
@@ -235,7 +243,7 @@ Cycl">
         <li class="menu-item menu-item-tags">
           <a href="/tags" rel="section">
             
-              <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
             
             标签
           </a>
@@ -245,7 +253,7 @@ Cycl">
       
         <li class="menu-item menu-item-search">
           
-            <a href="#" class="st-search-show-outputs">
+            <a href="javascript:;" class="st-search-show-outputs">
           
             
               <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
@@ -298,7 +306,7 @@ Cycl">
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
 
     
       <header class="post-header">
@@ -649,16 +657,18 @@ private void nextGeneration() {
 
       
     </div>
-    
+
     <div>
       
         
+
       
     </div>
 
     <div>
       
         
+
       
     </div>
 
@@ -750,7 +760,7 @@ private void nextGeneration() {
       
 
       <section class="site-overview sidebar-panel ">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="http://7x2wh6.com1.z0.glb.clouddn.com/avatar.jpg"
                alt="Format" />
@@ -798,27 +808,27 @@ private void nextGeneration() {
           
             
               <span class="links-of-author-item">
-                <a href="https://github.com/fangjian0423" target="_blank">
+                <a href="https://github.com/fangjian0423" target="_blank" title="GitHub">
                   
-                    <i class="fa fa-github"></i>
+                    <i class="fa fa-fw fa-github"></i>
                   
                   GitHub
                 </a>
               </span>
             
               <span class="links-of-author-item">
-                <a href="https://twitter.com/fangjian0423" target="_blank">
+                <a href="https://twitter.com/fangjian0423" target="_blank" title="Twitter">
                   
-                    <i class="fa fa-twitter"></i>
+                    <i class="fa fa-fw fa-twitter"></i>
                   
                   Twitter
                 </a>
               </span>
             
               <span class="links-of-author-item">
-                <a href="http://weibo.com/u/2952387973" target="_blank">
+                <a href="http://weibo.com/u/2952387973" target="_blank" title="Weibo">
                   
-                    <i class="fa fa-weibo"></i>
+                    <i class="fa fa-fw fa-weibo"></i>
                   
                   Weibo
                 </a>
@@ -831,26 +841,29 @@ private void nextGeneration() {
         
 
         
-        <div class="links-of-blogroll motion-element">
-          
-            <div class="links-of-blogroll-title">友情链接</div>
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
             <ul class="links-of-blogroll-list">
               
                 <li class="links-of-blogroll-item">
-                  <a href="http://xtutu.me/" target="_blank">xtutu</a>
+                  <a href="http://xtutu.me/" title="xtutu" target="_blank">xtutu</a>
                 </li>
               
                 <li class="links-of-blogroll-item">
-                  <a href="http://blog.zlf.me" target="_blank">Felix</a>
+                  <a href="http://blog.zlf.me" title="Felix" target="_blank">Felix</a>
                 </li>
               
                 <li class="links-of-blogroll-item">
-                  <a href="http://stockgraph.net/" target="_blank">WhiteAmber</a>
+                  <a href="http://stockgraph.net/" title="WhiteAmber" target="_blank">WhiteAmber</a>
                 </li>
               
             </ul>
-          
-        </div>
+          </div>
+        
 
       </section>
 
@@ -888,7 +901,7 @@ private void nextGeneration() {
 </div>
 
 <div class="powered-by">
-  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
 </div>
 
 <div class="theme-info">
@@ -989,7 +1002,7 @@ private void nextGeneration() {
     <script type="text/javascript">
       var disqus_shortname = 'fangjian0423';
       var disqus_identifier = '2016/05/01/countdownlatch-cyclicbarrier-difference/';
-      var disqus_title = 'CountDownLatch和CyclicBarrier的区别';
+      var disqus_title = "CountDownLatch和CyclicBarrier的区别";
       var disqus_url = 'http://fangjian0423.github.io/2016/05/01/countdownlatch-cyclicbarrier-difference/';
 
       function run_disqus_script(disqus_script){
@@ -1002,6 +1015,11 @@ private void nextGeneration() {
 
       run_disqus_script('count.js');
       
+        var disqus_config = function () {
+            this.page.url = disqus_url;
+            this.page.identifier = disqus_identifier;
+            this.page.title = disqus_title;
+        };
         run_disqus_script('embed.js');
       
     </script>
@@ -1009,13 +1027,18 @@ private void nextGeneration() {
 
 
 
-  
+
   
   
 
   
 
   
+
+  
+
+  
+
 
 </body>
 </html>

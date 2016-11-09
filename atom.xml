@@ -4,7 +4,7 @@
   <subtitle><![CDATA[吃饭睡觉撸代码]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2016-11-09T03:59:41.000Z</updated>
+  <updated>2016-11-09T04:22:25.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -19,7 +19,7 @@
     <link href="http://fangjian0423.github.io/2016/11/09/springbatch-retry-skip/"/>
     <id>http://fangjian0423.github.io/2016/11/09/springbatch-retry-skip/</id>
     <published>2016-11-09T00:15:22.000Z</published>
-    <updated>2016-11-09T03:59:41.000Z</updated>
+    <updated>2016-11-09T04:22:25.000Z</updated>
     <content type="html"><![CDATA[<p><a href="http://projects.spring.io/spring-batch/" target="_blank" rel="external">SpringBatch</a>是spring框架下的一个子模块，用于处理批处理的批次框架。</p>
 <p>本文主要分析SpringBatch中的retry和skip机制的实现。</p>
 <p>先简单说明下SpringBatch在SpringBoot中的使用。</p>
@@ -182,6 +182,8 @@ handle <span class="keyword">end</span>.. <span class="comment">-----[66666]</sp
       <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
     
       <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
     
       <category term="spring" scheme="http://fangjian0423.github.io/categories/spring/"/>
     

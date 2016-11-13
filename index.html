@@ -308,6 +308,148 @@
             
               
                 
+                <a class="post-title-link" href="/2016/11/13/spring-import-selector/" itemprop="url">
+                  Spring的ImportSelector使用
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-11-13T16:22:51+08:00" content="2016-11-13">
+              2016-11-13
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/spring/" itemprop="url" rel="index">
+                    <span itemprop="name">spring</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/11/13/spring-import-selector/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/11/13/spring-import-selector/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>一般情况下，对应这样的一个需求:</p>
+<pre><code>定义一个Annotation，让使用了这个Annotaion的应用程序自动化地注入一些类或者做一些底层的事情。
+</code></pre><p>我们会使用Spring提供的@Import注解配合一个配置类来完成。</p>
+<p>我们以一个最简单的例子来完成这个需求：定义一个注解EnableContentService，使用了这个注解的程序会自动注入ContentService这个bean。</p>
+<pre><code>@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Import(ContentConfiguration.class)
+public @interface EnableContentService {}
+
+public interface ContentService {
+    void doSomething();
+}
+
+public class SimpleContentService implements ContentService {
+    @Override
+    public void doSomething() {
+        System.out.println(&quot;do some simple things&quot;);
+    }
+}
+</code></pre><p>然后在应用程序的入口加上@EnableContentService注解。</p>
+<p>这样的话，ContentService就被注入进来了。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/11/13/spring-import-selector/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/11/09/springbatch-retry-skip/" itemprop="url">
                   SpringBatch中的retry和skip机制实现分析
                 </a>
@@ -1453,132 +1595,6 @@ libraryDependencies += &quot;io.springfox&quot; % &quot;springfox-swagger-ui&quo
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/06/22/springboot-with-scala/" itemprop="url">
-                  SpringBoot with Scala
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-06-22T23:22:39+08:00" content="2016-06-22">
-              2016-06-22
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/springboot/" itemprop="url" rel="index">
-                    <span itemprop="name">springboot</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/06/22/springboot-with-scala/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/06/22/springboot-with-scala/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>一般情况下，我们使用java开发springboot应用，可以使用scala开发springboot应用吗？</p>
-<p>答案当然是可以的。</p>
-<p>今天参考了阿福老师的这篇<a href="http://afoo.me/posts/2015-07-21-scala-developers-springboot-guide.html">Scala开发者的SpringBoot快速入门指南</a>以及一位国际友人的一个<a href="https://github.com/bijukunjummen/spring-boot-scala-web">spring-boot-scala-web</a> demo。</p>
-<p>自己尝试地搭建了一下环境，发现用scala编写springboot应用这种体验也是非常赞的。</p>
-<p>下面是具体的环境搭建流程：</p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/06/22/springboot-with-scala/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1624,7 +1640,7 @@ libraryDependencies += &quot;io.springfox&quot; % &quot;springfox-swagger-ui&quo
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-count">92</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

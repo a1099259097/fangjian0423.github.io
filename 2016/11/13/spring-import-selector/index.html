@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="big data,hive," />
+  <meta name="keywords" content="spring,springboot," />
 
 
 
@@ -86,16 +86,28 @@
 
 
 
-<meta name="description" content="Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集 ...">
+<meta name="description" content="一般情况下，对应这样的一个需求:
+定义一个Annotation，让使用了这个Annotaion的应用程序自动化地注入一些类或者做一些底层的事情。
+我们会使用Spring提供的@Import注解配合一个配置类来完成。
+我们以一个最简单的例子来完成这个需求：定义一个注解EnableContentService，使用了这个注解的程序会自动注入ContentService这个bean。
+@Retentio">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hive介绍">
-<meta property="og:url" content="http://fangjian0423.github.io/2015/07/31/hive-intro/index.html">
+<meta property="og:title" content="Spring的ImportSelector使用">
+<meta property="og:url" content="http://fangjian0423.github.io/2016/11/13/spring-import-selector/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集 ...">
-<meta property="og:updated_time" content="2016-05-10T14:59:25.000Z">
+<meta property="og:description" content="一般情况下，对应这样的一个需求:
+定义一个Annotation，让使用了这个Annotaion的应用程序自动化地注入一些类或者做一些底层的事情。
+我们会使用Spring提供的@Import注解配合一个配置类来完成。
+我们以一个最简单的例子来完成这个需求：定义一个注解EnableContentService，使用了这个注解的程序会自动注入ContentService这个bean。
+@Retentio">
+<meta property="og:updated_time" content="2016-11-13T08:27:46.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hive介绍">
-<meta name="twitter:description" content="Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集 ...">
+<meta name="twitter:title" content="Spring的ImportSelector使用">
+<meta name="twitter:description" content="一般情况下，对应这样的一个需求:
+定义一个Annotation，让使用了这个Annotaion的应用程序自动化地注入一些类或者做一些底层的事情。
+我们会使用Spring提供的@Import注解配合一个配置类来完成。
+我们以一个最简单的例子来完成这个需求：定义一个注解EnableContentService，使用了这个注解的程序会自动注入ContentService这个bean。
+@Retentio">
 
 
 
@@ -117,7 +129,7 @@
 
 
 
-  <title> Hive介绍 | Format's Notes </title>
+  <title> Spring的ImportSelector使用 | Format's Notes </title>
 </head>
 
 <body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
@@ -306,7 +318,7 @@
             
             
               
-                Hive介绍
+                Spring的ImportSelector使用
               
             
           </h1>
@@ -318,8 +330,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-07-31T13:32:33+08:00" content="2015-07-31">
-              2015-07-31
+            <time itemprop="dateCreated" datetime="2016-11-13T16:22:51+08:00" content="2016-11-13">
+              2016-11-13
             </time>
           </span>
 
@@ -332,8 +344,8 @@
               <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/hive/" itemprop="url" rel="index">
-                    <span itemprop="name">hive</span>
+                  <a href="/categories/spring/" itemprop="url" rel="index">
+                    <span itemprop="name">spring</span>
                   </a>
                 </span>
 
@@ -348,8 +360,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2015/07/31/hive-intro/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2015/07/31/hive-intro/" itemprop="commentsCount"></span>
+                <a href="/2016/11/13/spring-import-selector/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/11/13/spring-import-selector/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -372,180 +384,158 @@
       
 
       
-        <p>Hive是基于Hadoop的一个数据仓库工具，使用它可以查询和管理分布式存储系统上的大数据集。</p>
-<p>Hive提供了一种叫做HiveQL的类似SQL查询语言用来查询数据，HiveQL也允许熟悉MapReduce开发者开发自定义的mapper和reducer来处理内建的mapper和reducer无法完成的复杂的分析工作。</p>
-<p>Hive的工作模式是提交一个任务，等到任务结束时被通知，而不是实时查询。</p>
-<h2 id="Hive安装"><a href="#Hive安装" class="headerlink" title="Hive安装"></a>Hive安装</h2><p>直接去<a href="https://hive.apache.org/" target="_blank" rel="external">Hive官网</a>下载最新的文件，解压。</p>
-<p>运行bin目录里的hive文件，运行之前先启动hadoop，运行的时候可能会出现：</p>
-<pre><code>Missing Hive CLI Jar ....
-</code></pre><p>将hive解压出来的lib目录里的jline<em>.jar拷贝到$HADOOP/share/hadoop/yarn/lib里，同时将$HADOOP/share/hadoop/yarn/lib里的jline</em>.jar删除，重启hadoop。</p>
-<p>再次运行，可能还会出现</p>
-<pre><code>The reported blocks 2662 has reached the threshold 0.9990 of total blocks 2662. The number of live datanodes 1 has reached the minimum number 0. In safe mode extension. Safe mode will be turned off automatically in 0 seconds. ...
-</code></pre><p>类似的问题，关闭hdfs的安全模式即可：</p>
-<pre><code>hadoop dfsadmin -safemode leave
-</code></pre><h2 id="基本命令"><a href="#基本命令" class="headerlink" title="基本命令"></a>基本命令</h2><p>HiveQL就是模仿sql而创建的，以SQL的角度来介绍HiveQL。</p>
-<h3 id="DDL操作"><a href="#DDL操作" class="headerlink" title="DDL操作"></a>DDL操作</h3><p>创建表：</p>
-<pre><code>hive&gt; create table users(age INT, name STRING);
-</code></pre><p>查看所有的表：</p>
-<pre><code>hive&gt; show tables;
-</code></pre><p>查看以CLIENT开头的表：</p>
-<pre><code>hive&gt; show tables &apos;CLIENT.*&apos;;
-</code></pre><p>表加列：</p>
-<pre><code>hive&gt; alter table users add columns(gender BOOLEAN);
-</code></pre><p>改表名字：</p>
-<pre><code>hive&gt; alter table users rename to user;
-</code></pre><p>删除表：</p>
-<pre><code>hive&gt; drop table user;
-</code></pre><p>查看表的具体信息：</p>
-<pre><code>hive&gt; descibe user;
-hive&gt; desc user;
-</code></pre><h3 id="DML操作"><a href="#DML操作" class="headerlink" title="DML操作"></a>DML操作</h3><p>hive创建表的时候可以指定分隔符，由于hive操作的是hdfs，数据最终会存储在hdfs上，所以hdfs上的内容肯定是以某种分隔符分开各个列的。 hive默认的列分隔符是 <strong>^A</strong> 。 我们可以自定义自己的分隔符，在创建表的时候指定分隔符即可。</p>
-<p>本地导入数据到hive：</p>
-<pre><code>hive&gt; load data local inpath &apos;localFile&apos; overwrite into table users;
-</code></pre><p>users表的结构只有2列，name和age，而且使用默认的分隔符。</p>
-<p>比如本地文件的内容是这样的：</p>
-<pre><code>format1^A11
-format2^A22
-</code></pre><p>导入之后进行查询：</p>
-<pre><code>hive&gt; select * from users;
-</code></pre><p>显示结果：</p>
-<pre><code>OK
-format1    11
-format2    22
-Time taken: 0.362 seconds, Fetched: 2 row(s)
-</code></pre><p>在创建表的时候可以指定列分隔符和数组分隔符：</p>
-<pre><code>hive&gt; create table users(name string, age int)
- &gt; ROW FORMAT DELIMITED
- &gt; FIELDS TERMINATED BY &apos;\t&apos;
- &gt; COLLECTION ITEMS TERMINATED BY &apos;,&apos;;
-</code></pre><p>导入数据还有几个参数：</p>
-<p>local参数意味着从本地加载文件，如果没有local参数，那表示从hdfs加载文件。</p>
-<p>关键字overwrite意味着当前表中已经存在的数据将会被删除掉，没有overwrite关键字，表示数据是追加，追加到原先数据集里面。</p>
-<p>插入数据，插入数据后会起一个map reduce job去跑插入的数据：</p>
-<pre><code>hive&gt; insert into table users values(&apos;formatgogo&apos;, 222);
-</code></pre><p>带条件的查询数据：</p>
-<pre><code>hive&gt; select * from users where age = 11;
-</code></pre><p>group by查询：</p>
-<pre><code>hive&gt; select age, count(1) from users group by age;
-</code></pre><p>partition的使用，以部门表为例，用type进行partition：</p>
-<pre><code>hive&gt; create table dept(name STRING) partitioned by (type INT);
-</code></pre><p>以2个文件为例，dept1.txt：</p>
-<pre><code>dept1^A1
-dept11^A1
-dept111^A1
-dept1111^A1
-dept11111^A1
-dept111111^A1
-</code></pre><p>dept2.txt</p>
-<pre><code>dept2^A2
-dept22^A2
-dept222^A2
-dept2222^A2
-dept22222^A2
-dept222222^A2
-</code></pre><p>使用partition之后，导入数据的时候需要指定对应的partition：</p>
-<pre><code>hive&gt; load data local inpath &apos;$PATH/dept1.txt&apos; overwrite into table dept partition(type=1);
-hive&gt; load data local inpath &apos;$PATH/dept2.txt&apos; overwrite into table dept partition(type=2);
+        <p>一般情况下，对应这样的一个需求:</p>
+<pre><code>定义一个Annotation，让使用了这个Annotaion的应用程序自动化地注入一些类或者做一些底层的事情。
+</code></pre><p>我们会使用Spring提供的@Import注解配合一个配置类来完成。</p>
+<p>我们以一个最简单的例子来完成这个需求：定义一个注解EnableContentService，使用了这个注解的程序会自动注入ContentService这个bean。</p>
+<pre><code>@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Import(ContentConfiguration.class)
+public @interface EnableContentService {}
 
-hive&gt; select * from dept;
-</code></pre><p>结果：</p>
-<pre><code>OK
-dept1    1
-dept11    1
-dept111    1
-dept1111    1
-dept11111    1
-dept111111    1
-dept2    2
-dept22    2
-dept222    2
-dept2222    2
-dept22222    2
-dept222222    2
-Time taken: 0.114 seconds, Fetched: 12 row(s)
-</code></pre><p>insert可以将数据导出到指定目录，将users表导入到本地文件。 去掉local关键字表示导出到hdfs目录：</p>
-<pre><code>hive&gt; insert overwrite local directory &apos;localFileName&apos; select * from users;
-</code></pre><h3 id="hive存储在hdfs的位置"><a href="#hive存储在hdfs的位置" class="headerlink" title="hive存储在hdfs的位置"></a>hive存储在hdfs的位置</h3><p>进入hive控制台之后，可以使用：</p>
-<pre><code>hive&gt; set hive.metastore.warehouse.dir;
-</code></pre><p>查看hive存储在hdfs的位置，默认是存在 /user/hive/warehouse 目录。</p>
-<p>之前的users表，会存储在/user/hive/warehouse/user目录里。</p>
-<p>有partition的表会存在的不同位置，比如之前的dept表的type为1和2的分别存储在 /user/hive/warehouse/dept/type=1 和 /user/hive/warehouse/dept/type=2。</p>
-<h2 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h2><p>hive中的数据类型分2种，简单类型和复杂类型。</p>
-<p>简单类型有以下几种：TINYINT, SMALLINT, INT, BIGINT, BOOLEAN, FLOAT, DOUBLE, STRING。</p>
-<p>复杂类型有以下几种：Structs(结构体，学过C都知道)，MAPS(key-value键值对)，Arrays(数组类型，数组内的元素类型都必须一致)</p>
-<p>简单类型就不分析了，来看一下复杂类型的使用：</p>
-<h3 id="Structs"><a href="#Structs" class="headerlink" title="Structs"></a>Structs</h3><pre><code>hive&gt; create table employee(id INT, info struct&lt;name:STRING, age:INT&gt;)
-      &gt; ROW FORMAT DELIMITED FIELDS TERMINATED BY &apos;,&apos; 
-      &gt; COLLECTION ITEMS TERMINATED BY &apos;:&apos;; 
-</code></pre><p>要导入的数据：</p>
-<pre><code>1,format:11
-2,fj:22
-3,formatfj:33
-</code></pre><p>导入数据：</p>
-<pre><code>hive&gt; load data local inpath &apos;localFile&apos; overwrite into table employee;
-</code></pre><p>查询：</p>
-<pre><code>select * from employee;
+public interface ContentService {
+    void doSomething();
+}
 
-OK
-1    {&quot;name&quot;:&quot;format&quot;,&quot;age&quot;:11}
-2    {&quot;name&quot;:&quot;fj&quot;,&quot;age&quot;:22}
-3    {&quot;name&quot;:&quot;formatfj&quot;,&quot;age&quot;:33}
-Time taken: 0.042 seconds, Fetched: 3 row(s)
+public class SimpleContentService implements ContentService {
+    @Override
+    public void doSomething() {
+        System.out.println(&quot;do some simple things&quot;);
+    }
+}
+</code></pre><p>然后在应用程序的入口加上@EnableContentService注解。</p>
+<p>这样的话，ContentService就被注入进来了。</p>
+<a id="more"></a>
+<h2 id="ImportSelector的使用"><a href="#ImportSelector的使用" class="headerlink" title="ImportSelector的使用"></a>ImportSelector的使用</h2><p>如果我们要在Annotation上添加一些属性，然后根据属性的不同加载不同的bean。要想这么做的话，可以使用ImportSelector注解。</p>
+<p>@EnableContentService注解添加属性policy，同时Import一个Selector。</p>
+<pre><code>@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Import(ContentImportSelector.class)
+public @interface EnableContentService {
+    String policy() default &quot;simple&quot;;
+}
+</code></pre><p>这个ContentImportSelector根据EnableContentService注解里的policy加载不同的bean。</p>
+<pre><code>public class ContentImportSelector implements ImportSelector {
 
-hive&gt; select info.name from employee;
+    @Override
+    public String[] selectImports(AnnotationMetadata importingClassMetadata) {
+        Class&lt;?&gt; annotationType = EnableContentService.class;
+        AnnotationAttributes attributes = AnnotationAttributes.fromMap(importingClassMetadata.getAnnotationAttributes(
+                annotationType.getName(), false));
+        String policy = attributes.getString(&quot;policy&quot;);
+        if (&quot;core&quot;.equals(policy)) {
+            return new String[] { CoreContentConfiguration.class.getName() };
+        } else {
+            return new String[] { SimpleContentConfiguration.class.getName() };
+        }
+    }
 
-OK
-format
-fj
-formatfj
-Time taken: 0.061 seconds, Fetched: 3 row(s)
-</code></pre><h3 id="Maps"><a href="#Maps" class="headerlink" title="Maps"></a>Maps</h3><pre><code>hive&gt; create table lessons(id string, score map&lt;string, int&gt;)
-    &gt; ROW FORMAT DELIMITED
-    &gt; FIELDS TERMINATED BY &apos;\t&apos;
-    &gt; COLLECTION ITEMS TERMINATED BY &apos;,&apos;
-    &gt; MAP KEYS TERMINATED BY &apos;:&apos;;
-</code></pre><p>要导入的数据：</p>
-<pre><code>1       chinese:80,english:60,math:70  
-2       computer:60,chemistry:80   
-</code></pre><p>导入数据：</p>
-<pre><code>hive&gt; load data local inpath &apos;localFile&apos; overwrite into table lessons;
-</code></pre><p>查询：</p>
-<pre><code>hive&gt; select score[&apos;chinese&apos;] from lessions;
+}
+</code></pre><p>CoreContentService和CoreContentConfiguration如下：</p>
+<pre><code>public class CoreContentService implements ContentService {
+    @Override
+    public void doSomething() {
+        System.out.println(&quot;do some import things&quot;);
+    }
+}
 
-OK
-80
-NULL
-Time taken: 0.05 seconds, Fetched: 2 row(s)
+public class CoreContentConfiguration {
+    @Bean
+    public ContentService contentService() {
+        return new CoreContentService();
+    }
+}
+</code></pre><p>这样的话，如果在@EnableContentService注解的policy中使用core的话，应用程序会自动加载CoreContentService，否则会加载SimpleContentService。</p>
+<h2 id="ImportSelector在SpringBoot中的使用"><a href="#ImportSelector在SpringBoot中的使用" class="headerlink" title="ImportSelector在SpringBoot中的使用"></a>ImportSelector在SpringBoot中的使用</h2><p><a href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/">在之前的博文中，我们分析过SpringBoot是通过很多AutoConfiguration这些自动化配置类来完成所有的底层配置的</a>。</p>
+<p>那么这些AutoConfiguration类是怎么被加载到Spring的Factory里中的呢？ 那就是通过ImportSelector完成的。</p>
+<p>这个ImportSelector就是通过SpringBoot提供的@EnableAutoConfiguration这个注解里完成的。</p>
+<p>这个@EnableAutoConfiguration注解可以显式地调用，否则它会在@SpringBootApplication注解中隐式地被调用。</p>
+<p>@EnableAutoConfiguration注解中使用了EnableAutoConfigurationImportSelector作为ImportSelector。下面这段代码就是EnableAutoConfigurationImportSelector中进行选择的具体代码：</p>
+<pre><code>@Override
+public String[] selectImports(AnnotationMetadata metadata) {
+    try {
+        AnnotationAttributes attributes = getAttributes(metadata);
+        List&lt;String&gt; configurations = getCandidateConfigurations(metadata,
+                attributes);
+        configurations = removeDuplicates(configurations); // 删除重复的配置
+        Set&lt;String&gt; exclusions = getExclusions(metadata, attributes); // 去掉需要exclude的配置
+        configurations.removeAll(exclusions);
+        configurations = sort(configurations); // 排序
+        recordWithConditionEvaluationReport(configurations, exclusions);
+        return configurations.toArray(new String[configurations.size()]);
+    }
+    catch (IOException ex) {
+        throw new IllegalStateException(ex);
+    }
+}
+</code></pre><p>其中getCandidateConfigurations方法将获取配置类：</p>
+<pre><code>protected List&lt;String&gt; getCandidateConfigurations(AnnotationMetadata metadata,
+        AnnotationAttributes attributes) {
+    return SpringFactoriesLoader.loadFactoryNames(
+            getSpringFactoriesLoaderFactoryClass(), getBeanClassLoader());
+}
+</code></pre><p>SpringFactoriesLoader.loadFactoryNames方法会根据FACTORIES_RESOURCE_LOCATION这个静态变量从所有的jar包中读取META-INF/spring.factories文件信息：</p>
+<pre><code>public static List&lt;String&gt; loadFactoryNames(Class&lt;?&gt; factoryClass, ClassLoader classLoader) {
+    String factoryClassName = factoryClass.getName();
+    try {
+        Enumeration&lt;URL&gt; urls = (classLoader != null ? classLoader.getResources(FACTORIES_RESOURCE_LOCATION) :
+                ClassLoader.getSystemResources(FACTORIES_RESOURCE_LOCATION));
+        List&lt;String&gt; result = new ArrayList&lt;String&gt;();
+        while (urls.hasMoreElements()) {
+            URL url = urls.nextElement();
+            Properties properties = PropertiesLoaderUtils.loadProperties(new UrlResource(url));
+            String factoryClassNames = properties.getProperty(factoryClassName); // 只会过滤出key为factoryClassNames的值
+            result.addAll(Arrays.asList(StringUtils.commaDelimitedListToStringArray(factoryClassNames)));
+        }
+        return result;
+    }
+    catch (IOException ex) {
+        throw new IllegalArgumentException(&quot;Unable to load [&quot; + factoryClass.getName() +
+                &quot;] factories from location [&quot; + FACTORIES_RESOURCE_LOCATION + &quot;]&quot;, ex);
+    }
+}
+</code></pre><p>getCandidateConfigurations方法中的getSpringFactoriesLoaderFactoryClass方法返回的是EnableAutoConfiguration.class，所以会过滤出key为org.springframework.boot.autoconfigure.EnableAutoConfiguration的值。</p>
+<p>下面这段配置代码就是autoconfigure这个jar包里的spring.factories文件的一部分内容(有个key为org.springframework.boot.autoconfigure.EnableAutoConfiguration，所以会得到这些AutoConfiguration)：</p>
+<pre><code># Initializers
+org.springframework.context.ApplicationContextInitializer=\
+org.springframework.boot.autoconfigure.logging.AutoConfigurationReportLoggingInitializer
 
-hive&gt; select * from lessons;
-OK
-1    {&quot;chinese&quot;:80,&quot;english&quot;:60,&quot;math&quot;:70}
-2    {&quot;computer&quot;:60,&quot;chemistry&quot;:80}
-Time taken: 0.032 seconds, Fetched: 2 row(s)
-</code></pre><h3 id="Arrays"><a href="#Arrays" class="headerlink" title="Arrays"></a>Arrays</h3><pre><code>hive&gt; create table student(name string, hobby_list array&lt;STRING&gt;)
-    &gt; ROW FORMAT DELIMITED
-    &gt; FIELDS TERMINATED BY &apos;,&apos;
-    &gt; COLLECTION ITEMS TERMINATED BY &apos;:&apos;;
-</code></pre><p>要导入的数据：</p>
-<pre><code>format,basketball:football:swimming
-fj,coding:running
-</code></pre><p>导入数据：</p>
-<pre><code>hive&gt; load data local inpath &apos;localFile&apos; overwrite into table student;
-</code></pre><p>查询(数组下标没对应的值的话返回NULL)：</p>
-<pre><code>hive&gt; select * from student;
+# Application Listeners
+org.springframework.context.ApplicationListener=\
+org.springframework.boot.autoconfigure.BackgroundPreinitializer
 
-OK
-format    [&quot;basketball&quot;,&quot;football&quot;,&quot;swimming&quot;]
-fj    [&quot;coding&quot;,&quot;running&quot;]
-Time taken: 0.041 seconds, Fetched: 2 row(s)
+# Auto Configure
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration,\
+org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
+org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration,\
+org.springframework.boot.autoconfigure.MessageSourceAutoConfiguration,\
+</code></pre><p>当然了，这些AutoConfiguration不是所有都会加载的，会根据AutoConfiguration上的@ConditionalOnClass等条件判断是否加载。</p>
+<p>上面这个例子说的读取properties文件的时候只会过滤出key为org.springframework.boot.autoconfigure.EnableAutoConfiguration的值。</p>
+<p>SpringBoot内部还有一些其他的key用于过滤得到需要加载的类：</p>
+<ul>
+<li><p>org.springframework.test.context.TestExecutionListener</p>
+</li>
+<li><p>org.springframework.beans.BeanInfoFactory</p>
+</li>
+<li><p>org.springframework.context.ApplicationContextInitializer</p>
+</li>
+<li><p>org.springframework.context.ApplicationListener</p>
+</li>
+<li><p>org.springframework.boot.SpringApplicationRunListener</p>
+</li>
+<li><p>org.springframework.boot.env.EnvironmentPostProcessor</p>
+</li>
+<li><p>org.springframework.boot.env.PropertySourceLoader</p>
+</li>
+</ul>
+<h2 id="MyBatis跟SpringBoot的整合过程中的spring-factories"><a href="#MyBatis跟SpringBoot的整合过程中的spring-factories" class="headerlink" title="MyBatis跟SpringBoot的整合过程中的spring.factories"></a>MyBatis跟SpringBoot的整合过程中的spring.factories</h2><p>MyBatis内部提供了一个跟SpringBoot整合的starter，只需在maven中加入这个dependency即可。</p>
+<p>它内部也有一个<a href="https://github.com/mybatis/spring-boot-starter/blob/master/mybatis-spring-boot-autoconfigure/src/main/resources/META-INF/spring.factories" target="_blank" rel="external">spring.factories</a>配置文件，如下：</p>
+<pre><code># Auto Configure
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
+</code></pre><p>这个properties配置文件中的key就是org.springframework.boot.autoconfigure.EnableAutoConfiguration，所以它对应的org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration就会自动加载出来，然后构造对应的 SqlSessionFactory。</p>
 
-hive&gt; select hobby_list[2] from student;
-
-OK
-swimming
-NULL
-Time taken: 0.07 seconds, Fetched: 2 row(s)
-</code></pre>
       
     </div>
 
@@ -567,9 +557,9 @@ Time taken: 0.07 seconds, Fetched: 2 row(s)
       
         <div class="post-tags">
           
-            <a href="/tags/big-data/" rel="tag">#big data</a>
+            <a href="/tags/spring/" rel="tag">#spring</a>
           
-            <a href="/tags/hive/" rel="tag">#hive</a>
+            <a href="/tags/springboot/" rel="tag">#springboot</a>
           
         </div>
       
@@ -578,17 +568,13 @@ Time taken: 0.07 seconds, Fetched: 2 row(s)
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2015/07/26/google-guava-intro/" rel="next" title="google guava类库介绍">
-                <i class="fa fa-chevron-left"></i> google guava类库介绍
+              <a href="/2016/11/09/springbatch-retry-skip/" rel="next" title="SpringBatch中的retry和skip机制实现分析">
+                <i class="fa fa-chevron-left"></i> SpringBatch中的retry和skip机制实现分析
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2015/08/07/hbase-intro/" rel="prev" title="HBase介绍">
-                HBase介绍 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -767,7 +753,7 @@ Time taken: 0.07 seconds, Fetched: 2 row(s)
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Hive安装"><span class="nav-number">1.</span> <span class="nav-text">Hive安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本命令"><span class="nav-number">2.</span> <span class="nav-text">基本命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DDL操作"><span class="nav-number">2.1.</span> <span class="nav-text">DDL操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DML操作"><span class="nav-number">2.2.</span> <span class="nav-text">DML操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#hive存储在hdfs的位置"><span class="nav-number">2.3.</span> <span class="nav-text">hive存储在hdfs的位置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据类型"><span class="nav-number">3.</span> <span class="nav-text">数据类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Structs"><span class="nav-number">3.1.</span> <span class="nav-text">Structs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Maps"><span class="nav-number">3.2.</span> <span class="nav-text">Maps</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Arrays"><span class="nav-number">3.3.</span> <span class="nav-text">Arrays</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ImportSelector的使用"><span class="nav-number">1.</span> <span class="nav-text">ImportSelector的使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ImportSelector在SpringBoot中的使用"><span class="nav-number">2.</span> <span class="nav-text">ImportSelector在SpringBoot中的使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MyBatis跟SpringBoot的整合过程中的spring-factories"><span class="nav-number">3.</span> <span class="nav-text">MyBatis跟SpringBoot的整合过程中的spring.factories</span></a></li></ol></div>
             
           </div>
         </section>
@@ -894,9 +880,9 @@ Time taken: 0.07 seconds, Fetched: 2 row(s)
 
     <script type="text/javascript">
       var disqus_shortname = 'fangjian0423';
-      var disqus_identifier = '2015/07/31/hive-intro/';
-      var disqus_title = "Hive介绍";
-      var disqus_url = 'http://fangjian0423.github.io/2015/07/31/hive-intro/';
+      var disqus_identifier = '2016/11/13/spring-import-selector/';
+      var disqus_title = "Spring的ImportSelector使用";
+      var disqus_url = 'http://fangjian0423.github.io/2016/11/13/spring-import-selector/';
 
       function run_disqus_script(disqus_script){
         var dsq = document.createElement('script');

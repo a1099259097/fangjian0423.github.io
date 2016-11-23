@@ -377,7 +377,7 @@
 
       
         
-          <p>在之前的文章中，我们分析过SpringBoot内部的<a href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/">自动化配置原理</a>和<a href="http://fangjian0423.github.io/2016/11/13/spring-import-selector/">自动化加载原理</a>。</p>
+          <p>在之前的文章中，我们分析过SpringBoot内部的<a href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/">自动化配置原理</a>和<a href="http://fangjian0423.github.io/2016/11/13/spring-enable-annotation/">自动化配置注解开关原理</a>。</p>
 <p>我们先简单分析一下<a href="https://github.com/mybatis/spring-boot-starter">mybatis starter</a>的编写，然后再编写自定义的starter。</p>
 <p>mybatis中的autoconfigure模块中使用了一个叫做MybatisAutoConfiguration的自动化配置类。</p>
 <p>这个MybatisAutoConfiguration需要在这些Condition条件下才会执行：</p>
@@ -449,8 +449,8 @@ org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
             
               
                 
-                <a class="post-title-link" href="/2016/11/13/spring-import-selector/" itemprop="url">
-                  Spring的ImportSelector使用
+                <a class="post-title-link" href="/2016/11/13/springboot-enable-annotation/" itemprop="url">
+                  SpringBoot自动化配置的注解开关原理
                 </a>
               
             
@@ -477,8 +477,8 @@ org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
               <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/spring/" itemprop="url" rel="index">
-                    <span itemprop="name">spring</span>
+                  <a href="/categories/springboot/" itemprop="url" rel="index">
+                    <span itemprop="name">springboot</span>
                   </a>
                 </span>
 
@@ -493,8 +493,8 @@ org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/11/13/spring-import-selector/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/11/13/spring-import-selector/" itemprop="commentsCount"></span>
+                <a href="/2016/11/13/springboot-enable-annotation/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/11/13/springboot-enable-annotation/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -518,29 +518,10 @@ org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
 
       
         
-          <p>一般情况下，对应这样的一个需求:</p>
-<pre><code>定义一个Annotation，让使用了这个Annotaion的应用程序自动化地注入一些类或者做一些底层的事情。
-</code></pre><p>我们会使用Spring提供的@Import注解配合一个配置类来完成。</p>
-<p>我们以一个最简单的例子来完成这个需求：定义一个注解EnableContentService，使用了这个注解的程序会自动注入ContentService这个bean。</p>
-<pre><code>@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-@Import(ContentConfiguration.class)
-public @interface EnableContentService {}
-
-public interface ContentService {
-    void doSomething();
-}
-
-public class SimpleContentService implements ContentService {
-    @Override
-    public void doSomething() {
-        System.out.println(&quot;do some simple things&quot;);
-    }
-}
-</code></pre><p>然后在应用程序的入口加上@EnableContentService注解。</p>
-<p>这样的话，ContentService就被注入进来了。</p>
+          <p>在之前我们分析<a href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/">SpringBoot的自动化配置原理</a>的时候，分析了freemarker的自动化配置类FreeMarkerAutoConfiguration，这个自动化配置类需要classloader中的一些类需要存在并且在其他的一些配置类之后进行加载。</p>
+<p>但是还存在一些自动化配置类，它们需要在使用一些注解开关的情况下才会生效。比如spring-boot-starter-batch里的@EnableBatchProcessing注解、@EnableCaching等。</p>
           <div class="post-more-link text-center">
-            <a class="btn" href="/2016/11/13/spring-import-selector/#more" rel="contents">
+            <a class="btn" href="/2016/11/13/springboot-enable-annotation/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>

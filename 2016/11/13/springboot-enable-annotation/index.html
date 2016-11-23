@@ -86,28 +86,19 @@
 
 
 
-<meta name="description" content="一般情况下，对应这样的一个需求:
-定义一个Annotation，让使用了这个Annotaion的应用程序自动化地注入一些类或者做一些底层的事情。
-我们会使用Spring提供的@Import注解配合一个配置类来完成。
-我们以一个最简单的例子来完成这个需求：定义一个注解EnableContentService，使用了这个注解的程序会自动注入ContentService这个bean。
-@Retentio">
+<meta name="description" content="在之前我们分析SpringBoot的自动化配置原理的时候，分析了freemarker的自动化配置类FreeMarkerAutoConfiguration，这个自动化配置类需要classloader中的一些类需要存在并且在其他的一些配置类之后进行加载。
+但是还存在一些自动化配置类，它们需要在使用一些注解开关的情况下才会生效。比如spring-boot-starter-batch里的@EnableBa">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Spring的ImportSelector使用">
-<meta property="og:url" content="http://fangjian0423.github.io/2016/11/13/spring-import-selector/index.html">
+<meta property="og:title" content="SpringBoot自动化配置的注解开关原理">
+<meta property="og:url" content="http://fangjian0423.github.io/2016/11/13/springboot-enable-annotation/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="一般情况下，对应这样的一个需求:
-定义一个Annotation，让使用了这个Annotaion的应用程序自动化地注入一些类或者做一些底层的事情。
-我们会使用Spring提供的@Import注解配合一个配置类来完成。
-我们以一个最简单的例子来完成这个需求：定义一个注解EnableContentService，使用了这个注解的程序会自动注入ContentService这个bean。
-@Retentio">
-<meta property="og:updated_time" content="2016-11-13T08:27:46.000Z">
+<meta property="og:description" content="在之前我们分析SpringBoot的自动化配置原理的时候，分析了freemarker的自动化配置类FreeMarkerAutoConfiguration，这个自动化配置类需要classloader中的一些类需要存在并且在其他的一些配置类之后进行加载。
+但是还存在一些自动化配置类，它们需要在使用一些注解开关的情况下才会生效。比如spring-boot-starter-batch里的@EnableBa">
+<meta property="og:updated_time" content="2016-11-23T07:29:21.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Spring的ImportSelector使用">
-<meta name="twitter:description" content="一般情况下，对应这样的一个需求:
-定义一个Annotation，让使用了这个Annotaion的应用程序自动化地注入一些类或者做一些底层的事情。
-我们会使用Spring提供的@Import注解配合一个配置类来完成。
-我们以一个最简单的例子来完成这个需求：定义一个注解EnableContentService，使用了这个注解的程序会自动注入ContentService这个bean。
-@Retentio">
+<meta name="twitter:title" content="SpringBoot自动化配置的注解开关原理">
+<meta name="twitter:description" content="在之前我们分析SpringBoot的自动化配置原理的时候，分析了freemarker的自动化配置类FreeMarkerAutoConfiguration，这个自动化配置类需要classloader中的一些类需要存在并且在其他的一些配置类之后进行加载。
+但是还存在一些自动化配置类，它们需要在使用一些注解开关的情况下才会生效。比如spring-boot-starter-batch里的@EnableBa">
 
 
 
@@ -129,7 +120,7 @@
 
 
 
-  <title> Spring的ImportSelector使用 | Format's Notes </title>
+  <title> SpringBoot自动化配置的注解开关原理 | Format's Notes </title>
 </head>
 
 <body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
@@ -318,7 +309,7 @@
             
             
               
-                Spring的ImportSelector使用
+                SpringBoot自动化配置的注解开关原理
               
             
           </h1>
@@ -344,8 +335,8 @@
               <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/spring/" itemprop="url" rel="index">
-                    <span itemprop="name">spring</span>
+                  <a href="/categories/springboot/" itemprop="url" rel="index">
+                    <span itemprop="name">springboot</span>
                   </a>
                 </span>
 
@@ -360,8 +351,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/11/13/spring-import-selector/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/11/13/spring-import-selector/" itemprop="commentsCount"></span>
+                <a href="/2016/11/13/springboot-enable-annotation/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/11/13/springboot-enable-annotation/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -384,7 +375,10 @@
       
 
       
-        <p>一般情况下，对应这样的一个需求:</p>
+        <p>在之前我们分析<a href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/">SpringBoot的自动化配置原理</a>的时候，分析了freemarker的自动化配置类FreeMarkerAutoConfiguration，这个自动化配置类需要classloader中的一些类需要存在并且在其他的一些配置类之后进行加载。</p>
+<p>但是还存在一些自动化配置类，它们需要在使用一些注解开关的情况下才会生效。比如spring-boot-starter-batch里的@EnableBatchProcessing注解、@EnableCaching等。</p>
+<a id="more"></a>
+<h2 id="一个需求"><a href="#一个需求" class="headerlink" title="一个需求"></a>一个需求</h2><p>在分析这些开关的原理之前，我们来看一个需求：</p>
 <pre><code>定义一个Annotation，让使用了这个Annotaion的应用程序自动化地注入一些类或者做一些底层的事情。
 </code></pre><p>我们会使用Spring提供的@Import注解配合一个配置类来完成。</p>
 <p>我们以一个最简单的例子来完成这个需求：定义一个注解EnableContentService，使用了这个注解的程序会自动注入ContentService这个bean。</p>
@@ -404,10 +398,9 @@ public class SimpleContentService implements ContentService {
     }
 }
 </code></pre><p>然后在应用程序的入口加上@EnableContentService注解。</p>
-<p>这样的话，ContentService就被注入进来了。</p>
-<a id="more"></a>
-<h2 id="ImportSelector的使用"><a href="#ImportSelector的使用" class="headerlink" title="ImportSelector的使用"></a>ImportSelector的使用</h2><p>如果我们要在Annotation上添加一些属性，然后根据属性的不同加载不同的bean。要想这么做的话，可以使用ImportSelector注解。</p>
-<p>@EnableContentService注解添加属性policy，同时Import一个Selector。</p>
+<p>这样的话，ContentService就被注入进来了。 SpringBoot也就是用这个完成的。只不过它用了更加高级点的ImportSelector。</p>
+<h2 id="ImportSelector的使用"><a href="#ImportSelector的使用" class="headerlink" title="ImportSelector的使用"></a>ImportSelector的使用</h2><p>用了ImportSelector之后，我们可以在Annotation上添加一些属性，然后根据属性的不同加载不同的bean。</p>
+<p>我们在@EnableContentService注解添加属性policy，同时Import一个Selector。</p>
 <pre><code>@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Import(ContentImportSelector.class)
@@ -446,9 +439,7 @@ public class CoreContentConfiguration {
     }
 }
 </code></pre><p>这样的话，如果在@EnableContentService注解的policy中使用core的话，应用程序会自动加载CoreContentService，否则会加载SimpleContentService。</p>
-<h2 id="ImportSelector在SpringBoot中的使用"><a href="#ImportSelector在SpringBoot中的使用" class="headerlink" title="ImportSelector在SpringBoot中的使用"></a>ImportSelector在SpringBoot中的使用</h2><p><a href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/">在之前的博文中，我们分析过SpringBoot是通过很多AutoConfiguration这些自动化配置类来完成所有的底层配置的</a>。</p>
-<p>那么这些AutoConfiguration类是怎么被加载到Spring的Factory里中的呢？ 那就是通过ImportSelector完成的。</p>
-<p>这个ImportSelector就是通过SpringBoot提供的@EnableAutoConfiguration这个注解里完成的。</p>
+<h2 id="ImportSelector在SpringBoot中的使用"><a href="#ImportSelector在SpringBoot中的使用" class="headerlink" title="ImportSelector在SpringBoot中的使用"></a>ImportSelector在SpringBoot中的使用</h2><p>SpringBoot里的ImportSelector是通过SpringBoot提供的@EnableAutoConfiguration这个注解里完成的。</p>
 <p>这个@EnableAutoConfiguration注解可以显式地调用，否则它会在@SpringBootApplication注解中隐式地被调用。</p>
 <p>@EnableAutoConfiguration注解中使用了EnableAutoConfigurationImportSelector作为ImportSelector。下面这段代码就是EnableAutoConfigurationImportSelector中进行选择的具体代码：</p>
 <pre><code>@Override
@@ -529,12 +520,6 @@ org.springframework.boot.autoconfigure.MessageSourceAutoConfiguration,\
 <li><p>org.springframework.boot.env.PropertySourceLoader</p>
 </li>
 </ul>
-<h2 id="MyBatis跟SpringBoot的整合过程中的spring-factories"><a href="#MyBatis跟SpringBoot的整合过程中的spring-factories" class="headerlink" title="MyBatis跟SpringBoot的整合过程中的spring.factories"></a>MyBatis跟SpringBoot的整合过程中的spring.factories</h2><p>MyBatis内部提供了一个跟SpringBoot整合的starter，只需在maven中加入这个dependency即可。</p>
-<p>它内部也有一个<a href="https://github.com/mybatis/spring-boot-starter/blob/master/mybatis-spring-boot-autoconfigure/src/main/resources/META-INF/spring.factories" target="_blank" rel="external">spring.factories</a>配置文件，如下：</p>
-<pre><code># Auto Configure
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
-</code></pre><p>这个properties配置文件中的key就是org.springframework.boot.autoconfigure.EnableAutoConfiguration，所以它对应的org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration就会自动加载出来，然后构造对应的 SqlSessionFactory。</p>
 
       
     </div>
@@ -757,7 +742,7 @@ org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ImportSelector的使用"><span class="nav-number">1.</span> <span class="nav-text">ImportSelector的使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ImportSelector在SpringBoot中的使用"><span class="nav-number">2.</span> <span class="nav-text">ImportSelector在SpringBoot中的使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MyBatis跟SpringBoot的整合过程中的spring-factories"><span class="nav-number">3.</span> <span class="nav-text">MyBatis跟SpringBoot的整合过程中的spring.factories</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一个需求"><span class="nav-number">1.</span> <span class="nav-text">一个需求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ImportSelector的使用"><span class="nav-number">2.</span> <span class="nav-text">ImportSelector的使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ImportSelector在SpringBoot中的使用"><span class="nav-number">3.</span> <span class="nav-text">ImportSelector在SpringBoot中的使用</span></a></li></ol></div>
             
           </div>
         </section>
@@ -884,9 +869,9 @@ org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
 
     <script type="text/javascript">
       var disqus_shortname = 'fangjian0423';
-      var disqus_identifier = '2016/11/13/spring-import-selector/';
-      var disqus_title = "Spring的ImportSelector使用";
-      var disqus_url = 'http://fangjian0423.github.io/2016/11/13/spring-import-selector/';
+      var disqus_identifier = '2016/11/13/springboot-enable-annotation/';
+      var disqus_title = "SpringBoot自动化配置的注解开关原理";
+      var disqus_url = 'http://fangjian0423.github.io/2016/11/13/springboot-enable-annotation/';
 
       function run_disqus_script(disqus_script){
         var dsq = document.createElement('script');

@@ -86,25 +86,25 @@
 
 
 
-<meta name="description" content="在之前的文章中，我们分析过SpringBoot内部的自动化配置原理和自动化加载原理。
+<meta name="description" content="在之前的文章中，我们分析过SpringBoot内部的自动化配置原理和自动化配置注解开关原理。
 我们先简单分析一下mybatis starter的编写，然后再编写自定义的starter。
 mybatis中的autoconfigure模块中使用了一个叫做MybatisAutoConfiguration的自动化配置类。
-这个MybatisAutoConfiguration需要在这些Condition条件下才会执">
+这个MybatisAutoConfiguration需要在这些Condition条件">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SpringBoot编写自定义的starter">
 <meta property="og:url" content="http://fangjian0423.github.io/2016/11/16/springboot-custom-starter/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="在之前的文章中，我们分析过SpringBoot内部的自动化配置原理和自动化加载原理。
+<meta property="og:description" content="在之前的文章中，我们分析过SpringBoot内部的自动化配置原理和自动化配置注解开关原理。
 我们先简单分析一下mybatis starter的编写，然后再编写自定义的starter。
 mybatis中的autoconfigure模块中使用了一个叫做MybatisAutoConfiguration的自动化配置类。
-这个MybatisAutoConfiguration需要在这些Condition条件下才会执">
-<meta property="og:updated_time" content="2016-11-15T17:45:36.000Z">
+这个MybatisAutoConfiguration需要在这些Condition条件">
+<meta property="og:updated_time" content="2016-11-23T07:26:25.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SpringBoot编写自定义的starter">
-<meta name="twitter:description" content="在之前的文章中，我们分析过SpringBoot内部的自动化配置原理和自动化加载原理。
+<meta name="twitter:description" content="在之前的文章中，我们分析过SpringBoot内部的自动化配置原理和自动化配置注解开关原理。
 我们先简单分析一下mybatis starter的编写，然后再编写自定义的starter。
 mybatis中的autoconfigure模块中使用了一个叫做MybatisAutoConfiguration的自动化配置类。
-这个MybatisAutoConfiguration需要在这些Condition条件下才会执">
+这个MybatisAutoConfiguration需要在这些Condition条件">
 
 
 
@@ -381,7 +381,7 @@ mybatis中的autoconfigure模块中使用了一个叫做MybatisAutoConfiguration
       
 
       
-        <p>在之前的文章中，我们分析过SpringBoot内部的<a href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/">自动化配置原理</a>和<a href="http://fangjian0423.github.io/2016/11/13/spring-import-selector/">自动化加载原理</a>。</p>
+        <p>在之前的文章中，我们分析过SpringBoot内部的<a href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/">自动化配置原理</a>和<a href="http://fangjian0423.github.io/2016/11/13/spring-enable-annotation/">自动化配置注解开关原理</a>。</p>
 <p>我们先简单分析一下<a href="https://github.com/mybatis/spring-boot-starter" target="_blank" rel="external">mybatis starter</a>的编写，然后再编写自定义的starter。</p>
 <p>mybatis中的autoconfigure模块中使用了一个叫做MybatisAutoConfiguration的自动化配置类。</p>
 <p>这个MybatisAutoConfiguration需要在这些Condition条件下才会执行：</p>
@@ -613,8 +613,8 @@ public class SimpleService {
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/11/13/spring-import-selector/" rel="next" title="Spring的ImportSelector使用">
-                <i class="fa fa-chevron-left"></i> Spring的ImportSelector使用
+              <a href="/2016/11/13/springboot-enable-annotation/" rel="next" title="SpringBoot自动化配置的注解开关原理">
+                <i class="fa fa-chevron-left"></i> SpringBoot自动化配置的注解开关原理
               </a>
             
           </div>

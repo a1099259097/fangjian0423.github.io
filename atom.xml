@@ -600,9 +600,9 @@ private StepBuilderFactory steps;
     
       <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
     
-      <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
-    
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
     
   </entry>
   

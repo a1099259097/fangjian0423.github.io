@@ -308,6 +308,130 @@
             
               
                 
+                <a class="post-title-link" href="/2016/04/10/jdk_priorityqueue/" itemprop="url">
+                  jdk PriorityQueue优先队列工作原理分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-04-10T21:36:08+08:00" content="2016-04-10">
+              2016-04-10
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/jdk/" itemprop="url" rel="index">
+                    <span itemprop="name">jdk</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/04/10/jdk_priorityqueue/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/10/jdk_priorityqueue/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>优先队列跟普通的队列不一样，普通队列是一种遵循FIFO规则的队列，拿数据的时候按照加入队列的顺序拿取。   而优先队列每次拿数据的时候都会拿出优先级最高的数据。</p>
+<p>优先队列内部维护着一个堆，每次取数据的时候都从堆顶拿数据，这就是优先队列的原理。</p>
+<p>jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优先级规则。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/04/10/jdk_priorityqueue/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/04/09/heap-heapsort/" itemprop="url">
                   堆、二叉堆、堆排序
                 </a>
@@ -766,7 +890,7 @@
         
           <p>ArrayDeque双向队列是jdk中列表的一种实现，支持元素在头和尾这两端进行插入和删除操作。</p>
 <p>Deque接口(双向队列)的两个主要实现类是ArrayDeque和LinkedList。</p>
-<p>其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链接实现，之前在<a href="http://fangjian0423.github.io/2016/03/27/jdk_linkedlist/">jdk LinkedList工作原理分析</a>这篇文章中，已经分析过了LinkedList的实现原理，本文分析ArrayDeque的实现原理。</p>
+<p>其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链表实现，之前在<a href="http://fangjian0423.github.io/2016/03/27/jdk_linkedlist/">jdk LinkedList工作原理分析</a>这篇文章中，已经分析过了LinkedList的实现原理，本文分析ArrayDeque的实现原理。</p>
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/04/03/jdk_arraydeque/#more" rel="contents">
               阅读全文 &raquo;
@@ -1418,129 +1542,6 @@
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/03/22/java-threadpool-analysis/" itemprop="url">
-                  Java线程池ThreadPoolExecutor源码分析
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-03-22T20:56:11+08:00" content="2016-03-22">
-              2016-03-22
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/java/" itemprop="url" rel="index">
-                    <span itemprop="name">java</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/03/22/java-threadpool-analysis/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/03/22/java-threadpool-analysis/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>ThreadPoolExecutor是jdk内置线程池的一个实现，基本上大部分情况都会使用这个线程池完成各项操作。</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/thread-pool.jpeg" alt=""></p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/03/22/java-threadpool-analysis/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1586,7 +1587,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">94</span>
+              <span class="site-state-item-count">95</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -1594,7 +1595,7 @@
           
             <div class="site-state-item site-state-categories">
               <a href="/categories">
-                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -1603,7 +1604,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">61</span>
+                <span class="site-state-item-count">62</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

@@ -88,24 +88,24 @@
 
 <meta name="description" content="ArrayDeque双向队列是jdk中列表的一种实现，支持元素在头和尾这两端进行插入和删除操作。
 Deque接口(双向队列)的两个主要实现类是ArrayDeque和LinkedList。
-其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链接实现，之前在jdk LinkedList工作原理分析这篇文章中，已经分析过了LinkedList的实现原理，本文分析Array">
+其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链表实现，之前在jdk LinkedList工作原理分析这篇文章中，已经分析过了LinkedList的实现原理，本文分析Array">
 <meta property="og:type" content="article">
 <meta property="og:title" content="jdk ArrayDeque工作原理分析">
 <meta property="og:url" content="http://fangjian0423.github.io/2016/04/03/jdk_arraydeque/index.html">
 <meta property="og:site_name" content="Format's Notes">
 <meta property="og:description" content="ArrayDeque双向队列是jdk中列表的一种实现，支持元素在头和尾这两端进行插入和删除操作。
 Deque接口(双向队列)的两个主要实现类是ArrayDeque和LinkedList。
-其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链接实现，之前在jdk LinkedList工作原理分析这篇文章中，已经分析过了LinkedList的实现原理，本文分析Array">
+其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链表实现，之前在jdk LinkedList工作原理分析这篇文章中，已经分析过了LinkedList的实现原理，本文分析Array">
 <meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/arraydeque01.jpg">
 <meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/arraydeque02.jpg">
 <meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/arraydeque03.jpg">
 <meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/arraydeque04.jpg">
-<meta property="og:updated_time" content="2016-05-10T14:59:25.000Z">
+<meta property="og:updated_time" content="2017-01-05T06:30:04.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="jdk ArrayDeque工作原理分析">
 <meta name="twitter:description" content="ArrayDeque双向队列是jdk中列表的一种实现，支持元素在头和尾这两端进行插入和删除操作。
 Deque接口(双向队列)的两个主要实现类是ArrayDeque和LinkedList。
-其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链接实现，之前在jdk LinkedList工作原理分析这篇文章中，已经分析过了LinkedList的实现原理，本文分析Array">
+其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链表实现，之前在jdk LinkedList工作原理分析这篇文章中，已经分析过了LinkedList的实现原理，本文分析Array">
 <meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/arraydeque01.jpg">
 
 
@@ -385,7 +385,7 @@ Deque接口(双向队列)的两个主要实现类是ArrayDeque和LinkedList。
       
         <p>ArrayDeque双向队列是jdk中列表的一种实现，支持元素在头和尾这两端进行插入和删除操作。</p>
 <p>Deque接口(双向队列)的两个主要实现类是ArrayDeque和LinkedList。</p>
-<p>其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链接实现，之前在<a href="http://fangjian0423.github.io/2016/03/27/jdk_linkedlist/">jdk LinkedList工作原理分析</a>这篇文章中，已经分析过了LinkedList的实现原理，本文分析ArrayDeque的实现原理。</p>
+<p>其中ArrayDeque底层使用循环数组实现双向队列，而LinkedList是使用链表实现，之前在<a href="http://fangjian0423.github.io/2016/03/27/jdk_linkedlist/">jdk LinkedList工作原理分析</a>这篇文章中，已经分析过了LinkedList的实现原理，本文分析ArrayDeque的实现原理。</p>
 <a id="more"></a>
 <h2 id="一个ArrayDeque例子"><a href="#一个ArrayDeque例子" class="headerlink" title="一个ArrayDeque例子"></a>一个ArrayDeque例子</h2><p>一段ArrayDeque代码：</p>
 <pre><code>ArrayDeque&lt;String&gt; arrayDeque = new ArrayDeque&lt;String&gt;(4);
@@ -627,7 +627,7 @@ String pop = stack.pop(); // 3
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">94</span>
+              <span class="site-state-item-count">95</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -635,7 +635,7 @@ String pop = stack.pop(); // 3
           
             <div class="site-state-item site-state-categories">
               <a href="/categories">
-                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -644,7 +644,7 @@ String pop = stack.pop(); // 3
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">61</span>
+                <span class="site-state-item-count">62</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

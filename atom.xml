@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-01-01T14:28:28.000Z</updated>
+  <updated>2017-01-29T11:44:53.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -14,6 +14,250 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Loadbalance的几种算法以及在ribbon中的使用</title>
+    <link href="http://fangjian0423.github.io/2017/01/29/loadbalance/"/>
+    <id>http://fangjian0423.github.io/2017/01/29/loadbalance/</id>
+    <published>2017-01-29T11:32:16.000Z</published>
+    <updated>2017-01-29T11:44:53.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>Load Balance负载均衡是用于解决一台机器(一个进程)无法解决所有请求而产生的一种算法。</p>
+<p>像nginx可以使用负载均衡分配流量，ribbon为客户端提供负载均衡，dubbo服务调用里的负载均衡等等，很多地方都使用到了负载均衡。</p>
+<p>使用负载均衡带来的好处很明显：</p>
+<ol>
+<li>当集群里的1台或者多台服务器down的时候，剩余的没有down的服务器可以保证服务的继续使用</li>
+<li>使用了更多的机器保证了机器的良性使用，不会由于某一高峰时刻导致系统cpu急剧上升</li>
+</ol>
+<p>负载均衡有好几种实现策略，常见的有：</p>
+<ol>
+<li>随机 (Random)</li>
+<li>轮询 (RoundRobin)</li>
+<li>一致性哈希 (ConsistentHash)</li>
+<li>哈希 (Hash)</li>
+<li>加权（Weighted）</li>
+</ol>
+<a id="more"></a>
+<p>我们以<a href="https://github.com/Netflix/ribbon" target="_blank" rel="external">ribbon</a>的实现为基础，看看其中的一些算法是如何实现的。</p>
+<p>ribbon是一个为客户端提供负载均衡功能的服务，它内部提供了一个叫做ILoadBalance的接口代表负载均衡器的操作，比如有添加服务器操作、选择服务器操作、获取所有的服务器列表、获取可用的服务器列表等等。</p>
+<p>还提供了一个叫做IRule的接口代表负载均衡策略：</p>
+<pre><code>public interface IRule{
+    public Server choose(Object key);
+    public void setLoadBalancer(ILoadBalancer lb);
+    public ILoadBalancer getLoadBalancer();    
+}
+</code></pre><p>IRule接口的实现类有以下几种：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/loadbalance01.png" alt="image"></p>
+<p>其中RandomRule表示随机策略、RoundRobin表示轮询策略、WeightedResponseTimeRule表示加权策略、BestAvailableRule表示请求数最少策略等等。</p>
+<p>随机策略很简单，就是从服务器中随机选择一个服务器，RandomRule的实现代码如下：</p>
+<pre><code>public Server choose(ILoadBalancer lb, Object key) {
+    if (lb == null) {
+        return null;
+    }
+    Server server = null;
+
+    while (server == null) {
+        if (Thread.interrupted()) {
+            return null;
+        }
+        List&lt;Server&gt; upList = lb.getReachableServers();
+        List&lt;Server&gt; allList = lb.getAllServers();
+        int serverCount = allList.size();
+        if (serverCount == 0) {
+            return null;
+        }
+        int index = rand.nextInt(serverCount); // 使用jdk内部的Random类随机获取索引值index
+        server = upList.get(index); // 得到服务器实例
+
+        if (server == null) {
+            Thread.yield();
+            continue;
+        }
+
+        if (server.isAlive()) {
+            return (server);
+        }
+
+        server = null;
+        Thread.yield();
+    }
+    return server;
+}
+</code></pre><p>RoundRobin轮询策略表示每次都取下一个服务器，比如一共有5台服务器，第1次取第1台，第2次取第2台，第3次取第3台，以此类推：</p>
+<pre><code>public Server choose(ILoadBalancer lb, Object key) {
+    if (lb == null) {
+        log.warn(&quot;no load balancer&quot;);
+        return null;
+    }
+
+    Server server = null;
+    int count = 0;
+    while (server == null &amp;&amp; count++ &lt; 10) { // retry 10 次
+        List&lt;Server&gt; reachableServers = lb.getReachableServers();
+        List&lt;Server&gt; allServers = lb.getAllServers();
+        int upCount = reachableServers.size();
+        int serverCount = allServers.size();
+
+        if ((upCount == 0) || (serverCount == 0)) {
+            log.warn(&quot;No up servers available from load balancer: &quot; + lb);
+            return null;
+        }
+
+        int nextServerIndex = incrementAndGetModulo(serverCount); // incrementAndGetModulo方法内部使用nextServerCyclicCounter这个AtomicInteger属性原子递增对serverCount取模得到索引值
+        server = allServers.get(nextServerIndex); // 得到服务器实例
+
+        if (server == null) {
+            Thread.yield();
+            continue;
+        }
+
+        if (server.isAlive() &amp;&amp; (server.isReadyToServe())) {
+            return (server);
+        }
+
+        server = null;
+    }
+
+    if (count &gt;= 10) {
+        log.warn(&quot;No available alive servers after 10 tries from load balancer: &quot;
+                + lb);
+    }
+    return server;
+}
+</code></pre><p>BestAvailableRule策略用来选取最少并发量请求的服务器：</p>
+<pre><code>public Server choose(Object key) {
+    if (loadBalancerStats == null) {
+        return super.choose(key);
+    }
+    List&lt;Server&gt; serverList = getLoadBalancer().getAllServers(); // 获取所有的服务器列表
+    int minimalConcurrentConnections = Integer.MAX_VALUE;
+    long currentTime = System.currentTimeMillis();
+    Server chosen = null;
+    for (Server server: serverList) { // 遍历每个服务器
+        ServerStats serverStats = loadBalancerStats.getSingleServerStat(server); // 获取各个服务器的状态
+        if (!serverStats.isCircuitBreakerTripped(currentTime)) { // 没有触发断路器的话继续执行
+            int concurrentConnections = serverStats.getActiveRequestsCount(currentTime); // 获取当前服务器的请求个数
+            if (concurrentConnections &lt; minimalConcurrentConnections) { // 比较各个服务器之间的请求数，然后选取请求数最少的服务器并放到chosen变量中
+                minimalConcurrentConnections = concurrentConnections;
+                chosen = server;
+            }
+        }
+    }
+    if (chosen == null) { // 如果没有选上，调用父类ClientConfigEnabledRoundRobinRule的choose方法，也就是使用RoundRobinRule轮询的方式进行负载均衡        
+        return super.choose(key);
+    } else {
+        return chosen;
+    }
+}
+</code></pre><h2 id="实例验证Ribbon中的LoadBalance功能"><a href="#实例验证Ribbon中的LoadBalance功能" class="headerlink" title="实例验证Ribbon中的LoadBalance功能"></a>实例验证Ribbon中的LoadBalance功能</h2><p>ServerList中提供了3个instance，分别是：</p>
+<pre><code>compute-service:2222
+compute-service:2223
+compute-service:2224
+</code></pre><p>然后使用不同的IRule策略查看负载均衡的实现。</p>
+<p>首先先使用ribbon提供的LoadBalanced注解加在RestTemplate上面，这个注解会自动构造LoadBalancerClient接口的实现类并注册到Spring容器中。</p>
+<pre><code>@Bean
+@LoadBalanced
+RestTemplate restTemplate() {
+    return new RestTemplate();
+}
+</code></pre><p>接下来使用RestTemplate进行rest操作的时候，会自动使用负载均衡策略，它内部会在RestTemplate中加入LoadBalancerInterceptor这个拦截器，这个拦截器的作用就是使用负载均衡。</p>
+<p>例子中，我们的实例的name叫做compute-service，里面提供了一个方法add用于相加2个Integer类型的数值。</p>
+<p>loadbalance的具体操作：</p>
+<pre><code>public String loadbalance() {
+    ServiceInstance serviceInstance = loadBalancerClient.choose(&quot;compute-service&quot;);
+    StringBuilder sb = new StringBuilder();
+    sb.append(&quot;host: &quot;).append(serviceInstance.getHost()).append(&quot;, &quot;);
+    sb.append(&quot;port: &quot;).append(serviceInstance.getPort()).append(&quot;, &quot;);
+    sb.append(&quot;uri: &quot;).append(serviceInstance.getUri());
+    return sb.toString();
+}
+</code></pre><h3 id="RandomRule随机策略"><a href="#RandomRule随机策略" class="headerlink" title="RandomRule随机策略"></a>RandomRule随机策略</h3><p>RandomRule：</p>
+<pre><code>@Configuration
+public class RibbonConfiguration {
+
+    @Autowired
+    private SpringClientFactory springClientFactory;
+
+    @Bean
+    public IRule ribbonRule() {
+        return new RandomRule();
+    }
+
+}
+</code></pre><p>测试结果如下，确实是随机获取的：</p>
+<pre><code>host: 192.168.31.113, port: 2222, uri: http://192.168.31.113:2222
+host: 192.168.31.113, port: 2222, uri: http://192.168.31.113:2222
+host: 192.168.31.113, port: 2222, uri: http://192.168.31.113:2222
+host: 192.168.31.113, port: 2224, uri: http://192.168.31.113:2224
+host: 192.168.31.113, port: 2224, uri: http://192.168.31.113:2224
+host: 192.168.31.113, port: 2222, uri: http://192.168.31.113:2222
+host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223
+host: 192.168.31.113, port: 2222, uri: http://192.168.31.113:2222
+host: 192.168.31.113, port: 2222, uri: http://192.168.31.113:2222
+host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223    
+</code></pre><h3 id="RoundRobinRule轮询策略"><a href="#RoundRobinRule轮询策略" class="headerlink" title="RoundRobinRule轮询策略"></a>RoundRobinRule轮询策略</h3><p>RoundRobinRule：</p>
+<pre><code>@Bean
+public IRule ribbonRule() {
+    return new RandomRule();
+}
+</code></pre><p>测试结果如下，确实是轮询每个服务器的：</p>
+<pre><code>host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223
+host: 192.168.31.113, port: 2222, uri: http://192.168.31.113:2222
+host: 192.168.31.113, port: 2224, uri: http://192.168.31.113:2224
+host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223
+host: 192.168.31.113, port: 2222, uri: http://192.168.31.113:2222
+host: 192.168.31.113, port: 2224, uri: http://192.168.31.113:2224
+host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223
+host: 192.168.31.113, port: 2222, uri: http://192.168.31.113:2222
+host: 192.168.31.113, port: 2224, uri: http://192.168.31.113:2224
+host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223
+host: 192.168.31.113, port: 2222, uri: http://192.168.31.113:2222
+host: 192.168.31.113, port: 2224, uri: http://192.168.31.113:2224
+</code></pre><h3 id="BestAvailableRule最少并发数策略"><a href="#BestAvailableRule最少并发数策略" class="headerlink" title="BestAvailableRule最少并发数策略"></a>BestAvailableRule最少并发数策略</h3><p>BestAvailableRule：</p>
+<pre><code>@Bean
+public IRule ribbonRule() {
+    return new BestAvailableRule();
+}
+</code></pre><p>如果直接访问浏览器的话，测试结果如下(因为每次访问完请求数都变成0，下次遍历永远都是2223这个端口的实例)：</p>
+<pre><code>host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223
+host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223
+host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223
+host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223
+host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223
+host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223
+..
+</code></pre><p>使用wrk模拟并发请求，结果会出现多个实例：</p>
+<pre><code>wrk -c 1000 -t 10 -d 10s http://localhost:3333/test
+</code></pre>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Load Balance负载均衡是用于解决一台机器(一个进程)无法解决所有请求而产生的一种算法。&lt;/p&gt;
+&lt;p&gt;像nginx可以使用负载均衡分配流量，ribbon为客户端提供负载均衡，dubbo服务调用里的负载均衡等等，很多地方都使用到了负载均衡。&lt;/p&gt;
+&lt;p&gt;使用负载均衡带来的好处很明显：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;当集群里的1台或者多台服务器down的时候，剩余的没有down的服务器可以保证服务的继续使用&lt;/li&gt;
+&lt;li&gt;使用了更多的机器保证了机器的良性使用，不会由于某一高峰时刻导致系统cpu急剧上升&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;负载均衡有好几种实现策略，常见的有：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;随机 (Random)&lt;/li&gt;
+&lt;li&gt;轮询 (RoundRobin)&lt;/li&gt;
+&lt;li&gt;一致性哈希 (ConsistentHash)&lt;/li&gt;
+&lt;li&gt;哈希 (Hash)&lt;/li&gt;
+&lt;li&gt;加权（Weighted）&lt;/li&gt;
+&lt;/ol&gt;
+    
+    </summary>
+    
+      <category term="springcloud" scheme="http://fangjian0423.github.io/categories/springcloud/"/>
+    
+    
+      <category term="algorithm" scheme="http://fangjian0423.github.io/tags/algorithm/"/>
+    
+      <category term="springcloud" scheme="http://fangjian0423.github.io/tags/springcloud/"/>
+    
+  </entry>
   
   <entry>
     <title>2016总结</title>
@@ -4034,233 +4278,6 @@ private Node&lt;K,V&gt; findPredecessor(Object key, Comparator&lt;? super K&gt; 
       <category term="jdk" scheme="http://fangjian0423.github.io/tags/jdk/"/>
     
       <category term="map" scheme="http://fangjian0423.github.io/tags/map/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>jdk PriorityQueue优先队列工作原理分析</title>
-    <link href="http://fangjian0423.github.io/2016/04/10/jdk_priorityqueue/"/>
-    <id>http://fangjian0423.github.io/2016/04/10/jdk_priorityqueue/</id>
-    <published>2016-04-10T13:36:08.000Z</published>
-    <updated>2016-05-10T14:59:25.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>优先队列跟普通的队列不一样，普通队列是一种遵循FIFO规则的队列，拿数据的时候按照加入队列的顺序拿取。   而优先队列每次拿数据的时候都会拿出优先级最高的数据。</p>
-<p>优先队列内部维护着一个堆，每次取数据的时候都从堆顶拿数据，这就是优先队列的原理。</p>
-<p>jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优先级规则。</p>
-<a id="more"></a>
-<h2 id="一个PriorityQueue例子"><a href="#一个PriorityQueue例子" class="headerlink" title="一个PriorityQueue例子"></a>一个PriorityQueue例子</h2><p>定义一个Task类，有2个属性name和level。这个类放到PriorityQueue里，level越大优先级越高：</p>
-<pre><code>private static class Task {
-    String name;
-    int level;
-
-    public Task(String name, int level) {
-        this.name = name;
-        this.level = level;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public void setLevel(int level) {
-        this.level = level;
-    }
-
-    @Override
-    public String toString() {
-        return &quot;Task{&quot; +
-                &quot;name=&apos;&quot; + name + &apos;\&apos;&apos; +
-                &quot;, level=&quot; + level +
-                &apos;}&apos;;
-    }
-}
-
-public static void main(String[] args) {
-    PriorityQueue&lt;Task&gt; queue = new PriorityQueue&lt;Task&gt;(6, new Comparator&lt;Task&gt;() {
-        @Override
-        public int compare(Task t1, Task t2) {
-            return t2.getLevel() - t1.getLevel();
-        }
-    });
-    queue.add(new Task(&quot;游戏&quot;, 20));
-    queue.add(new Task(&quot;吃饭&quot;, 100));
-    queue.add(new Task(&quot;睡觉&quot;, 90));
-    queue.add(new Task(&quot;看书&quot;, 70));
-    queue.add(new Task(&quot;工作&quot;, 80));
-    queue.add(new Task(&quot;撩妹&quot;, 10));
-    while(!queue.isEmpty()) {
-        System.out.println(queue.poll());
-    }
-}
-</code></pre><p>输出结果：</p>
-<pre><code>Task{name=&apos;吃饭&apos;, level=100}
-Task{name=&apos;睡觉&apos;, level=90}
-Task{name=&apos;工作&apos;, level=80}
-Task{name=&apos;看书&apos;, level=70}
-Task{name=&apos;游戏&apos;, level=20}
-Task{name=&apos;撩妹&apos;, level=10}
-</code></pre><p>add过程其实就是在最大堆里添加新的元素，添加之后再进行调整：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<p>出队相当于每次都是堆顶出堆，堆顶出堆之后然后重新调整：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue02.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<h2 id="PriorityQueue原理分析"><a href="#PriorityQueue原理分析" class="headerlink" title="PriorityQueue原理分析"></a>PriorityQueue原理分析</h2><p>首先看下PriorityQueue的属性：</p>
-<pre><code>transient Object[] queue; // 堆
-private int size = 0; // 元素个数
-private final Comparator&lt;? super E&gt; comparator; // 比较器，如果是null，使用元素自身的比较器
-</code></pre><p>接下来是PriorityQueue的几个方法介绍。</p>
-<p>add，添加元素：</p>
-<pre><code>public boolean add(E e) {
-    return offer(e); // add方法内部调用offer方法
-}
-
-public boolean offer(E e) {
-    if (e == null) // 元素为空的话，抛出NullPointerException异常
-        throw new NullPointerException();
-    modCount++;
-    int i = size;
-    if (i &gt;= queue.length) // 如果当前用堆表示的数组已经满了，调用grow方法扩容
-        grow(i + 1); // 扩容
-    size = i + 1; // 元素个数+1
-    if (i == 0) // 堆还没有元素的情况
-        queue[0] = e; // 直接给堆顶赋值元素
-    else // 堆中已有元素的情况
-        siftUp(i, e); // 重新调整堆，从下往上调整，因为新增元素是加到最后一个叶子节点
-    return true;
-}
-
-private void siftUp(int k, E x) {
-    if (comparator != null)  // 比较器存在的情况下
-        siftUpUsingComparator(k, x); // 使用比较器调整
-    else // 比较器不存在的情况下
-        siftUpComparable(k, x); // 使用元素自身的比较器调整
-}
-
-private void siftUpUsingComparator(int k, E x) {
-    while (k &gt; 0) { // 一直循环直到父节点还存在
-        int parent = (k - 1) &gt;&gt;&gt; 1; // 找到父节点索引
-        Object e = queue[parent]; // 赋值父节点元素
-        if (comparator.compare(x, (E) e) &gt;= 0) // 新元素与父元素进行比较，如果满足比较器结果，直接跳出，否则进行调整
-            break;
-        queue[k] = e; // 进行调整，新位置的元素变成了父元素
-        k = parent; // 新位置索引变成父元素索引，进行递归操作
-    }
-    queue[k] = x; // 新添加的元素添加到堆中
-}
-</code></pre><p>siftUp方法调用过程如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue03.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<p>poll，出队方法：</p>
-<pre><code>public E poll() {
-    if (size == 0)
-        return null;
-    int s = --size; // 元素个数-1
-    modCount++;
-    E result = (E) queue[0]; // 得到堆顶元素
-    E x = (E) queue[s]; // 最后一个叶子节点
-    queue[s] = null; // 最后1个叶子节点置空
-    if (s != 0)
-        siftDown(0, x); // 从上往下调整，因为删除元素是删除堆顶的元素
-    return result;
-}
-
-private void siftDown(int k, E x) {
-    if (comparator != null) // 比较器存在的情况下
-        siftDownUsingComparator(k, x); // 使用比较器调整
-    else // 比较器不存在的情况下
-        siftDownComparable(k, x); // 使用元素自身的比较器调整
-}
-
-private void siftDownUsingComparator(int k, E x) {
-    int half = size &gt;&gt;&gt; 1; // 只需循环节点个数的一般即可
-    while (k &lt; half) {
-        int child = (k &lt;&lt; 1) + 1; // 得到父节点的左子节点索引
-        Object c = queue[child]; // 得到左子元素
-        int right = child + 1; // 得到父节点的右子节点索引
-        if (right &lt; size &amp;&amp;
-            comparator.compare((E) c, (E) queue[right]) &gt; 0) // 左子节点跟右子节点比较，取更大的值
-            c = queue[child = right];
-        if (comparator.compare(x, (E) c) &lt;= 0)  // 然后这个更大的值跟最后一个叶子节点比较
-
-            break;
-        queue[k] = c; // 新位置使用更大的值
-        k = child; // 新位置索引变成子元素索引，进行递归操作
-    }
-    queue[k] = x; // 最后一个叶子节点添加到合适的位置
-}
-</code></pre><p>siftDown方法调用过程如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue04.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<p>grow扩容方法：</p>
-<pre><code>private void grow(int minCapacity) {
-    int oldCapacity = queue.length;
-    // 新容量
-    // 如果老容量小于64 新容量 = 老容量 + 老容量 + 2
-    // 如果老容量大于等于64 老容量 = 老容量 + 老容量/2
-    int newCapacity = oldCapacity + ((oldCapacity &lt; 64) ?
-                                     (oldCapacity + 2) :
-                                     (oldCapacity &gt;&gt; 1));
-    // 溢出处理
-    if (newCapacity - MAX_ARRAY_SIZE &gt; 0)
-        newCapacity = hugeCapacity(minCapacity);
-    // 使用新容量
-    queue = Arrays.copyOf(queue, newCapacity);
-}
-</code></pre><p>remove，删除队列元素操作：</p>
-<pre><code>public boolean remove(Object o) {
-    int i = indexOf(o); // 找到数据对应的索引
-    if (i == -1) // 不存在的话返回false
-        return false;
-    else { // 存在的话调用removeAt方法，返回true
-        removeAt(i);
-        return true;
-    }
-}
-
-private E removeAt(int i) {
-    modCount++;
-    int s = --size; // 元素个数-1
-    if (s == i) // 如果是删除最后一个叶子节点
-        queue[i] = null; // 直接置空，删除即可，堆还是保持特质，不需要调整
-    else { // 如果是删除的不是最后一个叶子节点
-        E moved = (E) queue[s]; // 获得最后1个叶子节点元素
-        queue[s] = null; // 最后1个叶子节点置空
-        siftDown(i, moved); // 从上往下调整
-        if (queue[i] == moved) { // 如果从上往下调整完毕之后发现元素位置没变，从下往上调整
-            siftUp(i, moved); // 从下往上调整
-            if (queue[i] != moved)
-                return moved;
-        }
-    }
-    return null;
-}
-</code></pre><p>下图这个堆如果删除红色节点100的时候，siftDown之后元素位置没变，所以还得siftUp：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue05.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
-<li>jdk内置的优先队列PriorityQueue内部使用一个堆维护数据，每当有数据add进来或者poll出去的时候会对堆做从下往上的调整和从上往下的调整</li>
-<li>PriorityQueue不是一个线程安全的类，如果要在多线程环境下使用，可以使用PriorityBlockingQueue这个优先阻塞队列</li>
-</ol>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;优先队列跟普通的队列不一样，普通队列是一种遵循FIFO规则的队列，拿数据的时候按照加入队列的顺序拿取。   而优先队列每次拿数据的时候都会拿出优先级最高的数据。&lt;/p&gt;
-&lt;p&gt;优先队列内部维护着一个堆，每次取数据的时候都从堆顶拿数据，这就是优先队列的原理。&lt;/p&gt;
-&lt;p&gt;jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优先级规则。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="jdk" scheme="http://fangjian0423.github.io/categories/jdk/"/>
-    
-    
-      <category term="jdk" scheme="http://fangjian0423.github.io/tags/jdk/"/>
-    
-      <category term="queue" scheme="http://fangjian0423.github.io/tags/queue/"/>
     
   </entry>
   

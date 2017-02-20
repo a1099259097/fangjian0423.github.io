@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-01-29T11:44:53.000Z</updated>
+  <updated>2017-02-20T07:40:54.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -16,11 +16,199 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>SpringCloud使用Hystrix实现断路器</title>
+    <link href="http://fangjian0423.github.io/2017/02/19/springcloud-hystrix/"/>
+    <id>http://fangjian0423.github.io/2017/02/19/springcloud-hystrix/</id>
+    <published>2017-02-19T04:11:39.000Z</published>
+    <updated>2017-02-20T07:40:54.000Z</updated>
+    
+    <content type="html"><![CDATA[<p><a href="https://github.com/Netflix/Hystrix" target="_blank" rel="external">Hystrix</a>是一个供分布式系统使用，提供延迟和容错功能，保证复杂的分布系统在面临不可避免的失败时，仍能有其弹性。</p>
+<p>比如系统中有很多服务，当某些服务不稳定的时候，使用这些服务的用户线程将会阻塞，如果没有隔离机制，系统随时就有可能会挂掉，从而带来很大的风险。</p>
+<p>SpringCloud使用Hystrix组件提供断路器、资源隔离与自我修复功能。下图表示服务B触发了断路器，阻止了级联失败。</p>
+<p><img src="http://cloud.spring.io/spring-cloud-static/Brixton.SR7/images/HystrixFallback.png" alt="image"></p>
+<a id="more"></a>
+<h2 id="Hystrix的简单使用"><a href="#Hystrix的简单使用" class="headerlink" title="Hystrix的简单使用"></a>Hystrix的简单使用</h2><p>Hystrix使用了命令设计模式，只需要编写命令即可：</p>
+<pre><code>public class CommandHelloWorld extends HystrixCommand&lt;String&gt; {
+
+    private final String name;
+
+    public CommandHelloWorld(String name) {
+        super(HystrixCommandGroupKey.Factory.asKey(&quot;HelloWorld&quot;));
+        this.name = name;
+    }
+
+    @Override
+    protected String run() throws Exception { // 完成业务逻辑
+        return &quot;Hello &quot; + name + &quot;!&quot;;
+    }
+
+    @Override
+    protected String getFallback() { // run方法抛出异常的时候返回备用结果
+        return &quot;Hello Failure &quot; + name + &quot;!&quot;;
+    }
+
+}
+</code></pre><p>测试用例：</p>
+<pre><code>@Test
+public void test() {
+    assertEquals(&quot;Hello World!&quot;, new CommandHelloWorld(&quot;World&quot;).execute());
+    assertEquals(&quot;Hello Format!&quot;, new CommandHelloWorld(&quot;Format&quot;).execute());
+}
+</code></pre><p>可能有的人觉得写Command有点麻烦，Hystrix提供了一个类库<a href="https://github.com/Netflix/Hystrix/tree/master/hystrix-contrib/hystrix-javanica" target="_blank" rel="external">javanica</a>，可以使用@HystrixCommand注解完成命令的编写。</p>
+<h2 id="在SpringCloud中使用Hystrix"><a href="#在SpringCloud中使用Hystrix" class="headerlink" title="在SpringCloud中使用Hystrix"></a>在SpringCloud中使用Hystrix</h2><p>要在SpringCloud中使用断路器，需要加上@EnableCircuitBreaker注解：</p>
+<pre><code>...
+@EnableCircuitBreaker
+...
+public class RibbonApplication { ... }
+</code></pre><p>然后在对应的方法上加入@HystrixCommand注解实现断路器功能，当service方法对应的服务发生异常的时候，会跳转到serviceFallback方法执行：</p>
+<pre><code>@HystrixCommand(fallbackMethod = &quot;serviceFallback&quot;) // 加入@HystrixCommand注解实现断路器功能
+public String service() { // 原先的方法
+    return restTemplate.getForEntity(&quot;...&quot;, String.class).getBody();
+}
+
+public String serviceFallback() { // fallback方法
+    return &quot;error&quot;;
+}
+</code></pre><h2 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h2><p>加上@EnableCircuitBreaker注解之后，就可以使用断路器功能，所以SpringCloud内部是如何整合Hystrix的话先从这个注解开始分析。</p>
+<p>@EnableCircuitBreaker注解定义如下：</p>
+<pre><code>@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@Import(EnableCircuitBreakerImportSelector.class)
+public @interface EnableCircuitBreaker {
+
+}
+</code></pre><p>import了EnableCircuitBreakerImportSelector这个selector：</p>
+<pre><code>public class EnableCircuitBreakerImportSelector extends
+    SpringFactoryImportSelector&lt;EnableCircuitBreaker&gt; {
+
+    @Override
+    protected boolean isEnabled() {
+        return new RelaxedPropertyResolver(getEnvironment()).getProperty(
+            &quot;spring.cloud.circuit.breaker.enabled&quot;, Boolean.class, Boolean.TRUE);
+    }
+
+}
+</code></pre><p>在之前的这篇<a href="http://fangjian0423.github.io/2016/11/13/springboot-enable-annotation/">SpringBoot自动化配置的注解开关原理</a>文章中分析过selector的原理，这个EnableCircuitBreakerImportSelector会加载spring.factories属性文件中key为org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker的类：</p>
+<pre><code>org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker=\
+    org.springframework.cloud.netflix.hystrix.HystrixCircuitBreakerConfiguration
+</code></pre><p>会加载HystrixCircuitBreakerConfiguration这个配置类。</p>
+<p>这个配置类内部构造了一个aspect：</p>
+<pre><code>@Bean
+public HystrixCommandAspect hystrixCommandAspect() {
+    return new HystrixCommandAspect();
+}
+</code></pre><p>这个aspect对应的pointcut如下，所以使用@HystrixCommand注解修饰的方法会被这个aspect处理：</p>
+<pre><code>@annotation(com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand) || @annotation(com.netflix.hystrix.contrib.javanica.annotation.HystrixCollapser)
+</code></pre><p>对应的aop处理方法：</p>
+<pre><code>public Object methodsAnnotatedWithHystrixCommand(final ProceedingJoinPoint joinPoint) throws Throwable {
+    Method method = getMethodFromTarget(joinPoint);  // 得到初始的方法
+    Validate.notNull(method, &quot;failed to get method from joinPoint: %s&quot;, joinPoint);
+    if (method.isAnnotationPresent(HystrixCommand.class) &amp;&amp; method.isAnnotationPresent(HystrixCollapser.class)) { // 如果使用@HystrixCommand注解和@HystrixCollapser注解同时修改，不允许
+        throw new IllegalStateException(&quot;method cannot be annotated with HystrixCommand and HystrixCollapser &quot; +
+                &quot;annotations at the same time&quot;);
+    }
+    MetaHolderFactory metaHolderFactory = META_HOLDER_FACTORY_MAP.get(HystrixPointcutType.of(method));
+    MetaHolder metaHolder = metaHolderFactory.create(joinPoint); // 创建一个MetaHolder，这个MetaHolder封装了方法中的一些以及Hystrix的一些信息
+    HystrixInvokable invokable = HystrixCommandFactory.getInstance().create(metaHolder); // 根据这个metaHolder创建出一个HystrixInvokable，也就是一个HystrixCommand
+    ExecutionType executionType = metaHolder.isCollapserAnnotationPresent() ?
+            metaHolder.getCollapserExecutionType() : metaHolder.getExecutionType(); // 得到执行类型，有3种类型：1. 异步 2. 同步  3. reactive
+    Object result;
+    try {
+        result = CommandExecutor.execute(invokable, executionType, metaHolder);
+    } catch (HystrixBadRequestException e) {
+        throw e.getCause();
+    }
+    return result;
+}
+</code></pre><p>CommandExecutor的execute方法：</p>
+<pre><code>public static Object execute(HystrixInvokable invokable, ExecutionType executionType, MetaHolder metaHolder) throws RuntimeException {
+    Validate.notNull(invokable);
+    Validate.notNull(metaHolder);
+
+    switch (executionType) {
+        case SYNCHRONOUS: { // 同步方式的话，调用HystrixCommand的execute方法
+            return castToExecutable(invokable, executionType).execute();
+        }
+        case ASYNCHRONOUS: { // 异步方式的话，调用HystrixCommand的queue方法
+            HystrixExecutable executable = castToExecutable(invokable, executionType);
+            if (metaHolder.hasFallbackMethodCommand()
+                    &amp;&amp; ExecutionType.ASYNCHRONOUS == metaHolder.getFallbackExecutionType()) {
+                return new FutureDecorator(executable.queue());
+            }
+            return executable.queue();
+        }
+        case OBSERVABLE: { // reactive方式的话，调用HystrixCommand的observe或者toObservable方法
+            HystrixObservable observable = castToObservable(invokable);
+            return ObservableExecutionMode.EAGER == metaHolder.getObservableExecutionMode() ? observable.observe() : observable.toObservable();
+        }
+        default:
+            throw new RuntimeException(&quot;unsupported execution type: &quot; + executionType);
+    }
+}
+</code></pre><p>根据metaHolder创建出HystrixCommand的过程在HystrixCommandBuilderFactory中：</p>
+<pre><code>return HystrixCommandBuilder.builder()
+            .setterBuilder(createGenericSetterBuilder(metaHolder))
+            .commandActions(createCommandActions(metaHolder))
+            .collapsedRequests(collapsedRequests)
+            .cacheResultInvocationContext(createCacheResultInvocationContext(metaHolder))
+            .cacheRemoveInvocationContext(createCacheRemoveInvocationContext(metaHolder))
+            .ignoreExceptions(metaHolder.getHystrixCommand().ignoreExceptions())
+            .executionType(metaHolder.getExecutionType())
+            .build();
+</code></pre><p>所以这个aspect的作用就是把一个普通的Java方法转换成HystrixCommand。</p>
+<h2 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h2><p>HystrixCircuitBreakerConfiguration配置类中有个HystrixWebConfiguration内部配置类，它构造了一个HystrixStreamEndpoint这个endpoint，这个endpoint使用HystrixMetricsStreamServlet暴露出/hystrix.stream地址来获取hystrix的metrics信息。</p>
+<p>Hystrix还提供了一个dashboard，这个dashboard可以查看各个断路器的健康状况，要使用这个dashboard，在项目中加入这些依赖：</p>
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-actuator&lt;/artifactId&gt;
+&lt;/dependency&gt;
+
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-hystrix-dashboard&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre><p>然后在代码里加上开关：</p>
+<pre><code>@EnableHystrixDashboard
+...
+</code></pre><p>启动项目，打开：</p>
+<pre><code>http://localhost:3333/hystrix
+</code></pre><p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/hystrix01.png" alt="image"><br>输入：</p>
+<pre><code>http://localhost:3333/hystrix.stream
+</code></pre><p>我们使用wrk模拟请求：</p>
+<pre><code>wrk -c 10 -t 10 -d 20s http://localhost:3333/add
+</code></pre><p>然后dashboard中发生了变化：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/hystrix02.png" alt="image"></p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="http://cloud.spring.io/spring-cloud-static/Brixton.SR7/" target="_blank" rel="external">http://cloud.spring.io/spring-cloud-static/Brixton.SR7/</a></p>
+<p><a href="https://github.com/Netflix/Hystrix" target="_blank" rel="external">https://github.com/Netflix/Hystrix</a></p>
+<p><a href="https://github.com/Netflix/Hystrix/wiki" target="_blank" rel="external">https://github.com/Netflix/Hystrix/wiki</a></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;a href=&quot;https://github.com/Netflix/Hystrix&quot;&gt;Hystrix&lt;/a&gt;是一个供分布式系统使用，提供延迟和容错功能，保证复杂的分布系统在面临不可避免的失败时，仍能有其弹性。&lt;/p&gt;
+&lt;p&gt;比如系统中有很多服务，当某些服务不稳定的时候，使用这些服务的用户线程将会阻塞，如果没有隔离机制，系统随时就有可能会挂掉，从而带来很大的风险。&lt;/p&gt;
+&lt;p&gt;SpringCloud使用Hystrix组件提供断路器、资源隔离与自我修复功能。下图表示服务B触发了断路器，阻止了级联失败。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://cloud.spring.io/spring-cloud-static/Brixton.SR7/images/HystrixFallback.png&quot; alt=&quot;image&quot;&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="springcloud" scheme="http://fangjian0423.github.io/categories/springcloud/"/>
+    
+    
+      <category term="springcloud" scheme="http://fangjian0423.github.io/tags/springcloud/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Loadbalance的几种算法以及在ribbon中的使用</title>
     <link href="http://fangjian0423.github.io/2017/01/29/loadbalance/"/>
     <id>http://fangjian0423.github.io/2017/01/29/loadbalance/</id>
     <published>2017-01-29T11:32:16.000Z</published>
-    <updated>2017-01-29T11:44:53.000Z</updated>
+    <updated>2017-01-29T11:47:10.000Z</updated>
     
     <content type="html"><![CDATA[<p>Load Balance负载均衡是用于解决一台机器(一个进程)无法解决所有请求而产生的一种算法。</p>
 <p>像nginx可以使用负载均衡分配流量，ribbon为客户端提供负载均衡，dubbo服务调用里的负载均衡等等，很多地方都使用到了负载均衡。</p>
@@ -4120,164 +4308,6 @@ all thread over
     
     
       <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>jdk ConcurrentSkipListMap工作原理分析</title>
-    <link href="http://fangjian0423.github.io/2016/04/12/jdk-concurrentskiplistmap/"/>
-    <id>http://fangjian0423.github.io/2016/04/12/jdk-concurrentskiplistmap/</id>
-    <published>2016-04-12T11:49:11.000Z</published>
-    <updated>2016-05-10T14:59:25.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>ConcurrentSkipListMap是一个内部使用跳表，并且支持排序和并发的一个Map。</p>
-<p>跳表的介绍：</p>
-<p>跳表是一种允许在一个有顺序的序列中进行快速查询的数据结构。</p>
-<p>如果在普通的顺序链表中查询一个元素，需要从链表头部开始一个一个节点进行遍历，然后找到节点，如下图所示，要查找234元素的话需要从5元素节点开始一个一个节点进行遍历，这样的效率是非常低的。</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<p>跳表可以解决这种查询时间过长的问题：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist02.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<p>从上图可以看到，跳表具有以下几种特性：</p>
-<ol>
-<li>由很多层组成，level越高的层节点越少，最后一层level用有所有的节点数据</li>
-<li>每一层的节点数据也都是有顺序的</li>
-<li>上面层的节点肯定会在下面层中出现</li>
-<li>每个节点都有两个指针，分别是同一层的下一个节点指针和下一层节点的指针</li>
-</ol>
-<p>使用跳表查询元素的时间复杂度是O(log n)，跟红黑树一样。查询效率还是不错的，</p>
-<p>但是跳表的存储容量变大了，本来一共只有7个节点的数据，使用跳表之后变成了14个节点。</p>
-<p>所以跳表是一种使用”空间换时间”的概念用来提高查询效率的链表，开源软件Redis、LevelDB都使用到了跳表。跳表相比B树，红黑树，AVL树时间复杂度一样，但是耗费更多存储空间，但是跳表的优势就是它相比树，实现简单，不需要考虑树的一些rebalance问题。</p>
-<a id="more"></a>
-<p>下图是一个级别更高的跳表：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist03.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<h2 id="跳表的查询"><a href="#跳表的查询" class="headerlink" title="跳表的查询"></a>跳表的查询</h2><p>比如要在下面这个跳表中查找93元素，过程如下：</p>
-<ol>
-<li>从head节点(最上层的第一个节点)开始找，发现5比93小，继续同一层(Level3)的下一个节点150进行比较</li>
-<li>发现105比93大，往下一层(Level2)走，然后找Level2的5元素的下一个节点67，发现67比93小，继续同一层(Level2)的下一个节点150进行比较</li>
-<li>发现105比93大，往下一层(Level1)走，然后找Level1的67元素的下一个节点93，找到，返回</li>
-</ol>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist04.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<h2 id="跳表新增元素"><a href="#跳表新增元素" class="headerlink" title="跳表新增元素"></a>跳表新增元素</h2><p>跳表中新增元素的话首先会确定Level层，在这个Level以及这个Level以下的层中都加入新的元素，具体的Level层数是通过一个通过一种随机算法获取的，比如之前这个跳表在Level2和Level1中插入666元素：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/skiplist05.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<p>如果Level大于目前跳表的层数，那么会添加新的一层。</p>
-<h2 id="跳表删除元素"><a href="#跳表删除元素" class="headerlink" title="跳表删除元素"></a>跳表删除元素</h2><p>在各个层中找到对应的元素并删除即可。</p>
-<h2 id="ConcurrentSkipListMap分析"><a href="#ConcurrentSkipListMap分析" class="headerlink" title="ConcurrentSkipListMap分析"></a>ConcurrentSkipListMap分析</h2><p>ConcurrentSkipListMap对跳表中的几个概念做了一层封装，如下：</p>
-<pre><code>// 每个节点的封装，跟层数没有关系
-static final class Node&lt;K,V&gt; {
-    final K key; // 节点的关键字
-    volatile Object value; // 节点的值
-    volatile Node&lt;K,V&gt; next; // 节点的next节点引用
-    ...
-}
-
-// 每一层节点的封装，叫做索引
-static class Index&lt;K,V&gt; {
-    final Node&lt;K,V&gt; node; // 对应的节点
-    final Index&lt;K,V&gt; down; // 下一层索引
-    volatile Index&lt;K,V&gt; right; // 同一层的下一个索引
-    ...
-}
-
-// 每一层的头索引
-static final class HeadIndex&lt;K,V&gt; extends Index&lt;K,V&gt; {
-    final int level; // Level 级别
-    HeadIndex(Node&lt;K,V&gt; node, Index&lt;K,V&gt; down, Index&lt;K,V&gt; right, int level) {
-        super(node, down, right);
-        this.level = level;
-    }
-    ...
-}
-</code></pre><p>简单分析下ConcurrentSkipListMap的get方法：</p>
-<pre><code>private V doGet(Object key) {
-    if (key == null)
-        throw new NullPointerException();
-    Comparator&lt;? super K&gt; cmp = comparator;
-    outer: for (;;) {
-        // findPredecessor方法表示找到最接近要查找节点的节点，并且这个节点在最下面那一层，这样就保证会遍历所有节点
-        for (Node&lt;K,V&gt; b = findPredecessor(key, cmp), n = b.next;;) {
-            Object v; int c;
-            if (n == null) // 已经遍历节点到最后还是没有找到，break，返回null
-                break outer;
-            Node&lt;K,V&gt; f = n.next;
-            if (n != b.next) // 判断比较下一个节点是否发生了变化，如果发生变化break重新开始死循环
-                break;
-            if ((v = n.value) == null) {    // 如果下一个节点已经被删除了
-                n.helpDelete(b, f);
-                break;
-            }
-            if (b.value == null || v == n)  // b is deleted
-                break;
-            if ((c = cpr(cmp, key, n.key)) == 0) {  // 比较并且找到了，直接返回
-                @SuppressWarnings(&quot;unchecked&quot;) V vv = (V)v;
-                return vv;
-            }
-            if (c &lt; 0) // 找过头了，说明没有对应节点了，跳出循环，返回null
-                break outer;
-            b = n; // 继续遍历
-            n = f; // 继续遍历
-        }
-    }
-    return null;
-}
-
-private Node&lt;K,V&gt; findPredecessor(Object key, Comparator&lt;? super K&gt; cmp) {
-    if (key == null)
-        throw new NullPointerException(); // don&apos;t postpone errors
-    for (;;) { // 一个死循环内部套着另外一个循环
-        for (Index&lt;K,V&gt; q = head, r = q.right, d;;) { // head表示最顶层的第一个索引，从这个索引开始找
-            if (r != null) { // 如果索引的同一层下一个索引不为null
-                Node&lt;K,V&gt; n = r.node;
-                K k = n.key;
-                if (n.value == null) { // 如果是个已删除节点
-                    if (!q.unlink(r)) // 使用cas把已删除节点从跳表上删除掉
-                        break;           // 已删除节点从跳表上删除失败，跳出重新循环
-                    r = q.right;         // 继续遍历
-                    continue;
-                }
-                if (cpr(cmp, key, k) &gt; 0) { // 使用cas比较要找的关键字和索引内节点的关键字，如果满足比较条件
-                    q = r; // 当前所在索引变成同一层下一个索引
-                    r = r.right;  // 当前所在索引的下一个索引变成下下个索引，继续遍历
-                    continue;
-                }
-            }
-            // 直到找出上一层满足不了条件的那个索引
-            if ((d = q.down) == null) // 找到下一层的索引
-                return q.node; // 如果下一层没有索引了，返回找到的最接近的节点
-            q = d; // 下一层开始做相同的操作
-            r = d.right; // 下一层开始做相同的操作
-        }
-    }
-}
-</code></pre>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;ConcurrentSkipListMap是一个内部使用跳表，并且支持排序和并发的一个Map。&lt;/p&gt;
-&lt;p&gt;跳表的介绍：&lt;/p&gt;
-&lt;p&gt;跳表是一种允许在一个有顺序的序列中进行快速查询的数据结构。&lt;/p&gt;
-&lt;p&gt;如果在普通的顺序链表中查询一个元素，需要从链表头部开始一个一个节点进行遍历，然后找到节点，如下图所示，要查找234元素的话需要从5元素节点开始一个一个节点进行遍历，这样的效率是非常低的。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://7x2wh6.com1.z0.glb.clouddn.com/skiplist01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;跳表可以解决这种查询时间过长的问题：&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://7x2wh6.com1.z0.glb.clouddn.com/skiplist02.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/280/fill/IzFBMDBGRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;从上图可以看到，跳表具有以下几种特性：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;由很多层组成，level越高的层节点越少，最后一层level用有所有的节点数据&lt;/li&gt;
-&lt;li&gt;每一层的节点数据也都是有顺序的&lt;/li&gt;
-&lt;li&gt;上面层的节点肯定会在下面层中出现&lt;/li&gt;
-&lt;li&gt;每个节点都有两个指针，分别是同一层的下一个节点指针和下一层节点的指针&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;使用跳表查询元素的时间复杂度是O(log n)，跟红黑树一样。查询效率还是不错的，&lt;/p&gt;
-&lt;p&gt;但是跳表的存储容量变大了，本来一共只有7个节点的数据，使用跳表之后变成了14个节点。&lt;/p&gt;
-&lt;p&gt;所以跳表是一种使用”空间换时间”的概念用来提高查询效率的链表，开源软件Redis、LevelDB都使用到了跳表。跳表相比B树，红黑树，AVL树时间复杂度一样，但是耗费更多存储空间，但是跳表的优势就是它相比树，实现简单，不需要考虑树的一些rebalance问题。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="jdk" scheme="http://fangjian0423.github.io/categories/jdk/"/>
-    
-    
-      <category term="jdk" scheme="http://fangjian0423.github.io/tags/jdk/"/>
-    
-      <category term="map" scheme="http://fangjian0423.github.io/tags/map/"/>
     
   </entry>
   

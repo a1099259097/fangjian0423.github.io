@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-02-20T07:40:54.000Z</updated>
+  <updated>2017-02-23T14:08:57.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -16,11 +16,349 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>SpringCloud网关服务zuul介绍</title>
+    <link href="http://fangjian0423.github.io/2017/02/22/springcloud-zuul/"/>
+    <id>http://fangjian0423.github.io/2017/02/22/springcloud-zuul/</id>
+    <published>2017-02-22T13:33:22.000Z</published>
+    <updated>2017-02-23T14:08:57.000Z</updated>
+    
+    <content type="html"><![CDATA[<p><a href="https://github.com/Netflix/zuul" target="_blank" rel="external">Zuul</a>是Netflix开发的一款提供动态路由、监控、弹性、安全的网关服务。</p>
+<p>使用Zuul网关服务带来的好处是统一向外系统提供REST API，并额外提供了权限控制、负载均衡等功能，并且这些功能是从原先的服务中抽离出来并单独存在的。</p>
+<p>Zuul提供了不同类型的filter用于处理请求，这些filter可以让我们实现以下功能：</p>
+<ol>
+<li>权限控制和安全性：可以识别认证需要的信息和拒绝不满足条件的请求</li>
+<li>监控：监控请求信息</li>
+<li>动态路由：根据需要动态地路由请求到后台的不同集群</li>
+<li>压力测试</li>
+<li>负载均衡</li>
+<li>静态资源处理：直接在zuul处理静态资源的响应而不需要转发这些请求到内部集群中</li>
+</ol>
+<a id="more"></a>
+<h2 id="Zuul的执行过程介绍"><a href="#Zuul的执行过程介绍" class="headerlink" title="Zuul的执行过程介绍"></a>Zuul的执行过程介绍</h2><p>Zuul基于Servlet实现，它封装了Servlet提供的相关接口，并提供了一个全新的api。</p>
+<p><strong>ZuulFilter</strong>是一个基础的抽象类，定义了一些抽象方法：</p>
+<ol>
+<li>filterType方法: filter的类型，有”pre”, “route”, “post”, “error”, “static”</li>
+<li>filterOrder方法：优先级，级别越高，越快被执行</li>
+<li>shouldFilter方法：开关，如果是true，run方法会执行，否则不会执行</li>
+<li>run方法：filter执行的逻辑操作</li>
+</ol>
+<p><strong>ZuulServlet</strong>是一个继承自HttpServlet的子类，使用Zuul所有的请求都会被这个Servlet接收并处理。</p>
+<p>ZuulServlet覆盖了HttpServlet的service方法，所以不论是get/post/put/delete等方法都会执行相同的操作：</p>
+<pre><code>@Override
+public void service(javax.servlet.ServletRequest servletRequest, javax.servlet.ServletResponse servletResponse) throws ServletException, IOException {
+    try {
+        init((HttpServletRequest) servletRequest, (HttpServletResponse) servletResponse); // 初始化ZuulRunner，也就是包装request和response，并设置到RequestContext中，RequestContext使用ThreadLocal获得，每个线程独立保存一份，用于存储各种信息，比如request，response，监控信息，异常信息，成功信息，执行时间等等
+
+        // Marks this request as having passed through the &quot;Zuul engine&quot;, as opposed to servlets
+        // explicitly bound in web.xml, for which requests will not have the same data attached
+        RequestContext context = RequestContext.getCurrentContext();
+        context.setZuulEngineRan();
+
+        try {
+            preRoute(); // 执行 pre 类型的filter
+        } catch (ZuulException e) {
+            error(e); // pre 类型的filter执行报错的话执行 error 类型的filter
+            postRoute(); // 执行 post 类型的filter
+            return;
+        }
+        try {
+            route(); // pre 类型的filter执行成功后，执行 route 类型的filter
+        } catch (ZuulException e) {
+            error(e); //route 类型的filter执行报错的话执行 error 类型的filter
+            postRoute(); // 执行 post 类型的filter
+            return;
+        }
+        try {
+            postRoute(); // route 类型的filter执行成功后，执行 post 类型的filter
+        } catch (ZuulException e) {
+            error(e); //post 类型的filter执行报错的话执行 error 类型的filter
+            return;
+        }
+
+    } catch (Throwable e) {
+        error(new ZuulException(e, 500, &quot;UNHANDLED_EXCEPTION_&quot; + e.getClass().getName())); // 发生其他没有catch的错误的话，执行 error 类型的filter
+    } finally {
+        RequestContext.getCurrentContext().unset();
+    }
+}
+</code></pre><p>下图是<a href="https://github.com/Netflix/zuul/wiki/How-it-Works" target="_blank" rel="external">zuul wiki</a>上对filter的执行过程说明。</p>
+<p><img src="https://camo.githubusercontent.com/4eb7754152028cdebd5c09d1c6f5acc7683f0094/687474703a2f2f6e6574666c69782e6769746875622e696f2f7a75756c2f696d616765732f7a75756c2d726571756573742d6c6966656379636c652e706e67" alt="filter"></p>
+<p>从上面的service方法中我们也可以得出：先执行pre类型的filter；如果pre filter执行失败那么执行error和post类型的filter，pre filter执行成功的话执行route类型的filter；如果route filter执行失败那么执行error和post类型的filter，route filter执行成功的话执行post filter；如果post filter执行失败那么执行error类型的filter，post filter执行成功的话，结束。上述过程中执行失败指的是ZuulException被catch，如果是其他Exception的话，那么执行error类型的filter，然后结束。</p>
+<p>ZuulServlet里的preRoute(), route(), postRoute(), error()方法详情：</p>
+<pre><code>ZuulRunner.java
+public void preRoute() throws ZuulException {
+    FilterProcessor.getInstance().preRoute();
+}
+
+FilterProcessor.java
+public void preRoute() throws ZuulException {
+    try {
+        runFilters(&quot;pre&quot;);
+    } catch (Throwable e) {
+        if (e instanceof ZuulException) {
+            throw (ZuulException) e;
+        }
+        throw new ZuulException(e, 500, &quot;UNCAUGHT_EXCEPTION_IN_PRE_FILTER_&quot; + e.getClass().getName());
+    }
+}
+
+public Object runFilters(String sType) throws Throwable {
+    if (RequestContext.getCurrentContext().debugRouting()) {
+        Debug.addRoutingDebug(&quot;Invoking {&quot; + sType + &quot;} type filters&quot;);
+    }
+    boolean bResult = false;
+    List&lt;ZuulFilter&gt; list = FilterLoader.getInstance().getFiltersByType(sType); // 获得对应类型的filter集合
+    if (list != null) {
+        for (int i = 0; i &lt; list.size(); i++) { // 遍历这些类型的filter集合
+            ZuulFilter zuulFilter = list.get(i);
+            Object result = processZuulFilter(zuulFilter); // 调用processZuulFilter方法
+            if (result != null &amp;&amp; result instanceof Boolean) {
+                bResult |= ((Boolean) result);
+            }
+        }
+    }
+    return bResult;
+}
+
+public Object processZuulFilter(ZuulFilter filter) throws ZuulException {
+
+    RequestContext ctx = RequestContext.getCurrentContext();
+    boolean bDebug = ctx.debugRouting();
+    final String metricPrefix = &quot;zuul.filter-&quot;;
+    long execTime = 0; // 执行时间
+    String filterName = &quot;&quot;;
+    try {
+        long ltime = System.currentTimeMillis(); // 执行前的时间
+        filterName = filter.getClass().getSimpleName(); // 获取filter名字
+
+        RequestContext copy = null;
+        Object o = null;
+        Throwable t = null;
+
+        if (bDebug) {
+            Debug.addRoutingDebug(&quot;Filter &quot; + filter.filterType() + &quot; &quot; + filter.filterOrder() + &quot; &quot; + filterName);
+            copy = ctx.copy();
+        }
+
+        ZuulFilterResult result = filter.runFilter(); // 调用ZuulFilter的runFilter方法得到ZuulFilterResult，这个类是对filter执行结果的包装，包括返回值、异常信息、状态
+        ExecutionStatus s = result.getStatus(); // 得到ZuulFilterResult的状态信息
+        execTime = System.currentTimeMillis() - ltime; // 得到filter的执行时间
+
+        switch (s) { // 针对不同的ZuulFilterResult的状态做不同处理
+            case FAILED: // 如果是FAILED状态，说错run方法执行失败了
+                t = result.getException(); // 得到失败的异常
+                ctx.addFilterExecutionSummary(filterName, ExecutionStatus.FAILED.name(), execTime); // 失败信息加到RequestContext中
+                break;
+            case SUCCESS: // 如果是SUCCESS状态，说明run方法正确执行完毕
+                o = result.getResult(); // 得到run方法返回的结果
+                ctx.addFilterExecutionSummary(filterName, ExecutionStatus.SUCCESS.name(), execTime); // 成功信息加到RequestContext中
+                if (bDebug) {
+                    Debug.addRoutingDebug(&quot;Filter {&quot; + filterName + &quot; TYPE:&quot; + filter.filterType() + &quot; ORDER:&quot; + filter.filterOrder() + &quot;} Execution time = &quot; + execTime + &quot;ms&quot;);
+                    Debug.compareContextState(filterName, copy);
+                }
+                break;
+            default: // 其他状态的话不做处理
+                break;
+        }
+
+        if (t != null) throw t; // 如果是FAILED状态，抛出这个Exception
+
+        usageNotifier.notify(filter, s); // 记录监控信息
+        return o;
+
+    } catch (Throwable e) { // 如果发生了一些其它没有catch的异常
+        if (bDebug) {
+            Debug.addRoutingDebug(&quot;Running Filter failed &quot; + filterName + &quot; type:&quot; + filter.filterType() + &quot; order:&quot; + filter.filterOrder() + &quot; &quot; + e.getMessage());
+        }
+        usageNotifier.notify(filter, ExecutionStatus.FAILED); // 记录监控信息
+        if (e instanceof ZuulException) {
+            throw (ZuulException) e;
+        } else { // 封装成ZuulException并抛出
+            ZuulException ex = new ZuulException(e, &quot;Filter threw Exception&quot;, 500, filter.filterType() + &quot;:&quot; + filterName);
+            ctx.addFilterExecutionSummary(filterName, ExecutionStatus.FAILED.name(), execTime);
+            throw ex;
+        }
+    }
+}
+
+ZuulFilter.java
+public ZuulFilterResult runFilter() {
+    ZuulFilterResult zr = new ZuulFilterResult();
+    if (!isFilterDisabled()) { // 如果对应的zuul filter没有被disable
+        if (shouldFilter()) { // shouldFilter开关是否开启
+            Tracer t = TracerFactory.instance().startMicroTracer(&quot;ZUUL::&quot; + this.getClass().getSimpleName()); // 设置监控信息
+            try {
+                Object res = run(); // 调用ZuulFilter的run方法
+                zr = new ZuulFilterResult(res, ExecutionStatus.SUCCESS); // 把结果封装到ZuulFilterResult中，并设置状态为SUCCESS
+            } catch (Throwable e) { // 如果发生了异常
+                t.setName(&quot;ZUUL::&quot; + this.getClass().getSimpleName() + &quot; failed&quot;); // 完善监控信息
+                zr = new ZuulFilterResult(ExecutionStatus.FAILED); // 把ZuulFilterResult状态设置为FAILED
+                zr.setException(e); // 设置异常信息
+            } finally {
+                t.stopAndLog();
+            }
+        } else {
+            zr = new ZuulFilterResult(ExecutionStatus.SKIPPED); // zuul filter被disable的话，把ZuulFilterResult状态设置为SKIPPED
+        }
+    }
+    return zr;
+}
+</code></pre><h2 id="在SpringCloud中使用Zuul"><a href="#在SpringCloud中使用Zuul" class="headerlink" title="在SpringCloud中使用Zuul"></a>在SpringCloud中使用Zuul</h2><p>在SpringCloud中使用Zuul，加上@EnableZuulProxy注解，这个注解会import ZuulProxyConfiguration配置类。ZuulProxyConfiguration配置类继承ZuulConfiguration类，ZuulConfiguration配置类使用zuul开头的配置。</p>
+<p>在这个例子中，本地端口2222有了compute-service服务。这个zuul的服务地址暴露在7777端口下。</p>
+<p>我们定义了一个规则：</p>
+<pre><code>zuul.routes.api-a-url.path=/api-a-url/**
+zuul.routes.api-a-url.url=http://localhost:2222/
+</code></pre><p>这个routes对应的类型是Map<string, zuulroute="">，key为String，value是一个ZuulRoute。ZuulRoute中定义了一些属性，有：</string,></p>
+<pre><code>private String id; // 标识一个路由规则
+private String path; // 拦截路径，比如 /api-a-url/**
+private String serviceId; // Eureka服务发现中的serviceId
+private String url; //不使用服务发现中的服务，独立的一个url
+private boolean stripPrefix = true;
+private Boolean retryable; // 是否会retry
+private Set&lt;String&gt; sensitiveHeaders = new LinkedHashSet&lt;&gt;();
+</code></pre><p>上面的api-a-url就是对应map中的key，path和url对应ZuulRoute中的path和url属性。</p>
+<p>在ZuulProxyConfiguration配置类中，构造了很多bean，比如有ZuulController、ZuulHandlerMapping、DiscoveryClientRouteLocator、各种filter等bean。</p>
+<p>其中ZuulController内部使用了ZuulServlet处理http请求，DiscoveryClientRouteLocator使用ZuulProperties中的route解析路由规则，然后封装成org.springframework.cloud.netflix.zuul.filters.Route在getRoutes方法中返回，这个方法会在RoutesEndpoint和ZuulHandlerMapping中被调用。</p>
+<p>另外DiscoveryClientRouteLocator会基于服务发现中心中的服务信息，再去寻找对应的路由规则。由于例子中有个本地端口为2222的compute-service服务。所以会被解析并放到路由规则里，这样路由规则里就有2个规则：</p>
+<ol>
+<li>path为/api-a-url/**，url为<a href="http://localhost:2222/" target="_blank" rel="external">http://localhost:2222/</a></li>
+<li>path为/compute-service/**，serviceId为compute-service</li>
+</ol>
+<p>ZuulHandlerMapping是一个HandlerMapping，用于处理请求的映射关系。在SpringMVC中，默认是使用RequestMappingHandlerMapping处理，而在Zuul中，使用ZuulHandlerMapping处理地址映射关系。它内部有个注册handler方法：</p>
+<pre><code>private void registerHandlers() {
+  Collection&lt;Route&gt; routes = this.routeLocator.getRoutes(); // 得到路由规则
+  if (routes.isEmpty()) {
+    this.logger.warn(&quot;No routes found from RouteLocator&quot;);
+  }
+  else {
+    for (Route route : routes) { // 注册路由规则中的地址，对应了handler是zuul属性，这个zuul也就是ZuulController
+      registerHandler(route.getFullPath(), this.zuul);
+    }
+  }
+}
+</code></pre><p>例子中路由规则里对应的路径有2个，分别是/api-a-url/<strong>和/compute-service/</strong>，它们对应的handler都是ZuulController。</p>
+<p>访问地址：</p>
+<pre><code>http://localhost:7777/api-a-url/add?a=1&amp;b=2
+</code></pre><p>在ZuulHandlerMapping中的规则路径中发现了/api-a-url/**，于是传递给ZuulController处理，ZuulController传递给ZuulServlet处理。</p>
+<p>讲到这里，细心的读者可能会发现一个问题：<strong>我们前面讲了这么多关于filter的各种细节，但是真正的服务调用是在哪里执行的?</strong></p>
+<p>Zuul把真正的服务调用也放在了filter中处理，并在产生的结果放在了RequestContext中。</p>
+<p>其中有route类型的filter中使用HttpClient执行，执行结果的stream放到了RequestContext。</p>
+<p>post类型的filter读取这个stream并使用response write出去。</p>
+<p>我们来简单看下这个过程中一些filter的各自实现。</p>
+<p>SimpleHostRoutingFilter这个route类型的filter的shouldFilter方法：</p>
+<pre><code>@Override
+public boolean shouldFilter() {
+  // 如果对应的地址是使用host方式，才会生效
+  return RequestContext.getCurrentContext().getRouteHost() != null
+      &amp;&amp; RequestContext.getCurrentContext().sendZuulResponse();
+}
+</code></pre><p>run方法：</p>
+<pre><code>@Override
+public Object run() {
+  RequestContext context = RequestContext.getCurrentContext();
+  HttpServletRequest request = context.getRequest();
+  MultiValueMap&lt;String, String&gt; headers = this.helper
+      .buildZuulRequestHeaders(request);
+  MultiValueMap&lt;String, String&gt; params = this.helper
+      .buildZuulRequestQueryParams(request);
+  String verb = getVerb(request);
+  InputStream requestEntity = getRequestBody(request);
+  if (request.getContentLength() &lt; 0) {
+    context.setChunkedRequestBody();
+  }
+
+  String uri = this.helper.buildZuulRequestURI(request);
+  this.helper.addIgnoredHeaders();
+
+  try {
+    HttpResponse response = forward(this.httpClient, verb, uri, request, headers,
+        params, requestEntity); // 使用HttpClient调用remoteHost
+    setResponse(response); // 设置remoteHost调用的结果
+  }
+  catch (Exception ex) {
+    context.set(&quot;error.status_code&quot;,
+        HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    context.set(&quot;error.exception&quot;, ex);
+  }
+  return null;
+}
+
+// setResponse方法会把response中的stream放到RequestContext中
+context.setResponseDataStream(entity);
+</code></pre><p>RibbonRoutingFilter跟SimpleHostRoutingFilter类似，区别就是它的shouldFilter方法里不是判断host方式，而是判断路由规则里是否存在serviceId。它的run方法也是使用HttpClient完成服务的调用，但是它是使用ribbon完成的。</p>
+<p>访问地址：</p>
+<pre><code>http://localhost:7777/compute-service/add?a=1&amp;b=2
+</code></pre><p>由于使用了serviceId的方式，所以会触发RibbonRoutingFilter并完成服务的调用。</p>
+<p>当使用Eureka服务发现的时候，建议使用serviceId的方式，而不是直接host的方式。因为基于serviceId的方式会使用ribbon完成服务的调用，ribbon中又使用了hystrix和loadbalance等功能，有更好的健壮性。</p>
+<p>SendResponseFilter是一个post类型的，它会写回服务调用产生的结果。</p>
+<pre><code>@Override
+public boolean shouldFilter() {
+  // RibbonRoutingFilter和SimpleHostRoutingFilter都会写入stream数据到RequestContext中的responseDataStream中，所以这个filter会生效
+  return !RequestContext.getCurrentContext().getZuulResponseHeaders().isEmpty()
+      || RequestContext.getCurrentContext().getResponseDataStream() != null
+      || RequestContext.getCurrentContext().getResponseBody() != null;
+}
+
+@Override
+  public Object run() {
+      try {
+          addResponseHeaders();
+    // 最终在RequestContext中使用response write这个stream
+          writeResponse();
+      }
+      catch (Exception ex) {
+          ReflectionUtils.rethrowRuntimeException(ex);
+      }
+      return null;
+  }
+</code></pre><p>SpringCloud默认还加了其它的一些拦截器，有兴趣的读者可以自行查看源代码。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Zuul内部的处理使用ZuulServlet完成，ZuulServlet继承HttpServlet，重写了service方法，service方法内部分别是pre、route、post和error类型的filter进行调用。这里的不同类型的filter执行顺序文中已经说明。</p>
+<p>要在SpringCloud中使用Zuul，需要加上@EnableZuulProxy注解。加上这个注解之后SpringCloud会构造一些bean，比如ZuulHandlerMapping、DiscoveryClientRouteLocator、各种filter等。其中DiscoveryClientRouteLocator是一个基于服务发现的路由规则生成器，它会基于zuul的配置构造路由规则。ZuulHandlerMapping是一个HandlerMapping的实现，它跟基于路由规则注册handler，其中key为路由规则对应的路径，handler都是ZuulController，ZuulController内部使用ZuulServlet进行请求的处理。</p>
+<p>Zuul把真正的服务调用放在了filter中实现。它提供了SimpleHostRoutingFilter和RibbonRoutingFilter这2个route类型的filter用于执行服务。从名字也可以看出来，SimpleHostRoutingFilter用于执行基于host方式的调用url接口，RibbonRoutingFilter基于服务发现的方式调用服务。一般我们都建议使用RibbonRoutingFilter，因为它内部使用ribbon，更加健壮。</p>
+<h2 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h2><p>RoutesEndpoint这个endpoint使用RouteLocator中提供的所有路由规则。</p>
+<p>访问：</p>
+<pre><code>http://localhost:7777/routes
+</code></pre><p>得到路由规则：</p>
+<pre><code>{
+    /api-a-url/**: &quot;http://localhost:2222/&quot;,
+    /compute-service/**: &quot;compute-service&quot;
+}
+</code></pre><p>Zuul声称自己可以使用static类型的filter用于处理静态资源，也提供了一个StaticResponseFilter的一个基类，但是查看ZuulServlet的源码发现没有哪段逻辑是处理静态资源的。 上了github发现专门有个<a href="https://github.com/spring-cloud/spring-cloud-netflix/issues/1001" target="_blank" rel="external">issue</a>说明目前还不支持自定义的filter。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://github.com/Netflix/zuul/" target="_blank" rel="external">https://github.com/Netflix/zuul/</a></p>
+<p><a href="https://github.com/Netflix/zuul/wiki" target="_blank" rel="external">https://github.com/Netflix/zuul/wiki</a></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;a href=&quot;https://github.com/Netflix/zuul&quot;&gt;Zuul&lt;/a&gt;是Netflix开发的一款提供动态路由、监控、弹性、安全的网关服务。&lt;/p&gt;
+&lt;p&gt;使用Zuul网关服务带来的好处是统一向外系统提供REST API，并额外提供了权限控制、负载均衡等功能，并且这些功能是从原先的服务中抽离出来并单独存在的。&lt;/p&gt;
+&lt;p&gt;Zuul提供了不同类型的filter用于处理请求，这些filter可以让我们实现以下功能：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;权限控制和安全性：可以识别认证需要的信息和拒绝不满足条件的请求&lt;/li&gt;
+&lt;li&gt;监控：监控请求信息&lt;/li&gt;
+&lt;li&gt;动态路由：根据需要动态地路由请求到后台的不同集群&lt;/li&gt;
+&lt;li&gt;压力测试&lt;/li&gt;
+&lt;li&gt;负载均衡&lt;/li&gt;
+&lt;li&gt;静态资源处理：直接在zuul处理静态资源的响应而不需要转发这些请求到内部集群中&lt;/li&gt;
+&lt;/ol&gt;
+    
+    </summary>
+    
+      <category term="springcloud" scheme="http://fangjian0423.github.io/categories/springcloud/"/>
+    
+    
+      <category term="springcloud" scheme="http://fangjian0423.github.io/tags/springcloud/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+  </entry>
+  
+  <entry>
     <title>SpringCloud使用Hystrix实现断路器</title>
     <link href="http://fangjian0423.github.io/2017/02/19/springcloud-hystrix/"/>
     <id>http://fangjian0423.github.io/2017/02/19/springcloud-hystrix/</id>
     <published>2017-02-19T04:11:39.000Z</published>
-    <updated>2017-02-20T07:40:54.000Z</updated>
+    <updated>2017-02-21T08:09:52.000Z</updated>
     
     <content type="html"><![CDATA[<p><a href="https://github.com/Netflix/Hystrix" target="_blank" rel="external">Hystrix</a>是一个供分布式系统使用，提供延迟和容错功能，保证复杂的分布系统在面临不可避免的失败时，仍能有其弹性。</p>
 <p>比如系统中有很多服务，当某些服务不稳定的时候，使用这些服务的用户线程将会阻塞，如果没有隔离机制，系统随时就有可能会挂掉，从而带来很大的风险。</p>
@@ -3857,450 +4195,6 @@ private void nextGeneration() {
 &lt;li&gt;CountDownLatch用完之后就不能再次使用了，CyclicBarrier用完之后可以再次使用，CyclicBarrier还可以做reset操作&lt;/li&gt;
 &lt;li&gt;CountDownLatch底层使用的是共享锁，CyclicBarrier底层使用的是ReentrantLock和这个lock的条件对象Condition&lt;/li&gt;
 &lt;/ol&gt;
-    
-    </summary>
-    
-      <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
-    
-    
-      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Java实现同步的几种方式</title>
-    <link href="http://fangjian0423.github.io/2016/04/18/java-synchronize-way/"/>
-    <id>http://fangjian0423.github.io/2016/04/18/java-synchronize-way/</id>
-    <published>2016-04-18T12:57:57.000Z</published>
-    <updated>2016-05-10T14:59:25.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>Java提供了很多同步操作，比如synchronized关键字、wait/notifyAll、ReentrantLock、Condition、一些并发包下的工具类、Semaphore，ThreadLocal、AbstractQueuedSynchronizer等。</p>
-<p>本文简单说明一下这几种方式的使用。</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/synchronize-way.jpeg" alt=""></p>
-<a id="more"></a>
-<h2 id="ReentrantLock可重入锁"><a href="#ReentrantLock可重入锁" class="headerlink" title="ReentrantLock可重入锁"></a>ReentrantLock可重入锁</h2><p>ReentrantLock可重入锁是jdk内置的一个锁对象，可以用来实现同步，基本使用方法如下：</p>
-<pre><code>public class ReentrantLockTest {
-
-    private ReentrantLock lock = new ReentrantLock();
-
-    public void execute() {
-        lock.lock();
-        try {
-            System.out.println(Thread.currentThread().getName() + &quot; do something synchronize&quot;);
-            try {
-                Thread.sleep(5000l);
-            } catch (InterruptedException e) {
-                System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
-                Thread.currentThread().interrupt();
-            }
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public static void main(String[] args) {
-        ReentrantLockTest reentrantLockTest = new ReentrantLockTest();
-        Thread thread1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                reentrantLockTest.execute();
-            }
-        });
-        Thread thread2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                reentrantLockTest.execute();
-            }
-        });
-        thread1.start();
-        thread2.start();
-    }
-
-}
-</code></pre><p>输出：</p>
-<pre><code>Thread-0 do something synchronize
-// 隔了5秒钟 输入下面
-Thread-1 do something synchronize
-</code></pre><p>这个例子表示同一时间段只能有1个线程执行execute方法。</p>
-<p>可重入锁中可重入表示的意义在于<strong>对于同一个线程，可以继续调用加锁的方法，而不会被挂起</strong>。可重入锁内部维护一个计数器，对于同一个线程调用lock方法，计数器+1，调用unlock方法，计数器-1。</p>
-<p>举个例子再次说明一下可重入的意思，在一个加锁方法execute中调用另外一个加锁方法anotherLock并不会被挂起，可以直接调用(调用execute方法时计数器+1，然后内部又调用了anotherLock方法，计数器+1，变成了2)：</p>
-<pre><code>public void execute() {
-    lock.lock();
-    try {
-        System.out.println(Thread.currentThread().getName() + &quot; do something synchronize&quot;);
-        try {
-            anotherLock();
-            Thread.sleep(5000l);
-        } catch (InterruptedException e) {
-            System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
-            Thread.currentThread().interrupt();
-        }
-    } finally {
-        lock.unlock();
-    }
-}
-
-public void anotherLock() {
-    lock.lock();
-    try {
-        System.out.println(Thread.currentThread().getName() + &quot; invoke anotherLock&quot;);
-    } finally {
-        lock.unlock();
-    }
-}
-</code></pre><p>输出：</p>
-<pre><code>Thread-0 do something synchronize
-Thread-0 invoke anotherLock
-// 隔了5秒钟 输入下面
-Thread-1 do something synchronize
-Thread-1 invoke anotherLock
-</code></pre><h2 id="synchronized关键字"><a href="#synchronized关键字" class="headerlink" title="synchronized关键字"></a>synchronized关键字</h2><p>synchronized关键跟ReentrantLock一样，也支持可重入锁。但是它是一个关键字，是一种语法级别的同步方式，称为内置锁：</p>
-<pre><code>public class SynchronizedKeyWordTest {
-
-    public synchronized void execute() {
-            System.out.println(Thread.currentThread().getName() + &quot; do something synchronize&quot;);
-        try {
-            anotherLock();
-            Thread.sleep(5000l);
-        } catch (InterruptedException e) {
-            System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    public synchronized void anotherLock() {
-        System.out.println(Thread.currentThread().getName() + &quot; invoke anotherLock&quot;);
-    }
-
-    public static void main(String[] args) {
-        SynchronizedKeyWordTest reentrantLockTest = new SynchronizedKeyWordTest();
-        Thread thread1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                reentrantLockTest.execute();
-            }
-        });
-        Thread thread2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                reentrantLockTest.execute();
-            }
-        });
-        thread1.start();
-        thread2.start();
-    }
-
-}
-</code></pre><p>输出结果跟ReentrantLock一样，这个例子说明内置锁可以作用在方法上。它还可以作用到变量，静态方法上。</p>
-<p>synchronized跟ReentrantLock相比，有几点局限性：</p>
-<ol>
-<li>加锁的时候不能设置超时。ReentrantLock有提供tryLock方法，可以设置超时时间，如果超过了这个时间并且没有获取到锁，就会放弃，而synchronized却没有这种功能</li>
-<li>ReentrantLock可以使用多个Condition，而synchronized却只能有1个</li>
-<li>不能中断一个试图获得锁的线程</li>
-<li>ReentrantLock可以选择公平锁和非公平锁</li>
-<li>ReentrantLock可以获得正在等待线程的个数，计数器等</li>
-</ol>
-<h2 id="Condition条件对象"><a href="#Condition条件对象" class="headerlink" title="Condition条件对象"></a>Condition条件对象</h2><p>条件对象的意义在于对于一个已经获取锁的线程，如果还需要等待其他条件才能继续执行的情况下，才会使用Condition条件对象。</p>
-<pre><code>public class ConditionTest {
-
-    public static void main(String[] args) {
-        ReentrantLock lock = new ReentrantLock();
-        Condition condition = lock.newCondition();
-        Thread thread1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                lock.lock();
-                try {
-                    System.out.println(Thread.currentThread().getName() + &quot; run&quot;);
-                    System.out.println(Thread.currentThread().getName() + &quot; wait for condition&quot;);
-                    try {
-                        condition.await();
-                        System.out.println(Thread.currentThread().getName() + &quot; continue&quot;);
-                    } catch (InterruptedException e) {
-                        System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
-                        Thread.currentThread().interrupt();
-                    }
-                } finally {
-                    lock.unlock();
-                }
-            }
-        });
-        Thread thread2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                lock.lock();
-                try {
-                    System.out.println(Thread.currentThread().getName() + &quot; run&quot;);
-                    System.out.println(Thread.currentThread().getName() + &quot; sleep 5 secs&quot;);
-                    try {
-                        Thread.sleep(5000l);
-                    } catch (InterruptedException e) {
-                        System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
-                        Thread.currentThread().interrupt();
-                    }
-                    condition.signalAll();
-                } finally {
-                    lock.unlock();
-                }
-            }
-        });
-        thread1.start();
-        thread2.start();
-    }
-
-}
-</code></pre><p>这个例子中thread1执行到condition.await()时，当前线程会被挂起，直到thread2调用了condition.signalAll()方法之后，thread1才会重新被激活执行。</p>
-<p>这里需要注意的是thread1调用Condition的await方法之后，thread1线程释放锁，然后马上加入到Condition的等待队列，由于thread1释放了锁，thread2获得锁并执行，thread2执行signalAll方法之后，Condition中的等待队列thread1被取出并加入到AQS中，接下来thread2执行完毕之后释放锁，由于thread1已经在AQS的等待队列中，所以thread1被唤醒，继续执行。</p>
-<h2 id="wait-notifyAll-方式"><a href="#wait-notifyAll-方式" class="headerlink" title="wait/notifyAll 方式"></a>wait/notifyAll 方式</h2><p>wait/notifyAll方式跟ReentrantLock/Condition方式的原理是一样的。</p>
-<p>Java中每个对象都拥有一个内置锁，在内置锁中调用wait，notify方法相当于调用锁的Condition条件对象的await和signalAll方法。</p>
-<p>使用wait/notifyAll实现上面的那个Condition例子：</p>
-<pre><code>public class WaitNotifyAllTest {
-
-    public synchronized void doWait() {
-        System.out.println(Thread.currentThread().getName() + &quot; run&quot;);
-        System.out.println(Thread.currentThread().getName() + &quot; wait for condition&quot;);
-        try {
-            this.wait();
-            System.out.println(Thread.currentThread().getName() + &quot; continue&quot;);
-        } catch (InterruptedException e) {
-            System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    public synchronized void doNotify() {
-        try {
-            System.out.println(Thread.currentThread().getName() + &quot; run&quot;);
-            System.out.println(Thread.currentThread().getName() + &quot; sleep 5 secs&quot;);
-            Thread.sleep(5000l);
-            this.notifyAll();
-        } catch (InterruptedException e) {
-            System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    public static void main(String[] args) {
-        WaitNotifyAllTest waitNotifyAllTest = new WaitNotifyAllTest();
-        Thread thread1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                waitNotifyAllTest.doWait();
-            }
-        });
-        Thread thread2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                waitNotifyAllTest.doNotify();
-            }
-        });
-        thread1.start();
-        thread2.start();
-    }
-
-}
-</code></pre><p>这里需要注意的是由于Condition是由锁创建的，所以调用wait/notifyAll方法的时候需要获得当前线程的锁，否则会发生IllegalMonitorStateException异常。</p>
-<h2 id="ThreadLocal"><a href="#ThreadLocal" class="headerlink" title="ThreadLocal"></a>ThreadLocal</h2><p>ThreadLocal是一种把变量放到线程本地的方式来实现线程同步的。</p>
-<p>比如SimpleDateFormat不是一个线程安全的类，可以使用ThreadLocal实现同步。</p>
-<pre><code>public class ThreadLocalTest {
-
-    private static ThreadLocal&lt;SimpleDateFormat&gt; dateFormatThreadLocal = new ThreadLocal&lt;SimpleDateFormat&gt;() {
-        @Override
-        protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);
-        }
-    };
-
-    public static void main(String[] args) {
-        Thread thread1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Date date = new Date();
-                System.out.println(dateFormatThreadLocal.get().format(date));
-            }
-        });
-        Thread thread2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Date date = new Date();
-                System.out.println(dateFormatThreadLocal.get().format(date));
-            }
-        });
-        thread1.start();
-        thread2.start();
-    }
-
-}
-</code></pre><h2 id="Semaphore信号量"><a href="#Semaphore信号量" class="headerlink" title="Semaphore信号量"></a>Semaphore信号量</h2><p>Semaphore信号量被用于控制特定资源在同一个时间被访问的个数。类似连接池的概念，保证资源可以被合理的使用。可以使用构造器初始化资源个数：</p>
-<pre><code>public class SemaphoreTest {
-
-    private static Semaphore semaphore = new Semaphore(2);
-
-    public static void main(String[] args) {
-        for(int i = 0; i &lt; 5; i ++) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        semaphore.acquire();
-                        System.out.println(Thread.currentThread().getName() + &quot; &quot; + new Date());
-                        Thread.sleep(5000l);
-                        semaphore.release();
-                    } catch (InterruptedException e) {
-                        System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
-                    }
-                }
-            }).start();
-        }
-    }
-
-}
-</code></pre><p>输出：</p>
-<pre><code>Thread-1 Mon Apr 18 18:03:46 CST 2016
-Thread-0 Mon Apr 18 18:03:46 CST 2016
-Thread-3 Mon Apr 18 18:03:51 CST 2016
-Thread-2 Mon Apr 18 18:03:51 CST 2016
-Thread-4 Mon Apr 18 18:03:56 CST 2016
-</code></pre><h2 id="并发包下的工具类"><a href="#并发包下的工具类" class="headerlink" title="并发包下的工具类"></a>并发包下的工具类</h2><p>一般情况下，我们不会使用wait/notifyAll或者ReentrantLock这种比较底层的类，而是使用并发包下提供的一些工具类。</p>
-<h3 id="CountDownLatch"><a href="#CountDownLatch" class="headerlink" title="CountDownLatch"></a>CountDownLatch</h3><p>CountDownLatch是一个计数器，它的构造方法中需要设置一个数值，用来设定计数的次数。每次调用countDown()方法之后，这个计数器都会减去1，CountDownLatch会一直阻塞着调用await()方法的线程，直到计数器的值变为0。</p>
-<pre><code>public class CountDownLatchTest {
-
-    public static void main(String[] args) {
-        CountDownLatch countDownLatch = new CountDownLatch(5);
-        for(int i = 0; i &lt; 5; i ++) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    System.out.println(Thread.currentThread().getName() + &quot; &quot; + new Date() + &quot; run&quot;);
-                    try {
-                        Thread.sleep(5000l);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    countDownLatch.countDown();
-                }
-            }).start();
-        }
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println(&quot;all thread over&quot;);
-    }
-
-}
-</code></pre><p>输出：</p>
-<pre><code>Thread-2 Mon Apr 18 18:18:30 CST 2016 run
-Thread-3 Mon Apr 18 18:18:30 CST 2016 run
-Thread-4 Mon Apr 18 18:18:30 CST 2016 run
-Thread-0 Mon Apr 18 18:18:30 CST 2016 run
-Thread-1 Mon Apr 18 18:18:30 CST 2016 run
-all thread over
-</code></pre><h3 id="CyclicBarrier"><a href="#CyclicBarrier" class="headerlink" title="CyclicBarrier"></a>CyclicBarrier</h3><p>CyclicBarrier阻塞调用的线程，直到条件满足时，阻塞的线程同时被打开。</p>
-<p>调用await()方法的时候，这个线程就会被阻塞，当调用await()的线程数量到达屏障数的时候，主线程就会取消所有被阻塞线程的状态。</p>
-<p>在CyclicBarrier的构造方法中，还可以设置一个barrierAction。</p>
-<p>在所有的屏障都到达之后，会启动一个线程来运行这里面的代码。</p>
-<pre><code>public class CyclicBarrierTest {
-
-    public static void main(String[] args) {
-        Random random = new Random();
-        CyclicBarrier cyclicBarrier = new CyclicBarrier(5);
-        for(int i = 0; i &lt; 5; i ++) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    int secs = random.nextInt(5);
-                    System.out.println(Thread.currentThread().getName() + &quot; &quot; + new Date() + &quot; run, sleep &quot; + secs + &quot; secs&quot;);
-                    try {
-                        Thread.sleep(secs * 1000);
-                        cyclicBarrier.await();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (BrokenBarrierException e) {
-                        e.printStackTrace();
-                    }
-                    System.out.println(Thread.currentThread().getName() + &quot; &quot; + new Date() + &quot; runs over&quot;);
-                }
-            }).start();
-        }
-    }
-
-}
-</code></pre><p>相比CountDownLatch，CyclicBarrier是可以被循环使用的，而且遇到线程中断等情况时，还可以利用reset()方法，重置计数器，从这些方面来说，CyclicBarrier会比CountDownLatch更加灵活一些。        </p>
-<h2 id="AbstractQueuedSynchronizer"><a href="#AbstractQueuedSynchronizer" class="headerlink" title="AbstractQueuedSynchronizer"></a>AbstractQueuedSynchronizer</h2><p>AQS是很多同步工具类的基础，比如ReentrentLock里的公平锁和非公平锁，Semaphore里的公平锁和非公平锁，CountDownLatch里的锁等他们的底层都是使用AbstractQueuedSynchronizer完成的。</p>
-<p>基于AbstractQueuedSynchronizer自定义实现一个独占锁：</p>
-<pre><code>public class MySynchronizer extends AbstractQueuedSynchronizer {
-
-    @Override
-    protected boolean tryAcquire(int arg) {
-        if(compareAndSetState(0, 1)) {
-            setExclusiveOwnerThread(Thread.currentThread());
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    protected boolean tryRelease(int arg) {
-        setState(0);
-        setExclusiveOwnerThread(null);
-        return true;
-    }
-
-    public void lock() {
-        acquire(1);
-    }
-
-    public void unlock() {
-        release(1);
-    }
-
-    public static void main(String[] args) {
-        MySynchronizer mySynchronizer = new MySynchronizer();
-        Thread thread1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mySynchronizer.lock();
-                try {
-                    System.out.println(Thread.currentThread().getName() + &quot; run&quot;);
-                    System.out.println(Thread.currentThread().getName() + &quot; will sleep 5 secs&quot;);
-                    try {
-                        Thread.sleep(5000l);
-                        System.out.println(Thread.currentThread().getName() + &quot; continue&quot;);
-                    } catch (InterruptedException e) {
-                        System.err.println(Thread.currentThread().getName() + &quot; interrupted&quot;);
-                        Thread.currentThread().interrupt();
-                    }
-                } finally {
-                    mySynchronizer.unlock();
-                }
-            }
-        });
-        Thread thread2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mySynchronizer.lock();
-                try {
-                    System.out.println(Thread.currentThread().getName() + &quot; run&quot;);
-                } finally {
-                    mySynchronizer.unlock();
-                }
-            }
-        });
-        thread1.start();
-        thread2.start();
-    }
-
-}
-</code></pre><p>MySynchronizer并没有实现可重入功能，只是简单的一个独占锁。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;Java提供了很多同步操作，比如synchronized关键字、wait/notifyAll、ReentrantLock、Condition、一些并发包下的工具类、Semaphore，ThreadLocal、AbstractQueuedSynchronizer等。&lt;/p&gt;
-&lt;p&gt;本文简单说明一下这几种方式的使用。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://7x2wh6.com1.z0.glb.clouddn.com/synchronize-way.jpeg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
     
     </summary>
     

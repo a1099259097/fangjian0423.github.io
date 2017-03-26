@@ -308,6 +308,141 @@
             
               
                 
+                <a class="post-title-link" href="/2016/10/07/springboot-transaction/" itemprop="url">
+                  SpringBoot的事务管理
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-10-07T01:28:36+08:00" content="2016-10-07">
+              2016-10-07
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/springboot/" itemprop="url" rel="index">
+                    <span itemprop="name">springboot</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/10/07/springboot-transaction/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/10/07/springboot-transaction/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>Springboot内部提供的事务管理器是根据autoconfigure来进行决定的。</p>
+<p>比如当使用jpa的时候，也就是pom中加入了spring-boot-starter-data-jpa这个starter之后(之前我们分析过<a href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/">springboot的自动化配置原理</a>)。</p>
+<p>Springboot会构造一个JpaTransactionManager这个事务管理器。</p>
+<p>而当我们使用spring-boot-starter-jdbc的时候，构造的事务管理器则是DataSourceTransactionManager。</p>
+<p>这2个事务管理器都实现了spring中提供的PlatformTransactionManager接口，这个接口是spring的事务核心接口。</p>
+<p>这个核心接口有以下这几个常用的实现策略：</p>
+<ol>
+<li>HibernateTransactionManager</li>
+<li>DataSourceTransactionManager</li>
+<li>JtaTransactionManager</li>
+<li>JpaTransactionManager</li>
+</ol>
+<p>具体的PlatformTransactionManager继承关系如下：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/transactionmanager.png" alt=""></p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/10/07/springboot-transaction/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/09/03/netty-unittest/" itemprop="url">
                   Netty的单元测试
                 </a>
@@ -1458,138 +1593,6 @@ class App {
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/05/01/countdownlatch-cyclicbarrier-difference/" itemprop="url">
-                  CountDownLatch和CyclicBarrier的区别
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-05-01T01:59:39+08:00" content="2016-05-01">
-              2016-05-01
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/java/" itemprop="url" rel="index">
-                    <span itemprop="name">java</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/05/01/countdownlatch-cyclicbarrier-difference/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/05/01/countdownlatch-cyclicbarrier-difference/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>CountDownLatch和CyclicBarrier都是java并发包下的工具类。</p>
-<p>CountDownLatch用于处理一个或多个线程等待其他所有线程完毕之后再继续进行操作。</p>
-<p>比如要处理一个非常耗时的任务，处理完之后需要更新这个任务的状态，需要开多线程去分批次处理任务中的各个子任务，当所有的子任务全部执行完毕之后，就可以更新任务状态了。这个时候就需要使用CountDownLatch。</p>
-<p>CyclicBarrier用于N个线程相互等待，当到达条件之后所有线程继续执行。</p>
-<p>比如一个抽奖活动，每个线程进行抽奖，当奖品全部抽完之后对各个线程中的用户进行后续操作。</p>
-<p>个人理解的两者之间的区别有3点：</p>
-<ol>
-<li>CountDownLatch可以阻塞1个或N个线程，CyclicBarrier必须要阻塞N个线程</li>
-<li>CountDownLatch用完之后就不能再次使用了，CyclicBarrier用完之后可以再次使用，CyclicBarrier还可以做reset操作</li>
-<li>CountDownLatch底层使用的是共享锁，CyclicBarrier底层使用的是ReentrantLock和这个lock的条件对象Condition</li>
-</ol>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/05/01/countdownlatch-cyclicbarrier-difference/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1635,7 +1638,7 @@ class App {
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">97</span>
+              <span class="site-state-item-count">98</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -1643,7 +1646,7 @@ class App {
           
             <div class="site-state-item site-state-categories">
               <a href="/categories">
-                <span class="site-state-item-count">24</span>
+                <span class="site-state-item-count">25</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -1652,7 +1655,7 @@ class App {
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">62</span>
+                <span class="site-state-item-count">63</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

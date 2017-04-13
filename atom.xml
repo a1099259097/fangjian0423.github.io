@@ -353,9 +353,9 @@ targetable.newMethod(); // new method
       <category term="architecture" scheme="http://fangjian0423.github.io/categories/architecture/"/>
     
     
-      <category term="architecture" scheme="http://fangjian0423.github.io/tags/architecture/"/>
-    
       <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="architecture" scheme="http://fangjian0423.github.io/tags/architecture/"/>
     
   </entry>
   
@@ -1758,9 +1758,9 @@ private StepBuilderFactory steps;
     
       <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
     
-      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
-    
       <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
     
   </entry>
   

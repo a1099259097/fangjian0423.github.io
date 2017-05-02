@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-03-26T07:51:53.000Z</updated>
+  <updated>2017-05-02T02:21:15.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -14,6 +14,297 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>SpringBoot源码分析之SpringBoot的启动过程</title>
+    <link href="http://fangjian0423.github.io/2017/04/30/springboot-startup-analysis/"/>
+    <id>http://fangjian0423.github.io/2017/04/30/springboot-startup-analysis/</id>
+    <published>2017-04-30T12:33:33.000Z</published>
+    <updated>2017-05-02T02:21:15.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>SpringBoot的启动很简单，代码如下：</p>
+<pre><code>@SpringBootApplication
+public class MyApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MyApplication.class, args);
+    }
+}
+</code></pre><p>从代码上可以看出，调用了SpringApplication的静态方法run。这个run方法会构造一个SpringApplication的实例，然后再调用这里实例的run方法就表示启动SpringBoot。</p>
+<p>因此，想要分析SpringBoot的启动过程，我们需要熟悉SpringApplication的构造过程以及SpringApplication的run方法执行过程即可。</p>
+<p>我们以上述这段代码为例，分析SpringBoot的启动过程。</p>
+<a id="more"></a>
+<h2 id="SpringApplication的构造过程"><a href="#SpringApplication的构造过程" class="headerlink" title="SpringApplication的构造过程"></a>SpringApplication的构造过程</h2><p>SpringApplication构造的时候内部会调用一个private方法initialize：</p>
+<pre><code>public SpringApplication(Object... sources) {
+  initialize(sources); // sources目前是一个MyApplication的class对象
+}
+
+private void initialize(Object[] sources) {
+  if (sources != null &amp;&amp; sources.length &gt; 0) {
+    this.sources.addAll(Arrays.asList(sources)); // 把sources设置到SpringApplication的sources属性中，目前只是一个MyApplication类对象
+  }
+  this.webEnvironment = deduceWebEnvironment(); // 判断是否是web程序(javax.servlet.Servlet和org.springframework.web.context.ConfigurableWebApplicationContext都必须在类加载器中存在)，并设置到webEnvironment属性中
+  // 从spring.factories文件中找出key为ApplicationContextInitializer的类并实例化后设置到SpringApplication的initializers属性中。这个过程也就是找出所有的应用程序初始化器
+  setInitializers((Collection) getSpringFactoriesInstances(
+      ApplicationContextInitializer.class));
+  // 从spring.factories文件中找出key为ApplicationListener的类并实例化后设置到SpringApplication的listeners属性中。这个过程就是找出所有的应用程序事件监听器
+  setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
+  // 找出main类，这里是MyApplication类
+  this.mainApplicationClass = deduceMainApplicationClass();
+}
+</code></pre><p>ApplicationContextInitializer，应用程序初始化器，做一些初始化的工作：</p>
+<pre><code>public interface ApplicationContextInitializer&lt;C extends ConfigurableApplicationContext&gt; {
+    void initialize(C applicationContext);
+}
+</code></pre><p>ApplicationListener，应用程序事件(ApplicationEvent)监听器：</p>
+<pre><code>public interface ApplicationListener&lt;E extends ApplicationEvent&gt; extends EventListener {
+    void onApplicationEvent(E event);
+}
+</code></pre><p>这里的应用程序事件(ApplicationEvent)有应用程序启动事件(ApplicationStartedEvent)，失败事件(ApplicationFailedEvent)，准备事件(ApplicationPreparedEvent)等。</p>
+<p>应用程序事件监听器跟监听事件是绑定的。比如ConfigServerBootstrapApplicationListener只跟ApplicationEnvironmentPreparedEvent事件绑定，LiquibaseServiceLocatorApplicationListener只跟ApplicationStartedEvent事件绑定，LoggingApplicationListener跟所有事件绑定等。</p>
+<p>默认情况下，initialize方法从spring.factories文件中找出的key为ApplicationContextInitializer的类有：</p>
+<ol>
+<li>org.springframework.boot.context.config.DelegatingApplicationContextInitializer</li>
+<li>org.springframework.boot.context.ContextIdApplicationContextInitializer</li>
+<li>org.springframework.boot.context.ConfigurationWarningsApplicationContextInitializer</li>
+<li>org.springframework.boot.context.web.ServerPortInfoApplicationContextInitializer</li>
+<li>org.springframework.boot.autoconfigure.logging.AutoConfigurationReportLoggingInitializer</li>
+</ol>
+<p>key为ApplicationListener的有：</p>
+<ol>
+<li>org.springframework.boot.context.config.ConfigFileApplicationListener</li>
+<li>org.springframework.boot.context.config.AnsiOutputApplicationListener</li>
+<li>org.springframework.boot.logging.LoggingApplicationListener</li>
+<li>org.springframework.boot.logging.ClasspathLoggingApplicationListener</li>
+<li>org.springframework.boot.autoconfigure.BackgroundPreinitializer</li>
+<li>org.springframework.boot.context.config.DelegatingApplicationListener</li>
+<li>org.springframework.boot.builder.ParentContextCloserApplicationListener</li>
+<li>org.springframework.boot.context.FileEncodingApplicationListener</li>
+<li>org.springframework.boot.liquibase.LiquibaseServiceLocatorApplicationListener</li>
+</ol>
+<h2 id="SpringApplication的执行"><a href="#SpringApplication的执行" class="headerlink" title="SpringApplication的执行"></a>SpringApplication的执行</h2><p>分析run方法之前，先看一下SpringApplication中的一些事件和监听器概念。</p>
+<p>首先是SpringApplicationRunListeners类和SpringApplicationRunListener类的介绍。</p>
+<p>SpringApplicationRunListeners内部持有SpringApplicationRunListener集合和1个Log日志类。用于SpringApplicationRunListener监听器的批量执行。</p>
+<p>SpringApplicationRunListener看名字也知道用于监听SpringApplication的run方法的执行。</p>
+<p>它定义了5个步骤：</p>
+<ol>
+<li>started(run方法执行的时候立马执行；对应事件的类型是ApplicationStartedEvent)</li>
+<li>environmentPrepared(ApplicationContext创建之前并且环境信息准备好的时候调用；对应事件的类型是ApplicationEnvironmentPreparedEvent)</li>
+<li>contextPrepared(ApplicationContext创建好并且在source加载之前调用一次；没有具体的对应事件)</li>
+<li>contextLoaded(ApplicationContext创建并加载之后并在refresh之前调用；对应事件的类型是ApplicationPreparedEvent)</li>
+<li>finished(run方法结束之前调用；对应事件的类型是ApplicationReadyEvent或ApplicationFailedEvent)</li>
+</ol>
+<p>SpringApplicationRunListener目前只有一个实现类EventPublishingRunListener，它把监听的过程封装成了SpringApplicationEvent事件并让内部属性(属性名为multicaster)ApplicationEventMulticaster接口的实现类SimpleApplicationEventMulticaster广播出去，广播出去的事件对象会被SpringApplication中的listeners属性进行处理。</p>
+<p>所以说SpringApplicationRunListener和ApplicationListener之间的关系是通过ApplicationEventMulticaster广播出去的SpringApplicationEvent所联系起来的。</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/startup2.jpg" alt=""></p>
+<p>SpringApplication的run方法代码如下：</p>
+<pre><code>public ConfigurableApplicationContext run(String... args) {
+  StopWatch stopWatch = new StopWatch(); // 构造一个任务执行观察器
+  stopWatch.start(); // 开始执行，记录开始时间
+  ConfigurableApplicationContext context = null;
+  configureHeadlessProperty();
+  // 获取SpringApplicationRunListeners，内部只有一个EventPublishingRunListener
+  SpringApplicationRunListeners listeners = getRunListeners(args);
+  // 上面分析过，会封装成SpringApplicationEvent事件然后广播出去给SpringApplication中的listeners所监听
+  // 这里接受ApplicationStartedEvent事件的listener会执行相应的操作
+  listeners.started();
+  try {
+    // 构造一个应用程序参数持有类
+    ApplicationArguments applicationArguments = new DefaultApplicationArguments(
+        args);
+    // 创建Spring容器
+    context = createAndRefreshContext(listeners, applicationArguments);
+    // 容器创建完成之后执行额外一些操作
+    afterRefresh(context, applicationArguments);
+    // 广播出ApplicationReadyEvent事件给相应的监听器执行
+    listeners.finished(context, null);
+    stopWatch.stop(); // 执行结束，记录执行时间
+    if (this.logStartupInfo) {
+      new StartupInfoLogger(this.mainApplicationClass)
+          .logStarted(getApplicationLog(), stopWatch);
+    }
+    return context; // 返回Spring容器
+  }
+  catch (Throwable ex) {
+    handleRunFailure(context, listeners, ex); // 这个过程报错的话会执行一些异常操作、然后广播出ApplicationFailedEvent事件给相应的监听器执行
+    throw new IllegalStateException(ex);
+  }
+}
+</code></pre><p>创建容器的方法createAndRefreshContext如下：</p>
+<pre><code>private ConfigurableApplicationContext createAndRefreshContext(
+    SpringApplicationRunListeners listeners,
+    ApplicationArguments applicationArguments) {
+  ConfigurableApplicationContext context; // 定义Spring容器
+  // 创建应用程序的环境信息。如果是web程序，创建StandardServletEnvironment；否则，创建StandardEnvironment
+  ConfigurableEnvironment environment = getOrCreateEnvironment();
+  // 配置一些环境信息。比如profile，命令行参数
+  configureEnvironment(environment, applicationArguments.getSourceArgs());
+  // 广播出ApplicationEnvironmentPreparedEvent事件给相应的监听器执行
+  listeners.environmentPrepared(environment);
+  // 环境信息的校对
+  if (isWebEnvironment(environment) &amp;&amp; !this.webEnvironment) {
+    environment = convertToStandardEnvironment(environment);
+  }
+
+  if (this.bannerMode != Banner.Mode.OFF) { // 是否在控制台上打印自定义的banner
+    printBanner(environment);
+  }
+
+  // Create, load, refresh and run the ApplicationContext
+  context = createApplicationContext(); // 创建Spring容器
+  context.setEnvironment(environment); // 设置Spring容器的环境信息
+  postProcessApplicationContext(context); // 回调方法，Spring容器创建之后做一些额外的事
+  applyInitializers(context); // SpringApplication的的初始化器开始工作
+  // 遍历调用SpringApplicationRunListener的contextPrepared方法。目前只是将这个事件广播器注册到Spring容器中
+  listeners.contextPrepared(context);
+  if (this.logStartupInfo) {
+    logStartupInfo(context.getParent() == null);
+    logStartupProfileInfo(context);
+  }
+
+  // 把应用程序参数持有类注册到Spring容器中，并且是一个单例
+  context.getBeanFactory().registerSingleton(&quot;springApplicationArguments&quot;,
+      applicationArguments);
+
+  Set&lt;Object&gt; sources = getSources();
+  Assert.notEmpty(sources, &quot;Sources must not be empty&quot;);
+  load(context, sources.toArray(new Object[sources.size()]));
+  // 广播出ApplicationPreparedEvent事件给相应的监听器执行
+  listeners.contextLoaded(context);
+
+  // Spring容器的刷新
+  refresh(context);
+  if (this.registerShutdownHook) {
+    try {
+      context.registerShutdownHook();
+    }
+    catch (AccessControlException ex) {
+      // Not allowed in some environments.
+    }
+  }
+  return context;
+}
+</code></pre><p>Spring容器的创建createApplicationContext方法如下：</p>
+<pre><code>protected ConfigurableApplicationContext createApplicationContext() {
+  Class&lt;?&gt; contextClass = this.applicationContextClass;
+  if (contextClass == null) {
+    try {
+      // 如果是web程序，那么构造org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext容器
+      // 否则构造org.springframework.context.annotation.AnnotationConfigApplicationContext容器
+      contextClass = Class.forName(this.webEnvironment
+          ? DEFAULT_WEB_CONTEXT_CLASS : DEFAULT_CONTEXT_CLASS);
+    }
+    catch (ClassNotFoundException ex) {
+      throw new IllegalStateException(
+          &quot;Unable create a default ApplicationContext, &quot;
+              + &quot;please specify an ApplicationContextClass&quot;,
+          ex);
+    }
+  }
+  return (ConfigurableApplicationContext) BeanUtils.instantiate(contextClass);
+}
+</code></pre><p>Spring容器创建之后有个回调方法postProcessApplicationContext：</p>
+<pre><code>protected void postProcessApplicationContext(ConfigurableApplicationContext context) {
+      if (this.webEnvironment) { // 如果是web程序
+          if (context instanceof ConfigurableWebApplicationContext) { // 并且也是Spring Web容器
+              ConfigurableWebApplicationContext configurableContext = (ConfigurableWebApplicationContext) context;
+              if (this.beanNameGenerator != null) { // 如果SpringApplication设置了是实例命名生成器，注册到Spring容器中
+                  configurableContext.getBeanFactory().registerSingleton(
+                          AnnotationConfigUtils.CONFIGURATION_BEAN_NAME_GENERATOR,
+                          this.beanNameGenerator);
+              }
+          }
+      }
+      if (this.resourceLoader != null) { // 如果SpringApplication设置了资源加载器，设置到Spring容器中
+          if (context instanceof GenericApplicationContext) {
+              ((GenericApplicationContext) context)
+                      .setResourceLoader(this.resourceLoader);
+          }
+          if (context instanceof DefaultResourceLoader) {
+              ((DefaultResourceLoader) context)
+                      .setClassLoader(this.resourceLoader.getClassLoader());
+          }
+      }
+  }
+</code></pre><p>初始化器做的工作，比如ContextIdApplicationContextInitializer会设置应用程序的id；AutoConfigurationReportLoggingInitializer会给应用程序添加一个条件注解解析器报告等：</p>
+<pre><code>protected void applyInitializers(ConfigurableApplicationContext context) {
+  // 遍历每个初始化器，对调用对应的initialize方法
+  for (ApplicationContextInitializer initializer : getInitializers()) {
+    Class&lt;?&gt; requiredType = GenericTypeResolver.resolveTypeArgument(
+        initializer.getClass(), ApplicationContextInitializer.class);
+    Assert.isInstanceOf(requiredType, context, &quot;Unable to call initializer.&quot;);
+    initializer.initialize(context);
+  }
+}
+</code></pre><p>Spring容器的刷新refresh方法内部会做很多很多的事情：比如BeanFactory的设置，BeanFactoryPostProcessor接口的执行、BeanPostProcessor接口的执行、自动化配置类的解析、条件注解的解析、国际化的初始化等等。这部分内容会在之后的文章中进行讲解。</p>
+<p>run方法中的Spring容器创建完成之后会调用afterRefresh方法，代码如下：</p>
+<pre><code>protected void afterRefresh(ConfigurableApplicationContext context,
+    ApplicationArguments args) {
+  afterRefresh(context, args.getSourceArgs()); // 目前是个空实现
+  callRunners(context, args); // 调用Spring容器中的ApplicationRunner和CommandLineRunner接口的实现类
+}
+
+private void callRunners(ApplicationContext context, ApplicationArguments args) {
+      List&lt;Object&gt; runners = new ArrayList&lt;Object&gt;();
+  // 找出Spring容器中ApplicationRunner接口的实现类
+      runners.addAll(context.getBeansOfType(ApplicationRunner.class).values());
+  // 找出Spring容器中CommandLineRunner接口的实现类
+      runners.addAll(context.getBeansOfType(CommandLineRunner.class).values());
+  // 对runners进行排序
+      AnnotationAwareOrderComparator.sort(runners);
+  // 遍历runners依次执行
+      for (Object runner : new LinkedHashSet&lt;Object&gt;(runners)) {
+          if (runner instanceof ApplicationRunner) { // 如果是ApplicationRunner，进行ApplicationRunner的run方法调用
+              callRunner((ApplicationRunner) runner, args);
+          }
+          if (runner instanceof CommandLineRunner) { // 如果是CommandLineRunner，进行CommandLineRunner的run方法调用
+              callRunner((CommandLineRunner) runner, args);
+          }
+      }
+  }
+</code></pre><p>这样run方法执行完成之后。Spring容器也已经初始化完成，各种监听器和初始化器也做了相应的工作。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>SpringBoot启动的时候，不论调用什么方法，都会构造一个SpringApplication的实例，然后调用这个实例的run方法，这样就表示启动SpringBoot。</p>
+<p>在run方法调用之前，也就是构造SpringApplication的时候会进行初始化的工作，初始化的时候会做以下几件事：</p>
+<ol>
+<li>把参数sources设置到SpringApplication属性中，这个sources可以是任何类型的参数。本文的例子中这个sources就是MyApplication的class对象</li>
+<li>判断是否是web程序，并设置到webEnvironment这个boolean属性中</li>
+<li>找出所有的初始化器，默认有5个，设置到initializers属性中</li>
+<li>找出所有的应用程序监听器，默认有9个，设置到listeners属性中</li>
+<li>找出运行的主类(main class)</li>
+</ol>
+<p>SpringApplication构造完成之后调用run方法，启动SpringApplication，run方法执行的时候会做以下几件事：</p>
+<ol>
+<li>构造一个StopWatch，观察SpringApplication的执行</li>
+<li>找出所有的SpringApplicationRunListener并封装到SpringApplicationRunListeners中，用于监听run方法的执行。监听的过程中会封装成事件并广播出去让初始化过程中产生的应用程序监听器进行监听</li>
+<li>构造Spring容器(ApplicationContext)，并返回<br>3.1 创建Spring容器的判断是否是web环境，是的话构造AnnotationConfigEmbeddedWebApplicationContext，否则构造AnnotationConfigApplicationContext<br>3.2 初始化过程中产生的初始化器在这个时候开始工作<br>3.3 Spring容器的刷新(完成bean的解析、各种processor接口的执行、条件注解的解析等等)</li>
+<li>从Spring容器中找出ApplicationRunner和CommandLineRunner接口的实现类并排序后依次执行</li>
+</ol>
+<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>写了一个例子用来验证分析的启动逻辑，包括自定义的初始化器、监听器、ApplicationRunner和CommandLineRunner。</p>
+<p>地址在：<a href="https://github.com/fangjian0423/springboot-analysis/tree/master/springboot-startup" target="_blank" rel="external">https://github.com/fangjian0423/springboot-analysis/tree/master/springboot-startup</a></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;SpringBoot的启动很简单，代码如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;@SpringBootApplication
+public class MyApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MyApplication.class, args);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;从代码上可以看出，调用了SpringApplication的静态方法run。这个run方法会构造一个SpringApplication的实例，然后再调用这里实例的run方法就表示启动SpringBoot。&lt;/p&gt;
+&lt;p&gt;因此，想要分析SpringBoot的启动过程，我们需要熟悉SpringApplication的构造过程以及SpringApplication的run方法执行过程即可。&lt;/p&gt;
+&lt;p&gt;我们以上述这段代码为例，分析SpringBoot的启动过程。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
+    
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+  </entry>
   
   <entry>
     <title>记录自己理解的一些设计模式</title>
@@ -1758,9 +2049,9 @@ private StepBuilderFactory steps;
     
       <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
     
-      <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
-    
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
     
   </entry>
   
@@ -3891,351 +4182,6 @@ System.out.println(threadA.getState()); // TERMINATED
 &lt;li&gt;TIMED_WAITING: 有等待时间的等待状态，比如调用了以下几个方法中的任意方法，并且指定了等待时间，线程就会处于这个状态。 1. Thread.sleep方法 2. Object的wait方法，带有时间 3. Thread.join方法，带有时间 4. LockSupport的parkNanos方法，带有时间 5. LockSupport的parkUntil方法，带有时间&lt;/li&gt;
 &lt;li&gt;TERMINATED: 线程中止的状态，这个线程已经完整地执行了它的任务&lt;/li&gt;
 &lt;/ol&gt;
-    
-    </summary>
-    
-      <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
-    
-    
-      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Java阻塞队列ArrayBlockingQueue和LinkedBlockingQueue实现原理分析</title>
-    <link href="http://fangjian0423.github.io/2016/05/10/java-arrayblockingqueue-linkedblockingqueue-analysis/"/>
-    <id>http://fangjian0423.github.io/2016/05/10/java-arrayblockingqueue-linkedblockingqueue-analysis/</id>
-    <published>2016-05-10T12:30:57.000Z</published>
-    <updated>2016-05-10T14:59:25.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>Java中的阻塞队列接口BlockingQueue继承自Queue接口。</p>
-<p>BlockingQueue接口提供了3个添加元素方法。</p>
-<ol>
-<li>add：添加元素到队列里，添加成功返回true，由于容量满了添加失败会抛出IllegalStateException异常</li>
-<li>offer：添加元素到队列里，添加成功返回true，添加失败返回false</li>
-<li>put：添加元素到队列里，如果容量满了会阻塞直到容量不满</li>
-</ol>
-<p>3个删除方法。</p>
-<ol>
-<li>poll：删除队列头部元素，如果队列为空，返回null。否则返回元素。</li>
-<li>remove：基于对象找到对应的元素，并删除。删除成功返回true，否则返回false</li>
-<li>take：删除队列头部元素，如果队列为空，一直阻塞到队列有元素并删除</li>
-</ol>
-<p>常用的阻塞队列具体类有ArrayBlockingQueue、LinkedBlockingQueue、PriorityBlockingQueue、LinkedBlockingDeque等。</p>
-<p>本文以ArrayBlockingQueue和LinkedBlockingQueue为例，分析它们的实现原理。</p>
-<a id="more"></a>
-<h2 id="ArrayBlockingQueue"><a href="#ArrayBlockingQueue" class="headerlink" title="ArrayBlockingQueue"></a>ArrayBlockingQueue</h2><p>ArrayBlockingQueue的原理就是使用一个可重入锁和这个锁生成的两个条件对象进行并发控制(classic two-condition algorithm)。</p>
-<p>ArrayBlockingQueue是一个带有长度的阻塞队列，初始化的时候必须要指定队列长度，且指定长度之后不允许进行修改。</p>
-<p>它带有的属性如下：</p>
-<pre><code>// 存储队列元素的数组，是个循环数组
-final Object[] items;
-
-// 拿数据的索引，用于take，poll，peek，remove方法
-int takeIndex;
-
-// 放数据的索引，用于put，offer，add方法
-int putIndex;
-
-// 元素个数
-int count;
-
-// 可重入锁
-final ReentrantLock lock;
-// notEmpty条件对象，由lock创建
-private final Condition notEmpty;
-// notFull条件对象，由lock创建
-private final Condition notFull;
-</code></pre><h3 id="数据的添加"><a href="#数据的添加" class="headerlink" title="数据的添加"></a>数据的添加</h3><p>ArrayBlockingQueue有不同的几个数据添加方法，add、offer、put方法。</p>
-<p>add方法：</p>
-<pre><code>public boolean add(E e) {
-    if (offer(e))
-        return true;
-    else
-        throw new IllegalStateException(&quot;Queue full&quot;);
-}
-</code></pre><p>add方法内部调用offer方法如下：</p>
-<pre><code>public boolean offer(E e) {
-    checkNotNull(e); // 不允许元素为空
-    final ReentrantLock lock = this.lock;
-    lock.lock(); // 加锁，保证调用offer方法的时候只有1个线程
-    try {
-        if (count == items.length) // 如果队列已满
-            return false; // 直接返回false，添加失败
-        else {
-            insert(e); // 数组没满的话调用insert方法
-            return true; // 返回true，添加成功
-        }
-    } finally {
-        lock.unlock(); // 释放锁，让其他线程可以调用offer方法
-    }
-}
-</code></pre><p>insert方法如下：</p>
-<pre><code>private void insert(E x) {
-    items[putIndex] = x; // 元素添加到数组里
-    putIndex = inc(putIndex); // 放数据索引+1，当索引满了变成0
-    ++count; // 元素个数+1
-    notEmpty.signal(); // 使用条件对象notEmpty通知，比如使用take方法的时候队列里没有数据，被阻塞。这个时候队列insert了一条数据，需要调用signal进行通知
-}
-</code></pre><p>put方法：</p>
-<pre><code>public void put(E e) throws InterruptedException {
-    checkNotNull(e); // 不允许元素为空
-    final ReentrantLock lock = this.lock;
-    lock.lockInterruptibly(); // 加锁，保证调用put方法的时候只有1个线程
-    try {
-        while (count == items.length) // 如果队列满了，阻塞当前线程，并加入到条件对象notFull的等待队列里
-            notFull.await(); // 线程阻塞并被挂起，同时释放锁
-        insert(e); // 调用insert方法
-    } finally {
-        lock.unlock(); // 释放锁，让其他线程可以调用put方法
-    }
-}
-</code></pre><p>ArrayBlockingQueue的添加数据方法有add，put，offer这3个方法，总结如下：</p>
-<p>add方法内部调用offer方法，如果队列满了，抛出IllegalStateException异常，否则返回true</p>
-<p>offer方法如果队列满了，返回false，否则返回true</p>
-<p>add方法和offer方法不会阻塞线程，put方法如果队列满了会阻塞线程，直到有线程消费了队列里的数据才有可能被唤醒。</p>
-<p>这3个方法内部都会使用可重入锁保证原子性。</p>
-<h3 id="数据的删除"><a href="#数据的删除" class="headerlink" title="数据的删除"></a>数据的删除</h3><p>ArrayBlockingQueue有不同的几个数据删除方法，poll、take、remove方法。</p>
-<p>poll方法：</p>
-<pre><code>public E poll() {
-    final ReentrantLock lock = this.lock;
-    lock.lock(); // 加锁，保证调用poll方法的时候只有1个线程
-    try {
-        return (count == 0) ? null : extract(); // 如果队列里没元素了，返回null，否则调用extract方法
-    } finally {
-        lock.unlock(); // 释放锁，让其他线程可以调用poll方法
-    }
-}
-</code></pre><p>poll方法内部调用extract方法：</p>
-<pre><code>private E extract() {
-    final Object[] items = this.items;
-    E x = this.&lt;E&gt;cast(items[takeIndex]); // 得到取索引位置上的元素
-    items[takeIndex] = null; // 对应取索引上的数据清空
-    takeIndex = inc(takeIndex); // 取数据索引+1，当索引满了变成0
-    --count; // 元素个数-1
-    notFull.signal(); // 使用条件对象notFull通知，比如使用put方法放数据的时候队列已满，被阻塞。这个时候消费了一条数据，队列没满了，就需要调用signal进行通知
-    return x; // 返回元素
-}
-</code></pre><p>take方法：</p>
-<pre><code>public E take() throws InterruptedException {
-    final ReentrantLock lock = this.lock;
-    lock.lockInterruptibly(); // 加锁，保证调用take方法的时候只有1个线程
-    try {
-        while (count == 0) // 如果队列空，阻塞当前线程，并加入到条件对象notEmpty的等待队列里
-            notEmpty.await(); // 线程阻塞并被挂起，同时释放锁
-        return extract(); // 调用extract方法
-    } finally {
-        lock.unlock(); // 释放锁，让其他线程可以调用take方法
-    }
-}
-</code></pre><p>remove方法：</p>
-<pre><code>public boolean remove(Object o) {
-    if (o == null) return false;
-    final Object[] items = this.items;
-    final ReentrantLock lock = this.lock;
-    lock.lock(); // 加锁，保证调用remove方法的时候只有1个线程
-    try {
-        for (int i = takeIndex, k = count; k &gt; 0; i = inc(i), k--) { // 遍历元素
-            if (o.equals(items[i])) { // 两个对象相等的话
-                removeAt(i); // 调用removeAt方法
-                return true; // 删除成功，返回true
-            }
-        }
-        return false; // 删除成功，返回false
-    } finally {
-        lock.unlock(); // 释放锁，让其他线程可以调用remove方法
-    }
-}
-</code></pre><p>removeAt方法：</p>
-<pre><code>void removeAt(int i) {
-    final Object[] items = this.items;
-    if (i == takeIndex) { // 如果要删除数据的索引是取索引位置，直接删除取索引位置上的数据，然后取索引+1即可
-        items[takeIndex] = null;
-        takeIndex = inc(takeIndex);
-    } else { // 如果要删除数据的索引不是取索引位置，移动元素元素，更新取索引和放索引的值
-        for (;;) {
-            int nexti = inc(i);
-            if (nexti != putIndex) {
-                items[i] = items[nexti];
-                i = nexti;
-            } else {
-                items[i] = null;
-                putIndex = i;
-                break;
-            }
-        }
-    }
-    --count; // 元素个数-1
-    notFull.signal(); // 使用条件对象notFull通知，比如使用put方法放数据的时候队列已满，被阻塞。这个时候消费了一条数据，队列没满了，就需要调用signal进行通知 
-}
-</code></pre><p>ArrayBlockingQueue的删除数据方法有poll，take，remove这3个方法，总结如下：</p>
-<p>poll方法对于队列为空的情况，返回null，否则返回队列头部元素。</p>
-<p>remove方法取的元素是基于对象的下标值，删除成功返回true，否则返回false。</p>
-<p>poll方法和remove方法不会阻塞线程。</p>
-<p>take方法对于队列为空的情况，会阻塞并挂起当前线程，直到有数据加入到队列中。</p>
-<p>这3个方法内部都会调用notFull.signal方法通知正在等待队列满情况下的阻塞线程。</p>
-<h2 id="LinkedBlockingQueue"><a href="#LinkedBlockingQueue" class="headerlink" title="LinkedBlockingQueue"></a>LinkedBlockingQueue</h2><p>LinkedBlockingQueue是一个使用链表完成队列操作的阻塞队列。链表是单向链表，而不是双向链表。</p>
-<p>内部使用放锁和拿锁，这两个锁实现阻塞(“two lock queue” algorithm)。</p>
-<p>它带有的属性如下：</p>
-<pre><code>// 容量大小
-private final int capacity;
-
-// 元素个数，因为有2个锁，存在竞态条件，使用AtomicInteger
-private final AtomicInteger count = new AtomicInteger(0);
-
-// 头结点
-private transient Node&lt;E&gt; head;
-
-// 尾节点
-private transient Node&lt;E&gt; last;
-
-// 拿锁
-private final ReentrantLock takeLock = new ReentrantLock();
-
-// 拿锁的条件对象
-private final Condition notEmpty = takeLock.newCondition();
-
-// 放锁
-private final ReentrantLock putLock = new ReentrantLock();
-
-// 放锁的条件对象
-private final Condition notFull = putLock.newCondition();
-</code></pre><p>ArrayBlockingQueue只有1个锁，添加数据和删除数据的时候只能有1个被执行，不允许并行执行。</p>
-<p>而LinkedBlockingQueue有2个锁，放锁和拿锁，添加数据和删除数据是可以并行进行的，当然添加数据和删除数据的时候只能有1个线程各自执行。</p>
-<h3 id="数据的添加-1"><a href="#数据的添加-1" class="headerlink" title="数据的添加"></a>数据的添加</h3><p>LinkedBlockingQueue有不同的几个数据添加方法，add、offer、put方法。</p>
-<p>add方法内部调用offer方法：</p>
-<pre><code>public boolean offer(E e) {
-    if (e == null) throw new NullPointerException(); // 不允许空元素
-    final AtomicInteger count = this.count;
-    if (count.get() == capacity) // 如果容量满了，返回false
-        return false;
-    int c = -1;
-    Node&lt;E&gt; node = new Node(e); // 容量没满，以新元素构造节点
-    final ReentrantLock putLock = this.putLock;
-    putLock.lock(); // 放锁加锁，保证调用offer方法的时候只有1个线程
-    try {
-        if (count.get() &lt; capacity) { // 再次判断容量是否已满，因为可能拿锁在进行消费数据，没满的话继续执行
-            enqueue(node); // 节点添加到链表尾部
-            c = count.getAndIncrement(); // 元素个数+1
-            if (c + 1 &lt; capacity) // 如果容量还没满
-                notFull.signal(); // 在放锁的条件对象notFull上唤醒正在等待的线程，表示可以再次往队列里面加数据了，队列还没满
-        }
-    } finally {
-        putLock.unlock(); // 释放放锁，让其他线程可以调用offer方法
-    }
-    if (c == 0) // 由于存在放锁和拿锁，这里可能拿锁一直在消费数据，count会变化。这里的if条件表示如果队列中还有1条数据
-        signalNotEmpty(); // 在拿锁的条件对象notEmpty上唤醒正在等待的1个线程，表示队列里还有1条数据，可以进行消费
-    return c &gt;= 0; // 添加成功返回true，否则返回false
-}
-</code></pre><p>put方法：</p>
-<pre><code>public void put(E e) throws InterruptedException {
-    if (e == null) throw new NullPointerException(); // 不允许空元素
-    int c = -1;
-    Node&lt;E&gt; node = new Node(e); // 以新元素构造节点
-    final ReentrantLock putLock = this.putLock;
-    final AtomicInteger count = this.count;
-    putLock.lockInterruptibly(); // 放锁加锁，保证调用put方法的时候只有1个线程
-    try {
-        while (count.get() == capacity) { // 如果容量满了
-            notFull.await(); // 阻塞并挂起当前线程
-        }
-        enqueue(node); // 节点添加到链表尾部
-        c = count.getAndIncrement(); // 元素个数+1
-        if (c + 1 &lt; capacity) // 如果容量还没满
-            notFull.signal(); // 在放锁的条件对象notFull上唤醒正在等待的线程，表示可以再次往队列里面加数据了，队列还没满
-    } finally {
-        putLock.unlock(); // 释放放锁，让其他线程可以调用put方法
-    }
-    if (c == 0) // 由于存在放锁和拿锁，这里可能拿锁一直在消费数据，count会变化。这里的if条件表示如果队列中还有1条数据
-        signalNotEmpty(); // 在拿锁的条件对象notEmpty上唤醒正在等待的1个线程，表示队列里还有1条数据，可以进行消费
-}
-</code></pre><p>LinkedBlockingQueue的添加数据方法add，put，offer跟ArrayBlockingQueue一样，不同的是它们的底层实现不一样。</p>
-<p>ArrayBlockingQueue中放入数据阻塞的时候，需要消费数据才能唤醒。</p>
-<p>而LinkedBlockingQueue中放入数据阻塞的时候，因为它内部有2个锁，可以并行执行放入数据和消费数据，不仅在消费数据的时候进行唤醒插入阻塞的线程，同时在插入的时候如果容量还没满，也会唤醒插入阻塞的线程。</p>
-<h3 id="数据的删除-1"><a href="#数据的删除-1" class="headerlink" title="数据的删除"></a>数据的删除</h3><p>LinkedBlockingQueue有不同的几个数据删除方法，poll、take、remove方法。</p>
-<p>poll方法：</p>
-<pre><code>public E poll() {
-    final AtomicInteger count = this.count;
-    if (count.get() == 0) // 如果元素个数为0
-        return null; // 返回null
-    E x = null;
-    int c = -1;
-    final ReentrantLock takeLock = this.takeLock;
-    takeLock.lock(); // 拿锁加锁，保证调用poll方法的时候只有1个线程
-    try {
-        if (count.get() &gt; 0) { // 判断队列里是否还有数据
-            x = dequeue(); // 删除头结点
-            c = count.getAndDecrement(); // 元素个数-1
-            if (c &gt; 1) // 如果队列里还有元素
-                notEmpty.signal(); // 在拿锁的条件对象notEmpty上唤醒正在等待的线程，表示队列里还有数据，可以再次消费
-        }
-    } finally {
-        takeLock.unlock(); // 释放拿锁，让其他线程可以调用poll方法
-    }
-    if (c == capacity) // 由于存在放锁和拿锁，这里可能放锁一直在添加数据，count会变化。这里的if条件表示如果队列中还可以再插入数据
-        signalNotFull(); // 在放锁的条件对象notFull上唤醒正在等待的1个线程，表示队列里还能再次添加数据
-                return x;
-}
-</code></pre><p>take方法：</p>
-<pre><code>public E take() throws InterruptedException {
-    E x;
-    int c = -1;
-    final AtomicInteger count = this.count;
-    final ReentrantLock takeLock = this.takeLock;
-    takeLock.lockInterruptibly(); // 拿锁加锁，保证调用take方法的时候只有1个线程
-    try {
-        while (count.get() == 0) { // 如果队列里已经没有元素了
-            notEmpty.await(); // 阻塞并挂起当前线程
-        }
-        x = dequeue(); // 删除头结点
-        c = count.getAndDecrement(); // 元素个数-1
-        if (c &gt; 1) // 如果队列里还有元素
-            notEmpty.signal(); // 在拿锁的条件对象notEmpty上唤醒正在等待的线程，表示队列里还有数据，可以再次消费
-    } finally {
-        takeLock.unlock(); // 释放拿锁，让其他线程可以调用take方法
-    }
-    if (c == capacity) // 由于存在放锁和拿锁，这里可能放锁一直在添加数据，count会变化。这里的if条件表示如果队列中还可以再插入数据
-        signalNotFull(); // 在放锁的条件对象notFull上唤醒正在等待的1个线程，表示队列里还能再次添加数据
-    return x;
-}
-</code></pre><p>remove方法：</p>
-<pre><code>public boolean remove(Object o) {
-    if (o == null) return false;
-    fullyLock(); // remove操作要移动的位置不固定，2个锁都需要加锁
-    try {
-        for (Node&lt;E&gt; trail = head, p = trail.next; // 从链表头结点开始遍历
-             p != null;
-             trail = p, p = p.next) {
-            if (o.equals(p.item)) { // 判断是否找到对象
-                unlink(p, trail); // 修改节点的链接信息，同时调用notFull的signal方法
-                return true;
-            }
-        }
-        return false;
-    } finally {
-        fullyUnlock(); // 2个锁解锁
-    }
-}
-</code></pre><p>LinkedBlockingQueue的take方法对于没数据的情况下会阻塞，poll方法删除链表头结点，remove方法删除指定的对象。</p>
-<p>需要注意的是remove方法由于要删除的数据的位置不确定，需要2个锁同时加锁。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;Java中的阻塞队列接口BlockingQueue继承自Queue接口。&lt;/p&gt;
-&lt;p&gt;BlockingQueue接口提供了3个添加元素方法。&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;add：添加元素到队列里，添加成功返回true，由于容量满了添加失败会抛出IllegalStateException异常&lt;/li&gt;
-&lt;li&gt;offer：添加元素到队列里，添加成功返回true，添加失败返回false&lt;/li&gt;
-&lt;li&gt;put：添加元素到队列里，如果容量满了会阻塞直到容量不满&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;3个删除方法。&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;poll：删除队列头部元素，如果队列为空，返回null。否则返回元素。&lt;/li&gt;
-&lt;li&gt;remove：基于对象找到对应的元素，并删除。删除成功返回true，否则返回false&lt;/li&gt;
-&lt;li&gt;take：删除队列头部元素，如果队列为空，一直阻塞到队列有元素并删除&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;常用的阻塞队列具体类有ArrayBlockingQueue、LinkedBlockingQueue、PriorityBlockingQueue、LinkedBlockingDeque等。&lt;/p&gt;
-&lt;p&gt;本文以ArrayBlockingQueue和LinkedBlockingQueue为例，分析它们的实现原理。&lt;/p&gt;
     
     </summary>
     

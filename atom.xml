@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-05-02T02:21:15.000Z</updated>
+  <updated>2017-05-10T06:59:11.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -14,6 +14,216 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>SpringBoot源码分析之Spring容器的refresh过程</title>
+    <link href="http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/"/>
+    <id>http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/</id>
+    <published>2017-05-10T11:55:21.000Z</published>
+    <updated>2017-05-10T06:59:11.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>上一篇文章中，我们分析了SpringBoot的启动过程：构造SpringApplication并调用它的run方法。其中构造SpringApplication的时候会初始化一些监听器和初始化器；run方法调用的过程中会有对应的监听器监听，并且会创建Spring容器。</p>
+<p>Spring容器创建之后，会调用它的refresh方法，refresh的时候会做很多事情：比如完成配置类的解析、各种BeanFactoryPostProcessor和BeanPostProcessor的注册、国际化配置的初始化、web内置容器的构造等等。</p>
+<p>我们来分析一下这个refresh过程。</p>
+<a id="more"></a>
+<p>还是以web程序为例，那么对应的Spring容器为AnnotationConfigEmbeddedWebApplicationContext。它的refresh方法调用了父类AbstractApplicationContext的refresh方法：</p>
+<pre><code>public void refresh() throws BeansException, IllegalStateException {
+  // refresh过程只能一个线程处理，不允许并发执行
+  synchronized (this.startupShutdownMonitor) {
+    prepareRefresh();
+    ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+    prepareBeanFactory(beanFactory);
+    try {
+      postProcessBeanFactory(beanFactory);
+      invokeBeanFactoryPostProcessors(beanFactory);
+      registerBeanPostProcessors(beanFactory);
+      initMessageSource();
+      initApplicationEventMulticaster();
+      onRefresh();
+      registerListeners();
+      finishBeanFactoryInitialization(beanFactory);
+      finishRefresh();
+    }
+    catch (BeansException ex) {
+      if (logger.isWarnEnabled()) {
+        logger.warn(&quot;Exception encountered during context initialization - &quot; +
+            &quot;cancelling refresh attempt: &quot; + ex);
+      }
+      destroyBeans();
+      cancelRefresh(ex);
+      throw ex;
+    }
+    finally {
+      resetCommonCaches();
+    }
+  }
+}
+</code></pre><h2 id="prepareRefresh方法"><a href="#prepareRefresh方法" class="headerlink" title="prepareRefresh方法"></a>prepareRefresh方法</h2><p>表示在真正做refresh操作之前需要准备做的事情：</p>
+<ol>
+<li>设置Spring容器的启动时间，撤销关闭状态，开启活跃状态。</li>
+<li>初始化属性源信息(Property)</li>
+<li>验证环境信息里一些必须存在的属性</li>
+</ol>
+<h2 id="prepareBeanFactory方法"><a href="#prepareBeanFactory方法" class="headerlink" title="prepareBeanFactory方法"></a>prepareBeanFactory方法</h2><p>从Spring容器获取BeanFactory(Spring Bean容器)并进行相关的设置为后续的使用做准备：</p>
+<ol>
+<li>设置classloader(用于加载bean)，设置表达式解析器(解析bean定义中的一些表达式)，添加属性编辑注册器(注册属性编辑器)</li>
+<li>添加ApplicationContextAwareProcessor这个BeanPostProcessor。取消ResourceLoaderAware、ApplicationEventPublisherAware、MessageSourceAware、ApplicationContextAware、EnvironmentAware这5个接口的自动注入。因为ApplicationContextAwareProcessor把这5个接口的实现工作做了</li>
+<li>设置特殊的类型对应的bean。BeanFactory对应刚刚获取的BeanFactory；ResourceLoader、ApplicationEventPublisher、ApplicationContext这3个接口对应的bean都设置为当前的Spring容器</li>
+<li>注入一些其它信息的bean，比如environment、systemProperties等</li>
+</ol>
+<h2 id="postProcessBeanFactory方法"><a href="#postProcessBeanFactory方法" class="headerlink" title="postProcessBeanFactory方法"></a>postProcessBeanFactory方法</h2><p>BeanFactory设置之后再进行后续的一些BeanFactory操作。</p>
+<p>不同的Spring容器做不同的操作。比如GenericWebApplicationContext容器会在BeanFactory中添加ServletContextAwareProcessor用于处理ServletContextAware类型的bean初始化的时候调用setServletContext或者setServletConfig方法(跟ApplicationContextAwareProcessor原理一样)。</p>
+<p>AnnotationConfigEmbeddedWebApplicationContext对应的postProcessBeanFactory方法：</p>
+<pre><code>@Override
+protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+  // 调用父类EmbeddedWebApplicationContext的实现
+  super.postProcessBeanFactory(beanFactory);
+  // 查看basePackages属性，如果设置了会使用ClassPathBeanDefinitionScanner去扫描basePackages包下的bean并注册
+  if (this.basePackages != null &amp;&amp; this.basePackages.length &gt; 0) {
+    this.scanner.scan(this.basePackages);
+  }
+  // 查看annotatedClasses属性，如果设置了会使用AnnotatedBeanDefinitionReader去注册这些bean
+  if (this.annotatedClasses != null &amp;&amp; this.annotatedClasses.length &gt; 0) {
+    this.reader.register(this.annotatedClasses);
+  }
+}
+</code></pre><p>父类EmbeddedWebApplicationContext的实现：</p>
+<pre><code>@Override
+protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+  beanFactory.addBeanPostProcessor(
+      new WebApplicationContextServletContextAwareProcessor(this));
+  beanFactory.ignoreDependencyInterface(ServletContextAware.class);
+}
+</code></pre><h2 id="invokeBeanFactoryPostProcessors方法"><a href="#invokeBeanFactoryPostProcessors方法" class="headerlink" title="invokeBeanFactoryPostProcessors方法"></a>invokeBeanFactoryPostProcessors方法</h2><p>在Spring容器中找出实现了BeanFactoryPostProcessor接口的processor并执行。Spring容器会委托给PostProcessorRegistrationDelegate的invokeBeanFactoryPostProcessors方法执行。</p>
+<p>介绍两个接口：</p>
+<ol>
+<li>BeanFactoryPostProcessor：用来修改Spring容器中已经存在的bean的定义，使用ConfigurableListableBeanFactory对bean进行处理</li>
+<li>BeanDefinitionRegistryPostProcessor：继承BeanFactoryPostProcessor，作用跟BeanFactoryPostProcessor一样，只不过是使用BeanDefinitionRegistry对bean进行处理</li>
+</ol>
+<p>基于web程序的Spring容器AnnotationConfigEmbeddedWebApplicationContext构造的时候，会初始化内部属性AnnotatedBeanDefinitionReader reader，这个reader构造的时候会在BeanFactory中注册一些post processor，包括BeanPostProcessor和BeanFactoryPostProcessor(比如ConfigurationClassPostProcessor、AutowiredAnnotationBeanPostProcessor)：</p>
+<pre><code>AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
+</code></pre><p>invokeBeanFactoryPostProcessors方法处理BeanFactoryPostProcessor的逻辑如下：</p>
+<p>从Spring容器中找出BeanDefinitionRegistryPostProcessor类型的bean(这些processor是在容器刚创建的时候通过构造AnnotatedBeanDefinitionReader的时候注册到容器中的)，然后按照优先级分别执行，优先级的逻辑如下：</p>
+<ol>
+<li>实现PriorityOrdered接口的BeanDefinitionRegistryPostProcessor先全部找出来，然后排序后依次执行</li>
+<li>实现Ordered接口的BeanDefinitionRegistryPostProcessor找出来，然后排序后依次执行</li>
+<li>没有实现PriorityOrdered和Ordered接口的BeanDefinitionRegistryPostProcessor找出来执行并依次执行</li>
+</ol>
+<p>接下来从Spring容器内查找BeanFactoryPostProcessor接口的实现类，然后执行(如果processor已经执行过，则忽略)，这里的查找规则跟上面查找BeanDefinitionRegistryPostProcessor一样，先找PriorityOrdered，然后是Ordered，最后是两者都没。</p>
+<p>这里需要说明的是ConfigurationClassPostProcessor这个processor是优先级最高的被执行的processor(实现了PriorityOrdered接口)。这个ConfigurationClassPostProcessor会去BeanFactory中找出所有有@Configuration注解的bean，然后使用ConfigurationClassParser去解析这个类。ConfigurationClassParser内部有个Map<configurationclass, configurationclass="">类型的configurationClasses属性用于保存解析的类，ConfigurationClass是一个对要解析的配置类的封装，内部存储了配置类的注解信息、被@Bean注解修饰的方法、@ImportResource注解修饰的信息、ImportBeanDefinitionRegistrar等都存储在这个封装类中。</configurationclass,></p>
+<p>这里ConfigurationClassPostProcessor最先被处理还有另外一个原因是如果程序中有自定义的BeanFactoryPostProcessor，那么这个PostProcessor首先得通过ConfigurationClassPostProcessor被解析出来，然后才能被Spring容器找到并执行。(ConfigurationClassPostProcessor不先执行的话，这个Processor是不会被解析的，不会被解析的话也就不会执行了)。</p>
+<p>在我们的程序中，只有主类RefreshContextApplication有@Configuration注解(@SpringBootApplication注解带有@Configuration注解)，所以这个配置类会被ConfigurationClassParser解析。解析过程如下：</p>
+<ol>
+<li>处理@PropertySources注解：进行一些配置信息的解析</li>
+<li>处理@ComponentScan注解：使用ComponentScanAnnotationParser扫描basePackage下的需要解析的类(@SpringBootApplication注解也包括了@ComponentScan注解，只不过basePackages是空的，空的话会去获取当前@Configuration修饰的类所在的包)，并注册到BeanFactory中(这个时候bean并没有进行实例化，而是进行了注册。具体的实例化在finishBeanFactoryInitialization方法中执行)。对于扫描出来的类，递归解析</li>
+<li>处理@Import注解：先递归找出所有的注解，然后再过滤出只有@Import注解的类，得到@Import注解的值。比如查找@SpringBootApplication注解的@Import注解数据的话，首先发现@SpringBootApplication不是一个@Import注解，然后递归调用修饰了@SpringBootApplication的注解，发现有个@EnableAutoConfiguration注解，再次递归发现被@Import(EnableAutoConfigurationImportSelector.class)修饰，还有@AutoConfigurationPackage注解修饰，再次递归@AutoConfigurationPackage注解，发现被@Import(AutoConfigurationPackages.Registrar.class)注解修饰，所以@SpringBootApplication注解对应的@Import注解有2个，分别是@Import(AutoConfigurationPackages.Registrar.class)和@Import(EnableAutoConfigurationImportSelector.class)。找出所有的@Import注解之后，开始处理逻辑：<ol>
+<li>遍历这些@Import注解内部的属性类集合</li>
+<li>如果这个类是个ImportSelector接口的实现类，实例化这个ImportSelector，如果这个类也是DeferredImportSelector接口的实现类，那么加入ConfigurationClassParser的deferredImportSelectors属性中让第6步处理。否则调用ImportSelector的selectImports方法得到需要Import的类，然后对这些类递归做@Import注解的处理</li>
+<li>如果这个类是ImportBeanDefinitionRegistrar接口的实现类，设置到配置类的importBeanDefinitionRegistrars属性中</li>
+<li>其它情况下把这个类入队到ConfigurationClassParser的importStack(队列)属性中，然后把这个类当成是@Configuration注解修饰的类递归重头开始解析这个类</li>
+</ol>
+</li>
+<li>处理@ImportResource注解：获取@ImportResource注解的locations属性，得到资源文件的地址信息。然后遍历这些资源文件并把它们添加到配置类的importedResources属性中</li>
+<li>处理@Bean注解：获取被@Bean注解修饰的方法，然后添加到配置类的beanMethods属性中</li>
+<li>处理DeferredImportSelector：处理第3步@Import注解产生的DeferredImportSelector，进行selectImports方法的调用找出需要import的类，然后再调用第3步相同的处理逻辑处理</li>
+</ol>
+<p>这里@SpringBootApplication注解被@EnableAutoConfiguration修饰，@EnableAutoConfiguration注解被@Import(EnableAutoConfigurationImportSelector.class)修饰，所以在第3步会找出这个@Import修饰的类EnableAutoConfigurationImportSelector，这个类刚好实现了DeferredImportSelector接口，接着就会在第6步被执行。第6步selectImport得到的类就是自动化配置类。</p>
+<p>EnableAutoConfigurationImportSelector的selectImport方法会在spring.factories文件中找出key为EnableAutoConfiguration对应的值，有81个，这81个就是所谓的自动化配置类(XXXAutoConfiguration)。</p>
+<p>ConfigurationClassParser解析完成之后，被解析出来的类会放到configurationClasses属性中。然后使用ConfigurationClassBeanDefinitionReader去解析这些类。</p>
+<p>这个时候这些bean只是被加载到了Spring容器中。下面这段代码是ConfigurationClassBeanDefinitionReader的解析bean过程：</p>
+<pre><code>public void loadBeanDefinitions(Set&lt;ConfigurationClass&gt; configurationModel) {
+  TrackedConditionEvaluator trackedConditionEvaluator = new TrackedConditionEvaluator();
+  for (ConfigurationClass configClass : configurationModel) {
+    // 对每一个配置类，调用loadBeanDefinitionsForConfigurationClass方法
+    loadBeanDefinitionsForConfigurationClass(configClass, trackedConditionEvaluator);
+  }
+}
+
+private void loadBeanDefinitionsForConfigurationClass(ConfigurationClass configClass,
+    TrackedConditionEvaluator trackedConditionEvaluator) {
+  // 使用条件注解判断是否需要跳过这个配置类
+  if (trackedConditionEvaluator.shouldSkip(configClass)) {
+    // 跳过配置类的话在Spring容器中移除bean的注册
+    String beanName = configClass.getBeanName();
+    if (StringUtils.hasLength(beanName) &amp;&amp; this.registry.containsBeanDefinition(beanName)) {
+      this.registry.removeBeanDefinition(beanName);
+    }
+    this.importRegistry.removeImportingClassFor(configClass.getMetadata().getClassName());
+    return;
+  }
+
+  if (configClass.isImported()) {
+    // 如果自身是被@Import注释所import的，注册自己
+    registerBeanDefinitionForImportedConfigurationClass(configClass);
+  }
+  // 注册方法中被@Bean注解修饰的bean
+  for (BeanMethod beanMethod : configClass.getBeanMethods()) {
+    loadBeanDefinitionsForBeanMethod(beanMethod);
+  }
+  // 注册@ImportResource注解注释的资源文件中的bean
+  loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+  // 注册@Import注解中的ImportBeanDefinitionRegistrar接口的registerBeanDefinitions
+  loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
+}
+</code></pre><p>invokeBeanFactoryPostProcessors方法总结来说就是从Spring容器中找出BeanDefinitionRegistryPostProcessor和BeanFactoryPostProcessor接口的实现类并按照一定的规则顺序进行执行。 其中ConfigurationClassPostProcessor这个BeanDefinitionRegistryPostProcessor优先级最高，它会对项目中的@Configuration注解修饰的类(@Component、@ComponentScan、@Import、@ImportResource修饰的类也会被处理)进行解析，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化。</p>
+<h2 id="registerBeanPostProcessors方法"><a href="#registerBeanPostProcessors方法" class="headerlink" title="registerBeanPostProcessors方法"></a>registerBeanPostProcessors方法</h2><p>从Spring容器中找出的BeanPostProcessor接口的bean，并设置到BeanFactory的属性中。之后bean被实例化的时候会调用这个BeanPostProcessor。</p>
+<p>该方法委托给了PostProcessorRegistrationDelegate类的registerBeanPostProcessors方法执行。这里的过程跟invokeBeanFactoryPostProcessors类似：</p>
+<ol>
+<li>先找出实现了PriorityOrdered接口的BeanPostProcessor并排序后加到BeanFactory的BeanPostProcessor集合中</li>
+<li>找出实现了Ordered接口的BeanPostProcessor并排序后加到BeanFactory的BeanPostProcessor集合中</li>
+<li>没有实现PriorityOrdered和Ordered接口的BeanPostProcessor加到BeanFactory的BeanPostProcessor集合中</li>
+</ol>
+<p>这些已经存在的BeanPostProcessor在postProcessBeanFactory方法中已经说明，都是由AnnotationConfigUtils的registerAnnotationConfigProcessors方法注册的。这些BeanPostProcessor包括有AutowiredAnnotationBeanPostProcessor(处理被@Autowired注解修饰的bean并注入)、RequiredAnnotationBeanPostProcessor(处理被@Required注解修饰的方法)、CommonAnnotationBeanPostProcessor(处理@PreDestroy、@PostConstruct、@Resource等多个注解的作用)等。</p>
+<p>如果是自定义的BeanPostProcessor，已经被ConfigurationClassPostProcessor注册到容器内。</p>
+<p>这些BeanPostProcessor会在这个方法内被实例化(通过调用BeanFactory的getBean方法，如果没有找到实例化的类，就会去实例化)。</p>
+<h2 id="initMessageSource方法"><a href="#initMessageSource方法" class="headerlink" title="initMessageSource方法"></a>initMessageSource方法</h2><p>在Spring容器中初始化一些国际化相关的属性。</p>
+<h2 id="initApplicationEventMulticaster方法"><a href="#initApplicationEventMulticaster方法" class="headerlink" title="initApplicationEventMulticaster方法"></a>initApplicationEventMulticaster方法</h2><p>在Spring容器中初始化事件广播器，事件广播器用于事件的发布。</p>
+<p>在<a href="http://fangjian0423.github.io/2017/04/30/springboot-startup-analysis/">SpringBoot源码分析之SpringBoot的启动过程</a>中分析过，EventPublishingRunListener这个SpringApplicationRunListener会监听事件，其中发生contextPrepared事件的时候EventPublishingRunListener会把事件广播器注入到BeanFactory中。</p>
+<p>所以initApplicationEventMulticaster不再需要再次注册，只需要拿出BeanFactory中的事件广播器然后设置到Spring容器的属性中即可。如果没有使用SpringBoot的话，Spring容器得需要自己初始化事件广播器。</p>
+<h2 id="onRefresh方法"><a href="#onRefresh方法" class="headerlink" title="onRefresh方法"></a>onRefresh方法</h2><p>一个模板方法，不同的Spring容器做不同的事情。</p>
+<p>比如web程序的容器AnnotationConfigEmbeddedWebApplicationContext中会调用createEmbeddedServletContainer方法去创建内置的Servlet容器。</p>
+<p>目前SpringBoot只支持3种内置的Servlet容器：</p>
+<ol>
+<li>Tomcat</li>
+<li>Jetty</li>
+<li>Undertow</li>
+</ol>
+<h2 id="registerListeners方法"><a href="#registerListeners方法" class="headerlink" title="registerListeners方法"></a>registerListeners方法</h2><p>把Spring容器内的时间监听器和BeanFactory中的时间监听器都添加的事件广播器中。</p>
+<p>然后如果存在early event的话，广播出去。</p>
+<h2 id="finishBeanFactoryInitialization方法"><a href="#finishBeanFactoryInitialization方法" class="headerlink" title="finishBeanFactoryInitialization方法"></a>finishBeanFactoryInitialization方法</h2><p>实例化BeanFactory中已经被注册但是未实例化的所有实例(懒加载的不需要实例化)。</p>
+<p>比如invokeBeanFactoryPostProcessors方法中根据各种注解解析出来的类，在这个时候都会被初始化。</p>
+<p>实例化的过程各种BeanPostProcessor开始起作用。</p>
+<h2 id="finishRefresh方法"><a href="#finishRefresh方法" class="headerlink" title="finishRefresh方法"></a>finishRefresh方法</h2><p>refresh做完之后需要做的其他事情。</p>
+<ol>
+<li>初始化生命周期处理器，并设置到Spring容器中(LifecycleProcessor)</li>
+<li>调用生命周期处理器的onRefresh方法，这个方法会找出Spring容器中实现了SmartLifecycle接口的类并进行start方法的调用</li>
+<li>发布ContextRefreshedEvent事件告知对应的ApplicationListener进行响应的操作</li>
+<li>调用LiveBeansView的registerApplicationContext方法：如果设置了JMX相关的属性，则就调用该方法</li>
+<li>发布EmbeddedServletContainerInitializedEvent事件告知对应的ApplicationListener进行响应的操作</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Spring容器的refresh过程就是上述11个方法的介绍。内容还是非常多的，本文也只是说了个大概，像bean的实例化过程没有具体去分析，这方面的内容以后会看情况去做分析。</p>
+<p>这篇文章也是为之后的文章比如内置Servlet容器的创建启动、条件注解的使用等打下基础。</p>
+<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>写了一个例子用来验证容器的refresh过程，包括bean解析，processor的使用、Lifecycle的使用等。</p>
+<p>可以启动项目debug去看看对应的过程，这样对Spring容器会有一个更好的理解。</p>
+<p>地址在：<a href="https://github.com/fangjian0423/springboot-analysis/tree/master/springboot-refresh-context" target="_blank" rel="external">https://github.com/fangjian0423/springboot-analysis/tree/master/springboot-refresh-context</a></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;上一篇文章中，我们分析了SpringBoot的启动过程：构造SpringApplication并调用它的run方法。其中构造SpringApplication的时候会初始化一些监听器和初始化器；run方法调用的过程中会有对应的监听器监听，并且会创建Spring容器。&lt;/p&gt;
+&lt;p&gt;Spring容器创建之后，会调用它的refresh方法，refresh的时候会做很多事情：比如完成配置类的解析、各种BeanFactoryPostProcessor和BeanPostProcessor的注册、国际化配置的初始化、web内置容器的构造等等。&lt;/p&gt;
+&lt;p&gt;我们来分析一下这个refresh过程。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
+    
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+  </entry>
   
   <entry>
     <title>SpringBoot源码分析之SpringBoot的启动过程</title>
@@ -2049,9 +2259,9 @@ private StepBuilderFactory steps;
     
       <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
     
-      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
-    
       <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
     
   </entry>
   
@@ -3949,246 +4159,6 @@ class App {
     
     
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Java线程状态分析</title>
-    <link href="http://fangjian0423.github.io/2016/06/04/java-thread-state/"/>
-    <id>http://fangjian0423.github.io/2016/06/04/java-thread-state/</id>
-    <published>2016-06-04T15:53:35.000Z</published>
-    <updated>2016-06-04T15:53:47.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>Java线程的生命周期中，存在几种状态。在Thread类里有一个枚举类型State，定义了线程的几种状态，分别有：</p>
-<ol>
-<li>NEW: 线程创建之后，但是还没有启动(not yet started)。这时候它的状态就是NEW</li>
-<li>RUNNABLE: 正在Java虚拟机下跑任务的线程的状态。在RUNNABLE状态下的线程可能会处于等待状态， 因为它正在等待一些系统资源的释放，比如IO</li>
-<li>BLOCKED: 阻塞状态，等待锁的释放，比如线程A进入了一个synchronized方法，线程B也想进入这个方法，但是这个方法的锁已经被线程A获取了，这个时候线程B就处于BLOCKED状态</li>
-<li>WAITING: 等待状态，处于等待状态的线程是由于执行了3个方法中的任意方法。 1. Object的wait方法，并且没有使用timeout参数; 2. Thread的join方法，没有使用timeout参数 3. LockSupport的park方法。  处于waiting状态的线程会等待另外一个线程处理特殊的行为。 再举个例子，如果一个线程调用了一个对象的wait方法，那么这个线程就会处于waiting状态直到另外一个线程调用这个对象的notify或者notifyAll方法后才会解除这个状态</li>
-<li>TIMED_WAITING: 有等待时间的等待状态，比如调用了以下几个方法中的任意方法，并且指定了等待时间，线程就会处于这个状态。 1. Thread.sleep方法 2. Object的wait方法，带有时间 3. Thread.join方法，带有时间 4. LockSupport的parkNanos方法，带有时间 5. LockSupport的parkUntil方法，带有时间</li>
-<li>TERMINATED: 线程中止的状态，这个线程已经完整地执行了它的任务</li>
-</ol>
-<a id="more"></a>
-<p>下面通过几个例子再次说明一下在什么情况下，线程会处于这几种状态：</p>
-<h2 id="NEW状态"><a href="#NEW状态" class="headerlink" title="NEW状态"></a>NEW状态</h2><p>NEW状态比较简单，实例化一个线程之后，并且这个线程没有开始执行，这个时候的状态就是NEW：</p>
-<pre><code>Thread thread = new Thread();
-System.out.println(thread.getState()); // NEW
-</code></pre><h2 id="RUNNABLE状态"><a href="#RUNNABLE状态" class="headerlink" title="RUNNABLE状态"></a>RUNNABLE状态</h2><p>正在运行的状态。</p>
-<pre><code>Thread thread = new Thread(new Runnable() {
-    @Override
-    public void run() {
-        for(int i = 0; i &lt; Integer.MAX_VALUE; i ++) {
-            System.out.println(i);
-        }
-    }
-}, &quot;RUNNABLE-Thread&quot;);
-thread.start();
-</code></pre><p>使用jstack查看线程状态：</p>
-<pre><code>&quot;RUNNABLE-Thread&quot; #10 prio=5 os_prio=31 tid=0x00007f8e04981000 nid=0x4f03 runnable [0x000070000124c000]
-   java.lang.Thread.State: RUNNABLE
-  at java.io.FileOutputStream.writeBytes(Native Method)
-  at java.io.FileOutputStream.write(FileOutputStream.java:315)
-  at java.io.BufferedOutputStream.flushBuffer(BufferedOutputStream.java:82)
-  at java.io.BufferedOutputStream.flush(BufferedOutputStream.java:140)
-  - locked &lt;0x000000079764cc50&gt; (a java.io.BufferedOutputStream)
-  at java.io.PrintStream.write(PrintStream.java:482)
-  - locked &lt;0x0000000797604dc0&gt; (a java.io.PrintStream)
-  at sun.nio.cs.StreamEncoder.writeBytes(StreamEncoder.java:221)
-  at sun.nio.cs.StreamEncoder.implFlushBuffer(StreamEncoder.java:291)
-  at sun.nio.cs.StreamEncoder.flushBuffer(StreamEncoder.java:104)
-  - locked &lt;0x0000000797604d78&gt; (a java.io.OutputStreamWriter)
-  at java.io.OutputStreamWriter.flushBuffer(OutputStreamWriter.java:185)
-  at java.io.PrintStream.write(PrintStream.java:527)
-  - eliminated &lt;0x0000000797604dc0&gt; (a java.io.PrintStream)
-  at java.io.PrintStream.print(PrintStream.java:597)
-  at java.io.PrintStream.println(PrintStream.java:736)
-  - locked &lt;0x0000000797604dc0&gt; (a java.io.PrintStream)
-  at study.thread.ThreadStateTest$1.run(ThreadStateTest.java:23)
-  at java.lang.Thread.run(Thread.java:745)
-</code></pre><h2 id="BLOCKED状态"><a href="#BLOCKED状态" class="headerlink" title="BLOCKED状态"></a>BLOCKED状态</h2><p>线程A和线程B都需要持有lock对象的锁才能调用方法。如果线程A持有锁，那么线程B处于BLOCKED状态；如果线程B持有锁，那么线程A处于BLOCKED状态。例子中使用Thread.sleep方法主要是用于调试方便：</p>
-<pre><code>final Object lock = new Object();
-Thread threadA = new Thread(new Runnable() {
-    @Override
-    public void run() {
-        synchronized (lock) {
-            System.out.println(Thread.currentThread().getName() + &quot; invoke&quot;);
-            try {
-                Thread.sleep(20000l);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-}, &quot;BLOCKED-Thread-A&quot;);
-Thread threadB = new Thread(new Runnable() {
-    @Override
-    public void run() {
-        synchronized (lock) {
-            System.out.println(Thread.currentThread().getName() + &quot; invoke&quot;);
-            try {
-                Thread.sleep(20000l);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-}, &quot;BLOCKED-Thread-B&quot;);
-threadA.start();
-threadB.start();
-</code></pre><p>使用jstack查看线程状态。由于线程A先执行，线程B后执行，而且线程A执行后调用了Thread.sleep方法，所以线程A会处于TIMED_WAITING状态，线程B处于BLOCKED状态：</p>
-<pre><code>&quot;BLOCKED-Thread-B&quot; #11 prio=5 os_prio=31 tid=0x00007fa7db8ff000 nid=0x5103 waiting for monitor entry [0x000070000134f000]
-   java.lang.Thread.State: BLOCKED (on object monitor)
-  at study.thread.ThreadStateTest$3.run(ThreadStateTest.java:50)
-  - waiting to lock &lt;0x0000000795a03bf8&gt; (a java.lang.Object)
-  at java.lang.Thread.run(Thread.java:745)
-
-&quot;BLOCKED-Thread-A&quot; #10 prio=5 os_prio=31 tid=0x00007fa7db15a000 nid=0x4f03 waiting on condition [0x000070000124c000]
-   java.lang.Thread.State: TIMED_WAITING (sleeping)
-  at java.lang.Thread.sleep(Native Method)
-  at study.thread.ThreadStateTest$2.run(ThreadStateTest.java:39)
-  - locked &lt;0x0000000795a03bf8&gt; (a java.lang.Object)
-  at java.lang.Thread.run(Thread.java:745)
-</code></pre><h2 id="WAITING状态"><a href="#WAITING状态" class="headerlink" title="WAITING状态"></a>WAITING状态</h2><p>Object的wait方法、Thread的join方法以及Conditon的await方法都会产生WAITING状态。</p>
-<p>1.没有时间参数的Object的wait方法</p>
-<pre><code>final Object lock = new Object();
-Thread threadA = new Thread(new Runnable() {
-    @Override
-    public void run() {
-        synchronized (lock) {
-            try {
-                lock.wait();
-                System.out.println(&quot;wait over&quot;);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-}, &quot;WAITING-Thread-A&quot;);
-Thread threadB = new Thread(new Runnable() {
-    @Override
-    public void run() {
-        synchronized (lock) {
-            try {
-                Thread.sleep(20000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            lock.notifyAll();
-        }
-    }
-}, &quot;WAITING-Thread-B&quot;);
-threadA.start();
-threadB.start();
-</code></pre><p>WAITING-Thread-A调用了lock的wait，处于WAITING状态：</p>
-<pre><code>&quot;WAITING-Thread-B&quot; #11 prio=5 os_prio=31 tid=0x00007f8de992d800 nid=0x5103 waiting on condition [0x000070000134f000]
-   java.lang.Thread.State: TIMED_WAITING (sleeping)
-  at java.lang.Thread.sleep(Native Method)
-  at study.thread.ThreadStateTest$5.run(ThreadStateTest.java:84)
-  - locked &lt;0x0000000795a03e40&gt; (a java.lang.Object)
-  at java.lang.Thread.run(Thread.java:745)
-
-&quot;WAITING-Thread-A&quot; #10 prio=5 os_prio=31 tid=0x00007f8dea193000 nid=0x4f03 in Object.wait() [0x000070000124c000]
-   java.lang.Thread.State: WAITING (on object monitor)
-  at java.lang.Object.wait(Native Method)
-  - waiting on &lt;0x0000000795a03e40&gt; (a java.lang.Object)
-  at java.lang.Object.wait(Object.java:502)
-  at study.thread.ThreadStateTest$4.run(ThreadStateTest.java:71)
-  - locked &lt;0x0000000795a03e40&gt; (a java.lang.Object)
-  at java.lang.Thread.run(Thread.java:745)
-</code></pre><p>2.Thread的join方法</p>
-<pre><code>Thread threadA = new Thread(new Runnable() {
-    @Override
-    public void run() {
-        try {
-            Thread.sleep(20000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println(&quot;Thread-A over&quot;);
-    }
-}, &quot;WAITING-Thread-A&quot;);
-threadA.start();
-try {
-    threadA.join();
-} catch (InterruptedException e) {
-    e.printStackTrace();
-}
-</code></pre><p>主线程main处于WAITING状态：</p>
-<pre><code>&quot;WAITING-Thread-A&quot; #10 prio=5 os_prio=31 tid=0x00007fd2d5100000 nid=0x4e03 waiting on condition [0x000070000124c000]
-   java.lang.Thread.State: TIMED_WAITING (sleeping)
-  at java.lang.Thread.sleep(Native Method)
-  at study.thread.ThreadStateTest$6.run(ThreadStateTest.java:103)
-  at java.lang.Thread.run(Thread.java:745)
-&quot;main&quot; #1 prio=5 os_prio=31 tid=0x00007fd2d3815000 nid=0x1003 in Object.wait() [0x0000700000182000]
-   java.lang.Thread.State: WAITING (on object monitor)
-  at java.lang.Object.wait(Native Method)
-  - waiting on &lt;0x0000000795a03ec0&gt; (a java.lang.Thread)
-  at java.lang.Thread.join(Thread.java:1245)
-  - locked &lt;0x0000000795a03ec0&gt; (a java.lang.Thread)
-  at java.lang.Thread.join(Thread.java:1319)
-  at study.thread.ThreadStateTest.WAITING_join(ThreadStateTest.java:118)
-  at study.thread.ThreadStateTest.main(ThreadStateTest.java:13)
-  at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-  at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-  at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-  at java.lang.reflect.Method.invoke(Method.java:483)
-  at com.intellij.rt.execution.application.AppMain.main(AppMain.java:140)
-</code></pre><p>3.没有时间参数的Condition的await方法</p>
-<p>Condition的await方法跟Obejct的wait方法原理是一样的，故也是WAITING状态</p>
-<h2 id="TIMED-WAITING状态"><a href="#TIMED-WAITING状态" class="headerlink" title="TIMED_WAITING状态"></a>TIMED_WAITING状态</h2><p>TIMED_WAITING状态跟TIMEING状态类似，是一个有等待时间的等待状态，不会一直等待下去。</p>
-<p>最简单的TIMED_WAITING状态例子就是Thread的sleep方法：</p>
-<pre><code>Thread threadA = new Thread(new Runnable() {
-    @Override
-    public void run() {
-        try {
-            Thread.sleep(20000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println(&quot;Thread-A over&quot;);
-    }
-}, &quot;WAITING-Thread-A&quot;);
-threadA.start();
-try {
-    Thread.sleep(5000);
-} catch (InterruptedException e) {
-    e.printStackTrace();
-}
-System.out.println(threadA.getState()); // TIMED_WAITING
-</code></pre><p>或者是Object的wait方法带有时间参数、Thread的join方法带有时间参数也会让线程的状态处于TIMED_WAITING状态。</p>
-<h2 id="TERMINATED"><a href="#TERMINATED" class="headerlink" title="TERMINATED"></a>TERMINATED</h2><p>线程终止的状态，线程执行完成，结束生命周期。</p>
-<pre><code>Thread threadA = new Thread();
-threadA.start();
-try {
-    Thread.sleep(5000l);
-} catch (InterruptedException e) {
-    e.printStackTrace();
-}
-System.out.println(threadA.getState()); // TERMINATED
-</code></pre><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>了解线程的状态可以分析一些问题。</p>
-<p>比如线程处于BLOCKED状态，这个时候可以分析一下是不是lock加锁的时候忘记释放了，或者释放的时机不对。导致另外的线程一直处于BLOCKED状态。</p>
-<p>比如线程处于WAITING状态，这个时候可以分析一下notifyAll或者signalAll方法的调用时机是否不对。</p>
-<p>java自带的jstack工具可以分析查看线程的状态、优先级、描述等具体信息。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;Java线程的生命周期中，存在几种状态。在Thread类里有一个枚举类型State，定义了线程的几种状态，分别有：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;NEW: 线程创建之后，但是还没有启动(not yet started)。这时候它的状态就是NEW&lt;/li&gt;
-&lt;li&gt;RUNNABLE: 正在Java虚拟机下跑任务的线程的状态。在RUNNABLE状态下的线程可能会处于等待状态， 因为它正在等待一些系统资源的释放，比如IO&lt;/li&gt;
-&lt;li&gt;BLOCKED: 阻塞状态，等待锁的释放，比如线程A进入了一个synchronized方法，线程B也想进入这个方法，但是这个方法的锁已经被线程A获取了，这个时候线程B就处于BLOCKED状态&lt;/li&gt;
-&lt;li&gt;WAITING: 等待状态，处于等待状态的线程是由于执行了3个方法中的任意方法。 1. Object的wait方法，并且没有使用timeout参数; 2. Thread的join方法，没有使用timeout参数 3. LockSupport的park方法。  处于waiting状态的线程会等待另外一个线程处理特殊的行为。 再举个例子，如果一个线程调用了一个对象的wait方法，那么这个线程就会处于waiting状态直到另外一个线程调用这个对象的notify或者notifyAll方法后才会解除这个状态&lt;/li&gt;
-&lt;li&gt;TIMED_WAITING: 有等待时间的等待状态，比如调用了以下几个方法中的任意方法，并且指定了等待时间，线程就会处于这个状态。 1. Thread.sleep方法 2. Object的wait方法，带有时间 3. Thread.join方法，带有时间 4. LockSupport的parkNanos方法，带有时间 5. LockSupport的parkUntil方法，带有时间&lt;/li&gt;
-&lt;li&gt;TERMINATED: 线程中止的状态，这个线程已经完整地执行了它的任务&lt;/li&gt;
-&lt;/ol&gt;
-    
-    </summary>
-    
-      <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
-    
-    
-      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
     
   </entry>
   

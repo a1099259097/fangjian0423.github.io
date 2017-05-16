@@ -94,7 +94,7 @@
 <meta property="og:site_name" content="Format's Notes">
 <meta property="og:description" content="SpringBoot内部提供了特有的注解：条件注解(Conditional Annotation)。比如@ConditionalOnBean、@ConditionalOnClass、@ConditionalOnExpression、@ConditionalOnMissingBean等。
 条件注解存在的意义在于动态识别(也可以说是代码自动化执行)。比如@ConditionalOnClass会检查类加">
-<meta property="og:updated_time" content="2017-05-16T10:43:07.000Z">
+<meta property="og:updated_time" content="2017-05-16T11:57:24.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SpringBoot源码分析之条件注解的底层实现">
 <meta name="twitter:description" content="SpringBoot内部提供了特有的注解：条件注解(Conditional Annotation)。比如@ConditionalOnBean、@ConditionalOnClass、@ConditionalOnExpression、@ConditionalOnMissingBean等。
@@ -777,7 +777,8 @@ org.springframework.boot.autoconfigure.h2.H2ConsoleAutoConfiguration -- OnClassC
 org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: org.springframework.hateoas.Resource,org.springframework.plugin.core.Plugin
 org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: com.hazelcast.core.HazelcastInstance
 .......
-</code></pre>
+</code></pre><p>一些测试的例子代码在 <a href="https://github.com/fangjian0423/springboot-analysis/tree/master/springboot-conditional" target="_blank" rel="external">https://github.com/fangjian0423/springboot-analysis/tree/master/springboot-conditional</a> 上</p>
+
       
     </div>
 

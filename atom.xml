@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-05-16T10:43:07.000Z</updated>
+  <updated>2017-05-16T11:57:24.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://fangjian0423.github.io/2017/05/16/springboot-condition-annotation/"/>
     <id>http://fangjian0423.github.io/2017/05/16/springboot-condition-annotation/</id>
     <published>2017-05-16T11:40:13.000Z</published>
-    <updated>2017-05-16T10:43:07.000Z</updated>
+    <updated>2017-05-16T11:57:24.000Z</updated>
     
     <content type="html"><![CDATA[<p>SpringBoot内部提供了特有的注解：条件注解(Conditional Annotation)。比如@ConditionalOnBean、@ConditionalOnClass、@ConditionalOnExpression、@ConditionalOnMissingBean等。</p>
 <p>条件注解存在的意义在于动态识别(也可以说是代码自动化执行)。比如@ConditionalOnClass会检查类加载器中是否存在对应的类，如果有的话被注解修饰的类就有资格被Spring容器所注册，否则会被skip。</p>
@@ -424,7 +424,8 @@ org.springframework.boot.autoconfigure.h2.H2ConsoleAutoConfiguration -- OnClassC
 org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: org.springframework.hateoas.Resource,org.springframework.plugin.core.Plugin
 org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: com.hazelcast.core.HazelcastInstance
 .......
-</code></pre>]]></content>
+</code></pre><p>一些测试的例子代码在 <a href="https://github.com/fangjian0423/springboot-analysis/tree/master/springboot-conditional" target="_blank" rel="external">https://github.com/fangjian0423/springboot-analysis/tree/master/springboot-conditional</a> 上</p>
+]]></content>
     
     <summary type="html">
     
@@ -2700,9 +2701,9 @@ private StepBuilderFactory steps;
     
       <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
     
-      <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
-    
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
     
   </entry>
   

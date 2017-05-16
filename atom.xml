@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-05-10T06:59:11.000Z</updated>
+  <updated>2017-05-16T10:43:07.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -16,11 +16,448 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>SpringBoot源码分析之条件注解的底层实现</title>
+    <link href="http://fangjian0423.github.io/2017/05/16/springboot-condition-annotation/"/>
+    <id>http://fangjian0423.github.io/2017/05/16/springboot-condition-annotation/</id>
+    <published>2017-05-16T11:40:13.000Z</published>
+    <updated>2017-05-16T10:43:07.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>SpringBoot内部提供了特有的注解：条件注解(Conditional Annotation)。比如@ConditionalOnBean、@ConditionalOnClass、@ConditionalOnExpression、@ConditionalOnMissingBean等。</p>
+<p>条件注解存在的意义在于动态识别(也可以说是代码自动化执行)。比如@ConditionalOnClass会检查类加载器中是否存在对应的类，如果有的话被注解修饰的类就有资格被Spring容器所注册，否则会被skip。</p>
+<p>比如FreemarkerAutoConfiguration这个自动化配置类的定义如下：</p>
+<pre><code>@Configuration
+@ConditionalOnClass({ freemarker.template.Configuration.class,
+        FreeMarkerConfigurationFactory.class })
+@AutoConfigureAfter(WebMvcAutoConfiguration.class)
+@EnableConfigurationProperties(FreeMarkerProperties.class)
+public class FreeMarkerAutoConfiguration
+</code></pre><p>这个自动化配置类被@ConditionalOnClass条件注解修饰，这个条件注解存在的意义在于判断类加载器中是否存在freemarker.template.Configuration和FreeMarkerConfigurationFactory这两个类，如果都存在的话会在Spring容器中加载这个FreeMarkerAutoConfiguration配置类；否则不会加载。</p>
+<a id="more"></a>
+<h2 id="条件注解内部的一些基础"><a href="#条件注解内部的一些基础" class="headerlink" title="条件注解内部的一些基础"></a>条件注解内部的一些基础</h2><p>在分析条件注解的底层实现之前，我们先来看一下这些条件注解的定义。以@ConditionalOnClass注解为例，它的定义如下：</p>
+<pre><code>@Target({ ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Conditional(OnClassCondition.class)
+public @interface ConditionalOnClass {
+    Class&lt;?&gt;[] value() default {}; // 需要匹配的类
+    String[] name() default {}; // 需要匹配的类名
+}
+</code></pre><p>它有2个属性，分别是类数组和字符串数组(作用一样，类型不一样)，而且被@Conditional注解所修饰，这个@Conditional注解有个名为values的Class&lt;? extends Condition&gt;[]类型的属性。 这个Condition是个接口，用于匹配组件是否有资格被容器注册，定义如下：</p>
+<pre><code>public interface Condition {
+  // ConditionContext内部会存储Spring容器、应用程序环境信息、资源加载器、类加载器
+    boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
+}
+</code></pre><p>也就是说@Conditional注解属性中可以持有多个Condition接口的实现类，所有的Condition接口需要全部匹配成功后这个@Conditional修饰的组件才有资格被注册。</p>
+<p>Condition接口有个子接口ConfigurationCondition：</p>
+<pre><code>public interface ConfigurationCondition extends Condition {
+
+    ConfigurationPhase getConfigurationPhase();
+
+    public static enum ConfigurationPhase {
+
+        PARSE_CONFIGURATION,
+
+        REGISTER_BEAN
+    }
+
+}
+</code></pre><p>这个子接口是一种特殊的条件接口，多了一个getConfigurationPhase方法，也就是条件注解的生效阶段。只有在ConfigurationPhase中定义的两种阶段下才会生效。</p>
+<p>Condition接口有个实现抽象类SpringBootCondition，SpringBoot中所有条件注解对应的条件类都继承这个抽象类。它实现了matches方法：</p>
+<pre><code>@Override
+  public final boolean matches(ConditionContext context,
+          AnnotatedTypeMetadata metadata) {
+      String classOrMethodName = getClassOrMethodName(metadata); // 得到类名或者方法名(条件注解可以作用的类或者方法上)
+      try {
+          ConditionOutcome outcome = getMatchOutcome(context, metadata); // 抽象方法，具体子类实现。ConditionOutcome记录了匹配结果boolean和log信息
+          logOutcome(classOrMethodName, outcome); // log记录一下匹配信息
+          recordEvaluation(context, classOrMethodName, outcome); // 报告记录一下匹配信息
+          return outcome.isMatch(); // 返回是否匹配
+      }
+      catch (NoClassDefFoundError ex) {
+          throw new IllegalStateException(
+                  &quot;Could not evaluate condition on &quot; + classOrMethodName + &quot; due to &quot;
+                          + ex.getMessage() + &quot; not &quot;
+                          + &quot;found. Make sure your own configuration does not rely on &quot;
+                          + &quot;that class. This can also happen if you are &quot;
+                          + &quot;@ComponentScanning a springframework package (e.g. if you &quot;
+                          + &quot;put a @ComponentScan in the default package by mistake)&quot;,
+                  ex);
+      }
+      catch (RuntimeException ex) {
+          throw new IllegalStateException(
+                  &quot;Error processing condition on &quot; + getName(metadata), ex);
+      }
+  }
+</code></pre><h2 id="基于Class的条件注解"><a href="#基于Class的条件注解" class="headerlink" title="基于Class的条件注解"></a>基于Class的条件注解</h2><p>SpringBoot提供了两个基于Class的条件注解：@ConditionalOnClass(类加载器中存在指明的类)或者@ConditionalOnMissingClass(类加载器中不存在指明的类)。</p>
+<p>@ConditionalOnClass或者@ConditionalOnMissingClass注解对应的条件类是OnClassCondition，定义如下：</p>
+<pre><code>@Order(Ordered.HIGHEST_PRECEDENCE) // 优先级、最高级别
+class OnClassCondition extends SpringBootCondition {
+
+    @Override
+    public ConditionOutcome getMatchOutcome(ConditionContext context,
+            AnnotatedTypeMetadata metadata) {
+
+        StringBuffer matchMessage = new StringBuffer(); // 记录匹配信息
+
+        MultiValueMap&lt;String, Object&gt; onClasses = getAttributes(metadata,
+                ConditionalOnClass.class); // 得到@ConditionalOnClass注解的属性
+        if (onClasses != null) { // 如果属性存在
+            List&lt;String&gt; missing = getMatchingClasses(onClasses, MatchType.MISSING,
+                    context); // 得到在类加载器中不存在的类
+            if (!missing.isEmpty()) { // 如果存在类加载器中不存在对应的类，返回一个匹配失败的ConditionalOutcome
+                return ConditionOutcome
+                        .noMatch(&quot;required @ConditionalOnClass classes not found: &quot;
+                                + StringUtils.collectionToCommaDelimitedString(missing));
+            }
+      // 如果类加载器中存在对应的类的话，匹配信息进行记录
+            matchMessage.append(&quot;@ConditionalOnClass classes found: &quot;
+                    + StringUtils.collectionToCommaDelimitedString(
+                            getMatchingClasses(onClasses, MatchType.PRESENT, context)));
+        }
+    // 对@ConditionalOnMissingClass注解做相同的逻辑处理(说明@ConditionalOnClass和@ConditionalOnMissingClass可以一起使用)
+        MultiValueMap&lt;String, Object&gt; onMissingClasses = getAttributes(metadata,
+                ConditionalOnMissingClass.class);
+        if (onMissingClasses != null) {
+            List&lt;String&gt; present = getMatchingClasses(onMissingClasses, MatchType.PRESENT,
+                    context);
+            if (!present.isEmpty()) {
+                return ConditionOutcome
+                        .noMatch(&quot;required @ConditionalOnMissing classes found: &quot;
+                                + StringUtils.collectionToCommaDelimitedString(present));
+            }
+            matchMessage.append(matchMessage.length() == 0 ? &quot;&quot; : &quot; &quot;);
+            matchMessage.append(&quot;@ConditionalOnMissing classes not found: &quot;
+                    + StringUtils.collectionToCommaDelimitedString(getMatchingClasses(
+                            onMissingClasses, MatchType.MISSING, context)));
+        }
+    // 返回全部匹配成功的ConditionalOutcome
+        return ConditionOutcome.match(matchMessage.toString());
+    }
+
+    private enum MatchType { // 枚举：匹配类型。用于查询类名在对应的类加载器中是否存在。
+
+        PRESENT { // 匹配成功
+            @Override
+            public boolean matches(String className, ConditionContext context) {
+                return ClassUtils.isPresent(className, context.getClassLoader());
+            }
+        },
+
+        MISSING { // 匹配不成功
+            @Override
+            public boolean matches(String className, ConditionContext context) {
+                return !ClassUtils.isPresent(className, context.getClassLoader());
+            }
+        };
+
+        public abstract boolean matches(String className, ConditionContext context);
+
+    }
+
+}
+</code></pre><p>比如FreemarkerAutoConfiguration中的@ConditionalOnClass注解中有value属性是freemarker.template.Configuration.class和FreeMarkerConfigurationFactory.class。在OnClassCondition执行过程中得到的最终ConditionalOutcome中的log message如下：</p>
+<pre><code>@ConditionalOnClass classes found: freemarker.template.Configuration,org.springframework.ui.freemarker.FreeMarkerConfigurationFactory
+</code></pre><h2 id="基于Bean的条件注解"><a href="#基于Bean的条件注解" class="headerlink" title="基于Bean的条件注解"></a>基于Bean的条件注解</h2><p>@ConditionalOnBean(Spring容器中存在指明的bean)、@ConditionalOnMissingBean(Spring容器中不存在指明的bean)以及ConditionalOnSingleCandidate(Spring容器中存在且只存在一个指明的bean)都是基于Bean的条件注解，它们对应的条件类是ConditionOnBean。</p>
+<p>@ConditionOnBean注解定义如下：</p>
+<pre><code>@Target({ ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Conditional(OnBeanCondition.class)
+public @interface ConditionalOnBean {
+    Class&lt;?&gt;[] value() default {}; // 匹配的bean类型
+    String[] type() default {}; // 匹配的bean类型的类名
+    Class&lt;? extends Annotation&gt;[] annotation() default {}; // 匹配的bean注解
+    String[] name() default {}; // 匹配的bean的名字
+    SearchStrategy search() default SearchStrategy.ALL; // 搜索策略。提供CURRENT(只在当前容器中找)、PARENTS(只在所有的父容器中找；但是不包括当前容器)和ALL(CURRENT和PARENTS的组合)
+}
+</code></pre><p>OnBeanCondition条件类的匹配代码如下：</p>
+<pre><code>@Override
+public ConditionOutcome getMatchOutcome(ConditionContext context,
+    AnnotatedTypeMetadata metadata) {
+  StringBuffer matchMessage = new StringBuffer(); // 记录匹配信息
+  if (metadata.isAnnotated(ConditionalOnBean.class.getName())) {
+    BeanSearchSpec spec = new BeanSearchSpec(context, metadata,
+        ConditionalOnBean.class); // 构造一个BeanSearchSpec，会从@ConditionalOnBean注解中获取属性，然后设置到BeanSearchSpec中
+    List&lt;String&gt; matching = getMatchingBeans(context, spec); // 从BeanFactory中根据策略找出所有匹配的bean
+    if (matching.isEmpty()) { // 如果没有匹配的bean，返回一个没有匹配成功的ConditionalOutcome
+      return ConditionOutcome
+          .noMatch(&quot;@ConditionalOnBean &quot; + spec + &quot; found no beans&quot;);
+    }
+    // 如果找到匹配的bean，匹配信息进行记录
+    matchMessage.append(
+        &quot;@ConditionalOnBean &quot; + spec + &quot; found the following &quot; + matching);
+  }
+  if (metadata.isAnnotated(ConditionalOnSingleCandidate.class.getName())) { // 相同的逻辑，针对@ConditionalOnSingleCandidate注解
+    BeanSearchSpec spec = new SingleCandidateBeanSearchSpec(context, metadata,
+        ConditionalOnSingleCandidate.class);
+    List&lt;String&gt; matching = getMatchingBeans(context, spec);
+    if (matching.isEmpty()) {
+      return ConditionOutcome.noMatch(
+          &quot;@ConditionalOnSingleCandidate &quot; + spec + &quot; found no beans&quot;);
+    }
+    else if (!hasSingleAutowireCandidate(context.getBeanFactory(), matching)) { // 多了一层判断，判断是否只有一个bean
+      return ConditionOutcome.noMatch(&quot;@ConditionalOnSingleCandidate &quot; + spec
+          + &quot; found no primary candidate amongst the&quot; + &quot; following &quot;
+          + matching);
+    }
+    matchMessage.append(&quot;@ConditionalOnSingleCandidate &quot; + spec + &quot; found &quot;
+        + &quot;a primary candidate amongst the following &quot; + matching);
+  }
+  if (metadata.isAnnotated(ConditionalOnMissingBean.class.getName())) { // 相同的逻辑，针对@ConditionalOnMissingBean注解
+    BeanSearchSpec spec = new BeanSearchSpec(context, metadata,
+        ConditionalOnMissingBean.class);
+    List&lt;String&gt; matching = getMatchingBeans(context, spec);
+    if (!matching.isEmpty()) {
+      return ConditionOutcome.noMatch(&quot;@ConditionalOnMissingBean &quot; + spec
+          + &quot; found the following &quot; + matching);
+    }
+    matchMessage.append(matchMessage.length() == 0 ? &quot;&quot; : &quot; &quot;);
+    matchMessage.append(&quot;@ConditionalOnMissingBean &quot; + spec + &quot; found no beans&quot;);
+  }
+  return ConditionOutcome.match(matchMessage.toString()); //返回匹配成功的ConditonalOutcome
+}
+</code></pre><p>SpringBoot还提供了其他比如ConditionalOnJava、ConditionalOnNotWebApplication、ConditionalOnWebApplication、ConditionalOnResource、ConditionalOnProperty、ConditionalOnExpression等条件注解，有兴趣的读者可以自行查看它们的底层处理逻辑。</p>
+<h2 id="各种条件注解的总结"><a href="#各种条件注解的总结" class="headerlink" title="各种条件注解的总结"></a>各种条件注解的总结</h2><table>
+<thead>
+<tr>
+<th>条件注解</th>
+<th>对应的Condition处理类</th>
+<th>处理逻辑</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>@ConditionalOnBean</td>
+<td>OnBeanCondition</td>
+<td>Spring容器中是否存在对应的实例。可以通过实例的类型、类名、注解、昵称去容器中查找(可以配置从当前容器中查找或者父容器中查找或者两者一起查找)这些属性都是数组，通过”与”的关系进行查找</td>
+</tr>
+<tr>
+<td>@ConditionalOnClass</td>
+<td>OnClassCondition</td>
+<td>类加载器中是否存在对应的类。可以通过Class指定(value属性)或者Class的全名指定(name属性)。如果是多个类或者多个类名的话，关系是”与”关系，也就是说这些类或者类名都必须同时在类加载器中存在</td>
+</tr>
+<tr>
+<td>@ConditionalOnExpression</td>
+<td>OnExpressionCondition</td>
+<td>判断SpEL 表达式是否成立</td>
+</tr>
+<tr>
+<td>@ConditionalOnJava</td>
+<td>OnJavaCondition</td>
+<td>指定Java版本是否符合要求。内部有2个属性value和range。value表示一个枚举的Java版本，range表示比这个老或者新于等于指定的Java版本(默认是新于等于)。内部会基于某些jdk版本特有的类去类加载器中查询，比如如果是jdk9，类加载器中需要存在java.security.cert.URICertStoreParameters；如果是jdk8，类加载器中需要存在java.util.function.Function；如果是jdk7，类加载器中需要存在java.nio.file.Files；如果是jdk6，类加载器中需要存在java.util.ServiceLoader</td>
+</tr>
+<tr>
+<td>@ConditionalOnMissingBean</td>
+<td>OnBeanCondition</td>
+<td>Spring容器中是否缺少对应的实例。可以通过实例的类型、类名、注解、昵称去容器中查找(可以配置从当前容器中查找或者父容器中查找或者两者一起查找)这些属性都是数组，通过”与”的关系进行查找。还多了2个属性ignored(类名)和ignoredType(类名)，匹配的过程中会忽略这些bean</td>
+</tr>
+<tr>
+<td>@ConditionalOnMissingClass</td>
+<td>OnClassCondition</td>
+<td>跟ConditionalOnClass的处理逻辑一样，只是条件相反，在类加载器中不存在对应的类</td>
+</tr>
+<tr>
+<td>@ConditionalOnNotWebApplication</td>
+<td>OnWebApplicationCondition</td>
+<td>应用程序是否是非Web程序，没有提供属性，只是一个标识。会从判断Web程序特有的类是否存在，环境是否是Servlet环境，容器是否是Web容器等</td>
+</tr>
+<tr>
+<td>@ConditionalOnProperty</td>
+<td>OnPropertyCondition</td>
+<td>应用环境中的屬性是否存在。提供prefix、name、havingValue以及matchIfMissing属性。prefix表示属性名的前缀，name是属性名，havingValue是具体的属性值，matchIfMissing是个boolean值，如果属性不存在，这个matchIfMissing为true的话，会继续验证下去，否则属性不存在的话直接就相当于匹配不成功</td>
+</tr>
+<tr>
+<td>@ConditionalOnResource</td>
+<td>OnResourceCondition</td>
+<td>是否存在指定的资源文件。只有一个属性resources，是个String数组。会从类加载器中去查询对应的资源文件是否存在</td>
+</tr>
+<tr>
+<td>@ConditionalOnSingleCandidate</td>
+<td>OnBeanCondition</td>
+<td>Spring容器中是否存在且只存在一个对应的实例。只有3个属性value、type、search。跟ConditionalOnBean中的这3种属性值意义一样</td>
+</tr>
+<tr>
+<td>@ConditionalOnWebApplication</td>
+<td>OnWebApplicationCondition</td>
+<td>应用程序是否是Web程序，没有提供属性，只是一个标识。会从判断Web程序特有的类是否存在，环境是否是Servlet环境，容器是否是Web容器等</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>例子</th>
+<th>例子意义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>@ConditionalOnBean(javax.sql.DataSource.class)</td>
+<td>Spring容器或者所有父容器中需要存在至少一个javax.sql.DataSource类的实例</td>
+</tr>
+<tr>
+<td>@ConditionalOnClass<br>({ Configuration.class,<br>FreeMarkerConfigurationFactory.class })</td>
+<td>类加载器中必须存在Configuration和FreeMarkerConfigurationFactory这两个类</td>
+</tr>
+<tr>
+<td>@ConditionalOnExpression<br>(“‘${server.host}’==’localhost’”)</td>
+<td>server.host配置项的值需要是localhost</td>
+</tr>
+<tr>
+<td>ConditionalOnJava(JavaVersion.EIGHT)</td>
+<td>Java版本至少是8</td>
+</tr>
+<tr>
+<td>@ConditionalOnMissingBean(value = ErrorController.class, search = SearchStrategy.CURRENT)</td>
+<td>Spring当前容器中不存在ErrorController类型的bean</td>
+</tr>
+<tr>
+<td>@ConditionalOnMissingClass<br>(“GenericObjectPool”)</td>
+<td>类加载器中不能存在GenericObjectPool这个类</td>
+</tr>
+<tr>
+<td>@ConditionalOnNotWebApplication</td>
+<td>必须在非Web应用下才会生效</td>
+</tr>
+<tr>
+<td>@ConditionalOnProperty(prefix = “spring.aop”, name = “auto”, havingValue = “true”, matchIfMissing = true)</td>
+<td>应用程序的环境中必须有spring.aop.auto这项配置，且它的值是true或者环境中不存在spring.aop.auto配置(matchIfMissing为true)</td>
+</tr>
+<tr>
+<td>@ConditionalOnResource<br>(resources=”mybatis.xml”)</td>
+<td>类加载路径中必须存在mybatis.xml文件</td>
+</tr>
+<tr>
+<td>@ConditionalOnSingleCandidate<br>(PlatformTransactionManager.class)</td>
+<td>Spring当前或父容器中必须存在PlatformTransactionManager这个类型的实例，且只有一个实例</td>
+</tr>
+<tr>
+<td>@ConditionalOnWebApplication</td>
+<td>必须在Web应用下才会生效</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SpringBoot条件注解的激活机制"><a href="#SpringBoot条件注解的激活机制" class="headerlink" title="SpringBoot条件注解的激活机制"></a>SpringBoot条件注解的激活机制</h2><p>分析完了条件注解的执行逻辑之后，接下来的问题就是SpringBoot是如何让这些条件注解生效的？</p>
+<p>SpringBoot使用ConditionEvaluator这个内部类完成条件注解的解析和判断。</p>
+<p>在Spring容器的refresh过程中，只有跟解析或者注册bean有关系的类都会使用ConditionEvaluator完成条件注解的判断，这个过程中一些类不满足条件的话就会被skip。这些类比如有AnnotatedBeanDefinitionReader、ConfigurationClassBeanDefinitionReader、ConfigurationClassParse、ClassPathScanningCandidateComponentProvider等。</p>
+<p>比如ConfigurationClassParser的构造函数会初始化内部属性conditionEvaluator：</p>
+<pre><code>public ConfigurationClassParser(MetadataReaderFactory metadataReaderFactory,
+    ProblemReporter problemReporter, Environment environment, ResourceLoader resourceLoader,
+    BeanNameGenerator componentScanBeanNameGenerator, BeanDefinitionRegistry registry) {
+
+  this.metadataReaderFactory = metadataReaderFactory;
+  this.problemReporter = problemReporter;
+  this.environment = environment;
+  this.resourceLoader = resourceLoader;
+  this.registry = registry;
+  this.componentScanParser = new ComponentScanAnnotationParser(
+      resourceLoader, environment, componentScanBeanNameGenerator, registry);
+  // 构造ConditionEvaluator用于处理条件注解
+  this.conditionEvaluator = new ConditionEvaluator(registry, environment, resourceLoader);
+}
+</code></pre><p>ConfigurationClassParser对每个配置类进行解析的时候都会使用ConditionEvaluator：</p>
+<pre><code>if (this.conditionEvaluator.shouldSkip(configClass.getMetadata(), ConfigurationPhase.PARSE_CONFIGURATION)) {
+  return;
+}
+</code></pre><p>ConditionEvaluator的skip方法：</p>
+<pre><code>public boolean shouldSkip(AnnotatedTypeMetadata metadata, ConfigurationPhase phase) {
+  // 如果这个类没有被@Conditional注解所修饰，不会skip
+  if (metadata == null || !metadata.isAnnotated(Conditional.class.getName())) {
+    return false;
+  }
+  // 如果参数中沒有设置条件注解的生效阶段
+  if (phase == null) {
+    // 是配置类的话直接使用PARSE_CONFIGURATION阶段
+    if (metadata instanceof AnnotationMetadata &amp;&amp;
+        ConfigurationClassUtils.isConfigurationCandidate((AnnotationMetadata) metadata)) {
+      return shouldSkip(metadata, ConfigurationPhase.PARSE_CONFIGURATION);
+    }
+    // 否则使用REGISTER_BEAN阶段
+    return shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN);
+  }
+  // 要解析的配置类的条件集合
+  List&lt;Condition&gt; conditions = new ArrayList&lt;Condition&gt;();
+  // 获取配置类的条件注解得到条件数据，并添加到集合中
+  for (String[] conditionClasses : getConditionClasses(metadata)) {
+    for (String conditionClass : conditionClasses) {
+      Condition condition = getCondition(conditionClass, this.context.getClassLoader());
+      conditions.add(condition);
+    }
+  }
+
+  // 对条件集合做个排序
+  AnnotationAwareOrderComparator.sort(conditions);
+  // 遍历条件集合
+  for (Condition condition : conditions) {
+    ConfigurationPhase requiredPhase = null;
+    if (condition instanceof ConfigurationCondition) {
+      requiredPhase = ((ConfigurationCondition) condition).getConfigurationPhase();
+    }
+    // 没有这个解析类不需要阶段的判断或者解析类和参数中的阶段一致才会继续进行
+    if (requiredPhase == null || requiredPhase == phase) {
+      // 阶段一致切不满足条件的话，返回true并跳过这个bean的解析
+      if (!condition.matches(this.context, metadata)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+</code></pre><p>SpringBoot在条件注解的解析log记录在了ConditionEvaluationReport类中，可以通过BeanFactory获取(BeanFactory是有父子关系的；每个BeanFactory都存有一份ConditionEvaluationReport，互不相干)：</p>
+<pre><code>ConditionEvaluationReport conditionEvaluationReport = beanFactory.getBean(&quot;autoConfigurationReport&quot;, ConditionEvaluationReport.class);
+Map&lt;String, ConditionEvaluationReport.ConditionAndOutcomes&gt; result = conditionEvaluationReport.getConditionAndOutcomesBySource();
+for(String key : result.keySet()) {
+    ConditionEvaluationReport.ConditionAndOutcomes conditionAndOutcomes = result.get(key);
+    Iterator&lt;ConditionEvaluationReport.ConditionAndOutcome&gt; iterator = conditionAndOutcomes.iterator();
+    while(iterator.hasNext()) {
+        ConditionEvaluationReport.ConditionAndOutcome conditionAndOutcome = iterator.next();
+        System.out.println(key + &quot; -- &quot; + conditionAndOutcome.getCondition().getClass().getSimpleName() + &quot; -- &quot; + conditionAndOutcome.getOutcome());
+    }
+}
+</code></pre><p>打印出条件注解下的类加载信息：</p>
+<pre><code>.......
+org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: freemarker.template.Configuration,org.springframework.ui.freemarker.FreeMarkerConfigurationFactory
+org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: groovy.text.markup.MarkupTemplateEngine
+org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: com.google.gson.Gson
+org.springframework.boot.autoconfigure.h2.H2ConsoleAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: org.h2.server.web.WebServlet
+org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: org.springframework.hateoas.Resource,org.springframework.plugin.core.Plugin
+org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: com.hazelcast.core.HazelcastInstance
+.......
+</code></pre>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;SpringBoot内部提供了特有的注解：条件注解(Conditional Annotation)。比如@ConditionalOnBean、@ConditionalOnClass、@ConditionalOnExpression、@ConditionalOnMissingBean等。&lt;/p&gt;
+&lt;p&gt;条件注解存在的意义在于动态识别(也可以说是代码自动化执行)。比如@ConditionalOnClass会检查类加载器中是否存在对应的类，如果有的话被注解修饰的类就有资格被Spring容器所注册，否则会被skip。&lt;/p&gt;
+&lt;p&gt;比如FreemarkerAutoConfiguration这个自动化配置类的定义如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;@Configuration
+@ConditionalOnClass({ freemarker.template.Configuration.class,
+        FreeMarkerConfigurationFactory.class })
+@AutoConfigureAfter(WebMvcAutoConfiguration.class)
+@EnableConfigurationProperties(FreeMarkerProperties.class)
+public class FreeMarkerAutoConfiguration
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这个自动化配置类被@ConditionalOnClass条件注解修饰，这个条件注解存在的意义在于判断类加载器中是否存在freemarker.template.Configuration和FreeMarkerConfigurationFactory这两个类，如果都存在的话会在Spring容器中加载这个FreeMarkerAutoConfiguration配置类；否则不会加载。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
+    
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springboot源码分析" scheme="http://fangjian0423.github.io/tags/springboot%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/"/>
+    
+  </entry>
+  
+  <entry>
     <title>SpringBoot源码分析之Spring容器的refresh过程</title>
     <link href="http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/"/>
     <id>http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/</id>
     <published>2017-05-10T11:55:21.000Z</published>
-    <updated>2017-05-10T06:59:11.000Z</updated>
+    <updated>2017-05-14T10:47:07.000Z</updated>
     
     <content type="html"><![CDATA[<p>上一篇文章中，我们分析了SpringBoot的启动过程：构造SpringApplication并调用它的run方法。其中构造SpringApplication的时候会初始化一些监听器和初始化器；run方法调用的过程中会有对应的监听器监听，并且会创建Spring容器。</p>
 <p>Spring容器创建之后，会调用它的refresh方法，refresh的时候会做很多事情：比如完成配置类的解析、各种BeanFactoryPostProcessor和BeanPostProcessor的注册、国际化配置的初始化、web内置容器的构造等等。</p>
@@ -223,6 +660,8 @@ private void loadBeanDefinitionsForConfigurationClass(ConfigurationClass configC
     
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
     
+      <category term="springboot源码分析" scheme="http://fangjian0423.github.io/tags/springboot%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/"/>
+    
   </entry>
   
   <entry>
@@ -230,7 +669,7 @@ private void loadBeanDefinitionsForConfigurationClass(ConfigurationClass configC
     <link href="http://fangjian0423.github.io/2017/04/30/springboot-startup-analysis/"/>
     <id>http://fangjian0423.github.io/2017/04/30/springboot-startup-analysis/</id>
     <published>2017-04-30T12:33:33.000Z</published>
-    <updated>2017-05-02T02:21:15.000Z</updated>
+    <updated>2017-05-14T10:46:53.000Z</updated>
     
     <content type="html"><![CDATA[<p>SpringBoot的启动很简单，代码如下：</p>
 <pre><code>@SpringBootApplication
@@ -513,6 +952,8 @@ public class MyApplication {
       <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
     
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springboot源码分析" scheme="http://fangjian0423.github.io/tags/springboot%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/"/>
     
   </entry>
   
@@ -3894,269 +4335,6 @@ curl http://localhost:8080/getPersons
     
     
       <category term="scala" scheme="http://fangjian0423.github.io/tags/scala/"/>
-    
-      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>SpringBoot内部的一些自动化配置原理</title>
-    <link href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/"/>
-    <id>http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/</id>
-    <published>2016-06-12T11:30:57.000Z</published>
-    <updated>2016-09-23T17:07:18.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>springboot用来简化Spring框架带来的大量XML配置以及复杂的依赖管理，让开发人员可以更加关注业务逻辑的开发。</p>
-<p>比如不使用springboot而使用SpringMVC作为web框架进行开发的时候，需要配置相关的SpringMVC配置以及对应的依赖，比较繁琐；而使用springboot的话只需要以下短短的几行代码就可以使用SpringMVC，可谓相当地方便：</p>
-<pre><code>@RestController
-class App {
-  @RequestMapping(&quot;/&quot;)
-  String home() {
-    &quot;hello&quot;
-  }
-}
-</code></pre><p>其中maven配置如下：</p>
-<pre><code>&lt;parent&gt;
-    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-    &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-    &lt;version&gt;1.3.5.RELEASE&lt;/version&gt;
-&lt;/parent&gt;
-&lt;dependencies&gt;
-    &lt;dependency&gt;
-        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-        &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
-    &lt;/dependency&gt;
-&lt;/dependencies&gt;
-</code></pre><a id="more"></a>
-<p>我们以使用SpringMVC并且视图使用freemarker为例，分析springboot内部是如何解析freemarker视图的。</p>
-<p>如果要在springboot中使用freemarker视图框架，并且使用maven构建项目的时候，还需要加入以下依赖：</p>
-<pre><code>&lt;dependency&gt;
-    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-    &lt;artifactId&gt;spring-boot-starter-freemarker&lt;/artifactId&gt;
-    &lt;version&gt;1.3.5.RELEASE&lt;/version&gt;
-&lt;/dependency&gt;
-</code></pre><p>这个spring-boot-starter-freemarker依赖对应的jar包里的文件如下：</p>
-<pre><code>META-INF
-├── MANIFEST.MF
-├── maven
-│   └── org.springframework.boot
-│       └── spring-boot-starter-freemarker
-│           ├── pom.properties
-│           └── pom.xml
-└── spring.provides
-</code></pre><p>内部的pom.xml里需要的依赖如下：</p>
-<pre><code>&lt;dependency&gt;
-  &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-  &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;
-&lt;/dependency&gt;
-&lt;dependency&gt;
-  &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-  &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
-&lt;/dependency&gt;
-&lt;dependency&gt;
-  &lt;groupId&gt;org.freemarker&lt;/groupId&gt;
-  &lt;artifactId&gt;freemarker&lt;/artifactId&gt;
-&lt;/dependency&gt;
-&lt;dependency&gt;
-  &lt;groupId&gt;org.springframework&lt;/groupId&gt;
-  &lt;artifactId&gt;spring-context-support&lt;/artifactId&gt;
-&lt;/dependency&gt;
-</code></pre><p>我们可以看到这个spring-boot-starter-freemarker依赖内部并没有freemarker的ViewResolver，而是仅仅加入了freemarker的依赖，还有3个依赖，分别是spring-boot-starter、spring-boot-starter-web和spring-context-support。</p>
-<p>接下来我们来分析一下为什么在springboot中加入了freemarker的依赖spring-boot-starter-freemarker后，SpringMVC自动地构造了一个freemarker的ViewResolver？</p>
-<p>在分析之前，首先我们先看下maven配置，看到了一个parent配置：</p>
-<pre><code>&lt;parent&gt;
-    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-    &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-    &lt;version&gt;1.3.5.RELEASE&lt;/version&gt;
-&lt;/parent&gt;
-</code></pre><p>这个spring-boot-starter-parent的pom文件在 <a href="http://central.maven.org/maven2/org/springframework/boot/spring-boot-starter-parent/1.3.5.RELEASE/spring-boot-starter-parent-1.3.5.RELEASE.pom" target="_blank" rel="external">http://central.maven.org/maven2/org/springframework/boot/spring-boot-starter-parent/1.3.5.RELEASE/spring-boot-starter-parent-1.3.5.RELEASE.pom</a> 里。</p>
-<p>它内部也有一个parent：</p>
-<pre><code>&lt;parent&gt;
-    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-    &lt;artifactId&gt;spring-boot-dependencies&lt;/artifactId&gt;
-    &lt;version&gt;1.3.5.RELEASE&lt;/version&gt;
-    &lt;relativePath&gt;../../spring-boot-dependencies&lt;/relativePath&gt;
-&lt;/parent&gt;
-</code></pre><p>这个spring-boot-dependencies的pom文件在<a href="http://central.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.3.5.RELEASE/spring-boot-dependencies-1.3.5.RELEASE.pom，内部有很多依赖。" target="_blank" rel="external">http://central.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.3.5.RELEASE/spring-boot-dependencies-1.3.5.RELEASE.pom，内部有很多依赖。</a></p>
-<p>比如spring-boot-starter-web、spring-boot-starter-websocket、spring-boot-starter-data-solrspring-boot-starter-freemarker等等，基本上所有的依赖都在这个parent里。</p>
-<p>我们的例子中使用了parent依赖里的两个依赖，分别是spring-boot-starter-web和spring-boot-starter-freemarker。</p>
-<p>其中spring-boot-starter-web内部依赖了spring的两个spring web依赖：spring-web和spring-webmvc。</p>
-<p>spring-boot-starter-web内部还依赖spring-boot-starter，这个spring-boot-starter依赖了spring核心依赖spring-core；还依赖了<strong>spring-boot</strong>和<strong>spring-boot-autoconfigure</strong>这两个。</p>
-<p><strong>spring-boot</strong>定义了很多基础功能类，像运行程序的SpringApplication，Logging系统，一些tomcat或者jetty这些EmbeddedServlet容器，配置属性loader等等。</p>
-<p>包括了这些包：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/springboot01.png" alt="image"></p>
-<p><strong>spring-boot-autoconfigure</strong>定义了很多自动配置的类，比如jpa，solr，redis，elasticsearch、mongo、freemarker、velocity，thymeleaf等等自动配置的类。</p>
-<p>以freemarker为例，看一下它的自动化配置类：</p>
-<pre><code>@Configuration // 使用Configuration注解，自动构造一些内部定义的bean
-@ConditionalOnClass({ freemarker.template.Configuration.class,
-        FreeMarkerConfigurationFactory.class }) // 需要freemarker.template.Configuration和FreeMarkerConfigurationFactory这两个类存在在classpath中才会进行自动配置
-@AutoConfigureAfter(WebMvcAutoConfiguration.class) // 本次自动配置需要依赖WebMvcAutoConfiguration这个配置类配置之后触发。这个WebMvcAutoConfiguration内部会配置很多Wen基础性的东西，比如RequestMappingHandlerMapping、RequestMappingHandlerAdapter等
-@EnableConfigurationProperties(FreeMarkerProperties.class) // 使用FreeMarkerProperties类中的配置
-public class FreeMarkerAutoConfiguration {
-
-    private static final Log logger = LogFactory
-            .getLog(FreeMarkerAutoConfiguration.class);
-
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    @Autowired
-    private FreeMarkerProperties properties;
-
-    @PostConstruct // 构造之后调用的方法，组要检查模板位置是否存在
-    public void checkTemplateLocationExists() {
-        if (this.properties.isCheckTemplateLocation()) {
-            TemplateLocation templatePathLocation = null;
-            List&lt;TemplateLocation&gt; locations = new ArrayList&lt;TemplateLocation&gt;();
-            for (String templateLoaderPath : this.properties.getTemplateLoaderPath()) {
-                TemplateLocation location = new TemplateLocation(templateLoaderPath);
-                locations.add(location);
-                if (location.exists(this.applicationContext)) {
-                    templatePathLocation = location;
-                    break;
-                }
-            }
-            if (templatePathLocation == null) {
-                logger.warn(&quot;Cannot find template location(s): &quot; + locations
-                        + &quot; (please add some templates, &quot;
-                        + &quot;check your FreeMarker configuration, or set &quot;
-                        + &quot;spring.freemarker.checkTemplateLocation=false)&quot;);
-            }
-        }
-    }
-
-    protected static class FreeMarkerConfiguration {
-
-        @Autowired
-        protected FreeMarkerProperties properties;
-
-        protected void applyProperties(FreeMarkerConfigurationFactory factory) {
-            factory.setTemplateLoaderPaths(this.properties.getTemplateLoaderPath());
-            factory.setPreferFileSystemAccess(this.properties.isPreferFileSystemAccess());
-            factory.setDefaultEncoding(this.properties.getCharsetName());
-            Properties settings = new Properties();
-            settings.putAll(this.properties.getSettings());
-            factory.setFreemarkerSettings(settings);
-        }
-
-    }
-
-    @Configuration
-    @ConditionalOnNotWebApplication // 非Web项目的自动配置
-    public static class FreeMarkerNonWebConfiguration extends FreeMarkerConfiguration {
-
-        @Bean
-        @ConditionalOnMissingBean
-        public FreeMarkerConfigurationFactoryBean freeMarkerConfiguration() {
-            FreeMarkerConfigurationFactoryBean freeMarkerFactoryBean = new FreeMarkerConfigurationFactoryBean();
-            applyProperties(freeMarkerFactoryBean);
-            return freeMarkerFactoryBean;
-        }
-
-    }
-
-    @Configuration // 自动配置的类
-    @ConditionalOnClass(Servlet.class) // 需要运行在Servlet容器下
-    @ConditionalOnWebApplication // 需要在Web项目下
-    public static class FreeMarkerWebConfiguration extends FreeMarkerConfiguration {
-
-        @Bean
-        @ConditionalOnMissingBean(FreeMarkerConfig.class)
-        public FreeMarkerConfigurer freeMarkerConfigurer() {
-            FreeMarkerConfigurer configurer = new FreeMarkerConfigurer();
-            applyProperties(configurer);
-            return configurer;
-        }
-
-        @Bean
-        public freemarker.template.Configuration freeMarkerConfiguration(
-                FreeMarkerConfig configurer) {
-            return configurer.getConfiguration();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean(name = &quot;freeMarkerViewResolver&quot;) // 没有配置freeMarkerViewResolver这个bean的话，会自动构造一个freeMarkerViewResolver
-        @ConditionalOnProperty(name = &quot;spring.freemarker.enabled&quot;, matchIfMissing = true) // 配置文件中开关开启的话，才会构造
-        public FreeMarkerViewResolver freeMarkerViewResolver() {
-            // 构造了freemarker的ViewSolver，这就是一开始我们分析的为什么没有设置ViewResolver，但是最后却还是存在的原因
-            FreeMarkerViewResolver resolver = new FreeMarkerViewResolver();
-            this.properties.applyToViewResolver(resolver);
-            return resolver;
-        }
-
-    }
-}
-</code></pre><p>freemarker对应的配置类：</p>
-<pre><code>@ConfigurationProperties(prefix = &quot;spring.freemarker&quot;) // 使用配置文件中以spring.freemarker开头的配置
-public class FreeMarkerProperties extends AbstractTemplateViewResolverProperties {
-    public static final String DEFAULT_TEMPLATE_LOADER_PATH = &quot;classpath:/templates/&quot;; // 默认路径
-
-    public static final String DEFAULT_PREFIX = &quot;&quot;; // 默认前缀
-
-    public static final String DEFAULT_SUFFIX = &quot;.ftl&quot;; // 默认后缀
-
-    ...
-
-}
-</code></pre><p>下面是官网上的freemarker配置：</p>
-<pre><code># FREEMARKER (FreeMarkerAutoConfiguration)
-spring.freemarker.allow-request-override=false # Set whether HttpServletRequest attributes are allowed to override (hide) controller generated model attributes of the same name.
-spring.freemarker.allow-session-override=false # Set whether HttpSession attributes are allowed to override (hide) controller generated model attributes of the same name.
-spring.freemarker.cache=false # Enable template caching.
-spring.freemarker.charset=UTF-8 # Template encoding.
-spring.freemarker.check-template-location=true # Check that the templates location exists.
-spring.freemarker.content-type=text/html # Content-Type value.
-spring.freemarker.enabled=true # Enable MVC view resolution for this technology.
-spring.freemarker.expose-request-attributes=false # Set whether all request attributes should be added to the model prior to merging with the template.
-spring.freemarker.expose-session-attributes=false # Set whether all HttpSession attributes should be added to the model prior to merging with the template.
-spring.freemarker.expose-spring-macro-helpers=true # Set whether to expose a RequestContext for use by Spring&apos;s macro library, under the name &quot;springMacroRequestContext&quot;.
-spring.freemarker.prefer-file-system-access=true # Prefer file system access for template loading. File system access enables hot detection of template changes.
-spring.freemarker.prefix= # Prefix that gets prepended to view names when building a URL.
-spring.freemarker.request-context-attribute= # Name of the RequestContext attribute for all views.
-spring.freemarker.settings.*= # Well-known FreeMarker keys which will be passed to FreeMarker&apos;s Configuration.
-spring.freemarker.suffix= # Suffix that gets appended to view names when building a URL.
-spring.freemarker.template-loader-path=classpath:/templates/ # Comma-separated list of template paths.
-spring.freemarker.view-names= # White list of view names that can be resolved.
-</code></pre><p>所以说一开始我们加入了一个spring-boot-starter-freemarker依赖，这个依赖中存在freemarker的lib，满足了FreeMarkerAutoConfiguration中的ConditionalOnClass里写的freemarker.template.Configuration.class这个类存在于classpath中。</p>
-<p>所以就构造了FreeMarkerAutoConfiguration里的ViewResolver，这个ViewResolver被自动加入到SpringMVC中。</p>
-<p>同样地，如果我们要使用velocity模板，springboot内部也有velocity的自动配置类VelocityAutoConfiguration，原理是跟freemarker一样的。</p>
-<p>其他：</p>
-<p><a href="https://github.com/mybatis/spring-boot-starter" target="_blank" rel="external">Mybatis的autoconfigure</a>是Mybatis提供的springboot的自动配置模块，由于springboot官方没有提供mybatis的自动化配置模块，所以mybatis自己写了这么一个模块，观察它的源码，发现基本上跟freemarker的autoconfigure模块一样，只需要构造对应的实例即可。</p>
-<p>总结：</p>
-<p>springboot内部提供了很多自动化配置的类，这些类会判断classpath中是否存在自己需要的那个类，如果存在则会自动配置相关的配置，否则就不会自动配置。</p>
-<p>如果我们需要使用一些框架，只需要加入依赖即可，这些依赖内部是没有代码的，只是一些对应框架需要的lib，有了这些lib就会触发自动化配置，于是就能使用框架了。</p>
-<p>这一点跟当时看springmvc的时候对response进行json或xml渲染的原理相同。springmvc中的requestmapping注解加上responsebody注解后会返回xml或者json，如果依赖中加入jackson依赖就会转换成json，如果依赖中加入xstream依赖就会转换成xml。当然，前提是springmvc中有了这两种依赖的HttpMessageConverter代码，这个HttpMessageConverter代码就相当于springboot中的各种AutoConfiguration。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;springboot用来简化Spring框架带来的大量XML配置以及复杂的依赖管理，让开发人员可以更加关注业务逻辑的开发。&lt;/p&gt;
-&lt;p&gt;比如不使用springboot而使用SpringMVC作为web框架进行开发的时候，需要配置相关的SpringMVC配置以及对应的依赖，比较繁琐；而使用springboot的话只需要以下短短的几行代码就可以使用SpringMVC，可谓相当地方便：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;@RestController
-class App {
-  @RequestMapping(&amp;quot;/&amp;quot;)
-  String home() {
-    &amp;quot;hello&amp;quot;
-  }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中maven配置如下：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;&amp;lt;parent&amp;gt;
-    &amp;lt;groupId&amp;gt;org.springframework.boot&amp;lt;/groupId&amp;gt;
-    &amp;lt;artifactId&amp;gt;spring-boot-starter-parent&amp;lt;/artifactId&amp;gt;
-    &amp;lt;version&amp;gt;1.3.5.RELEASE&amp;lt;/version&amp;gt;
-&amp;lt;/parent&amp;gt;
-&amp;lt;dependencies&amp;gt;
-    &amp;lt;dependency&amp;gt;
-        &amp;lt;groupId&amp;gt;org.springframework.boot&amp;lt;/groupId&amp;gt;
-        &amp;lt;artifactId&amp;gt;spring-boot-starter-web&amp;lt;/artifactId&amp;gt;
-    &amp;lt;/dependency&amp;gt;
-&amp;lt;/dependencies&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-    
-    </summary>
-    
-      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
-    
     
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
     

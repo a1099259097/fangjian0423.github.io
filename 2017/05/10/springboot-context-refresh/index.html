@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="java,springboot," />
+  <meta name="keywords" content="java,springboot,springboot源码分析," />
 
 
 
@@ -94,7 +94,7 @@ Spring容器创建之后，会调用它的refresh方法，refresh的时候会做
 <meta property="og:site_name" content="Format's Notes">
 <meta property="og:description" content="上一篇文章中，我们分析了SpringBoot的启动过程：构造SpringApplication并调用它的run方法。其中构造SpringApplication的时候会初始化一些监听器和初始化器；run方法调用的过程中会有对应的监听器监听，并且会创建Spring容器。
 Spring容器创建之后，会调用它的refresh方法，refresh的时候会做很多事情：比如完成配置类的解析、各种BeanFact">
-<meta property="og:updated_time" content="2017-05-10T06:59:11.000Z">
+<meta property="og:updated_time" content="2017-05-14T10:47:07.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SpringBoot源码分析之Spring容器的refresh过程">
 <meta name="twitter:description" content="上一篇文章中，我们分析了SpringBoot的启动过程：构造SpringApplication并调用它的run方法。其中构造SpringApplication的时候会初始化一些监听器和初始化器；run方法调用的过程中会有对应的监听器监听，并且会创建Spring容器。
@@ -606,6 +606,8 @@ private void loadBeanDefinitionsForConfigurationClass(ConfigurationClass configC
           
             <a href="/tags/springboot/" rel="tag">#springboot</a>
           
+            <a href="/tags/springboot源码分析/" rel="tag">#springboot源码分析</a>
+          
         </div>
       
 
@@ -620,6 +622,10 @@ private void loadBeanDefinitionsForConfigurationClass(ConfigurationClass configC
           </div>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/05/16/springboot-condition-annotation/" rel="prev" title="SpringBoot源码分析之条件注解的底层实现">
+                SpringBoot源码分析之条件注解的底层实现 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -694,7 +700,7 @@ private void loadBeanDefinitionsForConfigurationClass(ConfigurationClass configC
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">100</span>
+              <span class="site-state-item-count">101</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -711,7 +717,7 @@ private void loadBeanDefinitionsForConfigurationClass(ConfigurationClass configC
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-count">64</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

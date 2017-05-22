@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-05-22T10:35:40.000Z</updated>
+  <updated>2017-05-22T10:38:40.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://fangjian0423.github.io/2017/05/22/springboot-embedded-servlet-container/"/>
     <id>http://fangjian0423.github.io/2017/05/22/springboot-embedded-servlet-container/</id>
     <published>2017-05-22T10:35:36.000Z</published>
-    <updated>2017-05-22T10:35:40.000Z</updated>
+    <updated>2017-05-22T10:38:40.000Z</updated>
     
     <content type="html"><![CDATA[<p>SpringBoot内置了Servlet容器，这样项目的发布、部署就不需要额外的Servlet容器，直接启动jar包即可。SpringBoot官方文档上有一个小章节<a href="https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#boot-features-embedded-container" target="_blank" rel="external">内置servlet容器支持</a>用于说明内置Servlet的相关问题。</p>
 <p>在<a href="http://fangjian0423.github.io/2017/04/30/springboot-startup-analysis/">SpringBoot源码分析之SpringBoot的启动过程</a>文章中我们了解到如果是Web程序，那么会构造AnnotationConfigEmbeddedWebApplicationContext类型的Spring容器，在<a href="http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/">SpringBoot源码分析之Spring容器的refresh过程</a>文章中我们知道AnnotationConfigEmbeddedWebApplicationContext类型的Spring容器在refresh的过程中会在onRefresh方法中创建内置的Servlet容器。</p>
@@ -554,6 +554,7 @@ public ConditionOutcome getMatchOutcome(ConditionContext context,
 
 }
 </code></pre><p>所以BeanNameViewResolver不会被构造，Whitelabel Error Page也不会构造，而是直接去找自定义的error视图。</p>
+<p>一些测试代码： <a href="https://github.com/fangjian0423/springboot-analysis/tree/master/springboot-embedded-servlet-conatiner" target="_blank" rel="external">https://github.com/fangjian0423/springboot-analysis/tree/master/springboot-embedded-servlet-conatiner</a></p>
 ]]></content>
     
     <summary type="html">
@@ -1856,9 +1857,9 @@ targetable.newMethod(); // new method
       <category term="architecture" scheme="http://fangjian0423.github.io/categories/architecture/"/>
     
     
-      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
-    
       <category term="architecture" scheme="http://fangjian0423.github.io/tags/architecture/"/>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
     
   </entry>
   
@@ -3261,9 +3262,9 @@ private StepBuilderFactory steps;
     
       <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
     
-      <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
-    
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
     
   </entry>
   

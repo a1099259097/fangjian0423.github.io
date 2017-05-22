@@ -95,7 +95,7 @@
 <meta property="og:description" content="SpringBoot内置了Servlet容器，这样项目的发布、部署就不需要额外的Servlet容器，直接启动jar包即可。SpringBoot官方文档上有一个小章节内置servlet容器支持用于说明内置Servlet的相关问题。
 在SpringBoot源码分析之SpringBoot的启动过程文章中我们了解到如果是Web程序，那么会构造AnnotationConfigEmbeddedWebAppli">
 <meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/embedded-servlet-container01.png">
-<meta property="og:updated_time" content="2017-05-22T10:35:40.000Z">
+<meta property="og:updated_time" content="2017-05-22T10:38:40.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SpringBoot源码分析之内置Servlet容器">
 <meta name="twitter:description" content="SpringBoot内置了Servlet容器，这样项目的发布、部署就不需要额外的Servlet容器，直接启动jar包即可。SpringBoot官方文档上有一个小章节内置servlet容器支持用于说明内置Servlet的相关问题。
@@ -909,6 +909,7 @@ public ConditionOutcome getMatchOutcome(ConditionContext context,
 
 }
 </code></pre><p>所以BeanNameViewResolver不会被构造，Whitelabel Error Page也不会构造，而是直接去找自定义的error视图。</p>
+<p>一些测试代码： <a href="https://github.com/fangjian0423/springboot-analysis/tree/master/springboot-embedded-servlet-conatiner" target="_blank" rel="external">https://github.com/fangjian0423/springboot-analysis/tree/master/springboot-embedded-servlet-conatiner</a></p>
 
       
     </div>

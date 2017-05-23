@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="jdk,queue," />
+  <meta name="keywords" content="java,elasticsearch," />
 
 
 
@@ -86,28 +86,25 @@
 
 
 
-<meta name="description" content="优先队列跟普通的队列不一样，普通队列是一种遵循FIFO规则的队列，拿数据的时候按照加入队列的顺序拿取。   而优先队列每次拿数据的时候都会拿出优先级最高的数据。
-优先队列内部维护着一个堆，每次取数据的时候都从堆顶拿数据，这就是优先队列的原理。
-jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优先级规则。">
+<meta name="description" content="最近工作中使用了Spring Data Elasticsearch。发生它存在一个问题：
+Document对应的POJO的属性跟es里面文档的字段名字不一样，这样Repository里面编写自定义的查询方法就会查询不出结果。
+比如有个Person类，它有2个属性goodFace和goodAt。这2个属性在es的索引里对应的字段表为good_face和good_at：
+@Document(repli">
 <meta property="og:type" content="article">
-<meta property="og:title" content="jdk PriorityQueue优先队列工作原理分析">
-<meta property="og:url" content="http://fangjian0423.github.io/2016/04/10/jdk_priorityqueue/index.html">
+<meta property="og:title" content="SpringData ES 关于字段名和索引中的列名字不一致导致的查询问题">
+<meta property="og:url" content="http://fangjian0423.github.io/2017/05/24/spring-data-es-query-problem/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="优先队列跟普通的队列不一样，普通队列是一种遵循FIFO规则的队列，拿数据的时候按照加入队列的顺序拿取。   而优先队列每次拿数据的时候都会拿出优先级最高的数据。
-优先队列内部维护着一个堆，每次取数据的时候都从堆顶拿数据，这就是优先队列的原理。
-jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优先级规则。">
-<meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10">
-<meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue02.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10">
-<meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue03.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10">
-<meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue04.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10">
-<meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue05.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10">
-<meta property="og:updated_time" content="2016-05-10T14:59:25.000Z">
+<meta property="og:description" content="最近工作中使用了Spring Data Elasticsearch。发生它存在一个问题：
+Document对应的POJO的属性跟es里面文档的字段名字不一样，这样Repository里面编写自定义的查询方法就会查询不出结果。
+比如有个Person类，它有2个属性goodFace和goodAt。这2个属性在es的索引里对应的字段表为good_face和good_at：
+@Document(repli">
+<meta property="og:updated_time" content="2017-05-23T16:23:15.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="jdk PriorityQueue优先队列工作原理分析">
-<meta name="twitter:description" content="优先队列跟普通的队列不一样，普通队列是一种遵循FIFO规则的队列，拿数据的时候按照加入队列的顺序拿取。   而优先队列每次拿数据的时候都会拿出优先级最高的数据。
-优先队列内部维护着一个堆，每次取数据的时候都从堆顶拿数据，这就是优先队列的原理。
-jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优先级规则。">
-<meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10">
+<meta name="twitter:title" content="SpringData ES 关于字段名和索引中的列名字不一致导致的查询问题">
+<meta name="twitter:description" content="最近工作中使用了Spring Data Elasticsearch。发生它存在一个问题：
+Document对应的POJO的属性跟es里面文档的字段名字不一样，这样Repository里面编写自定义的查询方法就会查询不出结果。
+比如有个Person类，它有2个属性goodFace和goodAt。这2个属性在es的索引里对应的字段表为good_face和good_at：
+@Document(repli">
 
 
 
@@ -129,7 +126,7 @@ jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优�
 
 
 
-  <title> jdk PriorityQueue优先队列工作原理分析 | Format's Notes </title>
+  <title> SpringData ES 关于字段名和索引中的列名字不一致导致的查询问题 | Format's Notes </title>
 </head>
 
 <body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
@@ -318,7 +315,7 @@ jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优�
             
             
               
-                jdk PriorityQueue优先队列工作原理分析
+                SpringData ES 关于字段名和索引中的列名字不一致导致的查询问题
               
             
           </h1>
@@ -330,8 +327,8 @@ jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优�
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-04-10T21:36:08+08:00" content="2016-04-10">
-              2016-04-10
+            <time itemprop="dateCreated" datetime="2017-05-24T00:33:33+08:00" content="2017-05-24">
+              2017-05-24
             </time>
           </span>
 
@@ -344,8 +341,8 @@ jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优�
               <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/jdk/" itemprop="url" rel="index">
-                    <span itemprop="name">jdk</span>
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
                   </a>
                 </span>
 
@@ -360,8 +357,8 @@ jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优�
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/04/10/jdk_priorityqueue/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/10/jdk_priorityqueue/" itemprop="commentsCount"></span>
+                <a href="/2017/05/24/spring-data-es-query-problem/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/05/24/spring-data-es-query-problem/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -384,207 +381,192 @@ jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优�
       
 
       
-        <p>优先队列跟普通的队列不一样，普通队列是一种遵循FIFO规则的队列，拿数据的时候按照加入队列的顺序拿取。   而优先队列每次拿数据的时候都会拿出优先级最高的数据。</p>
-<p>优先队列内部维护着一个堆，每次取数据的时候都从堆顶拿数据，这就是优先队列的原理。</p>
-<p>jdk的优先队列使用PriorityQueue这个类，使用者可以自己定义优先级规则。</p>
+        <p>最近工作中使用了<a href="https://github.com/spring-projects/spring-data-elasticsearch" target="_blank" rel="external">Spring Data Elasticsearch</a>。发生它存在一个问题：</p>
+<p><strong>Document对应的POJO的属性跟es里面文档的字段名字不一样，这样Repository里面编写自定义的查询方法就会查询不出结果。</strong></p>
+<p>比如有个Person类，它有2个属性goodFace和goodAt。这2个属性在es的索引里对应的字段表为good_face和good_at：</p>
+<pre><code>@Document(replicas = 1, shards = 1, type = &quot;person&quot;, indexName = &quot;person&quot;)
+@Getter
+@Setter
+@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+public class Person {
+    @Id
+    private String id;
+    private String name;
+    private boolean goodFace;
+    private String goodAt;
+}
+</code></pre><p>Repository中的自定义查询：</p>
+<pre><code>@Repository
+public interface PersonRepository extends ElasticsearchRepository&lt;Person, String&gt; {
+    List&lt;Person&gt; findByGoodFace(boolean isGoodFace);
+    List&lt;Person&gt; findByName(String name);
+}
+</code></pre><p>方法findByGoodFace是查询不出结果的，而findByName是ok的。</p>
+<p>为什么findByGoodFace不行而findByName可以呢，来探究一下。</p>
 <a id="more"></a>
-<h2 id="一个PriorityQueue例子"><a href="#一个PriorityQueue例子" class="headerlink" title="一个PriorityQueue例子"></a>一个PriorityQueue例子</h2><p>定义一个Task类，有2个属性name和level。这个类放到PriorityQueue里，level越大优先级越高：</p>
-<pre><code>private static class Task {
-    String name;
-    int level;
-
-    public Task(String name, int level) {
-        this.name = name;
-        this.level = level;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public void setLevel(int level) {
-        this.level = level;
-    }
-
-    @Override
-    public String toString() {
-        return &quot;Task{&quot; +
-                &quot;name=&apos;&quot; + name + &apos;\&apos;&apos; +
-                &quot;, level=&quot; + level +
-                &apos;}&apos;;
-    }
+<p>Person类的name属性跟ES中的字段名是一模一样的，而goodFace字段在ES中的字段是good_face(因为我们使用了SnakeCaseStrategy策略)。</p>
+<p>所以产生这个问题的原因在于ES中文档的字段名跟POJO中的字段名不统一造成的。</p>
+<p><strong>但是我们使用PersonRepository的save方法保存文档的时候属性和字段是可以对上的。</strong></p>
+<p>那为什么使用repository的save方法能对应上文档和字段，而自定义的find方法却不行呢？</p>
+<p>ES是使用<a href="https://github.com/FasterXML/jackson" target="_blank" rel="external">jackson</a>来完成POJO到json的映射关系的。</p>
+<p>在Person类上使用@JsonNaming注解完成POJO和json的映射，我们使用了SnakeCaseStrategy策略，这个策略会把属性从驼峰方式改成小写带下划线的方式。</p>
+<p>比如goodAt属性映射的时候就会变成good_at，good_face变成good_face，name变成name。</p>
+<p>Spring Data Elasticsearch把对ES的操作封装成了一个ElasticsearchOperations接口。比如queryForObject、queryForPage、count、queryForList方法。</p>
+<p>ElasticsearchOperations接口目前有一个实现类ElasticsearchTemplate。</p>
+<p>ElasticsearchTemplate内部有个ResultsMapper属性，这个ResultsMapper目前只有一个实现类DefaultResultMapper，DefaultResultMapper内部使用DefaultEntityMapper完成映射。DefaultEntityMapper是个EntityMapper接口的实现类，它的定义如下：</p>
+<pre><code>public interface EntityMapper {
+    public String mapToString(Object object) throws IOException;
+    public &lt;T&gt; T mapToObject(String source, Class&lt;T&gt; clazz) throws IOException;
+}
+</code></pre><p>方法很明白：对象到json字符串的转换和json字符串倒对象的转换。</p>
+<p>DefaultEntityMapper内部使用jackson的ObjectMapper完成。</p>
+<p>自定义的Repository继承自ElasticsearchRepository，最后会使用代理映射成SimpleElasticsearchRepository。</p>
+<p>SimpleElasticsearchRepository内部有个属性ElasticsearchOperations用于完成与ES的交互。</p>
+<p>我们看下SimpleElasticsearchRepository的save方法：</p>
+<pre><code>@Override
+public &lt;S extends T&gt; S save(S entity) {
+  Assert.notNull(entity, &quot;Cannot save &apos;null&apos; entity.&quot;);
+  // createIndexQuery方法会构造一个IndexQuery，然后调用ElasticsearchOperations的index方法
+  elasticsearchOperations.index(createIndexQuery(entity));
+  elasticsearchOperations.refresh(entityInformation.getIndexName());
+  return entity;
 }
 
-public static void main(String[] args) {
-    PriorityQueue&lt;Task&gt; queue = new PriorityQueue&lt;Task&gt;(6, new Comparator&lt;Task&gt;() {
-        @Override
-        public int compare(Task t1, Task t2) {
-            return t2.getLevel() - t1.getLevel();
-        }
-    });
-    queue.add(new Task(&quot;游戏&quot;, 20));
-    queue.add(new Task(&quot;吃饭&quot;, 100));
-    queue.add(new Task(&quot;睡觉&quot;, 90));
-    queue.add(new Task(&quot;看书&quot;, 70));
-    queue.add(new Task(&quot;工作&quot;, 80));
-    queue.add(new Task(&quot;撩妹&quot;, 10));
-    while(!queue.isEmpty()) {
-        System.out.println(queue.poll());
-    }
-}
-</code></pre><p>输出结果：</p>
-<pre><code>Task{name=&apos;吃饭&apos;, level=100}
-Task{name=&apos;睡觉&apos;, level=90}
-Task{name=&apos;工作&apos;, level=80}
-Task{name=&apos;看书&apos;, level=70}
-Task{name=&apos;游戏&apos;, level=20}
-Task{name=&apos;撩妹&apos;, level=10}
-</code></pre><p>add过程其实就是在最大堆里添加新的元素，添加之后再进行调整：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue01.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<p>出队相当于每次都是堆顶出堆，堆顶出堆之后然后重新调整：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue02.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<h2 id="PriorityQueue原理分析"><a href="#PriorityQueue原理分析" class="headerlink" title="PriorityQueue原理分析"></a>PriorityQueue原理分析</h2><p>首先看下PriorityQueue的属性：</p>
-<pre><code>transient Object[] queue; // 堆
-private int size = 0; // 元素个数
-private final Comparator&lt;? super E&gt; comparator; // 比较器，如果是null，使用元素自身的比较器
-</code></pre><p>接下来是PriorityQueue的几个方法介绍。</p>
-<p>add，添加元素：</p>
-<pre><code>public boolean add(E e) {
-    return offer(e); // add方法内部调用offer方法
-}
+// ElasticsearchTemplate的index方法
+@Override
+  public String index(IndexQuery query) {
+      // 调用prepareIndex方法构造一个IndexRequestBuilder
+      String documentId = prepareIndex(query).execute().actionGet().getId();
+      // 设置保存文档的id
+      if (query.getObject() != null) {
+          setPersistentEntityId(query.getObject(), documentId);
+      }
+      return documentId;
+  }
 
-public boolean offer(E e) {
-    if (e == null) // 元素为空的话，抛出NullPointerException异常
-        throw new NullPointerException();
-    modCount++;
-    int i = size;
-    if (i &gt;= queue.length) // 如果当前用堆表示的数组已经满了，调用grow方法扩容
-        grow(i + 1); // 扩容
-    size = i + 1; // 元素个数+1
-    if (i == 0) // 堆还没有元素的情况
-        queue[0] = e; // 直接给堆顶赋值元素
-    else // 堆中已有元素的情况
-        siftUp(i, e); // 重新调整堆，从下往上调整，因为新增元素是加到最后一个叶子节点
-    return true;
-}
+private IndexRequestBuilder prepareIndex(IndexQuery query) {
+      try {
+          // 从@Document注解中得到索引的名字
+          String indexName = isBlank(query.getIndexName()) ? retrieveIndexNameFromPersistentEntity(query.getObject()
+                  .getClass())[0] : query.getIndexName();
+          // 从@Document注解中得到索引的类型
+          String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
+                  : query.getType();
 
-private void siftUp(int k, E x) {
-    if (comparator != null)  // 比较器存在的情况下
-        siftUpUsingComparator(k, x); // 使用比较器调整
-    else // 比较器不存在的情况下
-        siftUpComparable(k, x); // 使用元素自身的比较器调整
-}
+          IndexRequestBuilder indexRequestBuilder = null;
 
-private void siftUpUsingComparator(int k, E x) {
-    while (k &gt; 0) { // 一直循环直到父节点还存在
-        int parent = (k - 1) &gt;&gt;&gt; 1; // 找到父节点索引
-        Object e = queue[parent]; // 赋值父节点元素
-        if (comparator.compare(x, (E) e) &gt;= 0) // 新元素与父元素进行比较，如果满足比较器结果，直接跳出，否则进行调整
-            break;
-        queue[k] = e; // 进行调整，新位置的元素变成了父元素
-        k = parent; // 新位置索引变成父元素索引，进行递归操作
-    }
-    queue[k] = x; // 新添加的元素添加到堆中
-}
-</code></pre><p>siftUp方法调用过程如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue03.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<p>poll，出队方法：</p>
-<pre><code>public E poll() {
-    if (size == 0)
-        return null;
-    int s = --size; // 元素个数-1
-    modCount++;
-    E result = (E) queue[0]; // 得到堆顶元素
-    E x = (E) queue[s]; // 最后一个叶子节点
-    queue[s] = null; // 最后1个叶子节点置空
-    if (s != 0)
-        siftDown(0, x); // 从上往下调整，因为删除元素是删除堆顶的元素
+          if (query.getObject() != null) { // save方法这里保存的object就是POJO
+      // 得到id字段
+              String id = isBlank(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
+              if (id != null) { // 如果设置了id字段
+                  indexRequestBuilder = client.prepareIndex(indexName, type, id);
+              } else { // 如果没有设置id字段
+                  indexRequestBuilder = client.prepareIndex(indexName, type);
+              }
+      // 使用ResultsMapper映射POJO到json字符串
+              indexRequestBuilder.setSource(resultsMapper.getEntityMapper().mapToString(query.getObject()));
+          } else if (query.getSource() != null) { // 如果自定义了source属性，直接赋值
+              indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource());
+          } else { // 没有设置object属性或者source属性，抛出ElasticsearchException异常
+              throw new ElasticsearchException(&quot;object or source is null, failed to index the document [id: &quot; + query.getId() + &quot;]&quot;);
+          }
+          if (query.getVersion() != null) { // 设置版本
+              indexRequestBuilder.setVersion(query.getVersion());
+              indexRequestBuilder.setVersionType(EXTERNAL);
+          }
+
+          if (query.getParentId() != null) { // 设置parentId
+              indexRequestBuilder.setParent(query.getParentId());
+          }
+
+          return indexRequestBuilder;
+      } catch (IOException e) {
+          throw new ElasticsearchException(&quot;failed to index the document [id: &quot; + query.getId() + &quot;]&quot;, e);
+      }
+  }
+</code></pre><p>save方法使用ResultsMapper完成了POJO到json的转换，所以save方法保存成功对应的文档数据：</p>
+<pre><code>indexRequestBuilder.setSource(resultsMapper.getEntityMapper().mapToString(query.getObject()));
+</code></pre><p>自定义的findByGoodFace方法：</p>
+<p>由于是Repository中的自定义方法，会被Spring Data通过代理进行构造，内部还是用了AOP，最终在QueryExecutorMethodInterceptor中并解析成ElasticsearchPartQuery这个RepositoryQuery接口的实现类，然后调用execute方法：</p>
+<pre><code>@Override
+public Object execute(Object[] parameters) {
+  ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
+  CriteriaQuery query = createQuery(accessor);
+  if(tree.isDelete()) { // 如果是删除方法
+    Object result = countOrGetDocumentsForDelete(query, accessor);
+    elasticsearchOperations.delete(query, queryMethod.getEntityInformation().getJavaType());
     return result;
-}
-
-private void siftDown(int k, E x) {
-    if (comparator != null) // 比较器存在的情况下
-        siftDownUsingComparator(k, x); // 使用比较器调整
-    else // 比较器不存在的情况下
-        siftDownComparable(k, x); // 使用元素自身的比较器调整
-}
-
-private void siftDownUsingComparator(int k, E x) {
-    int half = size &gt;&gt;&gt; 1; // 只需循环节点个数的一般即可
-    while (k &lt; half) {
-        int child = (k &lt;&lt; 1) + 1; // 得到父节点的左子节点索引
-        Object c = queue[child]; // 得到左子元素
-        int right = child + 1; // 得到父节点的右子节点索引
-        if (right &lt; size &amp;&amp;
-            comparator.compare((E) c, (E) queue[right]) &gt; 0) // 左子节点跟右子节点比较，取更大的值
-            c = queue[child = right];
-        if (comparator.compare(x, (E) c) &lt;= 0)  // 然后这个更大的值跟最后一个叶子节点比较
-
-            break;
-        queue[k] = c; // 新位置使用更大的值
-        k = child; // 新位置索引变成子元素索引，进行递归操作
+  } else if (queryMethod.isPageQuery()) { // 如果是分页查询
+    query.setPageable(accessor.getPageable());
+    return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
+  } else if (queryMethod.isStreamQuery()) { // 如果是流式查询
+    Class&lt;?&gt; entityType = queryMethod.getEntityInformation().getJavaType();
+    if (query.getPageable() == null) {
+      query.setPageable(new PageRequest(0, 20));
     }
-    queue[k] = x; // 最后一个叶子节点添加到合适的位置
+
+    return StreamUtils.createStreamFromIterator((CloseableIterator&lt;Object&gt;) elasticsearchOperations.stream(query, entityType));
+
+  } else if (queryMethod.isCollectionQuery()) { // 如果是集合查询
+    if (accessor.getPageable() == null) {
+      int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
+      query.setPageable(new PageRequest(0, Math.max(1, itemCount)));
+    } else {
+        query.setPageable(accessor.getPageable());
+      }
+    return elasticsearchOperations.queryForList(query, queryMethod.getEntityInformation().getJavaType());
+  } else if (tree.isCountProjection()) { // 如果是count查询
+    return elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
+  }
+  // 单个查询
+  return elasticsearchOperations.queryForObject(query, queryMethod.getEntityInformation().getJavaType());
 }
-</code></pre><p>siftDown方法调用过程如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue04.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<p>grow扩容方法：</p>
-<pre><code>private void grow(int minCapacity) {
-    int oldCapacity = queue.length;
-    // 新容量
-    // 如果老容量小于64 新容量 = 老容量 + 老容量 + 2
-    // 如果老容量大于等于64 老容量 = 老容量 + 老容量/2
-    int newCapacity = oldCapacity + ((oldCapacity &lt; 64) ?
-                                     (oldCapacity + 2) :
-                                     (oldCapacity &gt;&gt; 1));
-    // 溢出处理
-    if (newCapacity - MAX_ARRAY_SIZE &gt; 0)
-        newCapacity = hugeCapacity(minCapacity);
-    // 使用新容量
-    queue = Arrays.copyOf(queue, newCapacity);
-}
-</code></pre><p>remove，删除队列元素操作：</p>
-<pre><code>public boolean remove(Object o) {
-    int i = indexOf(o); // 找到数据对应的索引
-    if (i == -1) // 不存在的话返回false
-        return false;
-    else { // 存在的话调用removeAt方法，返回true
-        removeAt(i);
-        return true;
-    }
+</code></pre><p>findByGoodFace方法是个集合查询，最终会调用ElasticsearchOperations的queryForList方法：</p>
+<pre><code>@Override
+public &lt;T&gt; List&lt;T&gt; queryForList(CriteriaQuery query, Class&lt;T&gt; clazz) {
+  // 调用queryForPage方法
+  return queryForPage(query, clazz).getContent();
 }
 
-private E removeAt(int i) {
-    modCount++;
-    int s = --size; // 元素个数-1
-    if (s == i) // 如果是删除最后一个叶子节点
-        queue[i] = null; // 直接置空，删除即可，堆还是保持特质，不需要调整
-    else { // 如果是删除的不是最后一个叶子节点
-        E moved = (E) queue[s]; // 获得最后1个叶子节点元素
-        queue[s] = null; // 最后1个叶子节点置空
-        siftDown(i, moved); // 从上往下调整
-        if (queue[i] == moved) { // 如果从上往下调整完毕之后发现元素位置没变，从下往上调整
-            siftUp(i, moved); // 从下往上调整
-            if (queue[i] != moved)
-                return moved;
-        }
-    }
-    return null;
+@Override
+public &lt;T&gt; Page&lt;T&gt; queryForPage(CriteriaQuery criteriaQuery, Class&lt;T&gt; clazz) {
+  // 查询解析器进行语法的解析
+  QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
+  QueryBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
+  SearchRequestBuilder searchRequestBuilder = prepareSearch(criteriaQuery, clazz);
+
+  if (elasticsearchQuery != null) {
+    searchRequestBuilder.setQuery(elasticsearchQuery);
+  } else {
+    searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
+  }
+
+  if (criteriaQuery.getMinScore() &gt; 0) {
+    searchRequestBuilder.setMinScore(criteriaQuery.getMinScore());
+  }
+
+  if (elasticsearchFilter != null)
+    searchRequestBuilder.setPostFilter(elasticsearchFilter);
+  if (logger.isDebugEnabled()) {
+    logger.debug(&quot;doSearch query:\n&quot; + searchRequestBuilder.toString());
+  }
+
+  SearchResponse response = getSearchResponse(searchRequestBuilder
+      .execute());
+  // 最终的结果是用ResultsMapper进行映射
+  return resultsMapper.mapResults(response, clazz, criteriaQuery.getPageable());
 }
-</code></pre><p>下图这个堆如果删除红色节点100的时候，siftDown之后元素位置没变，所以还得siftUp：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/priorityqueue05.jpg?imageView2/1/w/10000/h/10000/q/100|watermark/2/text/ZmFuZ2ppYW4wNDIzLmdpdGh1Yi5pbw==/font/5a6L5L2T/fontsize/500/fill/I0VGRUZFRg==/dissolve/100/gravity/SouthEast/dx/10/dy/10" alt=""></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
-<li>jdk内置的优先队列PriorityQueue内部使用一个堆维护数据，每当有数据add进来或者poll出去的时候会对堆做从下往上的调整和从上往下的调整</li>
-<li>PriorityQueue不是一个线程安全的类，如果要在多线程环境下使用，可以使用PriorityBlockingQueue这个优先阻塞队列</li>
-</ol>
+</code></pre><p>自定义的方法使用ElasticsearchQueryCreator去创建CriteriaQuery，内部做一些词法的分析，有了CriteriaQuery之后，使用CriteriaQueryProcessor基于Criteria构造了QueryBuilder，最后使用QueryBuilder去做rest请求得到es的查询结果。这些过程中是没有用到ResultsMapper，而只是用反射得到POJO的属性，只有在得到查询结果后才会用ResultsMapper去做映射。</p>
+<p>如果出现了这种情况，解决方案目前有两种：</p>
+<p>1.使用repository的search方法，参数可以是QueryBuilder或者SearchQuery</p>
+<pre><code>personRepository.search(
+        QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery(&quot;good_face&quot;, true))
+)
+</code></pre><p>2.使用@Query注解</p>
+<pre><code>@Query(&quot;{\&quot;bool\&quot; : {\&quot;must\&quot; : {\&quot;term\&quot; : {\&quot;good_face\&quot; : \&quot;?0\&quot;}}}}&quot;)
+List&lt;Person&gt; findByGoodFace(boolean isGoodFace);
+</code></pre><p>暂时发现这两种解决方法，不知还有否更好的解决方案。</p>
 
       
     </div>
@@ -628,9 +610,9 @@ private E removeAt(int i) {
       
         <div class="post-tags">
           
-            <a href="/tags/jdk/" rel="tag">#jdk</a>
+            <a href="/tags/java/" rel="tag">#java</a>
           
-            <a href="/tags/queue/" rel="tag">#queue</a>
+            <a href="/tags/elasticsearch/" rel="tag">#elasticsearch</a>
           
         </div>
       
@@ -639,17 +621,13 @@ private E removeAt(int i) {
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/04/09/heap-heapsort/" rel="next" title="堆、二叉堆、堆排序">
-                <i class="fa fa-chevron-left"></i> 堆、二叉堆、堆排序
+              <a href="/2017/05/22/springboot-embedded-servlet-container/" rel="next" title="SpringBoot源码分析之内置Servlet容器">
+                <i class="fa fa-chevron-left"></i> SpringBoot源码分析之内置Servlet容器
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/04/12/jdk-concurrentskiplistmap/" rel="prev" title="jdk ConcurrentSkipListMap工作原理分析">
-                jdk ConcurrentSkipListMap工作原理分析 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -832,7 +810,7 @@ private E removeAt(int i) {
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一个PriorityQueue例子"><span class="nav-number">1.</span> <span class="nav-text">一个PriorityQueue例子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PriorityQueue原理分析"><span class="nav-number">2.</span> <span class="nav-text">PriorityQueue原理分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+              <p class="post-toc-empty">此文章未包含目录</p>
             
           </div>
         </section>
@@ -959,9 +937,9 @@ private E removeAt(int i) {
 
     <script type="text/javascript">
       var disqus_shortname = 'fangjian0423';
-      var disqus_identifier = '2016/04/10/jdk_priorityqueue/';
-      var disqus_title = "jdk PriorityQueue优先队列工作原理分析";
-      var disqus_url = 'http://fangjian0423.github.io/2016/04/10/jdk_priorityqueue/';
+      var disqus_identifier = '2017/05/24/spring-data-es-query-problem/';
+      var disqus_title = "SpringData ES 关于字段名和索引中的列名字不一致导致的查询问题";
+      var disqus_url = 'http://fangjian0423.github.io/2017/05/24/spring-data-es-query-problem/';
 
       function run_disqus_script(disqus_script){
         var dsq = document.createElement('script');

@@ -308,6 +308,147 @@
             
               
                 
+                <a class="post-title-link" href="/2016/11/16/springboot-custom-starter/" itemprop="url">
+                  SpringBoot编写自定义的starter
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-11-16T01:40:32+08:00" content="2016-11-16">
+              2016-11-16
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/springboot/" itemprop="url" rel="index">
+                    <span itemprop="name">springboot</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/11/16/springboot-custom-starter/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/11/16/springboot-custom-starter/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>在之前的文章中，我们分析过SpringBoot内部的<a href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/">自动化配置原理</a>和<a href="http://fangjian0423.github.io/2016/11/13/springboot-enable-annotation/">自动化配置注解开关原理</a>。</p>
+<p>我们先简单分析一下<a href="https://github.com/mybatis/spring-boot-starter">mybatis starter</a>的编写，然后再编写自定义的starter。</p>
+<p>mybatis中的autoconfigure模块中使用了一个叫做MybatisAutoConfiguration的自动化配置类。</p>
+<p>这个MybatisAutoConfiguration需要在这些Condition条件下才会执行：</p>
+<ol>
+<li>@ConditionalOnClass({ SqlSessionFactory.class, SqlSessionFactoryBean.class })。需要SqlSessionFactory和SqlSessionFactoryBean在classpath中都存在</li>
+<li>@ConditionalOnBean(DataSource.class)。 spring factory中需要存在一个DataSource的bean</li>
+<li>@AutoConfigureAfter(DataSourceAutoConfiguration.class)。需要在DataSourceAutoConfiguration自动化配置之后进行配置，因为mybatis需要数据源的支持</li>
+</ol>
+<p>同时在META-INF目录下有个spring.factories这个properties文件，而且它的key为org.springframework.boot.autoconfigure.EnableAutoConfiguration，这样才会被springboot加载：</p>
+<pre><code># Auto Configure
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
+</code></pre><p>有了这些东西之后，mybatis相关的配置会被自动加入到spring container中，只要在maven中加入starter即可：</p>
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;mybatis-spring-boot-starter&lt;/artifactId&gt;
+    &lt;version&gt;1.1.1&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/11/16/springboot-custom-starter/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/11/13/springboot-enable-annotation/" itemprop="url">
                   SpringBoot自动化配置的注解开关原理
                 </a>
@@ -1435,147 +1576,6 @@ libraryDependencies += &quot;io.springfox&quot; % &quot;springfox-swagger-ui&quo
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/06/25/springboot-actuator/" itemprop="url">
-                  SpringBoot的actuator模块
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-06-25T14:52:52+08:00" content="2016-06-25">
-              2016-06-25
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/springboot/" itemprop="url" rel="index">
-                    <span itemprop="name">springboot</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/06/25/springboot-actuator/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/06/25/springboot-actuator/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>springboot内部提供了一个模块spring-boot-actuator用于监控和管理springboot应用。</p>
-<p>这个模块内部提供了很多功能，endpoint就是其中一块功能。</p>
-<p>我们在sbt中加入这个模块的依赖：</p>
-<pre><code>libraryDependencies += &quot;org.springframework.boot&quot; % &quot;spring-boot-starter-actuator&quot; % &quot;1.3.5.RELEASE&quot;
-</code></pre><p>然后启动项目，访问地址 <a href="http://localhost:8080/health，看到以下页面：">http://localhost:8080/health，看到以下页面：</a></p>
-<pre><code>{
-    status: &quot;UP&quot;,
-    diskSpace: {
-        status: &quot;UP&quot;,
-        total: 249779191808,
-        free: 22231089152,
-        threshold: 10485760
-    },
-    db: {
-        status: &quot;UP&quot;,
-        database: &quot;H2&quot;,
-        hello: 1
-    }
-}
-</code></pre>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/06/25/springboot-actuator/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1621,7 +1621,7 @@ libraryDependencies += &quot;io.springfox&quot; % &quot;springfox-swagger-ui&quo
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">102</span>
+              <span class="site-state-item-count">103</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

@@ -308,6 +308,149 @@
             
               
                 
+                <a class="post-title-link" href="/2017/05/24/spring-data-es-query-problem/" itemprop="url">
+                  SpringData ES 关于字段名和索引中的列名字不一致导致的查询问题
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-05-24T00:33:33+08:00" content="2017-05-24">
+              2017-05-24
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2017/05/24/spring-data-es-query-problem/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/05/24/spring-data-es-query-problem/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>最近工作中使用了<a href="https://github.com/spring-projects/spring-data-elasticsearch">Spring Data Elasticsearch</a>。发生它存在一个问题：</p>
+<p><strong>Document对应的POJO的属性跟es里面文档的字段名字不一样，这样Repository里面编写自定义的查询方法就会查询不出结果。</strong></p>
+<p>比如有个Person类，它有2个属性goodFace和goodAt。这2个属性在es的索引里对应的字段表为good_face和good_at：</p>
+<pre><code>@Document(replicas = 1, shards = 1, type = &quot;person&quot;, indexName = &quot;person&quot;)
+@Getter
+@Setter
+@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+public class Person {
+    @Id
+    private String id;
+    private String name;
+    private boolean goodFace;
+    private String goodAt;
+}
+</code></pre><p>Repository中的自定义查询：</p>
+<pre><code>@Repository
+public interface PersonRepository extends ElasticsearchRepository&lt;Person, String&gt; {
+    List&lt;Person&gt; findByGoodFace(boolean isGoodFace);
+    List&lt;Person&gt; findByName(String name);
+}
+</code></pre><p>方法findByGoodFace是查询不出结果的，而findByName是ok的。</p>
+<p>为什么findByGoodFace不行而findByName可以呢，来探究一下。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2017/05/24/spring-data-es-query-problem/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2017/05/22/springboot-embedded-servlet-container/" itemprop="url">
                   SpringBoot源码分析之内置Servlet容器
                 </a>
@@ -1434,147 +1577,6 @@ public class MyApplication {
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/11/16/springboot-custom-starter/" itemprop="url">
-                  SpringBoot编写自定义的starter
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-11-16T01:40:32+08:00" content="2016-11-16">
-              2016-11-16
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/springboot/" itemprop="url" rel="index">
-                    <span itemprop="name">springboot</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/11/16/springboot-custom-starter/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/11/16/springboot-custom-starter/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>在之前的文章中，我们分析过SpringBoot内部的<a href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/">自动化配置原理</a>和<a href="http://fangjian0423.github.io/2016/11/13/springboot-enable-annotation/">自动化配置注解开关原理</a>。</p>
-<p>我们先简单分析一下<a href="https://github.com/mybatis/spring-boot-starter">mybatis starter</a>的编写，然后再编写自定义的starter。</p>
-<p>mybatis中的autoconfigure模块中使用了一个叫做MybatisAutoConfiguration的自动化配置类。</p>
-<p>这个MybatisAutoConfiguration需要在这些Condition条件下才会执行：</p>
-<ol>
-<li>@ConditionalOnClass({ SqlSessionFactory.class, SqlSessionFactoryBean.class })。需要SqlSessionFactory和SqlSessionFactoryBean在classpath中都存在</li>
-<li>@ConditionalOnBean(DataSource.class)。 spring factory中需要存在一个DataSource的bean</li>
-<li>@AutoConfigureAfter(DataSourceAutoConfiguration.class)。需要在DataSourceAutoConfiguration自动化配置之后进行配置，因为mybatis需要数据源的支持</li>
-</ol>
-<p>同时在META-INF目录下有个spring.factories这个properties文件，而且它的key为org.springframework.boot.autoconfigure.EnableAutoConfiguration，这样才会被springboot加载：</p>
-<pre><code># Auto Configure
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
-</code></pre><p>有了这些东西之后，mybatis相关的配置会被自动加入到spring container中，只要在maven中加入starter即可：</p>
-<pre><code>&lt;dependency&gt;
-    &lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
-    &lt;artifactId&gt;mybatis-spring-boot-starter&lt;/artifactId&gt;
-    &lt;version&gt;1.1.1&lt;/version&gt;
-&lt;/dependency&gt;
-</code></pre>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/11/16/springboot-custom-starter/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1620,7 +1622,7 @@ org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">102</span>
+              <span class="site-state-item-count">103</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

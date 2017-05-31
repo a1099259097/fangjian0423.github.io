@@ -94,7 +94,7 @@
 <meta property="og:site_name" content="Format's Notes">
 <meta property="og:description" content="SpringBoot内部提供了特有的注解：条件注解(Conditional Annotation)。比如@ConditionalOnBean、@ConditionalOnClass、@ConditionalOnExpression、@ConditionalOnMissingBean等。
 条件注解存在的意义在于动态识别(也可以说是代码自动化执行)。比如@ConditionalOnClass会检查类加">
-<meta property="og:updated_time" content="2017-05-16T11:57:24.000Z">
+<meta property="og:updated_time" content="2017-05-31T13:16:37.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SpringBoot源码分析之条件注解的底层实现">
 <meta name="twitter:description" content="SpringBoot内部提供了特有的注解：条件注解(Conditional Annotation)。比如@ConditionalOnBean、@ConditionalOnClass、@ConditionalOnExpression、@ConditionalOnMissingBean等。
@@ -378,198 +378,30 @@
         <p>SpringBoot内部提供了特有的注解：条件注解(Conditional Annotation)。比如@ConditionalOnBean、@ConditionalOnClass、@ConditionalOnExpression、@ConditionalOnMissingBean等。</p>
 <p>条件注解存在的意义在于动态识别(也可以说是代码自动化执行)。比如@ConditionalOnClass会检查类加载器中是否存在对应的类，如果有的话被注解修饰的类就有资格被Spring容器所注册，否则会被skip。</p>
 <p>比如FreemarkerAutoConfiguration这个自动化配置类的定义如下：</p>
-<pre><code>@Configuration
-@ConditionalOnClass({ freemarker.template.Configuration.class,
-        FreeMarkerConfigurationFactory.class })
-@AutoConfigureAfter(WebMvcAutoConfiguration.class)
-@EnableConfigurationProperties(FreeMarkerProperties.class)
-public class FreeMarkerAutoConfiguration
-</code></pre><p>这个自动化配置类被@ConditionalOnClass条件注解修饰，这个条件注解存在的意义在于判断类加载器中是否存在freemarker.template.Configuration和FreeMarkerConfigurationFactory这两个类，如果都存在的话会在Spring容器中加载这个FreeMarkerAutoConfiguration配置类；否则不会加载。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Configuration</span></div><div class="line"><span class="meta">@ConditionalOnClass</span>(&#123; freemarker.template.Configuration.class,</div><div class="line">		FreeMarkerConfigurationFactory.class &#125;)</div><div class="line"><span class="meta">@AutoConfigureAfter</span>(WebMvcAutoConfiguration.class)</div><div class="line"><span class="meta">@EnableConfigurationProperties</span>(FreeMarkerProperties.class)</div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FreeMarkerAutoConfiguration</span></span></div></pre></td></tr></table></figure>
+<p>这个自动化配置类被@ConditionalOnClass条件注解修饰，这个条件注解存在的意义在于判断类加载器中是否存在freemarker.template.Configuration和FreeMarkerConfigurationFactory这两个类，如果都存在的话会在Spring容器中加载这个FreeMarkerAutoConfiguration配置类；否则不会加载。</p>
 <a id="more"></a>
 <h2 id="条件注解内部的一些基础"><a href="#条件注解内部的一些基础" class="headerlink" title="条件注解内部的一些基础"></a>条件注解内部的一些基础</h2><p>在分析条件注解的底层实现之前，我们先来看一下这些条件注解的定义。以@ConditionalOnClass注解为例，它的定义如下：</p>
-<pre><code>@Target({ ElementType.TYPE, ElementType.METHOD })
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@Conditional(OnClassCondition.class)
-public @interface ConditionalOnClass {
-    Class&lt;?&gt;[] value() default {}; // 需要匹配的类
-    String[] name() default {}; // 需要匹配的类名
-}
-</code></pre><p>它有2个属性，分别是类数组和字符串数组(作用一样，类型不一样)，而且被@Conditional注解所修饰，这个@Conditional注解有个名为values的Class&lt;? extends Condition&gt;[]类型的属性。 这个Condition是个接口，用于匹配组件是否有资格被容器注册，定义如下：</p>
-<pre><code>public interface Condition {
-  // ConditionContext内部会存储Spring容器、应用程序环境信息、资源加载器、类加载器
-    boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
-}
-</code></pre><p>也就是说@Conditional注解属性中可以持有多个Condition接口的实现类，所有的Condition接口需要全部匹配成功后这个@Conditional修饰的组件才有资格被注册。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Target</span>(&#123; ElementType.TYPE, ElementType.METHOD &#125;)</div><div class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</div><div class="line"><span class="meta">@Documented</span></div><div class="line"><span class="meta">@Conditional</span>(OnClassCondition.class)</div><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> ConditionalOnClass &#123;</div><div class="line">  Class&lt;?&gt;[] value() <span class="keyword">default</span> &#123;&#125;; <span class="comment">// 需要匹配的类</span></div><div class="line">  String[] name() <span class="keyword">default</span> &#123;&#125;; <span class="comment">// 需要匹配的类名</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>它有2个属性，分别是类数组和字符串数组(作用一样，类型不一样)，而且被@Conditional注解所修饰，这个@Conditional注解有个名为values的Class&lt;? extends Condition&gt;[]类型的属性。 这个Condition是个接口，用于匹配组件是否有资格被容器注册，定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Condition</span> </span>&#123;</div><div class="line">  <span class="comment">// ConditionContext内部会存储Spring容器、应用程序环境信息、资源加载器、类加载器</span></div><div class="line">  <span class="function"><span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context, AnnotatedTypeMetadata metadata)</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>也就是说@Conditional注解属性中可以持有多个Condition接口的实现类，所有的Condition接口需要全部匹配成功后这个@Conditional修饰的组件才有资格被注册。</p>
 <p>Condition接口有个子接口ConfigurationCondition：</p>
-<pre><code>public interface ConfigurationCondition extends Condition {
-
-    ConfigurationPhase getConfigurationPhase();
-
-    public static enum ConfigurationPhase {
-
-        PARSE_CONFIGURATION,
-
-        REGISTER_BEAN
-    }
-
-}
-</code></pre><p>这个子接口是一种特殊的条件接口，多了一个getConfigurationPhase方法，也就是条件注解的生效阶段。只有在ConfigurationPhase中定义的两种阶段下才会生效。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ConfigurationCondition</span> <span class="keyword">extends</span> <span class="title">Condition</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="function">ConfigurationPhase <span class="title">getConfigurationPhase</span><span class="params">()</span></span>;</div><div class="line"></div><div class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">enum</span> ConfigurationPhase &#123;</div><div class="line"></div><div class="line">  	PARSE_CONFIGURATION,</div><div class="line"></div><div class="line">  	REGISTER_BEAN</div><div class="line">  &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个子接口是一种特殊的条件接口，多了一个getConfigurationPhase方法，也就是条件注解的生效阶段。只有在ConfigurationPhase中定义的两种阶段下才会生效。</p>
 <p>Condition接口有个实现抽象类SpringBootCondition，SpringBoot中所有条件注解对应的条件类都继承这个抽象类。它实现了matches方法：</p>
-<pre><code>@Override
-  public final boolean matches(ConditionContext context,
-          AnnotatedTypeMetadata metadata) {
-      String classOrMethodName = getClassOrMethodName(metadata); // 得到类名或者方法名(条件注解可以作用的类或者方法上)
-      try {
-          ConditionOutcome outcome = getMatchOutcome(context, metadata); // 抽象方法，具体子类实现。ConditionOutcome记录了匹配结果boolean和log信息
-          logOutcome(classOrMethodName, outcome); // log记录一下匹配信息
-          recordEvaluation(context, classOrMethodName, outcome); // 报告记录一下匹配信息
-          return outcome.isMatch(); // 返回是否匹配
-      }
-      catch (NoClassDefFoundError ex) {
-          throw new IllegalStateException(
-                  &quot;Could not evaluate condition on &quot; + classOrMethodName + &quot; due to &quot;
-                          + ex.getMessage() + &quot; not &quot;
-                          + &quot;found. Make sure your own configuration does not rely on &quot;
-                          + &quot;that class. This can also happen if you are &quot;
-                          + &quot;@ComponentScanning a springframework package (e.g. if you &quot;
-                          + &quot;put a @ComponentScan in the default package by mistake)&quot;,
-                  ex);
-      }
-      catch (RuntimeException ex) {
-          throw new IllegalStateException(
-                  &quot;Error processing condition on &quot; + getName(metadata), ex);
-      }
-  }
-</code></pre><h2 id="基于Class的条件注解"><a href="#基于Class的条件注解" class="headerlink" title="基于Class的条件注解"></a>基于Class的条件注解</h2><p>SpringBoot提供了两个基于Class的条件注解：@ConditionalOnClass(类加载器中存在指明的类)或者@ConditionalOnMissingClass(类加载器中不存在指明的类)。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context,</span></span></div><div class="line">		AnnotatedTypeMetadata metadata) &#123;</div><div class="line">  String classOrMethodName = getClassOrMethodName(metadata); <span class="comment">// 得到类名或者方法名(条件注解可以作用的类或者方法上)</span></div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">  	ConditionOutcome outcome = getMatchOutcome(context, metadata); <span class="comment">// 抽象方法，具体子类实现。ConditionOutcome记录了匹配结果boolean和log信息</span></div><div class="line">  	logOutcome(classOrMethodName, outcome); <span class="comment">// log记录一下匹配信息</span></div><div class="line">  	recordEvaluation(context, classOrMethodName, outcome); <span class="comment">// 报告记录一下匹配信息</span></div><div class="line">  	<span class="keyword">return</span> outcome.isMatch(); <span class="comment">// 返回是否匹配</span></div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (NoClassDefFoundError ex) &#123;</div><div class="line">  	<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</div><div class="line">  			<span class="string">"Could not evaluate condition on "</span> + classOrMethodName + <span class="string">" due to "</span></div><div class="line">  					+ ex.getMessage() + <span class="string">" not "</span></div><div class="line">  					+ <span class="string">"found. Make sure your own configuration does not rely on "</span></div><div class="line">  					+ <span class="string">"that class. This can also happen if you are "</span></div><div class="line">  					+ <span class="string">"@ComponentScanning a springframework package (e.g. if you "</span></div><div class="line">  					+ <span class="string">"put a @ComponentScan in the default package by mistake)"</span>,</div><div class="line">  			ex);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (RuntimeException ex) &#123;</div><div class="line">  	<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</div><div class="line">  			<span class="string">"Error processing condition on "</span> + getName(metadata), ex);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="基于Class的条件注解"><a href="#基于Class的条件注解" class="headerlink" title="基于Class的条件注解"></a>基于Class的条件注解</h2><p>SpringBoot提供了两个基于Class的条件注解：@ConditionalOnClass(类加载器中存在指明的类)或者@ConditionalOnMissingClass(类加载器中不存在指明的类)。</p>
 <p>@ConditionalOnClass或者@ConditionalOnMissingClass注解对应的条件类是OnClassCondition，定义如下：</p>
-<pre><code>@Order(Ordered.HIGHEST_PRECEDENCE) // 优先级、最高级别
-class OnClassCondition extends SpringBootCondition {
-
-    @Override
-    public ConditionOutcome getMatchOutcome(ConditionContext context,
-            AnnotatedTypeMetadata metadata) {
-
-        StringBuffer matchMessage = new StringBuffer(); // 记录匹配信息
-
-        MultiValueMap&lt;String, Object&gt; onClasses = getAttributes(metadata,
-                ConditionalOnClass.class); // 得到@ConditionalOnClass注解的属性
-        if (onClasses != null) { // 如果属性存在
-            List&lt;String&gt; missing = getMatchingClasses(onClasses, MatchType.MISSING,
-                    context); // 得到在类加载器中不存在的类
-            if (!missing.isEmpty()) { // 如果存在类加载器中不存在对应的类，返回一个匹配失败的ConditionalOutcome
-                return ConditionOutcome
-                        .noMatch(&quot;required @ConditionalOnClass classes not found: &quot;
-                                + StringUtils.collectionToCommaDelimitedString(missing));
-            }
-      // 如果类加载器中存在对应的类的话，匹配信息进行记录
-            matchMessage.append(&quot;@ConditionalOnClass classes found: &quot;
-                    + StringUtils.collectionToCommaDelimitedString(
-                            getMatchingClasses(onClasses, MatchType.PRESENT, context)));
-        }
-    // 对@ConditionalOnMissingClass注解做相同的逻辑处理(说明@ConditionalOnClass和@ConditionalOnMissingClass可以一起使用)
-        MultiValueMap&lt;String, Object&gt; onMissingClasses = getAttributes(metadata,
-                ConditionalOnMissingClass.class);
-        if (onMissingClasses != null) {
-            List&lt;String&gt; present = getMatchingClasses(onMissingClasses, MatchType.PRESENT,
-                    context);
-            if (!present.isEmpty()) {
-                return ConditionOutcome
-                        .noMatch(&quot;required @ConditionalOnMissing classes found: &quot;
-                                + StringUtils.collectionToCommaDelimitedString(present));
-            }
-            matchMessage.append(matchMessage.length() == 0 ? &quot;&quot; : &quot; &quot;);
-            matchMessage.append(&quot;@ConditionalOnMissing classes not found: &quot;
-                    + StringUtils.collectionToCommaDelimitedString(getMatchingClasses(
-                            onMissingClasses, MatchType.MISSING, context)));
-        }
-    // 返回全部匹配成功的ConditionalOutcome
-        return ConditionOutcome.match(matchMessage.toString());
-    }
-
-    private enum MatchType { // 枚举：匹配类型。用于查询类名在对应的类加载器中是否存在。
-
-        PRESENT { // 匹配成功
-            @Override
-            public boolean matches(String className, ConditionContext context) {
-                return ClassUtils.isPresent(className, context.getClassLoader());
-            }
-        },
-
-        MISSING { // 匹配不成功
-            @Override
-            public boolean matches(String className, ConditionContext context) {
-                return !ClassUtils.isPresent(className, context.getClassLoader());
-            }
-        };
-
-        public abstract boolean matches(String className, ConditionContext context);
-
-    }
-
-}
-</code></pre><p>比如FreemarkerAutoConfiguration中的@ConditionalOnClass注解中有value属性是freemarker.template.Configuration.class和FreeMarkerConfigurationFactory.class。在OnClassCondition执行过程中得到的最终ConditionalOutcome中的log message如下：</p>
-<pre><code>@ConditionalOnClass classes found: freemarker.template.Configuration,org.springframework.ui.freemarker.FreeMarkerConfigurationFactory
-</code></pre><h2 id="基于Bean的条件注解"><a href="#基于Bean的条件注解" class="headerlink" title="基于Bean的条件注解"></a>基于Bean的条件注解</h2><p>@ConditionalOnBean(Spring容器中存在指明的bean)、@ConditionalOnMissingBean(Spring容器中不存在指明的bean)以及ConditionalOnSingleCandidate(Spring容器中存在且只存在一个指明的bean)都是基于Bean的条件注解，它们对应的条件类是ConditionOnBean。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Order</span>(Ordered.HIGHEST_PRECEDENCE) <span class="comment">// 优先级、最高级别</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">OnClassCondition</span> <span class="keyword">extends</span> <span class="title">SpringBootCondition</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="meta">@Override</span></div><div class="line">  <span class="function"><span class="keyword">public</span> ConditionOutcome <span class="title">getMatchOutcome</span><span class="params">(ConditionContext context,</span></span></div><div class="line">  		AnnotatedTypeMetadata metadata) &#123;</div><div class="line"></div><div class="line">  	StringBuffer matchMessage = <span class="keyword">new</span> StringBuffer(); <span class="comment">// 记录匹配信息</span></div><div class="line"></div><div class="line">  	MultiValueMap&lt;String, Object&gt; onClasses = getAttributes(metadata,</div><div class="line">  			ConditionalOnClass.class); <span class="comment">// 得到@ConditionalOnClass注解的属性</span></div><div class="line">  	<span class="keyword">if</span> (onClasses != <span class="keyword">null</span>) &#123; <span class="comment">// 如果属性存在</span></div><div class="line">  		List&lt;String&gt; missing = getMatchingClasses(onClasses, MatchType.MISSING,</div><div class="line">  				context); <span class="comment">// 得到在类加载器中不存在的类</span></div><div class="line">  		<span class="keyword">if</span> (!missing.isEmpty()) &#123; <span class="comment">// 如果存在类加载器中不存在对应的类，返回一个匹配失败的ConditionalOutcome</span></div><div class="line">  			<span class="keyword">return</span> ConditionOutcome</div><div class="line">  					.noMatch(<span class="string">"required @ConditionalOnClass classes not found: "</span></div><div class="line">  							+ StringUtils.collectionToCommaDelimitedString(missing));</div><div class="line">  		&#125;</div><div class="line">                <span class="comment">// 如果类加载器中存在对应的类的话，匹配信息进行记录</span></div><div class="line">  		matchMessage.append(<span class="string">"@ConditionalOnClass classes found: "</span></div><div class="line">  				+ StringUtils.collectionToCommaDelimitedString(</div><div class="line">  						getMatchingClasses(onClasses, MatchType.PRESENT, context)));</div><div class="line">  	&#125;</div><div class="line">        <span class="comment">// 对@ConditionalOnMissingClass注解做相同的逻辑处理(说明@ConditionalOnClass和@ConditionalOnMissingClass可以一起使用)</span></div><div class="line">  	MultiValueMap&lt;String, Object&gt; onMissingClasses = getAttributes(metadata,</div><div class="line">  			ConditionalOnMissingClass.class);</div><div class="line">  	<span class="keyword">if</span> (onMissingClasses != <span class="keyword">null</span>) &#123;</div><div class="line">  		List&lt;String&gt; present = getMatchingClasses(onMissingClasses, MatchType.PRESENT,</div><div class="line">  				context);</div><div class="line">  		<span class="keyword">if</span> (!present.isEmpty()) &#123;</div><div class="line">  			<span class="keyword">return</span> ConditionOutcome</div><div class="line">  					.noMatch(<span class="string">"required @ConditionalOnMissing classes found: "</span></div><div class="line">  							+ StringUtils.collectionToCommaDelimitedString(present));</div><div class="line">  		&#125;</div><div class="line">  		matchMessage.append(matchMessage.length() == <span class="number">0</span> ? <span class="string">""</span> : <span class="string">" "</span>);</div><div class="line">  		matchMessage.append(<span class="string">"@ConditionalOnMissing classes not found: "</span></div><div class="line">  				+ StringUtils.collectionToCommaDelimitedString(getMatchingClasses(</div><div class="line">  						onMissingClasses, MatchType.MISSING, context)));</div><div class="line">  	&#125;</div><div class="line">        <span class="comment">// 返回全部匹配成功的ConditionalOutcome</span></div><div class="line">  	<span class="keyword">return</span> ConditionOutcome.match(matchMessage.toString());</div><div class="line">	&#125;</div><div class="line"></div><div class="line">  <span class="keyword">private</span> <span class="keyword">enum</span> MatchType &#123; <span class="comment">// 枚举：匹配类型。用于查询类名在对应的类加载器中是否存在。</span></div><div class="line"></div><div class="line">  	PRESENT &#123; <span class="comment">// 匹配成功</span></div><div class="line">  		<span class="meta">@Override</span></div><div class="line">  		<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(String className, ConditionContext context)</span> </span>&#123;</div><div class="line">  			<span class="keyword">return</span> ClassUtils.isPresent(className, context.getClassLoader());</div><div class="line">  		&#125;</div><div class="line">  	&#125;,</div><div class="line"></div><div class="line">  	MISSING &#123; <span class="comment">// 匹配不成功</span></div><div class="line">  		<span class="meta">@Override</span></div><div class="line">  		<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(String className, ConditionContext context)</span> </span>&#123;</div><div class="line">  			<span class="keyword">return</span> !ClassUtils.isPresent(className, context.getClassLoader());</div><div class="line">  		&#125;</div><div class="line">  	&#125;;</div><div class="line"></div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(String className, ConditionContext context)</span></span>;</div><div class="line"></div><div class="line">  &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>比如FreemarkerAutoConfiguration中的@ConditionalOnClass注解中有value属性是freemarker.template.Configuration.class和FreeMarkerConfigurationFactory.class。在OnClassCondition执行过程中得到的最终ConditionalOutcome中的log message如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@ConditionalOnClass</span> classes found: freemarker.template.Configuration,org.springframework.ui.freemarker.FreeMarkerConfigurationFactory</div></pre></td></tr></table></figure>
+<h2 id="基于Bean的条件注解"><a href="#基于Bean的条件注解" class="headerlink" title="基于Bean的条件注解"></a>基于Bean的条件注解</h2><p>@ConditionalOnBean(Spring容器中存在指明的bean)、@ConditionalOnMissingBean(Spring容器中不存在指明的bean)以及ConditionalOnSingleCandidate(Spring容器中存在且只存在一个指明的bean)都是基于Bean的条件注解，它们对应的条件类是ConditionOnBean。</p>
 <p>@ConditionOnBean注解定义如下：</p>
-<pre><code>@Target({ ElementType.TYPE, ElementType.METHOD })
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@Conditional(OnBeanCondition.class)
-public @interface ConditionalOnBean {
-    Class&lt;?&gt;[] value() default {}; // 匹配的bean类型
-    String[] type() default {}; // 匹配的bean类型的类名
-    Class&lt;? extends Annotation&gt;[] annotation() default {}; // 匹配的bean注解
-    String[] name() default {}; // 匹配的bean的名字
-    SearchStrategy search() default SearchStrategy.ALL; // 搜索策略。提供CURRENT(只在当前容器中找)、PARENTS(只在所有的父容器中找；但是不包括当前容器)和ALL(CURRENT和PARENTS的组合)
-}
-</code></pre><p>OnBeanCondition条件类的匹配代码如下：</p>
-<pre><code>@Override
-public ConditionOutcome getMatchOutcome(ConditionContext context,
-    AnnotatedTypeMetadata metadata) {
-  StringBuffer matchMessage = new StringBuffer(); // 记录匹配信息
-  if (metadata.isAnnotated(ConditionalOnBean.class.getName())) {
-    BeanSearchSpec spec = new BeanSearchSpec(context, metadata,
-        ConditionalOnBean.class); // 构造一个BeanSearchSpec，会从@ConditionalOnBean注解中获取属性，然后设置到BeanSearchSpec中
-    List&lt;String&gt; matching = getMatchingBeans(context, spec); // 从BeanFactory中根据策略找出所有匹配的bean
-    if (matching.isEmpty()) { // 如果没有匹配的bean，返回一个没有匹配成功的ConditionalOutcome
-      return ConditionOutcome
-          .noMatch(&quot;@ConditionalOnBean &quot; + spec + &quot; found no beans&quot;);
-    }
-    // 如果找到匹配的bean，匹配信息进行记录
-    matchMessage.append(
-        &quot;@ConditionalOnBean &quot; + spec + &quot; found the following &quot; + matching);
-  }
-  if (metadata.isAnnotated(ConditionalOnSingleCandidate.class.getName())) { // 相同的逻辑，针对@ConditionalOnSingleCandidate注解
-    BeanSearchSpec spec = new SingleCandidateBeanSearchSpec(context, metadata,
-        ConditionalOnSingleCandidate.class);
-    List&lt;String&gt; matching = getMatchingBeans(context, spec);
-    if (matching.isEmpty()) {
-      return ConditionOutcome.noMatch(
-          &quot;@ConditionalOnSingleCandidate &quot; + spec + &quot; found no beans&quot;);
-    }
-    else if (!hasSingleAutowireCandidate(context.getBeanFactory(), matching)) { // 多了一层判断，判断是否只有一个bean
-      return ConditionOutcome.noMatch(&quot;@ConditionalOnSingleCandidate &quot; + spec
-          + &quot; found no primary candidate amongst the&quot; + &quot; following &quot;
-          + matching);
-    }
-    matchMessage.append(&quot;@ConditionalOnSingleCandidate &quot; + spec + &quot; found &quot;
-        + &quot;a primary candidate amongst the following &quot; + matching);
-  }
-  if (metadata.isAnnotated(ConditionalOnMissingBean.class.getName())) { // 相同的逻辑，针对@ConditionalOnMissingBean注解
-    BeanSearchSpec spec = new BeanSearchSpec(context, metadata,
-        ConditionalOnMissingBean.class);
-    List&lt;String&gt; matching = getMatchingBeans(context, spec);
-    if (!matching.isEmpty()) {
-      return ConditionOutcome.noMatch(&quot;@ConditionalOnMissingBean &quot; + spec
-          + &quot; found the following &quot; + matching);
-    }
-    matchMessage.append(matchMessage.length() == 0 ? &quot;&quot; : &quot; &quot;);
-    matchMessage.append(&quot;@ConditionalOnMissingBean &quot; + spec + &quot; found no beans&quot;);
-  }
-  return ConditionOutcome.match(matchMessage.toString()); //返回匹配成功的ConditonalOutcome
-}
-</code></pre><p>SpringBoot还提供了其他比如ConditionalOnJava、ConditionalOnNotWebApplication、ConditionalOnWebApplication、ConditionalOnResource、ConditionalOnProperty、ConditionalOnExpression等条件注解，有兴趣的读者可以自行查看它们的底层处理逻辑。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Target</span>(&#123; ElementType.TYPE, ElementType.METHOD &#125;)</div><div class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</div><div class="line"><span class="meta">@Documented</span></div><div class="line"><span class="meta">@Conditional</span>(OnBeanCondition.class)</div><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> ConditionalOnBean &#123;</div><div class="line">  Class&lt;?&gt;[] value() <span class="keyword">default</span> &#123;&#125;; <span class="comment">// 匹配的bean类型</span></div><div class="line">  String[] type() <span class="keyword">default</span> &#123;&#125;; <span class="comment">// 匹配的bean类型的类名</span></div><div class="line">  Class&lt;? extends Annotation&gt;[] annotation() <span class="keyword">default</span> &#123;&#125;; <span class="comment">// 匹配的bean注解</span></div><div class="line">  String[] name() <span class="keyword">default</span> &#123;&#125;; <span class="comment">// 匹配的bean的名字</span></div><div class="line">  <span class="function">SearchStrategy <span class="title">search</span><span class="params">()</span> <span class="keyword">default</span> SearchStrategy.ALL</span>; <span class="comment">// 搜索策略。提供CURRENT(只在当前容器中找)、PARENTS(只在所有的父容器中找；但是不包括当前容器)和ALL(CURRENT和PARENTS的组合)</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>OnBeanCondition条件类的匹配代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> ConditionOutcome <span class="title">getMatchOutcome</span><span class="params">(ConditionContext context,</span></span></div><div class="line">    AnnotatedTypeMetadata metadata) &#123;</div><div class="line">  StringBuffer matchMessage = <span class="keyword">new</span> StringBuffer(); <span class="comment">// 记录匹配信息</span></div><div class="line">  <span class="keyword">if</span> (metadata.isAnnotated(ConditionalOnBean.class.getName())) &#123;</div><div class="line">    BeanSearchSpec spec = <span class="keyword">new</span> BeanSearchSpec(context, metadata,</div><div class="line">        ConditionalOnBean.class); <span class="comment">// 构造一个BeanSearchSpec，会从@ConditionalOnBean注解中获取属性，然后设置到BeanSearchSpec中</span></div><div class="line">    List&lt;String&gt; matching = getMatchingBeans(context, spec); <span class="comment">// 从BeanFactory中根据策略找出所有匹配的bean</span></div><div class="line">    <span class="keyword">if</span> (matching.isEmpty()) &#123; <span class="comment">// 如果没有匹配的bean，返回一个没有匹配成功的ConditionalOutcome</span></div><div class="line">      <span class="keyword">return</span> ConditionOutcome</div><div class="line">          .noMatch(<span class="string">"@ConditionalOnBean "</span> + spec + <span class="string">" found no beans"</span>);</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 如果找到匹配的bean，匹配信息进行记录</span></div><div class="line">    matchMessage.append(</div><div class="line">        <span class="string">"@ConditionalOnBean "</span> + spec + <span class="string">" found the following "</span> + matching);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">if</span> (metadata.isAnnotated(ConditionalOnSingleCandidate.class.getName())) &#123; <span class="comment">// 相同的逻辑，针对@ConditionalOnSingleCandidate注解</span></div><div class="line">    BeanSearchSpec spec = <span class="keyword">new</span> SingleCandidateBeanSearchSpec(context, metadata,</div><div class="line">        ConditionalOnSingleCandidate.class);</div><div class="line">    List&lt;String&gt; matching = getMatchingBeans(context, spec);</div><div class="line">    <span class="keyword">if</span> (matching.isEmpty()) &#123;</div><div class="line">      <span class="keyword">return</span> ConditionOutcome.noMatch(</div><div class="line">          <span class="string">"@ConditionalOnSingleCandidate "</span> + spec + <span class="string">" found no beans"</span>);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (!hasSingleAutowireCandidate(context.getBeanFactory(), matching)) &#123; <span class="comment">// 多了一层判断，判断是否只有一个bean</span></div><div class="line">      <span class="keyword">return</span> ConditionOutcome.noMatch(<span class="string">"@ConditionalOnSingleCandidate "</span> + spec</div><div class="line">          + <span class="string">" found no primary candidate amongst the"</span> + <span class="string">" following "</span></div><div class="line">          + matching);</div><div class="line">    &#125;</div><div class="line">    matchMessage.append(<span class="string">"@ConditionalOnSingleCandidate "</span> + spec + <span class="string">" found "</span></div><div class="line">        + <span class="string">"a primary candidate amongst the following "</span> + matching);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">if</span> (metadata.isAnnotated(ConditionalOnMissingBean.class.getName())) &#123; <span class="comment">// 相同的逻辑，针对@ConditionalOnMissingBean注解</span></div><div class="line">    BeanSearchSpec spec = <span class="keyword">new</span> BeanSearchSpec(context, metadata,</div><div class="line">        ConditionalOnMissingBean.class);</div><div class="line">    List&lt;String&gt; matching = getMatchingBeans(context, spec);</div><div class="line">    <span class="keyword">if</span> (!matching.isEmpty()) &#123;</div><div class="line">      <span class="keyword">return</span> ConditionOutcome.noMatch(<span class="string">"@ConditionalOnMissingBean "</span> + spec</div><div class="line">          + <span class="string">" found the following "</span> + matching);</div><div class="line">    &#125;</div><div class="line">    matchMessage.append(matchMessage.length() == <span class="number">0</span> ? <span class="string">""</span> : <span class="string">" "</span>);</div><div class="line">    matchMessage.append(<span class="string">"@ConditionalOnMissingBean "</span> + spec + <span class="string">" found no beans"</span>);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> ConditionOutcome.match(matchMessage.toString()); <span class="comment">//返回匹配成功的ConditonalOutcome</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>SpringBoot还提供了其他比如ConditionalOnJava、ConditionalOnNotWebApplication、ConditionalOnWebApplication、ConditionalOnResource、ConditionalOnProperty、ConditionalOnExpression等条件注解，有兴趣的读者可以自行查看它们的底层处理逻辑。</p>
 <h2 id="各种条件注解的总结"><a href="#各种条件注解的总结" class="headerlink" title="各种条件注解的总结"></a>各种条件注解的总结</h2><table>
 <thead>
 <tr>
@@ -694,81 +526,14 @@ public ConditionOutcome getMatchOutcome(ConditionContext context,
 <p>SpringBoot使用ConditionEvaluator这个内部类完成条件注解的解析和判断。</p>
 <p>在Spring容器的refresh过程中，只有跟解析或者注册bean有关系的类都会使用ConditionEvaluator完成条件注解的判断，这个过程中一些类不满足条件的话就会被skip。这些类比如有AnnotatedBeanDefinitionReader、ConfigurationClassBeanDefinitionReader、ConfigurationClassParse、ClassPathScanningCandidateComponentProvider等。</p>
 <p>比如ConfigurationClassParser的构造函数会初始化内部属性conditionEvaluator：</p>
-<pre><code>public ConfigurationClassParser(MetadataReaderFactory metadataReaderFactory,
-    ProblemReporter problemReporter, Environment environment, ResourceLoader resourceLoader,
-    BeanNameGenerator componentScanBeanNameGenerator, BeanDefinitionRegistry registry) {
-
-  this.metadataReaderFactory = metadataReaderFactory;
-  this.problemReporter = problemReporter;
-  this.environment = environment;
-  this.resourceLoader = resourceLoader;
-  this.registry = registry;
-  this.componentScanParser = new ComponentScanAnnotationParser(
-      resourceLoader, environment, componentScanBeanNameGenerator, registry);
-  // 构造ConditionEvaluator用于处理条件注解
-  this.conditionEvaluator = new ConditionEvaluator(registry, environment, resourceLoader);
-}
-</code></pre><p>ConfigurationClassParser对每个配置类进行解析的时候都会使用ConditionEvaluator：</p>
-<pre><code>if (this.conditionEvaluator.shouldSkip(configClass.getMetadata(), ConfigurationPhase.PARSE_CONFIGURATION)) {
-  return;
-}
-</code></pre><p>ConditionEvaluator的skip方法：</p>
-<pre><code>public boolean shouldSkip(AnnotatedTypeMetadata metadata, ConfigurationPhase phase) {
-  // 如果这个类没有被@Conditional注解所修饰，不会skip
-  if (metadata == null || !metadata.isAnnotated(Conditional.class.getName())) {
-    return false;
-  }
-  // 如果参数中沒有设置条件注解的生效阶段
-  if (phase == null) {
-    // 是配置类的话直接使用PARSE_CONFIGURATION阶段
-    if (metadata instanceof AnnotationMetadata &amp;&amp;
-        ConfigurationClassUtils.isConfigurationCandidate((AnnotationMetadata) metadata)) {
-      return shouldSkip(metadata, ConfigurationPhase.PARSE_CONFIGURATION);
-    }
-    // 否则使用REGISTER_BEAN阶段
-    return shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN);
-  }
-  // 要解析的配置类的条件集合
-  List&lt;Condition&gt; conditions = new ArrayList&lt;Condition&gt;();
-  // 获取配置类的条件注解得到条件数据，并添加到集合中
-  for (String[] conditionClasses : getConditionClasses(metadata)) {
-    for (String conditionClass : conditionClasses) {
-      Condition condition = getCondition(conditionClass, this.context.getClassLoader());
-      conditions.add(condition);
-    }
-  }
-
-  // 对条件集合做个排序
-  AnnotationAwareOrderComparator.sort(conditions);
-  // 遍历条件集合
-  for (Condition condition : conditions) {
-    ConfigurationPhase requiredPhase = null;
-    if (condition instanceof ConfigurationCondition) {
-      requiredPhase = ((ConfigurationCondition) condition).getConfigurationPhase();
-    }
-    // 没有这个解析类不需要阶段的判断或者解析类和参数中的阶段一致才会继续进行
-    if (requiredPhase == null || requiredPhase == phase) {
-      // 阶段一致切不满足条件的话，返回true并跳过这个bean的解析
-      if (!condition.matches(this.context, metadata)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-</code></pre><p>SpringBoot在条件注解的解析log记录在了ConditionEvaluationReport类中，可以通过BeanFactory获取(BeanFactory是有父子关系的；每个BeanFactory都存有一份ConditionEvaluationReport，互不相干)：</p>
-<pre><code>ConditionEvaluationReport conditionEvaluationReport = beanFactory.getBean(&quot;autoConfigurationReport&quot;, ConditionEvaluationReport.class);
-Map&lt;String, ConditionEvaluationReport.ConditionAndOutcomes&gt; result = conditionEvaluationReport.getConditionAndOutcomesBySource();
-for(String key : result.keySet()) {
-    ConditionEvaluationReport.ConditionAndOutcomes conditionAndOutcomes = result.get(key);
-    Iterator&lt;ConditionEvaluationReport.ConditionAndOutcome&gt; iterator = conditionAndOutcomes.iterator();
-    while(iterator.hasNext()) {
-        ConditionEvaluationReport.ConditionAndOutcome conditionAndOutcome = iterator.next();
-        System.out.println(key + &quot; -- &quot; + conditionAndOutcome.getCondition().getClass().getSimpleName() + &quot; -- &quot; + conditionAndOutcome.getOutcome());
-    }
-}
-</code></pre><p>打印出条件注解下的类加载信息：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">ConfigurationClassParser</span><span class="params">(MetadataReaderFactory metadataReaderFactory,</span></span></div><div class="line">    ProblemReporter problemReporter, Environment environment, ResourceLoader resourceLoader,</div><div class="line">    BeanNameGenerator componentScanBeanNameGenerator, BeanDefinitionRegistry registry) &#123;</div><div class="line"></div><div class="line">  <span class="keyword">this</span>.metadataReaderFactory = metadataReaderFactory;</div><div class="line">  <span class="keyword">this</span>.problemReporter = problemReporter;</div><div class="line">  <span class="keyword">this</span>.environment = environment;</div><div class="line">  <span class="keyword">this</span>.resourceLoader = resourceLoader;</div><div class="line">  <span class="keyword">this</span>.registry = registry;</div><div class="line">  <span class="keyword">this</span>.componentScanParser = <span class="keyword">new</span> ComponentScanAnnotationParser(</div><div class="line">      resourceLoader, environment, componentScanBeanNameGenerator, registry);</div><div class="line">  <span class="comment">// 构造ConditionEvaluator用于处理条件注解</span></div><div class="line">  <span class="keyword">this</span>.conditionEvaluator = <span class="keyword">new</span> ConditionEvaluator(registry, environment, resourceLoader);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>ConfigurationClassParser对每个配置类进行解析的时候都会使用ConditionEvaluator：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (<span class="keyword">this</span>.conditionEvaluator.shouldSkip(configClass.getMetadata(), ConfigurationPhase.PARSE_CONFIGURATION)) &#123;</div><div class="line">  <span class="keyword">return</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>ConditionEvaluator的skip方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">shouldSkip</span><span class="params">(AnnotatedTypeMetadata metadata, ConfigurationPhase phase)</span> </span>&#123;</div><div class="line">  <span class="comment">// 如果这个类没有被@Conditional注解所修饰，不会skip</span></div><div class="line">  <span class="keyword">if</span> (metadata == <span class="keyword">null</span> || !metadata.isAnnotated(Conditional.class.getName())) &#123;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 如果参数中沒有设置条件注解的生效阶段</span></div><div class="line">  <span class="keyword">if</span> (phase == <span class="keyword">null</span>) &#123;</div><div class="line">    <span class="comment">// 是配置类的话直接使用PARSE_CONFIGURATION阶段</span></div><div class="line">    <span class="keyword">if</span> (metadata <span class="keyword">instanceof</span> AnnotationMetadata &amp;&amp;</div><div class="line">        ConfigurationClassUtils.isConfigurationCandidate((AnnotationMetadata) metadata)) &#123;</div><div class="line">      <span class="keyword">return</span> shouldSkip(metadata, ConfigurationPhase.PARSE_CONFIGURATION);</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 否则使用REGISTER_BEAN阶段</span></div><div class="line">    <span class="keyword">return</span> shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 要解析的配置类的条件集合</span></div><div class="line">  List&lt;Condition&gt; conditions = <span class="keyword">new</span> ArrayList&lt;Condition&gt;();</div><div class="line">  <span class="comment">// 获取配置类的条件注解得到条件数据，并添加到集合中</span></div><div class="line">  <span class="keyword">for</span> (String[] conditionClasses : getConditionClasses(metadata)) &#123;</div><div class="line">    <span class="keyword">for</span> (String conditionClass : conditionClasses) &#123;</div><div class="line">      Condition condition = getCondition(conditionClass, <span class="keyword">this</span>.context.getClassLoader());</div><div class="line">      conditions.add(condition);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// 对条件集合做个排序</span></div><div class="line">  AnnotationAwareOrderComparator.sort(conditions);</div><div class="line">  <span class="comment">// 遍历条件集合</span></div><div class="line">  <span class="keyword">for</span> (Condition condition : conditions) &#123;</div><div class="line">    ConfigurationPhase requiredPhase = <span class="keyword">null</span>;</div><div class="line">    <span class="keyword">if</span> (condition <span class="keyword">instanceof</span> ConfigurationCondition) &#123;</div><div class="line">      requiredPhase = ((ConfigurationCondition) condition).getConfigurationPhase();</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 没有这个解析类不需要阶段的判断或者解析类和参数中的阶段一致才会继续进行</span></div><div class="line">    <span class="keyword">if</span> (requiredPhase == <span class="keyword">null</span> || requiredPhase == phase) &#123;</div><div class="line">      <span class="comment">// 阶段一致切不满足条件的话，返回true并跳过这个bean的解析</span></div><div class="line">      <span class="keyword">if</span> (!condition.matches(<span class="keyword">this</span>.context, metadata)) &#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>SpringBoot在条件注解的解析log记录在了ConditionEvaluationReport类中，可以通过BeanFactory获取(BeanFactory是有父子关系的；每个BeanFactory都存有一份ConditionEvaluationReport，互不相干)：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">ConditionEvaluationReport conditionEvaluationReport = beanFactory.getBean(<span class="string">"autoConfigurationReport"</span>, ConditionEvaluationReport.class);</div><div class="line">Map&lt;String, ConditionEvaluationReport.ConditionAndOutcomes&gt; result = conditionEvaluationReport.getConditionAndOutcomesBySource();</div><div class="line"><span class="keyword">for</span>(String key : result.keySet()) &#123;</div><div class="line">    ConditionEvaluationReport.ConditionAndOutcomes conditionAndOutcomes = result.get(key);</div><div class="line">    Iterator&lt;ConditionEvaluationReport.ConditionAndOutcome&gt; iterator = conditionAndOutcomes.iterator();</div><div class="line">    <span class="keyword">while</span>(iterator.hasNext()) &#123;</div><div class="line">        ConditionEvaluationReport.ConditionAndOutcome conditionAndOutcome = iterator.next();</div><div class="line">        System.out.println(key + <span class="string">" -- "</span> + conditionAndOutcome.getCondition().getClass().getSimpleName() + <span class="string">" -- "</span> + conditionAndOutcome.getOutcome());</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>打印出条件注解下的类加载信息：</p>
 <pre><code>.......
 org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: freemarker.template.Configuration,org.springframework.ui.freemarker.FreeMarkerConfigurationFactory
 org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: groovy.text.markup.MarkupTemplateEngine
@@ -1183,6 +948,132 @@ org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration -- O
 
   
   
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+       search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body").append('<div class="popoverlay">').css('overflow', 'hidden');
+      $('.popup').toggle();
+
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+    'use strict';
+    $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+            // get the contents from search data
+            isfetched = true;
+            $('.popup').detach().appendTo('.header-inner');
+            var datas = $( "entry", xmlResponse ).map(function() {
+                return {
+                    title: $( "title", this ).text(),
+                    content: $("content",this).text(),
+                    url: $( "url" , this).text()
+                };
+            }).get();
+            var $input = document.getElementById(search_id);
+            var $resultContent = document.getElementById(content_id);
+            $input.addEventListener('input', function(){
+                var matchcounts = 0;
+                var str='<ul class=\"search-result-list\">';
+                var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                $resultContent.innerHTML = "";
+                if (this.value.trim().length > 1) {
+                // perform local searching
+                datas.forEach(function(data) {
+                    var isMatch = false;
+                    var content_index = [];
+                    var data_title = data.title.trim().toLowerCase();
+                    var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                    var data_url = decodeURIComponent(data.url);
+                    var index_title = -1;
+                    var index_content = -1;
+                    var first_occur = -1;
+                    // only match artiles with not empty titles and contents
+                    if(data_title != '') {
+                        keywords.forEach(function(keyword, i) {
+                            index_title = data_title.indexOf(keyword);
+                            index_content = data_content.indexOf(keyword);
+                            if( index_title >= 0 || index_content >= 0 ){
+                                isMatch = true;
+								if (i == 0) {
+                                    first_occur = index_content;
+                                }
+                            } 
+							
+                        });
+                    }
+                    // show search results
+                    if (isMatch) {
+                        matchcounts += 1;
+                        str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                        var content = data.content.trim().replace(/<[^>]+>/g,"");
+                        if (first_occur >= 0) {
+                            // cut out 100 characters
+                            var start = first_occur - 20;
+                            var end = first_occur + 80;
+                            if(start < 0){
+                                start = 0;
+                            }
+                            if(start == 0){
+                                end = 50;
+                            }
+                            if(end > content.length){
+                                end = content.length;
+                            }
+                            var match_content = content.substring(start, end);
+                            // highlight all keywords
+                            keywords.forEach(function(keyword){
+                                var regS = new RegExp(keyword, "gi");
+                                match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                            });
+
+                            str += "<p class=\"search-result\">" + match_content +"...</p>"
+                        }
+                        str += "</li>";
+                    }
+                })};
+                str += "</ul>";
+                if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+                if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+                $resultContent.innerHTML = str;
+            });
+            proceedsearch();
+        }
+    });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".popoverlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
 
   
 

@@ -87,37 +87,19 @@
 
 
 <meta name="description" content="SpringBoot的启动很简单，代码如下：
-@SpringBootApplication
-public class MyApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(MyApplication.class, args);
-    }
-}
-从代码上可以看出，调用了Sp">
+123456@SpringBootApplicationpublic class MyApplication &amp;#123;    public static void main(String[] args) &amp;#123;        SpringApplication.run(MyApplication.class, args);    &amp;#125;">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SpringBoot源码分析之SpringBoot的启动过程">
 <meta property="og:url" content="http://fangjian0423.github.io/2017/04/30/springboot-startup-analysis/index.html">
 <meta property="og:site_name" content="Format's Notes">
 <meta property="og:description" content="SpringBoot的启动很简单，代码如下：
-@SpringBootApplication
-public class MyApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(MyApplication.class, args);
-    }
-}
-从代码上可以看出，调用了Sp">
+123456@SpringBootApplicationpublic class MyApplication &amp;#123;    public static void main(String[] args) &amp;#123;        SpringApplication.run(MyApplication.class, args);    &amp;#125;">
 <meta property="og:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/startup2.jpg">
-<meta property="og:updated_time" content="2017-05-14T10:46:53.000Z">
+<meta property="og:updated_time" content="2017-05-31T13:20:59.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SpringBoot源码分析之SpringBoot的启动过程">
 <meta name="twitter:description" content="SpringBoot的启动很简单，代码如下：
-@SpringBootApplication
-public class MyApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(MyApplication.class, args);
-    }
-}
-从代码上可以看出，调用了Sp">
+123456@SpringBootApplicationpublic class MyApplication &amp;#123;    public static void main(String[] args) &amp;#123;        SpringApplication.run(MyApplication.class, args);    &amp;#125;">
 <meta name="twitter:image" content="http://7x2wh6.com1.z0.glb.clouddn.com/startup2.jpg">
 
 
@@ -396,43 +378,18 @@ public class MyApplication {
 
       
         <p>SpringBoot的启动很简单，代码如下：</p>
-<pre><code>@SpringBootApplication
-public class MyApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(MyApplication.class, args);
-    }
-}
-</code></pre><p>从代码上可以看出，调用了SpringApplication的静态方法run。这个run方法会构造一个SpringApplication的实例，然后再调用这里实例的run方法就表示启动SpringBoot。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@SpringBootApplication</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyApplication</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">        SpringApplication.run(MyApplication.class, args);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>从代码上可以看出，调用了SpringApplication的静态方法run。这个run方法会构造一个SpringApplication的实例，然后再调用这里实例的run方法就表示启动SpringBoot。</p>
 <p>因此，想要分析SpringBoot的启动过程，我们需要熟悉SpringApplication的构造过程以及SpringApplication的run方法执行过程即可。</p>
 <p>我们以上述这段代码为例，分析SpringBoot的启动过程。</p>
 <a id="more"></a>
 <h2 id="SpringApplication的构造过程"><a href="#SpringApplication的构造过程" class="headerlink" title="SpringApplication的构造过程"></a>SpringApplication的构造过程</h2><p>SpringApplication构造的时候内部会调用一个private方法initialize：</p>
-<pre><code>public SpringApplication(Object... sources) {
-  initialize(sources); // sources目前是一个MyApplication的class对象
-}
-
-private void initialize(Object[] sources) {
-  if (sources != null &amp;&amp; sources.length &gt; 0) {
-    this.sources.addAll(Arrays.asList(sources)); // 把sources设置到SpringApplication的sources属性中，目前只是一个MyApplication类对象
-  }
-  this.webEnvironment = deduceWebEnvironment(); // 判断是否是web程序(javax.servlet.Servlet和org.springframework.web.context.ConfigurableWebApplicationContext都必须在类加载器中存在)，并设置到webEnvironment属性中
-  // 从spring.factories文件中找出key为ApplicationContextInitializer的类并实例化后设置到SpringApplication的initializers属性中。这个过程也就是找出所有的应用程序初始化器
-  setInitializers((Collection) getSpringFactoriesInstances(
-      ApplicationContextInitializer.class));
-  // 从spring.factories文件中找出key为ApplicationListener的类并实例化后设置到SpringApplication的listeners属性中。这个过程就是找出所有的应用程序事件监听器
-  setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
-  // 找出main类，这里是MyApplication类
-  this.mainApplicationClass = deduceMainApplicationClass();
-}
-</code></pre><p>ApplicationContextInitializer，应用程序初始化器，做一些初始化的工作：</p>
-<pre><code>public interface ApplicationContextInitializer&lt;C extends ConfigurableApplicationContext&gt; {
-    void initialize(C applicationContext);
-}
-</code></pre><p>ApplicationListener，应用程序事件(ApplicationEvent)监听器：</p>
-<pre><code>public interface ApplicationListener&lt;E extends ApplicationEvent&gt; extends EventListener {
-    void onApplicationEvent(E event);
-}
-</code></pre><p>这里的应用程序事件(ApplicationEvent)有应用程序启动事件(ApplicationStartedEvent)，失败事件(ApplicationFailedEvent)，准备事件(ApplicationPreparedEvent)等。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">SpringApplication</span><span class="params">(Object... sources)</span> </span>&#123;</div><div class="line">  initialize(sources); <span class="comment">// sources目前是一个MyApplication的class对象</span></div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initialize</span><span class="params">(Object[] sources)</span> </span>&#123;</div><div class="line">  <span class="keyword">if</span> (sources != <span class="keyword">null</span> &amp;&amp; sources.length &gt; <span class="number">0</span>) &#123;</div><div class="line">    <span class="keyword">this</span>.sources.addAll(Arrays.asList(sources)); <span class="comment">// 把sources设置到SpringApplication的sources属性中，目前只是一个MyApplication类对象</span></div><div class="line">  &#125;</div><div class="line">  <span class="keyword">this</span>.webEnvironment = deduceWebEnvironment(); <span class="comment">// 判断是否是web程序(javax.servlet.Servlet和org.springframework.web.context.ConfigurableWebApplicationContext都必须在类加载器中存在)，并设置到webEnvironment属性中</span></div><div class="line">  <span class="comment">// 从spring.factories文件中找出key为ApplicationContextInitializer的类并实例化后设置到SpringApplication的initializers属性中。这个过程也就是找出所有的应用程序初始化器</span></div><div class="line">  setInitializers((Collection) getSpringFactoriesInstances(</div><div class="line">      ApplicationContextInitializer.class));</div><div class="line">  <span class="comment">// 从spring.factories文件中找出key为ApplicationListener的类并实例化后设置到SpringApplication的listeners属性中。这个过程就是找出所有的应用程序事件监听器</span></div><div class="line">  setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));</div><div class="line">  <span class="comment">// 找出main类，这里是MyApplication类</span></div><div class="line">  <span class="keyword">this</span>.mainApplicationClass = deduceMainApplicationClass();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>ApplicationContextInitializer，应用程序初始化器，做一些初始化的工作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationContextInitializer</span>&lt;<span class="title">C</span> <span class="keyword">extends</span> <span class="title">ConfigurableApplicationContext</span>&gt; </span>&#123;</div><div class="line">	<span class="function"><span class="keyword">void</span> <span class="title">initialize</span><span class="params">(C applicationContext)</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>ApplicationListener，应用程序事件(ApplicationEvent)监听器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationListener</span>&lt;<span class="title">E</span> <span class="keyword">extends</span> <span class="title">ApplicationEvent</span>&gt; <span class="keyword">extends</span> <span class="title">EventListener</span> </span>&#123;</div><div class="line">	<span class="function"><span class="keyword">void</span> <span class="title">onApplicationEvent</span><span class="params">(E event)</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这里的应用程序事件(ApplicationEvent)有应用程序启动事件(ApplicationStartedEvent)，失败事件(ApplicationFailedEvent)，准备事件(ApplicationPreparedEvent)等。</p>
 <p>应用程序事件监听器跟监听事件是绑定的。比如ConfigServerBootstrapApplicationListener只跟ApplicationEnvironmentPreparedEvent事件绑定，LiquibaseServiceLocatorApplicationListener只跟ApplicationStartedEvent事件绑定，LoggingApplicationListener跟所有事件绑定等。</p>
 <p>默认情况下，initialize方法从spring.factories文件中找出的key为ApplicationContextInitializer的类有：</p>
 <ol>
@@ -470,171 +427,19 @@ private void initialize(Object[] sources) {
 <p>所以说SpringApplicationRunListener和ApplicationListener之间的关系是通过ApplicationEventMulticaster广播出去的SpringApplicationEvent所联系起来的。</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/startup2.jpg" alt=""></p>
 <p>SpringApplication的run方法代码如下：</p>
-<pre><code>public ConfigurableApplicationContext run(String... args) {
-  StopWatch stopWatch = new StopWatch(); // 构造一个任务执行观察器
-  stopWatch.start(); // 开始执行，记录开始时间
-  ConfigurableApplicationContext context = null;
-  configureHeadlessProperty();
-  // 获取SpringApplicationRunListeners，内部只有一个EventPublishingRunListener
-  SpringApplicationRunListeners listeners = getRunListeners(args);
-  // 上面分析过，会封装成SpringApplicationEvent事件然后广播出去给SpringApplication中的listeners所监听
-  // 这里接受ApplicationStartedEvent事件的listener会执行相应的操作
-  listeners.started();
-  try {
-    // 构造一个应用程序参数持有类
-    ApplicationArguments applicationArguments = new DefaultApplicationArguments(
-        args);
-    // 创建Spring容器
-    context = createAndRefreshContext(listeners, applicationArguments);
-    // 容器创建完成之后执行额外一些操作
-    afterRefresh(context, applicationArguments);
-    // 广播出ApplicationReadyEvent事件给相应的监听器执行
-    listeners.finished(context, null);
-    stopWatch.stop(); // 执行结束，记录执行时间
-    if (this.logStartupInfo) {
-      new StartupInfoLogger(this.mainApplicationClass)
-          .logStarted(getApplicationLog(), stopWatch);
-    }
-    return context; // 返回Spring容器
-  }
-  catch (Throwable ex) {
-    handleRunFailure(context, listeners, ex); // 这个过程报错的话会执行一些异常操作、然后广播出ApplicationFailedEvent事件给相应的监听器执行
-    throw new IllegalStateException(ex);
-  }
-}
-</code></pre><p>创建容器的方法createAndRefreshContext如下：</p>
-<pre><code>private ConfigurableApplicationContext createAndRefreshContext(
-    SpringApplicationRunListeners listeners,
-    ApplicationArguments applicationArguments) {
-  ConfigurableApplicationContext context; // 定义Spring容器
-  // 创建应用程序的环境信息。如果是web程序，创建StandardServletEnvironment；否则，创建StandardEnvironment
-  ConfigurableEnvironment environment = getOrCreateEnvironment();
-  // 配置一些环境信息。比如profile，命令行参数
-  configureEnvironment(environment, applicationArguments.getSourceArgs());
-  // 广播出ApplicationEnvironmentPreparedEvent事件给相应的监听器执行
-  listeners.environmentPrepared(environment);
-  // 环境信息的校对
-  if (isWebEnvironment(environment) &amp;&amp; !this.webEnvironment) {
-    environment = convertToStandardEnvironment(environment);
-  }
-
-  if (this.bannerMode != Banner.Mode.OFF) { // 是否在控制台上打印自定义的banner
-    printBanner(environment);
-  }
-
-  // Create, load, refresh and run the ApplicationContext
-  context = createApplicationContext(); // 创建Spring容器
-  context.setEnvironment(environment); // 设置Spring容器的环境信息
-  postProcessApplicationContext(context); // 回调方法，Spring容器创建之后做一些额外的事
-  applyInitializers(context); // SpringApplication的的初始化器开始工作
-  // 遍历调用SpringApplicationRunListener的contextPrepared方法。目前只是将这个事件广播器注册到Spring容器中
-  listeners.contextPrepared(context);
-  if (this.logStartupInfo) {
-    logStartupInfo(context.getParent() == null);
-    logStartupProfileInfo(context);
-  }
-
-  // 把应用程序参数持有类注册到Spring容器中，并且是一个单例
-  context.getBeanFactory().registerSingleton(&quot;springApplicationArguments&quot;,
-      applicationArguments);
-
-  Set&lt;Object&gt; sources = getSources();
-  Assert.notEmpty(sources, &quot;Sources must not be empty&quot;);
-  load(context, sources.toArray(new Object[sources.size()]));
-  // 广播出ApplicationPreparedEvent事件给相应的监听器执行
-  listeners.contextLoaded(context);
-
-  // Spring容器的刷新
-  refresh(context);
-  if (this.registerShutdownHook) {
-    try {
-      context.registerShutdownHook();
-    }
-    catch (AccessControlException ex) {
-      // Not allowed in some environments.
-    }
-  }
-  return context;
-}
-</code></pre><p>Spring容器的创建createApplicationContext方法如下：</p>
-<pre><code>protected ConfigurableApplicationContext createApplicationContext() {
-  Class&lt;?&gt; contextClass = this.applicationContextClass;
-  if (contextClass == null) {
-    try {
-      // 如果是web程序，那么构造org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext容器
-      // 否则构造org.springframework.context.annotation.AnnotationConfigApplicationContext容器
-      contextClass = Class.forName(this.webEnvironment
-          ? DEFAULT_WEB_CONTEXT_CLASS : DEFAULT_CONTEXT_CLASS);
-    }
-    catch (ClassNotFoundException ex) {
-      throw new IllegalStateException(
-          &quot;Unable create a default ApplicationContext, &quot;
-              + &quot;please specify an ApplicationContextClass&quot;,
-          ex);
-    }
-  }
-  return (ConfigurableApplicationContext) BeanUtils.instantiate(contextClass);
-}
-</code></pre><p>Spring容器创建之后有个回调方法postProcessApplicationContext：</p>
-<pre><code>protected void postProcessApplicationContext(ConfigurableApplicationContext context) {
-      if (this.webEnvironment) { // 如果是web程序
-          if (context instanceof ConfigurableWebApplicationContext) { // 并且也是Spring Web容器
-              ConfigurableWebApplicationContext configurableContext = (ConfigurableWebApplicationContext) context;
-              if (this.beanNameGenerator != null) { // 如果SpringApplication设置了是实例命名生成器，注册到Spring容器中
-                  configurableContext.getBeanFactory().registerSingleton(
-                          AnnotationConfigUtils.CONFIGURATION_BEAN_NAME_GENERATOR,
-                          this.beanNameGenerator);
-              }
-          }
-      }
-      if (this.resourceLoader != null) { // 如果SpringApplication设置了资源加载器，设置到Spring容器中
-          if (context instanceof GenericApplicationContext) {
-              ((GenericApplicationContext) context)
-                      .setResourceLoader(this.resourceLoader);
-          }
-          if (context instanceof DefaultResourceLoader) {
-              ((DefaultResourceLoader) context)
-                      .setClassLoader(this.resourceLoader.getClassLoader());
-          }
-      }
-  }
-</code></pre><p>初始化器做的工作，比如ContextIdApplicationContextInitializer会设置应用程序的id；AutoConfigurationReportLoggingInitializer会给应用程序添加一个条件注解解析器报告等：</p>
-<pre><code>protected void applyInitializers(ConfigurableApplicationContext context) {
-  // 遍历每个初始化器，对调用对应的initialize方法
-  for (ApplicationContextInitializer initializer : getInitializers()) {
-    Class&lt;?&gt; requiredType = GenericTypeResolver.resolveTypeArgument(
-        initializer.getClass(), ApplicationContextInitializer.class);
-    Assert.isInstanceOf(requiredType, context, &quot;Unable to call initializer.&quot;);
-    initializer.initialize(context);
-  }
-}
-</code></pre><p>Spring容器的刷新refresh方法内部会做很多很多的事情：比如BeanFactory的设置，BeanFactoryPostProcessor接口的执行、BeanPostProcessor接口的执行、自动化配置类的解析、条件注解的解析、国际化的初始化等等。这部分内容会在之后的文章中进行讲解。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> ConfigurableApplicationContext <span class="title">run</span><span class="params">(String... args)</span> </span>&#123;</div><div class="line">  StopWatch stopWatch = <span class="keyword">new</span> StopWatch(); <span class="comment">// 构造一个任务执行观察器</span></div><div class="line">  stopWatch.start(); <span class="comment">// 开始执行，记录开始时间</span></div><div class="line">  ConfigurableApplicationContext context = <span class="keyword">null</span>;</div><div class="line">  configureHeadlessProperty();</div><div class="line">  <span class="comment">// 获取SpringApplicationRunListeners，内部只有一个EventPublishingRunListener</span></div><div class="line">  SpringApplicationRunListeners listeners = getRunListeners(args);</div><div class="line">  <span class="comment">// 上面分析过，会封装成SpringApplicationEvent事件然后广播出去给SpringApplication中的listeners所监听</span></div><div class="line">  <span class="comment">// 这里接受ApplicationStartedEvent事件的listener会执行相应的操作</span></div><div class="line">  listeners.started();</div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    <span class="comment">// 构造一个应用程序参数持有类</span></div><div class="line">    ApplicationArguments applicationArguments = <span class="keyword">new</span> DefaultApplicationArguments(</div><div class="line">        args);</div><div class="line">    <span class="comment">// 创建Spring容器</span></div><div class="line">    context = createAndRefreshContext(listeners, applicationArguments);</div><div class="line">    <span class="comment">// 容器创建完成之后执行额外一些操作</span></div><div class="line">    afterRefresh(context, applicationArguments);</div><div class="line">    <span class="comment">// 广播出ApplicationReadyEvent事件给相应的监听器执行</span></div><div class="line">    listeners.finished(context, <span class="keyword">null</span>);</div><div class="line">    stopWatch.stop(); <span class="comment">// 执行结束，记录执行时间</span></div><div class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.logStartupInfo) &#123;</div><div class="line">      <span class="keyword">new</span> StartupInfoLogger(<span class="keyword">this</span>.mainApplicationClass)</div><div class="line">          .logStarted(getApplicationLog(), stopWatch);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> context; <span class="comment">// 返回Spring容器</span></div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (Throwable ex) &#123;</div><div class="line">    handleRunFailure(context, listeners, ex); <span class="comment">// 这个过程报错的话会执行一些异常操作、然后广播出ApplicationFailedEvent事件给相应的监听器执行</span></div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(ex);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>创建容器的方法createAndRefreshContext如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> ConfigurableApplicationContext <span class="title">createAndRefreshContext</span><span class="params">(</span></span></div><div class="line">    SpringApplicationRunListeners listeners,</div><div class="line">    ApplicationArguments applicationArguments) &#123;</div><div class="line">  ConfigurableApplicationContext context; <span class="comment">// 定义Spring容器</span></div><div class="line">  <span class="comment">// 创建应用程序的环境信息。如果是web程序，创建StandardServletEnvironment；否则，创建StandardEnvironment</span></div><div class="line">  ConfigurableEnvironment environment = getOrCreateEnvironment();</div><div class="line">  <span class="comment">// 配置一些环境信息。比如profile，命令行参数</span></div><div class="line">  configureEnvironment(environment, applicationArguments.getSourceArgs());</div><div class="line">  <span class="comment">// 广播出ApplicationEnvironmentPreparedEvent事件给相应的监听器执行</span></div><div class="line">  listeners.environmentPrepared(environment);</div><div class="line">  <span class="comment">// 环境信息的校对</span></div><div class="line">  <span class="keyword">if</span> (isWebEnvironment(environment) &amp;&amp; !<span class="keyword">this</span>.webEnvironment) &#123;</div><div class="line">    environment = convertToStandardEnvironment(environment);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.bannerMode != Banner.Mode.OFF) &#123; <span class="comment">// 是否在控制台上打印自定义的banner</span></div><div class="line">    printBanner(environment);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// Create, load, refresh and run the ApplicationContext</span></div><div class="line">  context = createApplicationContext(); <span class="comment">// 创建Spring容器</span></div><div class="line">  context.setEnvironment(environment); <span class="comment">// 设置Spring容器的环境信息</span></div><div class="line">  postProcessApplicationContext(context); <span class="comment">// 回调方法，Spring容器创建之后做一些额外的事</span></div><div class="line">  applyInitializers(context); <span class="comment">// SpringApplication的的初始化器开始工作</span></div><div class="line">  <span class="comment">// 遍历调用SpringApplicationRunListener的contextPrepared方法。目前只是将这个事件广播器注册到Spring容器中</span></div><div class="line">  listeners.contextPrepared(context);</div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.logStartupInfo) &#123;</div><div class="line">    logStartupInfo(context.getParent() == <span class="keyword">null</span>);</div><div class="line">    logStartupProfileInfo(context);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// 把应用程序参数持有类注册到Spring容器中，并且是一个单例</span></div><div class="line">  context.getBeanFactory().registerSingleton(<span class="string">"springApplicationArguments"</span>,</div><div class="line">      applicationArguments);</div><div class="line"></div><div class="line">  Set&lt;Object&gt; sources = getSources();</div><div class="line">  Assert.notEmpty(sources, <span class="string">"Sources must not be empty"</span>);</div><div class="line">  load(context, sources.toArray(<span class="keyword">new</span> Object[sources.size()]));</div><div class="line">  <span class="comment">// 广播出ApplicationPreparedEvent事件给相应的监听器执行</span></div><div class="line">  listeners.contextLoaded(context);</div><div class="line"></div><div class="line">  <span class="comment">// Spring容器的刷新</span></div><div class="line">  refresh(context);</div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.registerShutdownHook) &#123;</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">      context.registerShutdownHook();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (AccessControlException ex) &#123;</div><div class="line">      <span class="comment">// Not allowed in some environments.</span></div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> context;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Spring容器的创建createApplicationContext方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> ConfigurableApplicationContext <span class="title">createApplicationContext</span><span class="params">()</span> </span>&#123;</div><div class="line">  Class&lt;?&gt; contextClass = <span class="keyword">this</span>.applicationContextClass;</div><div class="line">  <span class="keyword">if</span> (contextClass == <span class="keyword">null</span>) &#123;</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">      <span class="comment">// 如果是web程序，那么构造org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext容器</span></div><div class="line">      <span class="comment">// 否则构造org.springframework.context.annotation.AnnotationConfigApplicationContext容器</span></div><div class="line">      contextClass = Class.forName(<span class="keyword">this</span>.webEnvironment</div><div class="line">          ? DEFAULT_WEB_CONTEXT_CLASS : DEFAULT_CONTEXT_CLASS);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (ClassNotFoundException ex) &#123;</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</div><div class="line">          <span class="string">"Unable create a default ApplicationContext, "</span></div><div class="line">              + <span class="string">"please specify an ApplicationContextClass"</span>,</div><div class="line">          ex);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> (ConfigurableApplicationContext) BeanUtils.instantiate(contextClass);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Spring容器创建之后有个回调方法postProcessApplicationContext：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"> <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">postProcessApplicationContext</span><span class="params">(ConfigurableApplicationContext context)</span> </span>&#123;</div><div class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.webEnvironment) &#123; <span class="comment">// 如果是web程序</span></div><div class="line">		<span class="keyword">if</span> (context <span class="keyword">instanceof</span> ConfigurableWebApplicationContext) &#123; <span class="comment">// 并且也是Spring Web容器</span></div><div class="line">			ConfigurableWebApplicationContext configurableContext = (ConfigurableWebApplicationContext) context;</div><div class="line">			<span class="keyword">if</span> (<span class="keyword">this</span>.beanNameGenerator != <span class="keyword">null</span>) &#123; <span class="comment">// 如果SpringApplication设置了是实例命名生成器，注册到Spring容器中</span></div><div class="line">				configurableContext.getBeanFactory().registerSingleton(</div><div class="line">						AnnotationConfigUtils.CONFIGURATION_BEAN_NAME_GENERATOR,</div><div class="line">						<span class="keyword">this</span>.beanNameGenerator);</div><div class="line">			&#125;</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.resourceLoader != <span class="keyword">null</span>) &#123; <span class="comment">// 如果SpringApplication设置了资源加载器，设置到Spring容器中</span></div><div class="line">		<span class="keyword">if</span> (context <span class="keyword">instanceof</span> GenericApplicationContext) &#123;</div><div class="line">			((GenericApplicationContext) context)</div><div class="line">					.setResourceLoader(<span class="keyword">this</span>.resourceLoader);</div><div class="line">		&#125;</div><div class="line">		<span class="keyword">if</span> (context <span class="keyword">instanceof</span> DefaultResourceLoader) &#123;</div><div class="line">			((DefaultResourceLoader) context)</div><div class="line">					.setClassLoader(<span class="keyword">this</span>.resourceLoader.getClassLoader());</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>初始化器做的工作，比如ContextIdApplicationContextInitializer会设置应用程序的id；AutoConfigurationReportLoggingInitializer会给应用程序添加一个条件注解解析器报告等：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">applyInitializers</span><span class="params">(ConfigurableApplicationContext context)</span> </span>&#123;</div><div class="line">  <span class="comment">// 遍历每个初始化器，对调用对应的initialize方法</span></div><div class="line">  <span class="keyword">for</span> (ApplicationContextInitializer initializer : getInitializers()) &#123;</div><div class="line">    Class&lt;?&gt; requiredType = GenericTypeResolver.resolveTypeArgument(</div><div class="line">        initializer.getClass(), ApplicationContextInitializer.class);</div><div class="line">    Assert.isInstanceOf(requiredType, context, <span class="string">"Unable to call initializer."</span>);</div><div class="line">    initializer.initialize(context);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Spring容器的刷新refresh方法内部会做很多很多的事情：比如BeanFactory的设置，BeanFactoryPostProcessor接口的执行、BeanPostProcessor接口的执行、自动化配置类的解析、条件注解的解析、国际化的初始化等等。这部分内容会在之后的文章中进行讲解。</p>
 <p>run方法中的Spring容器创建完成之后会调用afterRefresh方法，代码如下：</p>
-<pre><code>protected void afterRefresh(ConfigurableApplicationContext context,
-    ApplicationArguments args) {
-  afterRefresh(context, args.getSourceArgs()); // 目前是个空实现
-  callRunners(context, args); // 调用Spring容器中的ApplicationRunner和CommandLineRunner接口的实现类
-}
-
-private void callRunners(ApplicationContext context, ApplicationArguments args) {
-      List&lt;Object&gt; runners = new ArrayList&lt;Object&gt;();
-  // 找出Spring容器中ApplicationRunner接口的实现类
-      runners.addAll(context.getBeansOfType(ApplicationRunner.class).values());
-  // 找出Spring容器中CommandLineRunner接口的实现类
-      runners.addAll(context.getBeansOfType(CommandLineRunner.class).values());
-  // 对runners进行排序
-      AnnotationAwareOrderComparator.sort(runners);
-  // 遍历runners依次执行
-      for (Object runner : new LinkedHashSet&lt;Object&gt;(runners)) {
-          if (runner instanceof ApplicationRunner) { // 如果是ApplicationRunner，进行ApplicationRunner的run方法调用
-              callRunner((ApplicationRunner) runner, args);
-          }
-          if (runner instanceof CommandLineRunner) { // 如果是CommandLineRunner，进行CommandLineRunner的run方法调用
-              callRunner((CommandLineRunner) runner, args);
-          }
-      }
-  }
-</code></pre><p>这样run方法执行完成之后。Spring容器也已经初始化完成，各种监听器和初始化器也做了相应的工作。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"> <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">afterRefresh</span><span class="params">(ConfigurableApplicationContext context,</span></span></div><div class="line">     ApplicationArguments args) &#123;</div><div class="line">   afterRefresh(context, args.getSourceArgs()); <span class="comment">// 目前是个空实现</span></div><div class="line">   callRunners(context, args); <span class="comment">// 调用Spring容器中的ApplicationRunner和CommandLineRunner接口的实现类</span></div><div class="line"> &#125;</div><div class="line"></div><div class="line"> <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">callRunners</span><span class="params">(ApplicationContext context, ApplicationArguments args)</span> </span>&#123;</div><div class="line">	List&lt;Object&gt; runners = <span class="keyword">new</span> ArrayList&lt;Object&gt;();</div><div class="line">   <span class="comment">// 找出Spring容器中ApplicationRunner接口的实现类</span></div><div class="line">	runners.addAll(context.getBeansOfType(ApplicationRunner.class).values());</div><div class="line">   <span class="comment">// 找出Spring容器中CommandLineRunner接口的实现类</span></div><div class="line">	runners.addAll(context.getBeansOfType(CommandLineRunner.class).values());</div><div class="line">   <span class="comment">// 对runners进行排序</span></div><div class="line">	AnnotationAwareOrderComparator.sort(runners);</div><div class="line">   <span class="comment">// 遍历runners依次执行</span></div><div class="line">	<span class="keyword">for</span> (Object runner : <span class="keyword">new</span> LinkedHashSet&lt;Object&gt;(runners)) &#123;</div><div class="line">		<span class="keyword">if</span> (runner <span class="keyword">instanceof</span> ApplicationRunner) &#123; <span class="comment">// 如果是ApplicationRunner，进行ApplicationRunner的run方法调用</span></div><div class="line">			callRunner((ApplicationRunner) runner, args);</div><div class="line">		&#125;</div><div class="line">		<span class="keyword">if</span> (runner <span class="keyword">instanceof</span> CommandLineRunner) &#123; <span class="comment">// 如果是CommandLineRunner，进行CommandLineRunner的run方法调用</span></div><div class="line">			callRunner((CommandLineRunner) runner, args);</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这样run方法执行完成之后。Spring容器也已经初始化完成，各种监听器和初始化器也做了相应的工作。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>SpringBoot启动的时候，不论调用什么方法，都会构造一个SpringApplication的实例，然后调用这个实例的run方法，这样就表示启动SpringBoot。</p>
 <p>在run方法调用之前，也就是构造SpringApplication的时候会进行初始化的工作，初始化的时候会做以下几件事：</p>
 <ol>
@@ -1058,6 +863,132 @@ private void callRunners(ApplicationContext context, ApplicationArguments args) 
 
   
   
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+       search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body").append('<div class="popoverlay">').css('overflow', 'hidden');
+      $('.popup').toggle();
+
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+    'use strict';
+    $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+            // get the contents from search data
+            isfetched = true;
+            $('.popup').detach().appendTo('.header-inner');
+            var datas = $( "entry", xmlResponse ).map(function() {
+                return {
+                    title: $( "title", this ).text(),
+                    content: $("content",this).text(),
+                    url: $( "url" , this).text()
+                };
+            }).get();
+            var $input = document.getElementById(search_id);
+            var $resultContent = document.getElementById(content_id);
+            $input.addEventListener('input', function(){
+                var matchcounts = 0;
+                var str='<ul class=\"search-result-list\">';
+                var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                $resultContent.innerHTML = "";
+                if (this.value.trim().length > 1) {
+                // perform local searching
+                datas.forEach(function(data) {
+                    var isMatch = false;
+                    var content_index = [];
+                    var data_title = data.title.trim().toLowerCase();
+                    var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                    var data_url = decodeURIComponent(data.url);
+                    var index_title = -1;
+                    var index_content = -1;
+                    var first_occur = -1;
+                    // only match artiles with not empty titles and contents
+                    if(data_title != '') {
+                        keywords.forEach(function(keyword, i) {
+                            index_title = data_title.indexOf(keyword);
+                            index_content = data_content.indexOf(keyword);
+                            if( index_title >= 0 || index_content >= 0 ){
+                                isMatch = true;
+								if (i == 0) {
+                                    first_occur = index_content;
+                                }
+                            } 
+							
+                        });
+                    }
+                    // show search results
+                    if (isMatch) {
+                        matchcounts += 1;
+                        str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                        var content = data.content.trim().replace(/<[^>]+>/g,"");
+                        if (first_occur >= 0) {
+                            // cut out 100 characters
+                            var start = first_occur - 20;
+                            var end = first_occur + 80;
+                            if(start < 0){
+                                start = 0;
+                            }
+                            if(start == 0){
+                                end = 50;
+                            }
+                            if(end > content.length){
+                                end = content.length;
+                            }
+                            var match_content = content.substring(start, end);
+                            // highlight all keywords
+                            keywords.forEach(function(keyword){
+                                var regS = new RegExp(keyword, "gi");
+                                match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                            });
+
+                            str += "<p class=\"search-result\">" + match_content +"...</p>"
+                        }
+                        str += "</li>";
+                    }
+                })};
+                str += "</ul>";
+                if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+                if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+                $resultContent.innerHTML = str;
+            });
+            proceedsearch();
+        }
+    });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".popoverlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
 
   
 

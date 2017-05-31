@@ -94,7 +94,7 @@ Spring容器创建之后，会调用它的refresh方法，refresh的时候会做
 <meta property="og:site_name" content="Format's Notes">
 <meta property="og:description" content="上一篇文章中，我们分析了SpringBoot的启动过程：构造SpringApplication并调用它的run方法。其中构造SpringApplication的时候会初始化一些监听器和初始化器；run方法调用的过程中会有对应的监听器监听，并且会创建Spring容器。
 Spring容器创建之后，会调用它的refresh方法，refresh的时候会做很多事情：比如完成配置类的解析、各种BeanFact">
-<meta property="og:updated_time" content="2017-05-14T10:47:07.000Z">
+<meta property="og:updated_time" content="2017-05-31T13:18:20.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SpringBoot源码分析之Spring容器的refresh过程">
 <meta name="twitter:description" content="上一篇文章中，我们分析了SpringBoot的启动过程：构造SpringApplication并调用它的run方法。其中构造SpringApplication的时候会初始化一些监听器和初始化器；run方法调用的过程中会有对应的监听器监听，并且会创建Spring容器。
@@ -380,38 +380,8 @@ Spring容器创建之后，会调用它的refresh方法，refresh的时候会做
 <p>我们来分析一下这个refresh过程。</p>
 <a id="more"></a>
 <p>还是以web程序为例，那么对应的Spring容器为AnnotationConfigEmbeddedWebApplicationContext。它的refresh方法调用了父类AbstractApplicationContext的refresh方法：</p>
-<pre><code>public void refresh() throws BeansException, IllegalStateException {
-  // refresh过程只能一个线程处理，不允许并发执行
-  synchronized (this.startupShutdownMonitor) {
-    prepareRefresh();
-    ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
-    prepareBeanFactory(beanFactory);
-    try {
-      postProcessBeanFactory(beanFactory);
-      invokeBeanFactoryPostProcessors(beanFactory);
-      registerBeanPostProcessors(beanFactory);
-      initMessageSource();
-      initApplicationEventMulticaster();
-      onRefresh();
-      registerListeners();
-      finishBeanFactoryInitialization(beanFactory);
-      finishRefresh();
-    }
-    catch (BeansException ex) {
-      if (logger.isWarnEnabled()) {
-        logger.warn(&quot;Exception encountered during context initialization - &quot; +
-            &quot;cancelling refresh attempt: &quot; + ex);
-      }
-      destroyBeans();
-      cancelRefresh(ex);
-      throw ex;
-    }
-    finally {
-      resetCommonCaches();
-    }
-  }
-}
-</code></pre><h2 id="prepareRefresh方法"><a href="#prepareRefresh方法" class="headerlink" title="prepareRefresh方法"></a>prepareRefresh方法</h2><p>表示在真正做refresh操作之前需要准备做的事情：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">refresh</span><span class="params">()</span> <span class="keyword">throws</span> BeansException, IllegalStateException </span>&#123;</div><div class="line">  <span class="comment">// refresh过程只能一个线程处理，不允许并发执行</span></div><div class="line">  <span class="keyword">synchronized</span> (<span class="keyword">this</span>.startupShutdownMonitor) &#123;</div><div class="line">    prepareRefresh();</div><div class="line">    ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();</div><div class="line">    prepareBeanFactory(beanFactory);</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">      postProcessBeanFactory(beanFactory);</div><div class="line">      invokeBeanFactoryPostProcessors(beanFactory);</div><div class="line">      registerBeanPostProcessors(beanFactory);</div><div class="line">      initMessageSource();</div><div class="line">      initApplicationEventMulticaster();</div><div class="line">      onRefresh();</div><div class="line">      registerListeners();</div><div class="line">      finishBeanFactoryInitialization(beanFactory);</div><div class="line">      finishRefresh();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (BeansException ex) &#123;</div><div class="line">      <span class="keyword">if</span> (logger.isWarnEnabled()) &#123;</div><div class="line">        logger.warn(<span class="string">"Exception encountered during context initialization - "</span> +</div><div class="line">            <span class="string">"cancelling refresh attempt: "</span> + ex);</div><div class="line">      &#125;</div><div class="line">      destroyBeans();</div><div class="line">      cancelRefresh(ex);</div><div class="line">      <span class="keyword">throw</span> ex;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">finally</span> &#123;</div><div class="line">      resetCommonCaches();</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="prepareRefresh方法"><a href="#prepareRefresh方法" class="headerlink" title="prepareRefresh方法"></a>prepareRefresh方法</h2><p>表示在真正做refresh操作之前需要准备做的事情：</p>
 <ol>
 <li>设置Spring容器的启动时间，撤销关闭状态，开启活跃状态。</li>
 <li>初始化属性源信息(Property)</li>
@@ -427,27 +397,10 @@ Spring容器创建之后，会调用它的refresh方法，refresh的时候会做
 <h2 id="postProcessBeanFactory方法"><a href="#postProcessBeanFactory方法" class="headerlink" title="postProcessBeanFactory方法"></a>postProcessBeanFactory方法</h2><p>BeanFactory设置之后再进行后续的一些BeanFactory操作。</p>
 <p>不同的Spring容器做不同的操作。比如GenericWebApplicationContext容器会在BeanFactory中添加ServletContextAwareProcessor用于处理ServletContextAware类型的bean初始化的时候调用setServletContext或者setServletConfig方法(跟ApplicationContextAwareProcessor原理一样)。</p>
 <p>AnnotationConfigEmbeddedWebApplicationContext对应的postProcessBeanFactory方法：</p>
-<pre><code>@Override
-protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
-  // 调用父类EmbeddedWebApplicationContext的实现
-  super.postProcessBeanFactory(beanFactory);
-  // 查看basePackages属性，如果设置了会使用ClassPathBeanDefinitionScanner去扫描basePackages包下的bean并注册
-  if (this.basePackages != null &amp;&amp; this.basePackages.length &gt; 0) {
-    this.scanner.scan(this.basePackages);
-  }
-  // 查看annotatedClasses属性，如果设置了会使用AnnotatedBeanDefinitionReader去注册这些bean
-  if (this.annotatedClasses != null &amp;&amp; this.annotatedClasses.length &gt; 0) {
-    this.reader.register(this.annotatedClasses);
-  }
-}
-</code></pre><p>父类EmbeddedWebApplicationContext的实现：</p>
-<pre><code>@Override
-protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
-  beanFactory.addBeanPostProcessor(
-      new WebApplicationContextServletContextAwareProcessor(this));
-  beanFactory.ignoreDependencyInterface(ServletContextAware.class);
-}
-</code></pre><h2 id="invokeBeanFactoryPostProcessors方法"><a href="#invokeBeanFactoryPostProcessors方法" class="headerlink" title="invokeBeanFactoryPostProcessors方法"></a>invokeBeanFactoryPostProcessors方法</h2><p>在Spring容器中找出实现了BeanFactoryPostProcessor接口的processor并执行。Spring容器会委托给PostProcessorRegistrationDelegate的invokeBeanFactoryPostProcessors方法执行。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> </span>&#123;</div><div class="line">  <span class="comment">// 调用父类EmbeddedWebApplicationContext的实现</span></div><div class="line">  <span class="keyword">super</span>.postProcessBeanFactory(beanFactory);</div><div class="line">  <span class="comment">// 查看basePackages属性，如果设置了会使用ClassPathBeanDefinitionScanner去扫描basePackages包下的bean并注册</span></div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.basePackages != <span class="keyword">null</span> &amp;&amp; <span class="keyword">this</span>.basePackages.length &gt; <span class="number">0</span>) &#123;</div><div class="line">    <span class="keyword">this</span>.scanner.scan(<span class="keyword">this</span>.basePackages);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 查看annotatedClasses属性，如果设置了会使用AnnotatedBeanDefinitionReader去注册这些bean</span></div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.annotatedClasses != <span class="keyword">null</span> &amp;&amp; <span class="keyword">this</span>.annotatedClasses.length &gt; <span class="number">0</span>) &#123;</div><div class="line">    <span class="keyword">this</span>.reader.register(<span class="keyword">this</span>.annotatedClasses);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>父类EmbeddedWebApplicationContext的实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> </span>&#123;</div><div class="line">  beanFactory.addBeanPostProcessor(</div><div class="line">      <span class="keyword">new</span> WebApplicationContextServletContextAwareProcessor(<span class="keyword">this</span>));</div><div class="line">  beanFactory.ignoreDependencyInterface(ServletContextAware.class);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="invokeBeanFactoryPostProcessors方法"><a href="#invokeBeanFactoryPostProcessors方法" class="headerlink" title="invokeBeanFactoryPostProcessors方法"></a>invokeBeanFactoryPostProcessors方法</h2><p>在Spring容器中找出实现了BeanFactoryPostProcessor接口的processor并执行。Spring容器会委托给PostProcessorRegistrationDelegate的invokeBeanFactoryPostProcessors方法执行。</p>
 <p>介绍两个接口：</p>
 <ol>
 <li>BeanFactoryPostProcessor：用来修改Spring容器中已经存在的bean的定义，使用ConfigurableListableBeanFactory对bean进行处理</li>
@@ -484,41 +437,8 @@ protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactor
 <p>EnableAutoConfigurationImportSelector的selectImport方法会在spring.factories文件中找出key为EnableAutoConfiguration对应的值，有81个，这81个就是所谓的自动化配置类(XXXAutoConfiguration)。</p>
 <p>ConfigurationClassParser解析完成之后，被解析出来的类会放到configurationClasses属性中。然后使用ConfigurationClassBeanDefinitionReader去解析这些类。</p>
 <p>这个时候这些bean只是被加载到了Spring容器中。下面这段代码是ConfigurationClassBeanDefinitionReader的解析bean过程：</p>
-<pre><code>public void loadBeanDefinitions(Set&lt;ConfigurationClass&gt; configurationModel) {
-  TrackedConditionEvaluator trackedConditionEvaluator = new TrackedConditionEvaluator();
-  for (ConfigurationClass configClass : configurationModel) {
-    // 对每一个配置类，调用loadBeanDefinitionsForConfigurationClass方法
-    loadBeanDefinitionsForConfigurationClass(configClass, trackedConditionEvaluator);
-  }
-}
-
-private void loadBeanDefinitionsForConfigurationClass(ConfigurationClass configClass,
-    TrackedConditionEvaluator trackedConditionEvaluator) {
-  // 使用条件注解判断是否需要跳过这个配置类
-  if (trackedConditionEvaluator.shouldSkip(configClass)) {
-    // 跳过配置类的话在Spring容器中移除bean的注册
-    String beanName = configClass.getBeanName();
-    if (StringUtils.hasLength(beanName) &amp;&amp; this.registry.containsBeanDefinition(beanName)) {
-      this.registry.removeBeanDefinition(beanName);
-    }
-    this.importRegistry.removeImportingClassFor(configClass.getMetadata().getClassName());
-    return;
-  }
-
-  if (configClass.isImported()) {
-    // 如果自身是被@Import注释所import的，注册自己
-    registerBeanDefinitionForImportedConfigurationClass(configClass);
-  }
-  // 注册方法中被@Bean注解修饰的bean
-  for (BeanMethod beanMethod : configClass.getBeanMethods()) {
-    loadBeanDefinitionsForBeanMethod(beanMethod);
-  }
-  // 注册@ImportResource注解注释的资源文件中的bean
-  loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
-  // 注册@Import注解中的ImportBeanDefinitionRegistrar接口的registerBeanDefinitions
-  loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
-}
-</code></pre><p>invokeBeanFactoryPostProcessors方法总结来说就是从Spring容器中找出BeanDefinitionRegistryPostProcessor和BeanFactoryPostProcessor接口的实现类并按照一定的规则顺序进行执行。 其中ConfigurationClassPostProcessor这个BeanDefinitionRegistryPostProcessor优先级最高，它会对项目中的@Configuration注解修饰的类(@Component、@ComponentScan、@Import、@ImportResource修饰的类也会被处理)进行解析，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loadBeanDefinitions</span><span class="params">(Set&lt;ConfigurationClass&gt; configurationModel)</span> </span>&#123;</div><div class="line">  TrackedConditionEvaluator trackedConditionEvaluator = <span class="keyword">new</span> TrackedConditionEvaluator();</div><div class="line">  <span class="keyword">for</span> (ConfigurationClass configClass : configurationModel) &#123;</div><div class="line">    <span class="comment">// 对每一个配置类，调用loadBeanDefinitionsForConfigurationClass方法</span></div><div class="line">    loadBeanDefinitionsForConfigurationClass(configClass, trackedConditionEvaluator);</div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">loadBeanDefinitionsForConfigurationClass</span><span class="params">(ConfigurationClass configClass,</span></span></div><div class="line">    TrackedConditionEvaluator trackedConditionEvaluator) &#123;</div><div class="line">  <span class="comment">// 使用条件注解判断是否需要跳过这个配置类</span></div><div class="line">  <span class="keyword">if</span> (trackedConditionEvaluator.shouldSkip(configClass)) &#123;</div><div class="line">    <span class="comment">// 跳过配置类的话在Spring容器中移除bean的注册</span></div><div class="line">    String beanName = configClass.getBeanName();</div><div class="line">    <span class="keyword">if</span> (StringUtils.hasLength(beanName) &amp;&amp; <span class="keyword">this</span>.registry.containsBeanDefinition(beanName)) &#123;</div><div class="line">      <span class="keyword">this</span>.registry.removeBeanDefinition(beanName);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">this</span>.importRegistry.removeImportingClassFor(configClass.getMetadata().getClassName());</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (configClass.isImported()) &#123;</div><div class="line">    <span class="comment">// 如果自身是被@Import注释所import的，注册自己</span></div><div class="line">    registerBeanDefinitionForImportedConfigurationClass(configClass);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 注册方法中被@Bean注解修饰的bean</span></div><div class="line">  <span class="keyword">for</span> (BeanMethod beanMethod : configClass.getBeanMethods()) &#123;</div><div class="line">    loadBeanDefinitionsForBeanMethod(beanMethod);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 注册@ImportResource注解注释的资源文件中的bean</span></div><div class="line">  loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());</div><div class="line">  <span class="comment">// 注册@Import注解中的ImportBeanDefinitionRegistrar接口的registerBeanDefinitions</span></div><div class="line">  loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>invokeBeanFactoryPostProcessors方法总结来说就是从Spring容器中找出BeanDefinitionRegistryPostProcessor和BeanFactoryPostProcessor接口的实现类并按照一定的规则顺序进行执行。 其中ConfigurationClassPostProcessor这个BeanDefinitionRegistryPostProcessor优先级最高，它会对项目中的@Configuration注解修饰的类(@Component、@ComponentScan、@Import、@ImportResource修饰的类也会被处理)进行解析，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化。</p>
 <h2 id="registerBeanPostProcessors方法"><a href="#registerBeanPostProcessors方法" class="headerlink" title="registerBeanPostProcessors方法"></a>registerBeanPostProcessors方法</h2><p>从Spring容器中找出的BeanPostProcessor接口的bean，并设置到BeanFactory的属性中。之后bean被实例化的时候会调用这个BeanPostProcessor。</p>
 <p>该方法委托给了PostProcessorRegistrationDelegate类的registerBeanPostProcessors方法执行。这里的过程跟invokeBeanFactoryPostProcessors类似：</p>
 <ol>
@@ -964,6 +884,132 @@ private void loadBeanDefinitionsForConfigurationClass(ConfigurationClass configC
 
   
   
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+       search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body").append('<div class="popoverlay">').css('overflow', 'hidden');
+      $('.popup').toggle();
+
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+    'use strict';
+    $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+            // get the contents from search data
+            isfetched = true;
+            $('.popup').detach().appendTo('.header-inner');
+            var datas = $( "entry", xmlResponse ).map(function() {
+                return {
+                    title: $( "title", this ).text(),
+                    content: $("content",this).text(),
+                    url: $( "url" , this).text()
+                };
+            }).get();
+            var $input = document.getElementById(search_id);
+            var $resultContent = document.getElementById(content_id);
+            $input.addEventListener('input', function(){
+                var matchcounts = 0;
+                var str='<ul class=\"search-result-list\">';
+                var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                $resultContent.innerHTML = "";
+                if (this.value.trim().length > 1) {
+                // perform local searching
+                datas.forEach(function(data) {
+                    var isMatch = false;
+                    var content_index = [];
+                    var data_title = data.title.trim().toLowerCase();
+                    var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                    var data_url = decodeURIComponent(data.url);
+                    var index_title = -1;
+                    var index_content = -1;
+                    var first_occur = -1;
+                    // only match artiles with not empty titles and contents
+                    if(data_title != '') {
+                        keywords.forEach(function(keyword, i) {
+                            index_title = data_title.indexOf(keyword);
+                            index_content = data_content.indexOf(keyword);
+                            if( index_title >= 0 || index_content >= 0 ){
+                                isMatch = true;
+								if (i == 0) {
+                                    first_occur = index_content;
+                                }
+                            } 
+							
+                        });
+                    }
+                    // show search results
+                    if (isMatch) {
+                        matchcounts += 1;
+                        str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                        var content = data.content.trim().replace(/<[^>]+>/g,"");
+                        if (first_occur >= 0) {
+                            // cut out 100 characters
+                            var start = first_occur - 20;
+                            var end = first_occur + 80;
+                            if(start < 0){
+                                start = 0;
+                            }
+                            if(start == 0){
+                                end = 50;
+                            }
+                            if(end > content.length){
+                                end = content.length;
+                            }
+                            var match_content = content.substring(start, end);
+                            // highlight all keywords
+                            keywords.forEach(function(keyword){
+                                var regS = new RegExp(keyword, "gi");
+                                match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                            });
+
+                            str += "<p class=\"search-result\">" + match_content +"...</p>"
+                        }
+                        str += "</li>";
+                    }
+                })};
+                str += "</ul>";
+                if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+                if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+                $resultContent.innerHTML = str;
+            });
+            proceedsearch();
+        }
+    });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".popoverlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
 
   
 

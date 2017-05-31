@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-05-31T08:22:54.000Z</updated>
+  <updated>2017-05-31T13:05:35.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -20,18 +20,11 @@
     <link href="http://fangjian0423.github.io/2017/05/31/springboot-executable-jar/"/>
     <id>http://fangjian0423.github.io/2017/05/31/springboot-executable-jar/</id>
     <published>2017-05-31T12:33:33.000Z</published>
-    <updated>2017-05-31T08:22:54.000Z</updated>
+    <updated>2017-05-31T13:05:35.000Z</updated>
     
     <content type="html"><![CDATA[<p>SpringBoot提供了一个插件spring-boot-maven-plugin用于把程序打包成一个可执行的jar包。在pom文件里加入这个插件即可：</p>
-<pre><code>&lt;build&gt;
-    &lt;plugins&gt;
-        &lt;plugin&gt;
-            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
-        &lt;/plugin&gt;
-    &lt;/plugins&gt;
-&lt;/build&gt;
-</code></pre><p>打包完生成的executable-jar-1.0-SNAPSHOT.jar内部的结构如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">plugins</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">plugin</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>打包完生成的executable-jar-1.0-SNAPSHOT.jar内部的结构如下：</p>
 <pre><code>├── META-INF
 │   ├── MANIFEST.MF
 │   └── maven
@@ -56,8 +49,8 @@
         └── executablejar
             └── ExecutableJarApplication.class
 </code></pre><p>然后可以直接执行jar包就能启动程序了：</p>
-<pre><code>java -jar executable-jar-1.0-SNAPSHOT.jar
-</code></pre><a id="more"></a>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">java -jar executable-jar-1.0-SNAPSHOT.jar</div></pre></td></tr></table></figure>
+<a id="more"></a>
 <p>打包出来fat jar内部有4种文件类型：</p>
 <ol>
 <li>META-INF文件夹：程序入口，其中MANIFEST.MF用于描述jar包的信息</li>
@@ -104,179 +97,34 @@ lib/spring-boot-1.3.5.RELEASE.jar
 jar:file:/Users/Format/Develop/gitrepository/springboot-analysis/springboot-executable-jar/target/executable-jar-1.0-SNAPSHOT.jar!/lib/spring-boot-loader-1.3.5.RELEASE.jar!/org/springframework/boot/loader/JarLauncher.class
 </code></pre><p>我们看到如果有jar包中包含jar，或者jar包中包含jar包里面的class文件，那么会使用 <strong>!/</strong> 分隔开，这种方式只有org.springframework.boot.loader.jar.Handler能处理，它是SpringBoot内部扩展出来的一种URL协议。</p>
 <h2 id="JarLauncher的执行过程"><a href="#JarLauncher的执行过程" class="headerlink" title="JarLauncher的执行过程"></a>JarLauncher的执行过程</h2><p>JarLauncher的main方法：</p>
-<pre><code>public static void main(String[] args) {
-    // 构造JarLauncher，然后调用它的launch方法。参数是控制台传递的
-    new JarLauncher().launch(args);
-}
-</code></pre><p>JarLauncher被构造的时候会调用父类ExecutableArchiveLauncher的构造方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">    <span class="comment">// 构造JarLauncher，然后调用它的launch方法。参数是控制台传递的</span></div><div class="line">    <span class="keyword">new</span> JarLauncher().launch(args);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>JarLauncher被构造的时候会调用父类ExecutableArchiveLauncher的构造方法。</p>
 <p>ExecutableArchiveLauncher的构造方法内部会去构造Archive，这里构造了JarFileArchive。构造JarFileArchive的过程中还会构造很多东西，比如JarFile，Entry …</p>
-<p>JarLauncher的launch方法：</p>
-<pre><code>protected void launch(String[] args) {
-  try {
-    // 在系统属性中设置注册了自定义的URL处理器：org.springframework.boot.loader.jar.Handler。如果URL中没有指定处理器，会去系统属性中查询
-    JarFile.registerUrlProtocolHandler();
-    // getClassPathArchives方法在会去找lib目录下对应的第三方依赖JarFileArchive，同时也会项目自身的JarFileArchive
-    // 根据getClassPathArchives得到的JarFileArchive集合去创建类加载器ClassLoader。这里会构造一个LaunchedURLClassLoader类加载器，这个类加载器继承URLClassLoader，并使用这些JarFileArchive集合的URL构造成URLClassPath
-    // LaunchedURLClassLoader类加载器的父类加载器是当前执行类JarLauncher的类加载器
-    ClassLoader classLoader = createClassLoader(getClassPathArchives());
-    // getMainClass方法会去项目自身的Archive中的Manifest中找出key为Start-Class的类
-    // 调用重载方法launch
-    launch(args, getMainClass(), classLoader);
-  }
-  catch (Exception ex) {
-    ex.printStackTrace();
-    System.exit(1);
-  }
-}
-
-// Archive的getMainClass方法
-// 这里会找出spring.study.executablejar.ExecutableJarApplication这个类
-public String getMainClass() throws Exception {
-      Manifest manifest = getManifest();
-      String mainClass = null;
-      if (manifest != null) {
-          mainClass = manifest.getMainAttributes().getValue(&quot;Start-Class&quot;);
-      }
-      if (mainClass == null) {
-          throw new IllegalStateException(
-                  &quot;No &apos;Start-Class&apos; manifest entry specified in &quot; + this);
-      }
-      return mainClass;
-  }
-
-// launch重载方法
-protected void launch(String[] args, String mainClass, ClassLoader classLoader)
-          throws Exception {
-      // 创建一个MainMethodRunner，并把args和Start-Class传递给它
-      Runnable runner = createMainMethodRunner(mainClass, args, classLoader);
-      // 构造新线程
-      Thread runnerThread = new Thread(runner);
-      // 线程设置类加载器以及名字，然后启动
-      runnerThread.setContextClassLoader(classLoader);
-      runnerThread.setName(Thread.currentThread().getName());
-      runnerThread.start();
-  }
-</code></pre><p>MainMethodRunner的run方法：</p>
-<pre><code>@Override
-public void run() {
-  try {
-    // 根据Start-Class进行实例化
-    Class&lt;?&gt; mainClass = Thread.currentThread().getContextClassLoader()
-        .loadClass(this.mainClassName);
-    // 找出main方法
-    Method mainMethod = mainClass.getDeclaredMethod(&quot;main&quot;, String[].class);
-    // 如果main方法不存在，抛出异常
-    if (mainMethod == null) {
-      throw new IllegalStateException(
-          this.mainClassName + &quot; does not have a main method&quot;);
-    }
-    // 调用
-    mainMethod.invoke(null, new Object[] { this.args });
-  }
-  catch (Exception ex) {
-    UncaughtExceptionHandler handler = Thread.currentThread()
-        .getUncaughtExceptionHandler();
-    if (handler != null) {
-      handler.uncaughtException(Thread.currentThread(), ex);
-    }
-    throw new RuntimeException(ex);
-  }
-}
-</code></pre><p>Start-Class的main方法调用之后，内部会构造Spring容器，启动内置Servlet容器等过程。 这些过程我们都已经分析过了。</p>
+<p>JarLauncher的launch方法：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">launch</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    <span class="comment">// 在系统属性中设置注册了自定义的URL处理器：org.springframework.boot.loader.jar.Handler。如果URL中没有指定处理器，会去系统属性中查询</span></div><div class="line">    JarFile.registerUrlProtocolHandler();</div><div class="line">    <span class="comment">// getClassPathArchives方法在会去找lib目录下对应的第三方依赖JarFileArchive，同时也会项目自身的JarFileArchive</span></div><div class="line">    <span class="comment">// 根据getClassPathArchives得到的JarFileArchive集合去创建类加载器ClassLoader。这里会构造一个LaunchedURLClassLoader类加载器，这个类加载器继承URLClassLoader，并使用这些JarFileArchive集合的URL构造成URLClassPath</span></div><div class="line">    <span class="comment">// LaunchedURLClassLoader类加载器的父类加载器是当前执行类JarLauncher的类加载器</span></div><div class="line">    ClassLoader classLoader = createClassLoader(getClassPathArchives());</div><div class="line">    <span class="comment">// getMainClass方法会去项目自身的Archive中的Manifest中找出key为Start-Class的类</span></div><div class="line">    <span class="comment">// 调用重载方法launch</span></div><div class="line">    launch(args, getMainClass(), classLoader);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (Exception ex) &#123;</div><div class="line">    ex.printStackTrace();</div><div class="line">    System.exit(<span class="number">1</span>);</div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// Archive的getMainClass方法</span></div><div class="line"><span class="comment">// 这里会找出spring.study.executablejar.ExecutableJarApplication这个类</span></div><div class="line"><span class="function"><span class="keyword">public</span> String <span class="title">getMainClass</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</div><div class="line">	Manifest manifest = getManifest();</div><div class="line">	String mainClass = <span class="keyword">null</span>;</div><div class="line">	<span class="keyword">if</span> (manifest != <span class="keyword">null</span>) &#123;</div><div class="line">		mainClass = manifest.getMainAttributes().getValue(<span class="string">"Start-Class"</span>);</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">if</span> (mainClass == <span class="keyword">null</span>) &#123;</div><div class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</div><div class="line">				<span class="string">"No 'Start-Class' manifest entry specified in "</span> + <span class="keyword">this</span>);</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">return</span> mainClass;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// launch重载方法</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">launch</span><span class="params">(String[] args, String mainClass, ClassLoader classLoader)</span></span></div><div class="line">		<span class="keyword">throws</span> Exception &#123;</div><div class="line">      <span class="comment">// 创建一个MainMethodRunner，并把args和Start-Class传递给它</span></div><div class="line">	Runnable runner = createMainMethodRunner(mainClass, args, classLoader);</div><div class="line">      <span class="comment">// 构造新线程</span></div><div class="line">	Thread runnerThread = <span class="keyword">new</span> Thread(runner);</div><div class="line">      <span class="comment">// 线程设置类加载器以及名字，然后启动</span></div><div class="line">	runnerThread.setContextClassLoader(classLoader);</div><div class="line">	runnerThread.setName(Thread.currentThread().getName());</div><div class="line">	runnerThread.start();</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>MainMethodRunner的run方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    <span class="comment">// 根据Start-Class进行实例化</span></div><div class="line">    Class&lt;?&gt; mainClass = Thread.currentThread().getContextClassLoader()</div><div class="line">        .loadClass(<span class="keyword">this</span>.mainClassName);</div><div class="line">    <span class="comment">// 找出main方法</span></div><div class="line">    Method mainMethod = mainClass.getDeclaredMethod(<span class="string">"main"</span>, String[].class);</div><div class="line">    <span class="comment">// 如果main方法不存在，抛出异常</span></div><div class="line">    <span class="keyword">if</span> (mainMethod == <span class="keyword">null</span>) &#123;</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</div><div class="line">          <span class="keyword">this</span>.mainClassName + <span class="string">" does not have a main method"</span>);</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 调用</span></div><div class="line">    mainMethod.invoke(<span class="keyword">null</span>, <span class="keyword">new</span> Object[] &#123; <span class="keyword">this</span>.args &#125;);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (Exception ex) &#123;</div><div class="line">    UncaughtExceptionHandler handler = Thread.currentThread()</div><div class="line">        .getUncaughtExceptionHandler();</div><div class="line">    <span class="keyword">if</span> (handler != <span class="keyword">null</span>) &#123;</div><div class="line">      handler.uncaughtException(Thread.currentThread(), ex);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(ex);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Start-Class的main方法调用之后，内部会构造Spring容器，启动内置Servlet容器等过程。 这些过程我们都已经分析过了。</p>
 <h2 id="关于自定义的类加载器LaunchedURLClassLoader"><a href="#关于自定义的类加载器LaunchedURLClassLoader" class="headerlink" title="关于自定义的类加载器LaunchedURLClassLoader"></a>关于自定义的类加载器LaunchedURLClassLoader</h2><p>LaunchedURLClassLoader重写了loadClass方法，也就是说它修改了默认的类加载方式(先看该类是否已加载这部分不变，后面真正去加载类的规则改变了，不再是直接从父类加载器中去加载)。LaunchedURLClassLoader定义了自己的类加载规则：</p>
-<pre><code>private Class&lt;?&gt; doLoadClass(String name) throws ClassNotFoundException {
-
-  // 1) Try the root class loader
-  try {
-    if (this.rootClassLoader != null) {
-      return this.rootClassLoader.loadClass(name);
-    }
-  }
-  catch (Exception ex) {
-    // Ignore and continue
-  }
-
-  // 2) Try to find locally
-  try {
-    findPackage(name);
-    Class&lt;?&gt; cls = findClass(name);
-    return cls;
-  }
-  catch (Exception ex) {
-    // Ignore and continue
-  }
-
-  // 3) Use standard loading
-  return super.loadClass(name, false);
-}
-</code></pre><p>加载规则：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> Class&lt;?&gt; doLoadClass(String name) <span class="keyword">throws</span> ClassNotFoundException &#123;</div><div class="line"></div><div class="line">  <span class="comment">// 1) Try the root class loader</span></div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.rootClassLoader != <span class="keyword">null</span>) &#123;</div><div class="line">      <span class="keyword">return</span> <span class="keyword">this</span>.rootClassLoader.loadClass(name);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (Exception ex) &#123;</div><div class="line">    <span class="comment">// Ignore and continue</span></div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// 2) Try to find locally</span></div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    findPackage(name);</div><div class="line">    Class&lt;?&gt; cls = findClass(name);</div><div class="line">    <span class="keyword">return</span> cls;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (Exception ex) &#123;</div><div class="line">    <span class="comment">// Ignore and continue</span></div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// 3) Use standard loading</span></div><div class="line">  <span class="keyword">return</span> <span class="keyword">super</span>.loadClass(name, <span class="keyword">false</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>加载规则：</p>
 <ol>
 <li>如果根类加载器存在，调用它的加载方法。这里是根类加载是ExtClassLoader</li>
 <li>调用LaunchedURLClassLoader自身的findClass方法，也就是URLClassLoader的findClass方法</li>
 <li>调用父类的loadClass方法，也就是执行默认的类加载顺序(从BootstrapClassLoader开始从下往下寻找)</li>
 </ol>
 <p>LaunchedURLClassLoader自身的findClass方法：</p>
-<pre><code>protected Class&lt;?&gt; findClass(final String name)
-     throws ClassNotFoundException
-{
-    try {
-        return AccessController.doPrivileged(
-            new PrivilegedExceptionAction&lt;Class&lt;?&gt;&gt;() {
-                public Class&lt;?&gt; run() throws ClassNotFoundException {
-                    // 把类名解析成路径并加上.class后缀
-                    String path = name.replace(&apos;.&apos;, &apos;/&apos;).concat(&quot;.class&quot;);
-                    // 基于之前得到的第三方jar包依赖以及自己的jar包得到URL数组，进行遍历找出对应类名的资源
-                    // 比如path是org/springframework/boot/loader/JarLauncher.class，它在jar:file:/Users/Format/Develop/gitrepository/springboot-analysis/springboot-executable-jar/target/executable-jar-1.0-SNAPSHOT.jar!/lib/spring-boot-loader-1.3.5.RELEASE.jar!/中被找出
-                    // 那么找出的资源对应的URL为jar:file:/Users/Format/Develop/gitrepository/springboot-analysis/springboot-executable-jar/target/executable-jar-1.0-SNAPSHOT.jar!/lib/spring-boot-loader-1.3.5.RELEASE.jar!/org/springframework/boot/loader/JarLauncher.class
-                    Resource res = ucp.getResource(path, false);
-                    if (res != null) { // 找到了资源
-                        try {
-                            return defineClass(name, res);
-                        } catch (IOException e) {
-                            throw new ClassNotFoundException(name, e);
-                        }
-                    } else { // 找不到资源的话直接抛出ClassNotFoundException异常
-                        throw new ClassNotFoundException(name);
-                    }
-                }
-            }, acc);
-    } catch (java.security.PrivilegedActionException pae) {
-        throw (ClassNotFoundException) pae.getException();
-    }
-}
-</code></pre><p>下面是LaunchedURLClassLoader的一个测试：</p>
-<pre><code>// 注册org.springframework.boot.loader.jar.Handler URL协议处理器
-JarFile.registerUrlProtocolHandler();
-// 构造LaunchedURLClassLoader类加载器，这里使用了2个URL，分别对应jar包中依赖包spring-boot-loader和spring-boot，使用 &quot;!/&quot; 分开，需要org.springframework.boot.loader.jar.Handler处理器处理
-LaunchedURLClassLoader classLoader = new LaunchedURLClassLoader(
-        new URL[] {
-                new URL(&quot;jar:file:/Users/Format/Develop/gitrepository/springboot-analysis/springboot-executable-jar/target/executable-jar-1.0-SNAPSHOT.jar!/lib/spring-boot-loader-1.3.5.RELEASE.jar!/&quot;)
-                , new URL(&quot;jar:file:/Users/Format/Develop/gitrepository/springboot-analysis/springboot-executable-jar/target/executable-jar-1.0-SNAPSHOT.jar!/lib/spring-boot-1.3.5.RELEASE.jar!/&quot;)
-        },
-        LaunchedURLClassLoaderTest.class.getClassLoader());
-
-// 加载类
-// 这2个类都会在第二步本地查找中被找出(URLClassLoader的findClass方法)
-classLoader.loadClass(&quot;org.springframework.boot.loader.JarLauncher&quot;);
-classLoader.loadClass(&quot;org.springframework.boot.SpringApplication&quot;);
-// 在第三步使用默认的加载顺序在ApplicationClassLoader中被找出
-classLoader.loadClass(&quot;org.springframework.boot.autoconfigure.web.DispatcherServletAutoConfiguration&quot;);
-</code></pre><h2 id="Spring-Boot-Loader的作用"><a href="#Spring-Boot-Loader的作用" class="headerlink" title="Spring Boot Loader的作用"></a>Spring Boot Loader的作用</h2><p>SpringBoot在可执行jar包中定义了自己的一套规则，比如第三方依赖jar包在/lib目录下，jar包的URL路径使用自定义的规则并且这个规则需要使用org.springframework.boot.loader.jar.Handler处理器处理。它的Main-Class使用JarLauncher，如果是war包，使用WarLauncher执行。这些Launcher内部都会另起一个线程启动自定义的SpringApplication类。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">protected</span> Class&lt;?&gt; findClass(<span class="keyword">final</span> String name)</div><div class="line">     <span class="keyword">throws</span> ClassNotFoundException</div><div class="line">&#123;</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">        <span class="keyword">return</span> AccessController.doPrivileged(</div><div class="line">            <span class="keyword">new</span> PrivilegedExceptionAction&lt;Class&lt;?&gt;&gt;() &#123;</div><div class="line">                <span class="keyword">public</span> Class&lt;?&gt; run() <span class="keyword">throws</span> ClassNotFoundException &#123;</div><div class="line">                    <span class="comment">// 把类名解析成路径并加上.class后缀</span></div><div class="line">                    String path = name.replace(<span class="string">'.'</span>, <span class="string">'/'</span>).concat(<span class="string">".class"</span>);</div><div class="line">                    <span class="comment">// 基于之前得到的第三方jar包依赖以及自己的jar包得到URL数组，进行遍历找出对应类名的资源</span></div><div class="line">                    <span class="comment">// 比如path是org/springframework/boot/loader/JarLauncher.class，它在jar:file:/Users/Format/Develop/gitrepository/springboot-analysis/springboot-executable-jar/target/executable-jar-1.0-SNAPSHOT.jar!/lib/spring-boot-loader-1.3.5.RELEASE.jar!/中被找出</span></div><div class="line">                    <span class="comment">// 那么找出的资源对应的URL为jar:file:/Users/Format/Develop/gitrepository/springboot-analysis/springboot-executable-jar/target/executable-jar-1.0-SNAPSHOT.jar!/lib/spring-boot-loader-1.3.5.RELEASE.jar!/org/springframework/boot/loader/JarLauncher.class</span></div><div class="line">                    Resource res = ucp.getResource(path, <span class="keyword">false</span>);</div><div class="line">                    <span class="keyword">if</span> (res != <span class="keyword">null</span>) &#123; <span class="comment">// 找到了资源</span></div><div class="line">                        <span class="keyword">try</span> &#123;</div><div class="line">                            <span class="keyword">return</span> defineClass(name, res);</div><div class="line">                        &#125; <span class="keyword">catch</span> (IOException e) &#123;</div><div class="line">                            <span class="keyword">throw</span> <span class="keyword">new</span> ClassNotFoundException(name, e);</div><div class="line">                        &#125;</div><div class="line">                    &#125; <span class="keyword">else</span> &#123; <span class="comment">// 找不到资源的话直接抛出ClassNotFoundException异常</span></div><div class="line">                        <span class="keyword">throw</span> <span class="keyword">new</span> ClassNotFoundException(name);</div><div class="line">                    &#125;</div><div class="line">                &#125;</div><div class="line">            &#125;, acc);</div><div class="line">    &#125; <span class="keyword">catch</span> (java.security.PrivilegedActionException pae) &#123;</div><div class="line">        <span class="keyword">throw</span> (ClassNotFoundException) pae.getException();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>下面是LaunchedURLClassLoader的一个测试：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 注册org.springframework.boot.loader.jar.Handler URL协议处理器</span></div><div class="line">JarFile.registerUrlProtocolHandler();</div><div class="line"><span class="comment">// 构造LaunchedURLClassLoader类加载器，这里使用了2个URL，分别对应jar包中依赖包spring-boot-loader和spring-boot，使用 "!/" 分开，需要org.springframework.boot.loader.jar.Handler处理器处理</span></div><div class="line">LaunchedURLClassLoader classLoader = <span class="keyword">new</span> LaunchedURLClassLoader(</div><div class="line">        <span class="keyword">new</span> URL[] &#123;</div><div class="line">                <span class="keyword">new</span> URL(<span class="string">"jar:file:/Users/Format/Develop/gitrepository/springboot-analysis/springboot-executable-jar/target/executable-jar-1.0-SNAPSHOT.jar!/lib/spring-boot-loader-1.3.5.RELEASE.jar!/"</span>)</div><div class="line">                , <span class="keyword">new</span> URL(<span class="string">"jar:file:/Users/Format/Develop/gitrepository/springboot-analysis/springboot-executable-jar/target/executable-jar-1.0-SNAPSHOT.jar!/lib/spring-boot-1.3.5.RELEASE.jar!/"</span>)</div><div class="line">        &#125;,</div><div class="line">        LaunchedURLClassLoaderTest.class.getClassLoader());</div><div class="line"></div><div class="line"><span class="comment">// 加载类</span></div><div class="line"><span class="comment">// 这2个类都会在第二步本地查找中被找出(URLClassLoader的findClass方法)</span></div><div class="line">classLoader.loadClass(<span class="string">"org.springframework.boot.loader.JarLauncher"</span>);</div><div class="line">classLoader.loadClass(<span class="string">"org.springframework.boot.SpringApplication"</span>);</div><div class="line"><span class="comment">// 在第三步使用默认的加载顺序在ApplicationClassLoader中被找出</span></div><div class="line">classLoader.loadClass(<span class="string">"org.springframework.boot.autoconfigure.web.DispatcherServletAutoConfiguration"</span>);</div></pre></td></tr></table></figure>
+<h2 id="Spring-Boot-Loader的作用"><a href="#Spring-Boot-Loader的作用" class="headerlink" title="Spring Boot Loader的作用"></a>Spring Boot Loader的作用</h2><p>SpringBoot在可执行jar包中定义了自己的一套规则，比如第三方依赖jar包在/lib目录下，jar包的URL路径使用自定义的规则并且这个规则需要使用org.springframework.boot.loader.jar.Handler处理器处理。它的Main-Class使用JarLauncher，如果是war包，使用WarLauncher执行。这些Launcher内部都会另起一个线程启动自定义的SpringApplication类。</p>
 <p>这些特性通过spring-boot-maven-plugin插件打包完成。</p>
 ]]></content>
     
     <summary type="html">
     
       &lt;p&gt;SpringBoot提供了一个插件spring-boot-maven-plugin用于把程序打包成一个可执行的jar包。在pom文件里加入这个插件即可：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;&amp;lt;build&amp;gt;
-    &amp;lt;plugins&amp;gt;
-        &amp;lt;plugin&amp;gt;
-            &amp;lt;groupId&amp;gt;org.springframework.boot&amp;lt;/groupId&amp;gt;
-            &amp;lt;artifactId&amp;gt;spring-boot-maven-plugin&amp;lt;/artifactId&amp;gt;
-        &amp;lt;/plugin&amp;gt;
-    &amp;lt;/plugins&amp;gt;
-&amp;lt;/build&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;打包完生成的executable-jar-1.0-SNAPSHOT.jar内部的结构如下：&lt;/p&gt;
+&lt;figure class=&quot;highlight xml&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;2&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;3&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;4&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;5&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;6&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;7&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;8&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;tag&quot;&gt;&amp;lt;&lt;span class=&quot;name&quot;&gt;build&lt;/span&gt;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &lt;span class=&quot;tag&quot;&gt;&amp;lt;&lt;span class=&quot;name&quot;&gt;plugins&lt;/span&gt;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;        &lt;span class=&quot;tag&quot;&gt;&amp;lt;&lt;span class=&quot;name&quot;&gt;plugin&lt;/span&gt;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;            &lt;span class=&quot;tag&quot;&gt;&amp;lt;&lt;span class=&quot;name&quot;&gt;groupId&lt;/span&gt;&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span class=&quot;tag&quot;&gt;&amp;lt;/&lt;span class=&quot;name&quot;&gt;groupId&lt;/span&gt;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;            &lt;span class=&quot;tag&quot;&gt;&amp;lt;&lt;span class=&quot;name&quot;&gt;artifactId&lt;/span&gt;&amp;gt;&lt;/span&gt;spring-boot-maven-plugin&lt;span class=&quot;tag&quot;&gt;&amp;lt;/&lt;span class=&quot;name&quot;&gt;artifactId&lt;/span&gt;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;        &lt;span class=&quot;tag&quot;&gt;&amp;lt;/&lt;span class=&quot;name&quot;&gt;plugin&lt;/span&gt;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &lt;span class=&quot;tag&quot;&gt;&amp;lt;/&lt;span class=&quot;name&quot;&gt;plugins&lt;/span&gt;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;tag&quot;&gt;&amp;lt;/&lt;span class=&quot;name&quot;&gt;build&lt;/span&gt;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;打包完生成的executable-jar-1.0-SNAPSHOT.jar内部的结构如下：&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;├── META-INF
 │   ├── MANIFEST.MF
 │   └── maven
@@ -301,8 +149,7 @@ classLoader.loadClass(&quot;org.springframework.boot.autoconfigure.web.Dispatche
         └── executablejar
             └── ExecutableJarApplication.class
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;然后可以直接执行jar包就能启动程序了：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;java -jar executable-jar-1.0-SNAPSHOT.jar
-&lt;/code&gt;&lt;/pre&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;java -jar executable-jar-1.0-SNAPSHOT.jar&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
     
     </summary>
     
@@ -322,29 +169,15 @@ classLoader.loadClass(&quot;org.springframework.boot.autoconfigure.web.Dispatche
     <link href="http://fangjian0423.github.io/2017/05/24/spring-data-es-query-problem/"/>
     <id>http://fangjian0423.github.io/2017/05/24/spring-data-es-query-problem/</id>
     <published>2017-05-23T16:33:33.000Z</published>
-    <updated>2017-05-23T16:23:15.000Z</updated>
+    <updated>2017-05-31T13:09:22.000Z</updated>
     
     <content type="html"><![CDATA[<p>最近工作中使用了<a href="https://github.com/spring-projects/spring-data-elasticsearch" target="_blank" rel="external">Spring Data Elasticsearch</a>。发生它存在一个问题：</p>
 <p><strong>Document对应的POJO的属性跟es里面文档的字段名字不一样，这样Repository里面编写自定义的查询方法就会查询不出结果。</strong></p>
 <p>比如有个Person类，它有2个属性goodFace和goodAt。这2个属性在es的索引里对应的字段表为good_face和good_at：</p>
-<pre><code>@Document(replicas = 1, shards = 1, type = &quot;person&quot;, indexName = &quot;person&quot;)
-@Getter
-@Setter
-@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class Person {
-    @Id
-    private String id;
-    private String name;
-    private boolean goodFace;
-    private String goodAt;
-}
-</code></pre><p>Repository中的自定义查询：</p>
-<pre><code>@Repository
-public interface PersonRepository extends ElasticsearchRepository&lt;Person, String&gt; {
-    List&lt;Person&gt; findByGoodFace(boolean isGoodFace);
-    List&lt;Person&gt; findByName(String name);
-}
-</code></pre><p>方法findByGoodFace是查询不出结果的，而findByName是ok的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Document</span>(replicas = <span class="number">1</span>, shards = <span class="number">1</span>, type = <span class="string">"person"</span>, indexName = <span class="string">"person"</span>)</div><div class="line"><span class="meta">@Getter</span></div><div class="line"><span class="meta">@Setter</span></div><div class="line"><span class="meta">@JsonNaming</span>(PropertyNamingStrategy.SnakeCaseStrategy.class)</div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Person</span> </span>&#123;</div><div class="line">    <span class="meta">@Id</span></div><div class="line">    <span class="keyword">private</span> String id;</div><div class="line">    <span class="keyword">private</span> String name;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> goodFace;</div><div class="line">    <span class="keyword">private</span> String goodAt;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Repository中的自定义查询：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Repository</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">PersonRepository</span> <span class="keyword">extends</span> <span class="title">ElasticsearchRepository</span>&lt;<span class="title">Person</span>, <span class="title">String</span>&gt; </span>&#123;</div><div class="line">    <span class="function">List&lt;Person&gt; <span class="title">findByGoodFace</span><span class="params">(<span class="keyword">boolean</span> isGoodFace)</span></span>;</div><div class="line">    <span class="function">List&lt;Person&gt; <span class="title">findByName</span><span class="params">(String name)</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>方法findByGoodFace是查询不出结果的，而findByName是ok的。</p>
 <p>为什么findByGoodFace不行而findByName可以呢，来探究一下。</p>
 <a id="more"></a>
 <p>Person类的name属性跟ES中的字段名是一模一样的，而goodFace字段在ES中的字段是good_face(因为我们使用了SnakeCaseStrategy策略)。</p>
@@ -357,159 +190,27 @@ public interface PersonRepository extends ElasticsearchRepository&lt;Person, Str
 <p>Spring Data Elasticsearch把对ES的操作封装成了一个ElasticsearchOperations接口。比如queryForObject、queryForPage、count、queryForList方法。</p>
 <p>ElasticsearchOperations接口目前有一个实现类ElasticsearchTemplate。</p>
 <p>ElasticsearchTemplate内部有个ResultsMapper属性，这个ResultsMapper目前只有一个实现类DefaultResultMapper，DefaultResultMapper内部使用DefaultEntityMapper完成映射。DefaultEntityMapper是个EntityMapper接口的实现类，它的定义如下：</p>
-<pre><code>public interface EntityMapper {
-    public String mapToString(Object object) throws IOException;
-    public &lt;T&gt; T mapToObject(String source, Class&lt;T&gt; clazz) throws IOException;
-}
-</code></pre><p>方法很明白：对象到json字符串的转换和json字符串倒对象的转换。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">EntityMapper</span> </span>&#123;</div><div class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">mapToString</span><span class="params">(Object object)</span> <span class="keyword">throws</span> IOException</span>;</div><div class="line">  <span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">mapToObject</span><span class="params">(String source, Class&lt;T&gt; clazz)</span> <span class="keyword">throws</span> IOException</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>方法很明白：对象到json字符串的转换和json字符串倒对象的转换。</p>
 <p>DefaultEntityMapper内部使用jackson的ObjectMapper完成。</p>
 <p>自定义的Repository继承自ElasticsearchRepository，最后会使用代理映射成SimpleElasticsearchRepository。</p>
 <p>SimpleElasticsearchRepository内部有个属性ElasticsearchOperations用于完成与ES的交互。</p>
 <p>我们看下SimpleElasticsearchRepository的save方法：</p>
-<pre><code>@Override
-public &lt;S extends T&gt; S save(S entity) {
-  Assert.notNull(entity, &quot;Cannot save &apos;null&apos; entity.&quot;);
-  // createIndexQuery方法会构造一个IndexQuery，然后调用ElasticsearchOperations的index方法
-  elasticsearchOperations.index(createIndexQuery(entity));
-  elasticsearchOperations.refresh(entityInformation.getIndexName());
-  return entity;
-}
-
-// ElasticsearchTemplate的index方法
-@Override
-  public String index(IndexQuery query) {
-      // 调用prepareIndex方法构造一个IndexRequestBuilder
-      String documentId = prepareIndex(query).execute().actionGet().getId();
-      // 设置保存文档的id
-      if (query.getObject() != null) {
-          setPersistentEntityId(query.getObject(), documentId);
-      }
-      return documentId;
-  }
-
-private IndexRequestBuilder prepareIndex(IndexQuery query) {
-      try {
-          // 从@Document注解中得到索引的名字
-          String indexName = isBlank(query.getIndexName()) ? retrieveIndexNameFromPersistentEntity(query.getObject()
-                  .getClass())[0] : query.getIndexName();
-          // 从@Document注解中得到索引的类型
-          String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
-                  : query.getType();
-
-          IndexRequestBuilder indexRequestBuilder = null;
-
-          if (query.getObject() != null) { // save方法这里保存的object就是POJO
-      // 得到id字段
-              String id = isBlank(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
-              if (id != null) { // 如果设置了id字段
-                  indexRequestBuilder = client.prepareIndex(indexName, type, id);
-              } else { // 如果没有设置id字段
-                  indexRequestBuilder = client.prepareIndex(indexName, type);
-              }
-      // 使用ResultsMapper映射POJO到json字符串
-              indexRequestBuilder.setSource(resultsMapper.getEntityMapper().mapToString(query.getObject()));
-          } else if (query.getSource() != null) { // 如果自定义了source属性，直接赋值
-              indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource());
-          } else { // 没有设置object属性或者source属性，抛出ElasticsearchException异常
-              throw new ElasticsearchException(&quot;object or source is null, failed to index the document [id: &quot; + query.getId() + &quot;]&quot;);
-          }
-          if (query.getVersion() != null) { // 设置版本
-              indexRequestBuilder.setVersion(query.getVersion());
-              indexRequestBuilder.setVersionType(EXTERNAL);
-          }
-
-          if (query.getParentId() != null) { // 设置parentId
-              indexRequestBuilder.setParent(query.getParentId());
-          }
-
-          return indexRequestBuilder;
-      } catch (IOException e) {
-          throw new ElasticsearchException(&quot;failed to index the document [id: &quot; + query.getId() + &quot;]&quot;, e);
-      }
-  }
-</code></pre><p>save方法使用ResultsMapper完成了POJO到json的转换，所以save方法保存成功对应的文档数据：</p>
-<pre><code>indexRequestBuilder.setSource(resultsMapper.getEntityMapper().mapToString(query.getObject()));
-</code></pre><p>自定义的findByGoodFace方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="keyword">public</span> &lt;S extends T&gt; <span class="function">S <span class="title">save</span><span class="params">(S entity)</span> </span>&#123;</div><div class="line">  Assert.notNull(entity, <span class="string">"Cannot save 'null' entity."</span>);</div><div class="line">  <span class="comment">// createIndexQuery方法会构造一个IndexQuery，然后调用ElasticsearchOperations的index方法</span></div><div class="line">  elasticsearchOperations.index(createIndexQuery(entity));</div><div class="line">  elasticsearchOperations.refresh(entityInformation.getIndexName());</div><div class="line">  <span class="keyword">return</span> entity;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// ElasticsearchTemplate的index方法</span></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> String <span class="title">index</span><span class="params">(IndexQuery query)</span> </span>&#123;</div><div class="line">      <span class="comment">// 调用prepareIndex方法构造一个IndexRequestBuilder</span></div><div class="line">	String documentId = prepareIndex(query).execute().actionGet().getId();</div><div class="line">	<span class="comment">// 设置保存文档的id</span></div><div class="line">	<span class="keyword">if</span> (query.getObject() != <span class="keyword">null</span>) &#123;</div><div class="line">		setPersistentEntityId(query.getObject(), documentId);</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">return</span> documentId;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> IndexRequestBuilder <span class="title">prepareIndex</span><span class="params">(IndexQuery query)</span> </span>&#123;</div><div class="line">	<span class="keyword">try</span> &#123;</div><div class="line">              <span class="comment">// 从@Document注解中得到索引的名字</span></div><div class="line">		String indexName = isBlank(query.getIndexName()) ? retrieveIndexNameFromPersistentEntity(query.getObject()</div><div class="line">				.getClass())[<span class="number">0</span>] : query.getIndexName();</div><div class="line">              <span class="comment">// 从@Document注解中得到索引的类型</span></div><div class="line">		String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[<span class="number">0</span>]</div><div class="line">				: query.getType();</div><div class="line"></div><div class="line">		IndexRequestBuilder indexRequestBuilder = <span class="keyword">null</span>;</div><div class="line"></div><div class="line">		<span class="keyword">if</span> (query.getObject() != <span class="keyword">null</span>) &#123; <span class="comment">// save方法这里保存的object就是POJO</span></div><div class="line">            <span class="comment">// 得到id字段</span></div><div class="line">			String id = isBlank(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();</div><div class="line">			<span class="keyword">if</span> (id != <span class="keyword">null</span>) &#123; <span class="comment">// 如果设置了id字段</span></div><div class="line">				indexRequestBuilder = client.prepareIndex(indexName, type, id);</div><div class="line">			&#125; <span class="keyword">else</span> &#123; <span class="comment">// 如果没有设置id字段</span></div><div class="line">				indexRequestBuilder = client.prepareIndex(indexName, type);</div><div class="line">			&#125;</div><div class="line">            <span class="comment">// 使用ResultsMapper映射POJO到json字符串</span></div><div class="line">			indexRequestBuilder.setSource(resultsMapper.getEntityMapper().mapToString(query.getObject()));</div><div class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> (query.getSource() != <span class="keyword">null</span>) &#123; <span class="comment">// 如果自定义了source属性，直接赋值</span></div><div class="line">			indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource());</div><div class="line">		&#125; <span class="keyword">else</span> &#123; <span class="comment">// 没有设置object属性或者source属性，抛出ElasticsearchException异常</span></div><div class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> ElasticsearchException(<span class="string">"object or source is null, failed to index the document [id: "</span> + query.getId() + <span class="string">"]"</span>);</div><div class="line">		&#125;</div><div class="line">		<span class="keyword">if</span> (query.getVersion() != <span class="keyword">null</span>) &#123; <span class="comment">// 设置版本</span></div><div class="line">			indexRequestBuilder.setVersion(query.getVersion());</div><div class="line">			indexRequestBuilder.setVersionType(EXTERNAL);</div><div class="line">		&#125;</div><div class="line"></div><div class="line">		<span class="keyword">if</span> (query.getParentId() != <span class="keyword">null</span>) &#123; <span class="comment">// 设置parentId</span></div><div class="line">			indexRequestBuilder.setParent(query.getParentId());</div><div class="line">		&#125;</div><div class="line"></div><div class="line">		<span class="keyword">return</span> indexRequestBuilder;</div><div class="line">	&#125; <span class="keyword">catch</span> (IOException e) &#123;</div><div class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> ElasticsearchException(<span class="string">"failed to index the document [id: "</span> + query.getId() + <span class="string">"]"</span>, e);</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>save方法使用ResultsMapper完成了POJO到json的转换，所以save方法保存成功对应的文档数据：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">indexRequestBuilder.setSource(resultsMapper.getEntityMapper().mapToString(query.getObject()));</div></pre></td></tr></table></figure>
+<p>自定义的findByGoodFace方法：</p>
 <p>由于是Repository中的自定义方法，会被Spring Data通过代理进行构造，内部还是用了AOP，最终在QueryExecutorMethodInterceptor中并解析成ElasticsearchPartQuery这个RepositoryQuery接口的实现类，然后调用execute方法：</p>
-<pre><code>@Override
-public Object execute(Object[] parameters) {
-  ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
-  CriteriaQuery query = createQuery(accessor);
-  if(tree.isDelete()) { // 如果是删除方法
-    Object result = countOrGetDocumentsForDelete(query, accessor);
-    elasticsearchOperations.delete(query, queryMethod.getEntityInformation().getJavaType());
-    return result;
-  } else if (queryMethod.isPageQuery()) { // 如果是分页查询
-    query.setPageable(accessor.getPageable());
-    return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
-  } else if (queryMethod.isStreamQuery()) { // 如果是流式查询
-    Class&lt;?&gt; entityType = queryMethod.getEntityInformation().getJavaType();
-    if (query.getPageable() == null) {
-      query.setPageable(new PageRequest(0, 20));
-    }
-
-    return StreamUtils.createStreamFromIterator((CloseableIterator&lt;Object&gt;) elasticsearchOperations.stream(query, entityType));
-
-  } else if (queryMethod.isCollectionQuery()) { // 如果是集合查询
-    if (accessor.getPageable() == null) {
-      int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
-      query.setPageable(new PageRequest(0, Math.max(1, itemCount)));
-    } else {
-        query.setPageable(accessor.getPageable());
-      }
-    return elasticsearchOperations.queryForList(query, queryMethod.getEntityInformation().getJavaType());
-  } else if (tree.isCountProjection()) { // 如果是count查询
-    return elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
-  }
-  // 单个查询
-  return elasticsearchOperations.queryForObject(query, queryMethod.getEntityInformation().getJavaType());
-}
-</code></pre><p>findByGoodFace方法是个集合查询，最终会调用ElasticsearchOperations的queryForList方法：</p>
-<pre><code>@Override
-public &lt;T&gt; List&lt;T&gt; queryForList(CriteriaQuery query, Class&lt;T&gt; clazz) {
-  // 调用queryForPage方法
-  return queryForPage(query, clazz).getContent();
-}
-
-@Override
-public &lt;T&gt; Page&lt;T&gt; queryForPage(CriteriaQuery criteriaQuery, Class&lt;T&gt; clazz) {
-  // 查询解析器进行语法的解析
-  QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
-  QueryBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
-  SearchRequestBuilder searchRequestBuilder = prepareSearch(criteriaQuery, clazz);
-
-  if (elasticsearchQuery != null) {
-    searchRequestBuilder.setQuery(elasticsearchQuery);
-  } else {
-    searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
-  }
-
-  if (criteriaQuery.getMinScore() &gt; 0) {
-    searchRequestBuilder.setMinScore(criteriaQuery.getMinScore());
-  }
-
-  if (elasticsearchFilter != null)
-    searchRequestBuilder.setPostFilter(elasticsearchFilter);
-  if (logger.isDebugEnabled()) {
-    logger.debug(&quot;doSearch query:\n&quot; + searchRequestBuilder.toString());
-  }
-
-  SearchResponse response = getSearchResponse(searchRequestBuilder
-      .execute());
-  // 最终的结果是用ResultsMapper进行映射
-  return resultsMapper.mapResults(response, clazz, criteriaQuery.getPageable());
-}
-</code></pre><p>自定义的方法使用ElasticsearchQueryCreator去创建CriteriaQuery，内部做一些词法的分析，有了CriteriaQuery之后，使用CriteriaQueryProcessor基于Criteria构造了QueryBuilder，最后使用QueryBuilder去做rest请求得到es的查询结果。这些过程中是没有用到ResultsMapper，而只是用反射得到POJO的属性，只有在得到查询结果后才会用ResultsMapper去做映射。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">execute</span><span class="params">(Object[] parameters)</span> </span>&#123;</div><div class="line">  ParametersParameterAccessor accessor = <span class="keyword">new</span> ParametersParameterAccessor(queryMethod.getParameters(), parameters);</div><div class="line">  CriteriaQuery query = createQuery(accessor);</div><div class="line">  <span class="keyword">if</span>(tree.isDelete()) &#123; <span class="comment">// 如果是删除方法</span></div><div class="line">    Object result = countOrGetDocumentsForDelete(query, accessor);</div><div class="line">    elasticsearchOperations.delete(query, queryMethod.getEntityInformation().getJavaType());</div><div class="line">    <span class="keyword">return</span> result;</div><div class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (queryMethod.isPageQuery()) &#123; <span class="comment">// 如果是分页查询</span></div><div class="line">    query.setPageable(accessor.getPageable());</div><div class="line">    <span class="keyword">return</span> elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());</div><div class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (queryMethod.isStreamQuery()) &#123; <span class="comment">// 如果是流式查询</span></div><div class="line">    Class&lt;?&gt; entityType = queryMethod.getEntityInformation().getJavaType();</div><div class="line">    <span class="keyword">if</span> (query.getPageable() == <span class="keyword">null</span>) &#123;</div><div class="line">      query.setPageable(<span class="keyword">new</span> PageRequest(<span class="number">0</span>, <span class="number">20</span>));</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> StreamUtils.createStreamFromIterator((CloseableIterator&lt;Object&gt;) elasticsearchOperations.stream(query, entityType));</div><div class="line"></div><div class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (queryMethod.isCollectionQuery()) &#123; <span class="comment">// 如果是集合查询</span></div><div class="line">    <span class="keyword">if</span> (accessor.getPageable() == <span class="keyword">null</span>) &#123;</div><div class="line">      <span class="keyword">int</span> itemCount = (<span class="keyword">int</span>) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());</div><div class="line">      query.setPageable(<span class="keyword">new</span> PageRequest(<span class="number">0</span>, Math.max(<span class="number">1</span>, itemCount)));</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        query.setPageable(accessor.getPageable());</div><div class="line">      &#125;</div><div class="line">    <span class="keyword">return</span> elasticsearchOperations.queryForList(query, queryMethod.getEntityInformation().getJavaType());</div><div class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (tree.isCountProjection()) &#123; <span class="comment">// 如果是count查询</span></div><div class="line">    <span class="keyword">return</span> elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 单个查询</span></div><div class="line">  <span class="keyword">return</span> elasticsearchOperations.queryForObject(query, queryMethod.getEntityInformation().getJavaType());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>findByGoodFace方法是个集合查询，最终会调用ElasticsearchOperations的queryForList方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">List&lt;T&gt; <span class="title">queryForList</span><span class="params">(CriteriaQuery query, Class&lt;T&gt; clazz)</span> </span>&#123;</div><div class="line">  <span class="comment">// 调用queryForPage方法</span></div><div class="line">  <span class="keyword">return</span> queryForPage(query, clazz).getContent();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">Page&lt;T&gt; <span class="title">queryForPage</span><span class="params">(CriteriaQuery criteriaQuery, Class&lt;T&gt; clazz)</span> </span>&#123;</div><div class="line">  <span class="comment">// 查询解析器进行语法的解析</span></div><div class="line">  QueryBuilder elasticsearchQuery = <span class="keyword">new</span> CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());</div><div class="line">  QueryBuilder elasticsearchFilter = <span class="keyword">new</span> CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());</div><div class="line">  SearchRequestBuilder searchRequestBuilder = prepareSearch(criteriaQuery, clazz);</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (elasticsearchQuery != <span class="keyword">null</span>) &#123;</div><div class="line">    searchRequestBuilder.setQuery(elasticsearchQuery);</div><div class="line">  &#125; <span class="keyword">else</span> &#123;</div><div class="line">    searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (criteriaQuery.getMinScore() &gt; <span class="number">0</span>) &#123;</div><div class="line">    searchRequestBuilder.setMinScore(criteriaQuery.getMinScore());</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (elasticsearchFilter != <span class="keyword">null</span>)</div><div class="line">    searchRequestBuilder.setPostFilter(elasticsearchFilter);</div><div class="line">  <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</div><div class="line">    logger.debug(<span class="string">"doSearch query:\n"</span> + searchRequestBuilder.toString());</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  SearchResponse response = getSearchResponse(searchRequestBuilder</div><div class="line">      .execute());</div><div class="line">  <span class="comment">// 最终的结果是用ResultsMapper进行映射</span></div><div class="line">  <span class="keyword">return</span> resultsMapper.mapResults(response, clazz, criteriaQuery.getPageable());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>自定义的方法使用ElasticsearchQueryCreator去创建CriteriaQuery，内部做一些词法的分析，有了CriteriaQuery之后，使用CriteriaQueryProcessor基于Criteria构造了QueryBuilder，最后使用QueryBuilder去做rest请求得到es的查询结果。这些过程中是没有用到ResultsMapper，而只是用反射得到POJO的属性，只有在得到查询结果后才会用ResultsMapper去做映射。</p>
 <p>如果出现了这种情况，解决方案目前有两种：</p>
 <p>1.使用repository的search方法，参数可以是QueryBuilder或者SearchQuery</p>
-<pre><code>personRepository.search(
-        QueryBuilders.boolQuery()
-                .must(QueryBuilders.termQuery(&quot;good_face&quot;, true))
-)
-</code></pre><p>2.使用@Query注解</p>
-<pre><code>@Query(&quot;{\&quot;bool\&quot; : {\&quot;must\&quot; : {\&quot;term\&quot; : {\&quot;good_face\&quot; : \&quot;?0\&quot;}}}}&quot;)
-List&lt;Person&gt; findByGoodFace(boolean isGoodFace);
-</code></pre><p>暂时发现这两种解决方法，不知还有否更好的解决方案。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">personRepository.search(</div><div class="line">        QueryBuilders.boolQuery()</div><div class="line">                .must(QueryBuilders.termQuery(<span class="string">"good_face"</span>, <span class="keyword">true</span>))</div><div class="line">)</div></pre></td></tr></table></figure>
+<p>2.使用@Query注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Query</span>(<span class="string">"&#123;\"bool\" : &#123;\"must\" : &#123;\"term\" : &#123;\"good_face\" : \"?0\"&#125;&#125;&#125;&#125;"</span>)</div><div class="line"><span class="function">List&lt;Person&gt; <span class="title">findByGoodFace</span><span class="params">(<span class="keyword">boolean</span> isGoodFace)</span></span>;</div></pre></td></tr></table></figure>
+<p>暂时发现这两种解决方法，不知还有否更好的解决方案。</p>
 ]]></content>
     
     <summary type="html">
@@ -517,24 +218,10 @@ List&lt;Person&gt; findByGoodFace(boolean isGoodFace);
       &lt;p&gt;最近工作中使用了&lt;a href=&quot;https://github.com/spring-projects/spring-data-elasticsearch&quot;&gt;Spring Data Elasticsearch&lt;/a&gt;。发生它存在一个问题：&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Document对应的POJO的属性跟es里面文档的字段名字不一样，这样Repository里面编写自定义的查询方法就会查询不出结果。&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;比如有个Person类，它有2个属性goodFace和goodAt。这2个属性在es的索引里对应的字段表为good_face和good_at：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;@Document(replicas = 1, shards = 1, type = &amp;quot;person&amp;quot;, indexName = &amp;quot;person&amp;quot;)
-@Getter
-@Setter
-@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class Person {
-    @Id
-    private String id;
-    private String name;
-    private boolean goodFace;
-    private String goodAt;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Repository中的自定义查询：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;@Repository
-public interface PersonRepository extends ElasticsearchRepository&amp;lt;Person, String&amp;gt; {
-    List&amp;lt;Person&amp;gt; findByGoodFace(boolean isGoodFace);
-    List&amp;lt;Person&amp;gt; findByName(String name);
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;方法findByGoodFace是查询不出结果的，而findByName是ok的。&lt;/p&gt;
+&lt;figure class=&quot;highlight java&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;2&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;3&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;4&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;5&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;6&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;7&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;8&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;9&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;10&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;11&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@Document&lt;/span&gt;(replicas = &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;, shards = &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;, type = &lt;span class=&quot;string&quot;&gt;&quot;person&quot;&lt;/span&gt;, indexName = &lt;span class=&quot;string&quot;&gt;&quot;person&quot;&lt;/span&gt;)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@Getter&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@Setter&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@JsonNaming&lt;/span&gt;(PropertyNamingStrategy.SnakeCaseStrategy.class)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;class&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;Person&lt;/span&gt; &lt;/span&gt;&amp;#123;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &lt;span class=&quot;meta&quot;&gt;@Id&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;private&lt;/span&gt; String id;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;private&lt;/span&gt; String name;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;boolean&lt;/span&gt; goodFace;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;private&lt;/span&gt; String goodAt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&amp;#125;&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;Repository中的自定义查询：&lt;/p&gt;
+&lt;figure class=&quot;highlight java&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;2&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;3&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;4&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;5&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@Repository&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;class&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;PersonRepository&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;ElasticsearchRepository&lt;/span&gt;&amp;lt;&lt;span class=&quot;title&quot;&gt;Person&lt;/span&gt;, &lt;span class=&quot;title&quot;&gt;String&lt;/span&gt;&amp;gt; &lt;/span&gt;&amp;#123;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &lt;span class=&quot;function&quot;&gt;List&amp;lt;Person&amp;gt; &lt;span class=&quot;title&quot;&gt;findByGoodFace&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(&lt;span class=&quot;keyword&quot;&gt;boolean&lt;/span&gt; isGoodFace)&lt;/span&gt;&lt;/span&gt;;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &lt;span class=&quot;function&quot;&gt;List&amp;lt;Person&amp;gt; &lt;span class=&quot;title&quot;&gt;findByName&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(String name)&lt;/span&gt;&lt;/span&gt;;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&amp;#125;&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;方法findByGoodFace是查询不出结果的，而findByName是ok的。&lt;/p&gt;
 &lt;p&gt;为什么findByGoodFace不行而findByName可以呢，来探究一下。&lt;/p&gt;
     
     </summary>
@@ -1114,203 +801,35 @@ public ConditionOutcome getMatchOutcome(ConditionContext context,
     <link href="http://fangjian0423.github.io/2017/05/16/springboot-condition-annotation/"/>
     <id>http://fangjian0423.github.io/2017/05/16/springboot-condition-annotation/</id>
     <published>2017-05-16T11:40:13.000Z</published>
-    <updated>2017-05-16T11:57:24.000Z</updated>
+    <updated>2017-05-31T13:16:37.000Z</updated>
     
     <content type="html"><![CDATA[<p>SpringBoot内部提供了特有的注解：条件注解(Conditional Annotation)。比如@ConditionalOnBean、@ConditionalOnClass、@ConditionalOnExpression、@ConditionalOnMissingBean等。</p>
 <p>条件注解存在的意义在于动态识别(也可以说是代码自动化执行)。比如@ConditionalOnClass会检查类加载器中是否存在对应的类，如果有的话被注解修饰的类就有资格被Spring容器所注册，否则会被skip。</p>
 <p>比如FreemarkerAutoConfiguration这个自动化配置类的定义如下：</p>
-<pre><code>@Configuration
-@ConditionalOnClass({ freemarker.template.Configuration.class,
-        FreeMarkerConfigurationFactory.class })
-@AutoConfigureAfter(WebMvcAutoConfiguration.class)
-@EnableConfigurationProperties(FreeMarkerProperties.class)
-public class FreeMarkerAutoConfiguration
-</code></pre><p>这个自动化配置类被@ConditionalOnClass条件注解修饰，这个条件注解存在的意义在于判断类加载器中是否存在freemarker.template.Configuration和FreeMarkerConfigurationFactory这两个类，如果都存在的话会在Spring容器中加载这个FreeMarkerAutoConfiguration配置类；否则不会加载。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Configuration</span></div><div class="line"><span class="meta">@ConditionalOnClass</span>(&#123; freemarker.template.Configuration.class,</div><div class="line">		FreeMarkerConfigurationFactory.class &#125;)</div><div class="line"><span class="meta">@AutoConfigureAfter</span>(WebMvcAutoConfiguration.class)</div><div class="line"><span class="meta">@EnableConfigurationProperties</span>(FreeMarkerProperties.class)</div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FreeMarkerAutoConfiguration</span></span></div></pre></td></tr></table></figure>
+<p>这个自动化配置类被@ConditionalOnClass条件注解修饰，这个条件注解存在的意义在于判断类加载器中是否存在freemarker.template.Configuration和FreeMarkerConfigurationFactory这两个类，如果都存在的话会在Spring容器中加载这个FreeMarkerAutoConfiguration配置类；否则不会加载。</p>
 <a id="more"></a>
 <h2 id="条件注解内部的一些基础"><a href="#条件注解内部的一些基础" class="headerlink" title="条件注解内部的一些基础"></a>条件注解内部的一些基础</h2><p>在分析条件注解的底层实现之前，我们先来看一下这些条件注解的定义。以@ConditionalOnClass注解为例，它的定义如下：</p>
-<pre><code>@Target({ ElementType.TYPE, ElementType.METHOD })
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@Conditional(OnClassCondition.class)
-public @interface ConditionalOnClass {
-    Class&lt;?&gt;[] value() default {}; // 需要匹配的类
-    String[] name() default {}; // 需要匹配的类名
-}
-</code></pre><p>它有2个属性，分别是类数组和字符串数组(作用一样，类型不一样)，而且被@Conditional注解所修饰，这个@Conditional注解有个名为values的Class&lt;? extends Condition&gt;[]类型的属性。 这个Condition是个接口，用于匹配组件是否有资格被容器注册，定义如下：</p>
-<pre><code>public interface Condition {
-  // ConditionContext内部会存储Spring容器、应用程序环境信息、资源加载器、类加载器
-    boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
-}
-</code></pre><p>也就是说@Conditional注解属性中可以持有多个Condition接口的实现类，所有的Condition接口需要全部匹配成功后这个@Conditional修饰的组件才有资格被注册。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Target</span>(&#123; ElementType.TYPE, ElementType.METHOD &#125;)</div><div class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</div><div class="line"><span class="meta">@Documented</span></div><div class="line"><span class="meta">@Conditional</span>(OnClassCondition.class)</div><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> ConditionalOnClass &#123;</div><div class="line">  Class&lt;?&gt;[] value() <span class="keyword">default</span> &#123;&#125;; <span class="comment">// 需要匹配的类</span></div><div class="line">  String[] name() <span class="keyword">default</span> &#123;&#125;; <span class="comment">// 需要匹配的类名</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>它有2个属性，分别是类数组和字符串数组(作用一样，类型不一样)，而且被@Conditional注解所修饰，这个@Conditional注解有个名为values的Class&lt;? extends Condition&gt;[]类型的属性。 这个Condition是个接口，用于匹配组件是否有资格被容器注册，定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Condition</span> </span>&#123;</div><div class="line">  <span class="comment">// ConditionContext内部会存储Spring容器、应用程序环境信息、资源加载器、类加载器</span></div><div class="line">  <span class="function"><span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context, AnnotatedTypeMetadata metadata)</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>也就是说@Conditional注解属性中可以持有多个Condition接口的实现类，所有的Condition接口需要全部匹配成功后这个@Conditional修饰的组件才有资格被注册。</p>
 <p>Condition接口有个子接口ConfigurationCondition：</p>
-<pre><code>public interface ConfigurationCondition extends Condition {
-
-    ConfigurationPhase getConfigurationPhase();
-
-    public static enum ConfigurationPhase {
-
-        PARSE_CONFIGURATION,
-
-        REGISTER_BEAN
-    }
-
-}
-</code></pre><p>这个子接口是一种特殊的条件接口，多了一个getConfigurationPhase方法，也就是条件注解的生效阶段。只有在ConfigurationPhase中定义的两种阶段下才会生效。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ConfigurationCondition</span> <span class="keyword">extends</span> <span class="title">Condition</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="function">ConfigurationPhase <span class="title">getConfigurationPhase</span><span class="params">()</span></span>;</div><div class="line"></div><div class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">enum</span> ConfigurationPhase &#123;</div><div class="line"></div><div class="line">  	PARSE_CONFIGURATION,</div><div class="line"></div><div class="line">  	REGISTER_BEAN</div><div class="line">  &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个子接口是一种特殊的条件接口，多了一个getConfigurationPhase方法，也就是条件注解的生效阶段。只有在ConfigurationPhase中定义的两种阶段下才会生效。</p>
 <p>Condition接口有个实现抽象类SpringBootCondition，SpringBoot中所有条件注解对应的条件类都继承这个抽象类。它实现了matches方法：</p>
-<pre><code>@Override
-  public final boolean matches(ConditionContext context,
-          AnnotatedTypeMetadata metadata) {
-      String classOrMethodName = getClassOrMethodName(metadata); // 得到类名或者方法名(条件注解可以作用的类或者方法上)
-      try {
-          ConditionOutcome outcome = getMatchOutcome(context, metadata); // 抽象方法，具体子类实现。ConditionOutcome记录了匹配结果boolean和log信息
-          logOutcome(classOrMethodName, outcome); // log记录一下匹配信息
-          recordEvaluation(context, classOrMethodName, outcome); // 报告记录一下匹配信息
-          return outcome.isMatch(); // 返回是否匹配
-      }
-      catch (NoClassDefFoundError ex) {
-          throw new IllegalStateException(
-                  &quot;Could not evaluate condition on &quot; + classOrMethodName + &quot; due to &quot;
-                          + ex.getMessage() + &quot; not &quot;
-                          + &quot;found. Make sure your own configuration does not rely on &quot;
-                          + &quot;that class. This can also happen if you are &quot;
-                          + &quot;@ComponentScanning a springframework package (e.g. if you &quot;
-                          + &quot;put a @ComponentScan in the default package by mistake)&quot;,
-                  ex);
-      }
-      catch (RuntimeException ex) {
-          throw new IllegalStateException(
-                  &quot;Error processing condition on &quot; + getName(metadata), ex);
-      }
-  }
-</code></pre><h2 id="基于Class的条件注解"><a href="#基于Class的条件注解" class="headerlink" title="基于Class的条件注解"></a>基于Class的条件注解</h2><p>SpringBoot提供了两个基于Class的条件注解：@ConditionalOnClass(类加载器中存在指明的类)或者@ConditionalOnMissingClass(类加载器中不存在指明的类)。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context,</span></span></div><div class="line">		AnnotatedTypeMetadata metadata) &#123;</div><div class="line">  String classOrMethodName = getClassOrMethodName(metadata); <span class="comment">// 得到类名或者方法名(条件注解可以作用的类或者方法上)</span></div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">  	ConditionOutcome outcome = getMatchOutcome(context, metadata); <span class="comment">// 抽象方法，具体子类实现。ConditionOutcome记录了匹配结果boolean和log信息</span></div><div class="line">  	logOutcome(classOrMethodName, outcome); <span class="comment">// log记录一下匹配信息</span></div><div class="line">  	recordEvaluation(context, classOrMethodName, outcome); <span class="comment">// 报告记录一下匹配信息</span></div><div class="line">  	<span class="keyword">return</span> outcome.isMatch(); <span class="comment">// 返回是否匹配</span></div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (NoClassDefFoundError ex) &#123;</div><div class="line">  	<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</div><div class="line">  			<span class="string">"Could not evaluate condition on "</span> + classOrMethodName + <span class="string">" due to "</span></div><div class="line">  					+ ex.getMessage() + <span class="string">" not "</span></div><div class="line">  					+ <span class="string">"found. Make sure your own configuration does not rely on "</span></div><div class="line">  					+ <span class="string">"that class. This can also happen if you are "</span></div><div class="line">  					+ <span class="string">"@ComponentScanning a springframework package (e.g. if you "</span></div><div class="line">  					+ <span class="string">"put a @ComponentScan in the default package by mistake)"</span>,</div><div class="line">  			ex);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (RuntimeException ex) &#123;</div><div class="line">  	<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</div><div class="line">  			<span class="string">"Error processing condition on "</span> + getName(metadata), ex);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="基于Class的条件注解"><a href="#基于Class的条件注解" class="headerlink" title="基于Class的条件注解"></a>基于Class的条件注解</h2><p>SpringBoot提供了两个基于Class的条件注解：@ConditionalOnClass(类加载器中存在指明的类)或者@ConditionalOnMissingClass(类加载器中不存在指明的类)。</p>
 <p>@ConditionalOnClass或者@ConditionalOnMissingClass注解对应的条件类是OnClassCondition，定义如下：</p>
-<pre><code>@Order(Ordered.HIGHEST_PRECEDENCE) // 优先级、最高级别
-class OnClassCondition extends SpringBootCondition {
-
-    @Override
-    public ConditionOutcome getMatchOutcome(ConditionContext context,
-            AnnotatedTypeMetadata metadata) {
-
-        StringBuffer matchMessage = new StringBuffer(); // 记录匹配信息
-
-        MultiValueMap&lt;String, Object&gt; onClasses = getAttributes(metadata,
-                ConditionalOnClass.class); // 得到@ConditionalOnClass注解的属性
-        if (onClasses != null) { // 如果属性存在
-            List&lt;String&gt; missing = getMatchingClasses(onClasses, MatchType.MISSING,
-                    context); // 得到在类加载器中不存在的类
-            if (!missing.isEmpty()) { // 如果存在类加载器中不存在对应的类，返回一个匹配失败的ConditionalOutcome
-                return ConditionOutcome
-                        .noMatch(&quot;required @ConditionalOnClass classes not found: &quot;
-                                + StringUtils.collectionToCommaDelimitedString(missing));
-            }
-      // 如果类加载器中存在对应的类的话，匹配信息进行记录
-            matchMessage.append(&quot;@ConditionalOnClass classes found: &quot;
-                    + StringUtils.collectionToCommaDelimitedString(
-                            getMatchingClasses(onClasses, MatchType.PRESENT, context)));
-        }
-    // 对@ConditionalOnMissingClass注解做相同的逻辑处理(说明@ConditionalOnClass和@ConditionalOnMissingClass可以一起使用)
-        MultiValueMap&lt;String, Object&gt; onMissingClasses = getAttributes(metadata,
-                ConditionalOnMissingClass.class);
-        if (onMissingClasses != null) {
-            List&lt;String&gt; present = getMatchingClasses(onMissingClasses, MatchType.PRESENT,
-                    context);
-            if (!present.isEmpty()) {
-                return ConditionOutcome
-                        .noMatch(&quot;required @ConditionalOnMissing classes found: &quot;
-                                + StringUtils.collectionToCommaDelimitedString(present));
-            }
-            matchMessage.append(matchMessage.length() == 0 ? &quot;&quot; : &quot; &quot;);
-            matchMessage.append(&quot;@ConditionalOnMissing classes not found: &quot;
-                    + StringUtils.collectionToCommaDelimitedString(getMatchingClasses(
-                            onMissingClasses, MatchType.MISSING, context)));
-        }
-    // 返回全部匹配成功的ConditionalOutcome
-        return ConditionOutcome.match(matchMessage.toString());
-    }
-
-    private enum MatchType { // 枚举：匹配类型。用于查询类名在对应的类加载器中是否存在。
-
-        PRESENT { // 匹配成功
-            @Override
-            public boolean matches(String className, ConditionContext context) {
-                return ClassUtils.isPresent(className, context.getClassLoader());
-            }
-        },
-
-        MISSING { // 匹配不成功
-            @Override
-            public boolean matches(String className, ConditionContext context) {
-                return !ClassUtils.isPresent(className, context.getClassLoader());
-            }
-        };
-
-        public abstract boolean matches(String className, ConditionContext context);
-
-    }
-
-}
-</code></pre><p>比如FreemarkerAutoConfiguration中的@ConditionalOnClass注解中有value属性是freemarker.template.Configuration.class和FreeMarkerConfigurationFactory.class。在OnClassCondition执行过程中得到的最终ConditionalOutcome中的log message如下：</p>
-<pre><code>@ConditionalOnClass classes found: freemarker.template.Configuration,org.springframework.ui.freemarker.FreeMarkerConfigurationFactory
-</code></pre><h2 id="基于Bean的条件注解"><a href="#基于Bean的条件注解" class="headerlink" title="基于Bean的条件注解"></a>基于Bean的条件注解</h2><p>@ConditionalOnBean(Spring容器中存在指明的bean)、@ConditionalOnMissingBean(Spring容器中不存在指明的bean)以及ConditionalOnSingleCandidate(Spring容器中存在且只存在一个指明的bean)都是基于Bean的条件注解，它们对应的条件类是ConditionOnBean。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Order</span>(Ordered.HIGHEST_PRECEDENCE) <span class="comment">// 优先级、最高级别</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">OnClassCondition</span> <span class="keyword">extends</span> <span class="title">SpringBootCondition</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="meta">@Override</span></div><div class="line">  <span class="function"><span class="keyword">public</span> ConditionOutcome <span class="title">getMatchOutcome</span><span class="params">(ConditionContext context,</span></span></div><div class="line">  		AnnotatedTypeMetadata metadata) &#123;</div><div class="line"></div><div class="line">  	StringBuffer matchMessage = <span class="keyword">new</span> StringBuffer(); <span class="comment">// 记录匹配信息</span></div><div class="line"></div><div class="line">  	MultiValueMap&lt;String, Object&gt; onClasses = getAttributes(metadata,</div><div class="line">  			ConditionalOnClass.class); <span class="comment">// 得到@ConditionalOnClass注解的属性</span></div><div class="line">  	<span class="keyword">if</span> (onClasses != <span class="keyword">null</span>) &#123; <span class="comment">// 如果属性存在</span></div><div class="line">  		List&lt;String&gt; missing = getMatchingClasses(onClasses, MatchType.MISSING,</div><div class="line">  				context); <span class="comment">// 得到在类加载器中不存在的类</span></div><div class="line">  		<span class="keyword">if</span> (!missing.isEmpty()) &#123; <span class="comment">// 如果存在类加载器中不存在对应的类，返回一个匹配失败的ConditionalOutcome</span></div><div class="line">  			<span class="keyword">return</span> ConditionOutcome</div><div class="line">  					.noMatch(<span class="string">"required @ConditionalOnClass classes not found: "</span></div><div class="line">  							+ StringUtils.collectionToCommaDelimitedString(missing));</div><div class="line">  		&#125;</div><div class="line">                <span class="comment">// 如果类加载器中存在对应的类的话，匹配信息进行记录</span></div><div class="line">  		matchMessage.append(<span class="string">"@ConditionalOnClass classes found: "</span></div><div class="line">  				+ StringUtils.collectionToCommaDelimitedString(</div><div class="line">  						getMatchingClasses(onClasses, MatchType.PRESENT, context)));</div><div class="line">  	&#125;</div><div class="line">        <span class="comment">// 对@ConditionalOnMissingClass注解做相同的逻辑处理(说明@ConditionalOnClass和@ConditionalOnMissingClass可以一起使用)</span></div><div class="line">  	MultiValueMap&lt;String, Object&gt; onMissingClasses = getAttributes(metadata,</div><div class="line">  			ConditionalOnMissingClass.class);</div><div class="line">  	<span class="keyword">if</span> (onMissingClasses != <span class="keyword">null</span>) &#123;</div><div class="line">  		List&lt;String&gt; present = getMatchingClasses(onMissingClasses, MatchType.PRESENT,</div><div class="line">  				context);</div><div class="line">  		<span class="keyword">if</span> (!present.isEmpty()) &#123;</div><div class="line">  			<span class="keyword">return</span> ConditionOutcome</div><div class="line">  					.noMatch(<span class="string">"required @ConditionalOnMissing classes found: "</span></div><div class="line">  							+ StringUtils.collectionToCommaDelimitedString(present));</div><div class="line">  		&#125;</div><div class="line">  		matchMessage.append(matchMessage.length() == <span class="number">0</span> ? <span class="string">""</span> : <span class="string">" "</span>);</div><div class="line">  		matchMessage.append(<span class="string">"@ConditionalOnMissing classes not found: "</span></div><div class="line">  				+ StringUtils.collectionToCommaDelimitedString(getMatchingClasses(</div><div class="line">  						onMissingClasses, MatchType.MISSING, context)));</div><div class="line">  	&#125;</div><div class="line">        <span class="comment">// 返回全部匹配成功的ConditionalOutcome</span></div><div class="line">  	<span class="keyword">return</span> ConditionOutcome.match(matchMessage.toString());</div><div class="line">	&#125;</div><div class="line"></div><div class="line">  <span class="keyword">private</span> <span class="keyword">enum</span> MatchType &#123; <span class="comment">// 枚举：匹配类型。用于查询类名在对应的类加载器中是否存在。</span></div><div class="line"></div><div class="line">  	PRESENT &#123; <span class="comment">// 匹配成功</span></div><div class="line">  		<span class="meta">@Override</span></div><div class="line">  		<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(String className, ConditionContext context)</span> </span>&#123;</div><div class="line">  			<span class="keyword">return</span> ClassUtils.isPresent(className, context.getClassLoader());</div><div class="line">  		&#125;</div><div class="line">  	&#125;,</div><div class="line"></div><div class="line">  	MISSING &#123; <span class="comment">// 匹配不成功</span></div><div class="line">  		<span class="meta">@Override</span></div><div class="line">  		<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(String className, ConditionContext context)</span> </span>&#123;</div><div class="line">  			<span class="keyword">return</span> !ClassUtils.isPresent(className, context.getClassLoader());</div><div class="line">  		&#125;</div><div class="line">  	&#125;;</div><div class="line"></div><div class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(String className, ConditionContext context)</span></span>;</div><div class="line"></div><div class="line">  &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>比如FreemarkerAutoConfiguration中的@ConditionalOnClass注解中有value属性是freemarker.template.Configuration.class和FreeMarkerConfigurationFactory.class。在OnClassCondition执行过程中得到的最终ConditionalOutcome中的log message如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@ConditionalOnClass</span> classes found: freemarker.template.Configuration,org.springframework.ui.freemarker.FreeMarkerConfigurationFactory</div></pre></td></tr></table></figure>
+<h2 id="基于Bean的条件注解"><a href="#基于Bean的条件注解" class="headerlink" title="基于Bean的条件注解"></a>基于Bean的条件注解</h2><p>@ConditionalOnBean(Spring容器中存在指明的bean)、@ConditionalOnMissingBean(Spring容器中不存在指明的bean)以及ConditionalOnSingleCandidate(Spring容器中存在且只存在一个指明的bean)都是基于Bean的条件注解，它们对应的条件类是ConditionOnBean。</p>
 <p>@ConditionOnBean注解定义如下：</p>
-<pre><code>@Target({ ElementType.TYPE, ElementType.METHOD })
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@Conditional(OnBeanCondition.class)
-public @interface ConditionalOnBean {
-    Class&lt;?&gt;[] value() default {}; // 匹配的bean类型
-    String[] type() default {}; // 匹配的bean类型的类名
-    Class&lt;? extends Annotation&gt;[] annotation() default {}; // 匹配的bean注解
-    String[] name() default {}; // 匹配的bean的名字
-    SearchStrategy search() default SearchStrategy.ALL; // 搜索策略。提供CURRENT(只在当前容器中找)、PARENTS(只在所有的父容器中找；但是不包括当前容器)和ALL(CURRENT和PARENTS的组合)
-}
-</code></pre><p>OnBeanCondition条件类的匹配代码如下：</p>
-<pre><code>@Override
-public ConditionOutcome getMatchOutcome(ConditionContext context,
-    AnnotatedTypeMetadata metadata) {
-  StringBuffer matchMessage = new StringBuffer(); // 记录匹配信息
-  if (metadata.isAnnotated(ConditionalOnBean.class.getName())) {
-    BeanSearchSpec spec = new BeanSearchSpec(context, metadata,
-        ConditionalOnBean.class); // 构造一个BeanSearchSpec，会从@ConditionalOnBean注解中获取属性，然后设置到BeanSearchSpec中
-    List&lt;String&gt; matching = getMatchingBeans(context, spec); // 从BeanFactory中根据策略找出所有匹配的bean
-    if (matching.isEmpty()) { // 如果没有匹配的bean，返回一个没有匹配成功的ConditionalOutcome
-      return ConditionOutcome
-          .noMatch(&quot;@ConditionalOnBean &quot; + spec + &quot; found no beans&quot;);
-    }
-    // 如果找到匹配的bean，匹配信息进行记录
-    matchMessage.append(
-        &quot;@ConditionalOnBean &quot; + spec + &quot; found the following &quot; + matching);
-  }
-  if (metadata.isAnnotated(ConditionalOnSingleCandidate.class.getName())) { // 相同的逻辑，针对@ConditionalOnSingleCandidate注解
-    BeanSearchSpec spec = new SingleCandidateBeanSearchSpec(context, metadata,
-        ConditionalOnSingleCandidate.class);
-    List&lt;String&gt; matching = getMatchingBeans(context, spec);
-    if (matching.isEmpty()) {
-      return ConditionOutcome.noMatch(
-          &quot;@ConditionalOnSingleCandidate &quot; + spec + &quot; found no beans&quot;);
-    }
-    else if (!hasSingleAutowireCandidate(context.getBeanFactory(), matching)) { // 多了一层判断，判断是否只有一个bean
-      return ConditionOutcome.noMatch(&quot;@ConditionalOnSingleCandidate &quot; + spec
-          + &quot; found no primary candidate amongst the&quot; + &quot; following &quot;
-          + matching);
-    }
-    matchMessage.append(&quot;@ConditionalOnSingleCandidate &quot; + spec + &quot; found &quot;
-        + &quot;a primary candidate amongst the following &quot; + matching);
-  }
-  if (metadata.isAnnotated(ConditionalOnMissingBean.class.getName())) { // 相同的逻辑，针对@ConditionalOnMissingBean注解
-    BeanSearchSpec spec = new BeanSearchSpec(context, metadata,
-        ConditionalOnMissingBean.class);
-    List&lt;String&gt; matching = getMatchingBeans(context, spec);
-    if (!matching.isEmpty()) {
-      return ConditionOutcome.noMatch(&quot;@ConditionalOnMissingBean &quot; + spec
-          + &quot; found the following &quot; + matching);
-    }
-    matchMessage.append(matchMessage.length() == 0 ? &quot;&quot; : &quot; &quot;);
-    matchMessage.append(&quot;@ConditionalOnMissingBean &quot; + spec + &quot; found no beans&quot;);
-  }
-  return ConditionOutcome.match(matchMessage.toString()); //返回匹配成功的ConditonalOutcome
-}
-</code></pre><p>SpringBoot还提供了其他比如ConditionalOnJava、ConditionalOnNotWebApplication、ConditionalOnWebApplication、ConditionalOnResource、ConditionalOnProperty、ConditionalOnExpression等条件注解，有兴趣的读者可以自行查看它们的底层处理逻辑。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Target</span>(&#123; ElementType.TYPE, ElementType.METHOD &#125;)</div><div class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</div><div class="line"><span class="meta">@Documented</span></div><div class="line"><span class="meta">@Conditional</span>(OnBeanCondition.class)</div><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> ConditionalOnBean &#123;</div><div class="line">  Class&lt;?&gt;[] value() <span class="keyword">default</span> &#123;&#125;; <span class="comment">// 匹配的bean类型</span></div><div class="line">  String[] type() <span class="keyword">default</span> &#123;&#125;; <span class="comment">// 匹配的bean类型的类名</span></div><div class="line">  Class&lt;? extends Annotation&gt;[] annotation() <span class="keyword">default</span> &#123;&#125;; <span class="comment">// 匹配的bean注解</span></div><div class="line">  String[] name() <span class="keyword">default</span> &#123;&#125;; <span class="comment">// 匹配的bean的名字</span></div><div class="line">  <span class="function">SearchStrategy <span class="title">search</span><span class="params">()</span> <span class="keyword">default</span> SearchStrategy.ALL</span>; <span class="comment">// 搜索策略。提供CURRENT(只在当前容器中找)、PARENTS(只在所有的父容器中找；但是不包括当前容器)和ALL(CURRENT和PARENTS的组合)</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>OnBeanCondition条件类的匹配代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> ConditionOutcome <span class="title">getMatchOutcome</span><span class="params">(ConditionContext context,</span></span></div><div class="line">    AnnotatedTypeMetadata metadata) &#123;</div><div class="line">  StringBuffer matchMessage = <span class="keyword">new</span> StringBuffer(); <span class="comment">// 记录匹配信息</span></div><div class="line">  <span class="keyword">if</span> (metadata.isAnnotated(ConditionalOnBean.class.getName())) &#123;</div><div class="line">    BeanSearchSpec spec = <span class="keyword">new</span> BeanSearchSpec(context, metadata,</div><div class="line">        ConditionalOnBean.class); <span class="comment">// 构造一个BeanSearchSpec，会从@ConditionalOnBean注解中获取属性，然后设置到BeanSearchSpec中</span></div><div class="line">    List&lt;String&gt; matching = getMatchingBeans(context, spec); <span class="comment">// 从BeanFactory中根据策略找出所有匹配的bean</span></div><div class="line">    <span class="keyword">if</span> (matching.isEmpty()) &#123; <span class="comment">// 如果没有匹配的bean，返回一个没有匹配成功的ConditionalOutcome</span></div><div class="line">      <span class="keyword">return</span> ConditionOutcome</div><div class="line">          .noMatch(<span class="string">"@ConditionalOnBean "</span> + spec + <span class="string">" found no beans"</span>);</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 如果找到匹配的bean，匹配信息进行记录</span></div><div class="line">    matchMessage.append(</div><div class="line">        <span class="string">"@ConditionalOnBean "</span> + spec + <span class="string">" found the following "</span> + matching);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">if</span> (metadata.isAnnotated(ConditionalOnSingleCandidate.class.getName())) &#123; <span class="comment">// 相同的逻辑，针对@ConditionalOnSingleCandidate注解</span></div><div class="line">    BeanSearchSpec spec = <span class="keyword">new</span> SingleCandidateBeanSearchSpec(context, metadata,</div><div class="line">        ConditionalOnSingleCandidate.class);</div><div class="line">    List&lt;String&gt; matching = getMatchingBeans(context, spec);</div><div class="line">    <span class="keyword">if</span> (matching.isEmpty()) &#123;</div><div class="line">      <span class="keyword">return</span> ConditionOutcome.noMatch(</div><div class="line">          <span class="string">"@ConditionalOnSingleCandidate "</span> + spec + <span class="string">" found no beans"</span>);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (!hasSingleAutowireCandidate(context.getBeanFactory(), matching)) &#123; <span class="comment">// 多了一层判断，判断是否只有一个bean</span></div><div class="line">      <span class="keyword">return</span> ConditionOutcome.noMatch(<span class="string">"@ConditionalOnSingleCandidate "</span> + spec</div><div class="line">          + <span class="string">" found no primary candidate amongst the"</span> + <span class="string">" following "</span></div><div class="line">          + matching);</div><div class="line">    &#125;</div><div class="line">    matchMessage.append(<span class="string">"@ConditionalOnSingleCandidate "</span> + spec + <span class="string">" found "</span></div><div class="line">        + <span class="string">"a primary candidate amongst the following "</span> + matching);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">if</span> (metadata.isAnnotated(ConditionalOnMissingBean.class.getName())) &#123; <span class="comment">// 相同的逻辑，针对@ConditionalOnMissingBean注解</span></div><div class="line">    BeanSearchSpec spec = <span class="keyword">new</span> BeanSearchSpec(context, metadata,</div><div class="line">        ConditionalOnMissingBean.class);</div><div class="line">    List&lt;String&gt; matching = getMatchingBeans(context, spec);</div><div class="line">    <span class="keyword">if</span> (!matching.isEmpty()) &#123;</div><div class="line">      <span class="keyword">return</span> ConditionOutcome.noMatch(<span class="string">"@ConditionalOnMissingBean "</span> + spec</div><div class="line">          + <span class="string">" found the following "</span> + matching);</div><div class="line">    &#125;</div><div class="line">    matchMessage.append(matchMessage.length() == <span class="number">0</span> ? <span class="string">""</span> : <span class="string">" "</span>);</div><div class="line">    matchMessage.append(<span class="string">"@ConditionalOnMissingBean "</span> + spec + <span class="string">" found no beans"</span>);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> ConditionOutcome.match(matchMessage.toString()); <span class="comment">//返回匹配成功的ConditonalOutcome</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>SpringBoot还提供了其他比如ConditionalOnJava、ConditionalOnNotWebApplication、ConditionalOnWebApplication、ConditionalOnResource、ConditionalOnProperty、ConditionalOnExpression等条件注解，有兴趣的读者可以自行查看它们的底层处理逻辑。</p>
 <h2 id="各种条件注解的总结"><a href="#各种条件注解的总结" class="headerlink" title="各种条件注解的总结"></a>各种条件注解的总结</h2><table>
 <thead>
 <tr>
@@ -1435,81 +954,14 @@ public ConditionOutcome getMatchOutcome(ConditionContext context,
 <p>SpringBoot使用ConditionEvaluator这个内部类完成条件注解的解析和判断。</p>
 <p>在Spring容器的refresh过程中，只有跟解析或者注册bean有关系的类都会使用ConditionEvaluator完成条件注解的判断，这个过程中一些类不满足条件的话就会被skip。这些类比如有AnnotatedBeanDefinitionReader、ConfigurationClassBeanDefinitionReader、ConfigurationClassParse、ClassPathScanningCandidateComponentProvider等。</p>
 <p>比如ConfigurationClassParser的构造函数会初始化内部属性conditionEvaluator：</p>
-<pre><code>public ConfigurationClassParser(MetadataReaderFactory metadataReaderFactory,
-    ProblemReporter problemReporter, Environment environment, ResourceLoader resourceLoader,
-    BeanNameGenerator componentScanBeanNameGenerator, BeanDefinitionRegistry registry) {
-
-  this.metadataReaderFactory = metadataReaderFactory;
-  this.problemReporter = problemReporter;
-  this.environment = environment;
-  this.resourceLoader = resourceLoader;
-  this.registry = registry;
-  this.componentScanParser = new ComponentScanAnnotationParser(
-      resourceLoader, environment, componentScanBeanNameGenerator, registry);
-  // 构造ConditionEvaluator用于处理条件注解
-  this.conditionEvaluator = new ConditionEvaluator(registry, environment, resourceLoader);
-}
-</code></pre><p>ConfigurationClassParser对每个配置类进行解析的时候都会使用ConditionEvaluator：</p>
-<pre><code>if (this.conditionEvaluator.shouldSkip(configClass.getMetadata(), ConfigurationPhase.PARSE_CONFIGURATION)) {
-  return;
-}
-</code></pre><p>ConditionEvaluator的skip方法：</p>
-<pre><code>public boolean shouldSkip(AnnotatedTypeMetadata metadata, ConfigurationPhase phase) {
-  // 如果这个类没有被@Conditional注解所修饰，不会skip
-  if (metadata == null || !metadata.isAnnotated(Conditional.class.getName())) {
-    return false;
-  }
-  // 如果参数中沒有设置条件注解的生效阶段
-  if (phase == null) {
-    // 是配置类的话直接使用PARSE_CONFIGURATION阶段
-    if (metadata instanceof AnnotationMetadata &amp;&amp;
-        ConfigurationClassUtils.isConfigurationCandidate((AnnotationMetadata) metadata)) {
-      return shouldSkip(metadata, ConfigurationPhase.PARSE_CONFIGURATION);
-    }
-    // 否则使用REGISTER_BEAN阶段
-    return shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN);
-  }
-  // 要解析的配置类的条件集合
-  List&lt;Condition&gt; conditions = new ArrayList&lt;Condition&gt;();
-  // 获取配置类的条件注解得到条件数据，并添加到集合中
-  for (String[] conditionClasses : getConditionClasses(metadata)) {
-    for (String conditionClass : conditionClasses) {
-      Condition condition = getCondition(conditionClass, this.context.getClassLoader());
-      conditions.add(condition);
-    }
-  }
-
-  // 对条件集合做个排序
-  AnnotationAwareOrderComparator.sort(conditions);
-  // 遍历条件集合
-  for (Condition condition : conditions) {
-    ConfigurationPhase requiredPhase = null;
-    if (condition instanceof ConfigurationCondition) {
-      requiredPhase = ((ConfigurationCondition) condition).getConfigurationPhase();
-    }
-    // 没有这个解析类不需要阶段的判断或者解析类和参数中的阶段一致才会继续进行
-    if (requiredPhase == null || requiredPhase == phase) {
-      // 阶段一致切不满足条件的话，返回true并跳过这个bean的解析
-      if (!condition.matches(this.context, metadata)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-</code></pre><p>SpringBoot在条件注解的解析log记录在了ConditionEvaluationReport类中，可以通过BeanFactory获取(BeanFactory是有父子关系的；每个BeanFactory都存有一份ConditionEvaluationReport，互不相干)：</p>
-<pre><code>ConditionEvaluationReport conditionEvaluationReport = beanFactory.getBean(&quot;autoConfigurationReport&quot;, ConditionEvaluationReport.class);
-Map&lt;String, ConditionEvaluationReport.ConditionAndOutcomes&gt; result = conditionEvaluationReport.getConditionAndOutcomesBySource();
-for(String key : result.keySet()) {
-    ConditionEvaluationReport.ConditionAndOutcomes conditionAndOutcomes = result.get(key);
-    Iterator&lt;ConditionEvaluationReport.ConditionAndOutcome&gt; iterator = conditionAndOutcomes.iterator();
-    while(iterator.hasNext()) {
-        ConditionEvaluationReport.ConditionAndOutcome conditionAndOutcome = iterator.next();
-        System.out.println(key + &quot; -- &quot; + conditionAndOutcome.getCondition().getClass().getSimpleName() + &quot; -- &quot; + conditionAndOutcome.getOutcome());
-    }
-}
-</code></pre><p>打印出条件注解下的类加载信息：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">ConfigurationClassParser</span><span class="params">(MetadataReaderFactory metadataReaderFactory,</span></span></div><div class="line">    ProblemReporter problemReporter, Environment environment, ResourceLoader resourceLoader,</div><div class="line">    BeanNameGenerator componentScanBeanNameGenerator, BeanDefinitionRegistry registry) &#123;</div><div class="line"></div><div class="line">  <span class="keyword">this</span>.metadataReaderFactory = metadataReaderFactory;</div><div class="line">  <span class="keyword">this</span>.problemReporter = problemReporter;</div><div class="line">  <span class="keyword">this</span>.environment = environment;</div><div class="line">  <span class="keyword">this</span>.resourceLoader = resourceLoader;</div><div class="line">  <span class="keyword">this</span>.registry = registry;</div><div class="line">  <span class="keyword">this</span>.componentScanParser = <span class="keyword">new</span> ComponentScanAnnotationParser(</div><div class="line">      resourceLoader, environment, componentScanBeanNameGenerator, registry);</div><div class="line">  <span class="comment">// 构造ConditionEvaluator用于处理条件注解</span></div><div class="line">  <span class="keyword">this</span>.conditionEvaluator = <span class="keyword">new</span> ConditionEvaluator(registry, environment, resourceLoader);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>ConfigurationClassParser对每个配置类进行解析的时候都会使用ConditionEvaluator：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (<span class="keyword">this</span>.conditionEvaluator.shouldSkip(configClass.getMetadata(), ConfigurationPhase.PARSE_CONFIGURATION)) &#123;</div><div class="line">  <span class="keyword">return</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>ConditionEvaluator的skip方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">shouldSkip</span><span class="params">(AnnotatedTypeMetadata metadata, ConfigurationPhase phase)</span> </span>&#123;</div><div class="line">  <span class="comment">// 如果这个类没有被@Conditional注解所修饰，不会skip</span></div><div class="line">  <span class="keyword">if</span> (metadata == <span class="keyword">null</span> || !metadata.isAnnotated(Conditional.class.getName())) &#123;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 如果参数中沒有设置条件注解的生效阶段</span></div><div class="line">  <span class="keyword">if</span> (phase == <span class="keyword">null</span>) &#123;</div><div class="line">    <span class="comment">// 是配置类的话直接使用PARSE_CONFIGURATION阶段</span></div><div class="line">    <span class="keyword">if</span> (metadata <span class="keyword">instanceof</span> AnnotationMetadata &amp;&amp;</div><div class="line">        ConfigurationClassUtils.isConfigurationCandidate((AnnotationMetadata) metadata)) &#123;</div><div class="line">      <span class="keyword">return</span> shouldSkip(metadata, ConfigurationPhase.PARSE_CONFIGURATION);</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 否则使用REGISTER_BEAN阶段</span></div><div class="line">    <span class="keyword">return</span> shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 要解析的配置类的条件集合</span></div><div class="line">  List&lt;Condition&gt; conditions = <span class="keyword">new</span> ArrayList&lt;Condition&gt;();</div><div class="line">  <span class="comment">// 获取配置类的条件注解得到条件数据，并添加到集合中</span></div><div class="line">  <span class="keyword">for</span> (String[] conditionClasses : getConditionClasses(metadata)) &#123;</div><div class="line">    <span class="keyword">for</span> (String conditionClass : conditionClasses) &#123;</div><div class="line">      Condition condition = getCondition(conditionClass, <span class="keyword">this</span>.context.getClassLoader());</div><div class="line">      conditions.add(condition);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// 对条件集合做个排序</span></div><div class="line">  AnnotationAwareOrderComparator.sort(conditions);</div><div class="line">  <span class="comment">// 遍历条件集合</span></div><div class="line">  <span class="keyword">for</span> (Condition condition : conditions) &#123;</div><div class="line">    ConfigurationPhase requiredPhase = <span class="keyword">null</span>;</div><div class="line">    <span class="keyword">if</span> (condition <span class="keyword">instanceof</span> ConfigurationCondition) &#123;</div><div class="line">      requiredPhase = ((ConfigurationCondition) condition).getConfigurationPhase();</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 没有这个解析类不需要阶段的判断或者解析类和参数中的阶段一致才会继续进行</span></div><div class="line">    <span class="keyword">if</span> (requiredPhase == <span class="keyword">null</span> || requiredPhase == phase) &#123;</div><div class="line">      <span class="comment">// 阶段一致切不满足条件的话，返回true并跳过这个bean的解析</span></div><div class="line">      <span class="keyword">if</span> (!condition.matches(<span class="keyword">this</span>.context, metadata)) &#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>SpringBoot在条件注解的解析log记录在了ConditionEvaluationReport类中，可以通过BeanFactory获取(BeanFactory是有父子关系的；每个BeanFactory都存有一份ConditionEvaluationReport，互不相干)：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">ConditionEvaluationReport conditionEvaluationReport = beanFactory.getBean(<span class="string">"autoConfigurationReport"</span>, ConditionEvaluationReport.class);</div><div class="line">Map&lt;String, ConditionEvaluationReport.ConditionAndOutcomes&gt; result = conditionEvaluationReport.getConditionAndOutcomesBySource();</div><div class="line"><span class="keyword">for</span>(String key : result.keySet()) &#123;</div><div class="line">    ConditionEvaluationReport.ConditionAndOutcomes conditionAndOutcomes = result.get(key);</div><div class="line">    Iterator&lt;ConditionEvaluationReport.ConditionAndOutcome&gt; iterator = conditionAndOutcomes.iterator();</div><div class="line">    <span class="keyword">while</span>(iterator.hasNext()) &#123;</div><div class="line">        ConditionEvaluationReport.ConditionAndOutcome conditionAndOutcome = iterator.next();</div><div class="line">        System.out.println(key + <span class="string">" -- "</span> + conditionAndOutcome.getCondition().getClass().getSimpleName() + <span class="string">" -- "</span> + conditionAndOutcome.getOutcome());</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>打印出条件注解下的类加载信息：</p>
 <pre><code>.......
 org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: freemarker.template.Configuration,org.springframework.ui.freemarker.FreeMarkerConfigurationFactory
 org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration -- OnClassCondition -- required @ConditionalOnClass classes not found: groovy.text.markup.MarkupTemplateEngine
@@ -1526,13 +978,8 @@ org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration -- O
       &lt;p&gt;SpringBoot内部提供了特有的注解：条件注解(Conditional Annotation)。比如@ConditionalOnBean、@ConditionalOnClass、@ConditionalOnExpression、@ConditionalOnMissingBean等。&lt;/p&gt;
 &lt;p&gt;条件注解存在的意义在于动态识别(也可以说是代码自动化执行)。比如@ConditionalOnClass会检查类加载器中是否存在对应的类，如果有的话被注解修饰的类就有资格被Spring容器所注册，否则会被skip。&lt;/p&gt;
 &lt;p&gt;比如FreemarkerAutoConfiguration这个自动化配置类的定义如下：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;@Configuration
-@ConditionalOnClass({ freemarker.template.Configuration.class,
-        FreeMarkerConfigurationFactory.class })
-@AutoConfigureAfter(WebMvcAutoConfiguration.class)
-@EnableConfigurationProperties(FreeMarkerProperties.class)
-public class FreeMarkerAutoConfiguration
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这个自动化配置类被@ConditionalOnClass条件注解修饰，这个条件注解存在的意义在于判断类加载器中是否存在freemarker.template.Configuration和FreeMarkerConfigurationFactory这两个类，如果都存在的话会在Spring容器中加载这个FreeMarkerAutoConfiguration配置类；否则不会加载。&lt;/p&gt;
+&lt;figure class=&quot;highlight java&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;2&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;3&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;4&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;5&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;6&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@Configuration&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@ConditionalOnClass&lt;/span&gt;(&amp;#123; freemarker.template.Configuration.class,&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;		FreeMarkerConfigurationFactory.class &amp;#125;)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@AutoConfigureAfter&lt;/span&gt;(WebMvcAutoConfiguration.class)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@EnableConfigurationProperties&lt;/span&gt;(FreeMarkerProperties.class)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;class&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;FreeMarkerAutoConfiguration&lt;/span&gt;&lt;/span&gt;&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;这个自动化配置类被@ConditionalOnClass条件注解修饰，这个条件注解存在的意义在于判断类加载器中是否存在freemarker.template.Configuration和FreeMarkerConfigurationFactory这两个类，如果都存在的话会在Spring容器中加载这个FreeMarkerAutoConfiguration配置类；否则不会加载。&lt;/p&gt;
     
     </summary>
     
@@ -1552,45 +999,15 @@ public class FreeMarkerAutoConfiguration
     <link href="http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/"/>
     <id>http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/</id>
     <published>2017-05-10T11:55:21.000Z</published>
-    <updated>2017-05-14T10:47:07.000Z</updated>
+    <updated>2017-05-31T13:18:20.000Z</updated>
     
     <content type="html"><![CDATA[<p>上一篇文章中，我们分析了SpringBoot的启动过程：构造SpringApplication并调用它的run方法。其中构造SpringApplication的时候会初始化一些监听器和初始化器；run方法调用的过程中会有对应的监听器监听，并且会创建Spring容器。</p>
 <p>Spring容器创建之后，会调用它的refresh方法，refresh的时候会做很多事情：比如完成配置类的解析、各种BeanFactoryPostProcessor和BeanPostProcessor的注册、国际化配置的初始化、web内置容器的构造等等。</p>
 <p>我们来分析一下这个refresh过程。</p>
 <a id="more"></a>
 <p>还是以web程序为例，那么对应的Spring容器为AnnotationConfigEmbeddedWebApplicationContext。它的refresh方法调用了父类AbstractApplicationContext的refresh方法：</p>
-<pre><code>public void refresh() throws BeansException, IllegalStateException {
-  // refresh过程只能一个线程处理，不允许并发执行
-  synchronized (this.startupShutdownMonitor) {
-    prepareRefresh();
-    ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
-    prepareBeanFactory(beanFactory);
-    try {
-      postProcessBeanFactory(beanFactory);
-      invokeBeanFactoryPostProcessors(beanFactory);
-      registerBeanPostProcessors(beanFactory);
-      initMessageSource();
-      initApplicationEventMulticaster();
-      onRefresh();
-      registerListeners();
-      finishBeanFactoryInitialization(beanFactory);
-      finishRefresh();
-    }
-    catch (BeansException ex) {
-      if (logger.isWarnEnabled()) {
-        logger.warn(&quot;Exception encountered during context initialization - &quot; +
-            &quot;cancelling refresh attempt: &quot; + ex);
-      }
-      destroyBeans();
-      cancelRefresh(ex);
-      throw ex;
-    }
-    finally {
-      resetCommonCaches();
-    }
-  }
-}
-</code></pre><h2 id="prepareRefresh方法"><a href="#prepareRefresh方法" class="headerlink" title="prepareRefresh方法"></a>prepareRefresh方法</h2><p>表示在真正做refresh操作之前需要准备做的事情：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">refresh</span><span class="params">()</span> <span class="keyword">throws</span> BeansException, IllegalStateException </span>&#123;</div><div class="line">  <span class="comment">// refresh过程只能一个线程处理，不允许并发执行</span></div><div class="line">  <span class="keyword">synchronized</span> (<span class="keyword">this</span>.startupShutdownMonitor) &#123;</div><div class="line">    prepareRefresh();</div><div class="line">    ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();</div><div class="line">    prepareBeanFactory(beanFactory);</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">      postProcessBeanFactory(beanFactory);</div><div class="line">      invokeBeanFactoryPostProcessors(beanFactory);</div><div class="line">      registerBeanPostProcessors(beanFactory);</div><div class="line">      initMessageSource();</div><div class="line">      initApplicationEventMulticaster();</div><div class="line">      onRefresh();</div><div class="line">      registerListeners();</div><div class="line">      finishBeanFactoryInitialization(beanFactory);</div><div class="line">      finishRefresh();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (BeansException ex) &#123;</div><div class="line">      <span class="keyword">if</span> (logger.isWarnEnabled()) &#123;</div><div class="line">        logger.warn(<span class="string">"Exception encountered during context initialization - "</span> +</div><div class="line">            <span class="string">"cancelling refresh attempt: "</span> + ex);</div><div class="line">      &#125;</div><div class="line">      destroyBeans();</div><div class="line">      cancelRefresh(ex);</div><div class="line">      <span class="keyword">throw</span> ex;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">finally</span> &#123;</div><div class="line">      resetCommonCaches();</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="prepareRefresh方法"><a href="#prepareRefresh方法" class="headerlink" title="prepareRefresh方法"></a>prepareRefresh方法</h2><p>表示在真正做refresh操作之前需要准备做的事情：</p>
 <ol>
 <li>设置Spring容器的启动时间，撤销关闭状态，开启活跃状态。</li>
 <li>初始化属性源信息(Property)</li>
@@ -1606,27 +1023,10 @@ public class FreeMarkerAutoConfiguration
 <h2 id="postProcessBeanFactory方法"><a href="#postProcessBeanFactory方法" class="headerlink" title="postProcessBeanFactory方法"></a>postProcessBeanFactory方法</h2><p>BeanFactory设置之后再进行后续的一些BeanFactory操作。</p>
 <p>不同的Spring容器做不同的操作。比如GenericWebApplicationContext容器会在BeanFactory中添加ServletContextAwareProcessor用于处理ServletContextAware类型的bean初始化的时候调用setServletContext或者setServletConfig方法(跟ApplicationContextAwareProcessor原理一样)。</p>
 <p>AnnotationConfigEmbeddedWebApplicationContext对应的postProcessBeanFactory方法：</p>
-<pre><code>@Override
-protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
-  // 调用父类EmbeddedWebApplicationContext的实现
-  super.postProcessBeanFactory(beanFactory);
-  // 查看basePackages属性，如果设置了会使用ClassPathBeanDefinitionScanner去扫描basePackages包下的bean并注册
-  if (this.basePackages != null &amp;&amp; this.basePackages.length &gt; 0) {
-    this.scanner.scan(this.basePackages);
-  }
-  // 查看annotatedClasses属性，如果设置了会使用AnnotatedBeanDefinitionReader去注册这些bean
-  if (this.annotatedClasses != null &amp;&amp; this.annotatedClasses.length &gt; 0) {
-    this.reader.register(this.annotatedClasses);
-  }
-}
-</code></pre><p>父类EmbeddedWebApplicationContext的实现：</p>
-<pre><code>@Override
-protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
-  beanFactory.addBeanPostProcessor(
-      new WebApplicationContextServletContextAwareProcessor(this));
-  beanFactory.ignoreDependencyInterface(ServletContextAware.class);
-}
-</code></pre><h2 id="invokeBeanFactoryPostProcessors方法"><a href="#invokeBeanFactoryPostProcessors方法" class="headerlink" title="invokeBeanFactoryPostProcessors方法"></a>invokeBeanFactoryPostProcessors方法</h2><p>在Spring容器中找出实现了BeanFactoryPostProcessor接口的processor并执行。Spring容器会委托给PostProcessorRegistrationDelegate的invokeBeanFactoryPostProcessors方法执行。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> </span>&#123;</div><div class="line">  <span class="comment">// 调用父类EmbeddedWebApplicationContext的实现</span></div><div class="line">  <span class="keyword">super</span>.postProcessBeanFactory(beanFactory);</div><div class="line">  <span class="comment">// 查看basePackages属性，如果设置了会使用ClassPathBeanDefinitionScanner去扫描basePackages包下的bean并注册</span></div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.basePackages != <span class="keyword">null</span> &amp;&amp; <span class="keyword">this</span>.basePackages.length &gt; <span class="number">0</span>) &#123;</div><div class="line">    <span class="keyword">this</span>.scanner.scan(<span class="keyword">this</span>.basePackages);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 查看annotatedClasses属性，如果设置了会使用AnnotatedBeanDefinitionReader去注册这些bean</span></div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.annotatedClasses != <span class="keyword">null</span> &amp;&amp; <span class="keyword">this</span>.annotatedClasses.length &gt; <span class="number">0</span>) &#123;</div><div class="line">    <span class="keyword">this</span>.reader.register(<span class="keyword">this</span>.annotatedClasses);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>父类EmbeddedWebApplicationContext的实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> </span>&#123;</div><div class="line">  beanFactory.addBeanPostProcessor(</div><div class="line">      <span class="keyword">new</span> WebApplicationContextServletContextAwareProcessor(<span class="keyword">this</span>));</div><div class="line">  beanFactory.ignoreDependencyInterface(ServletContextAware.class);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="invokeBeanFactoryPostProcessors方法"><a href="#invokeBeanFactoryPostProcessors方法" class="headerlink" title="invokeBeanFactoryPostProcessors方法"></a>invokeBeanFactoryPostProcessors方法</h2><p>在Spring容器中找出实现了BeanFactoryPostProcessor接口的processor并执行。Spring容器会委托给PostProcessorRegistrationDelegate的invokeBeanFactoryPostProcessors方法执行。</p>
 <p>介绍两个接口：</p>
 <ol>
 <li>BeanFactoryPostProcessor：用来修改Spring容器中已经存在的bean的定义，使用ConfigurableListableBeanFactory对bean进行处理</li>
@@ -1663,41 +1063,8 @@ protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactor
 <p>EnableAutoConfigurationImportSelector的selectImport方法会在spring.factories文件中找出key为EnableAutoConfiguration对应的值，有81个，这81个就是所谓的自动化配置类(XXXAutoConfiguration)。</p>
 <p>ConfigurationClassParser解析完成之后，被解析出来的类会放到configurationClasses属性中。然后使用ConfigurationClassBeanDefinitionReader去解析这些类。</p>
 <p>这个时候这些bean只是被加载到了Spring容器中。下面这段代码是ConfigurationClassBeanDefinitionReader的解析bean过程：</p>
-<pre><code>public void loadBeanDefinitions(Set&lt;ConfigurationClass&gt; configurationModel) {
-  TrackedConditionEvaluator trackedConditionEvaluator = new TrackedConditionEvaluator();
-  for (ConfigurationClass configClass : configurationModel) {
-    // 对每一个配置类，调用loadBeanDefinitionsForConfigurationClass方法
-    loadBeanDefinitionsForConfigurationClass(configClass, trackedConditionEvaluator);
-  }
-}
-
-private void loadBeanDefinitionsForConfigurationClass(ConfigurationClass configClass,
-    TrackedConditionEvaluator trackedConditionEvaluator) {
-  // 使用条件注解判断是否需要跳过这个配置类
-  if (trackedConditionEvaluator.shouldSkip(configClass)) {
-    // 跳过配置类的话在Spring容器中移除bean的注册
-    String beanName = configClass.getBeanName();
-    if (StringUtils.hasLength(beanName) &amp;&amp; this.registry.containsBeanDefinition(beanName)) {
-      this.registry.removeBeanDefinition(beanName);
-    }
-    this.importRegistry.removeImportingClassFor(configClass.getMetadata().getClassName());
-    return;
-  }
-
-  if (configClass.isImported()) {
-    // 如果自身是被@Import注释所import的，注册自己
-    registerBeanDefinitionForImportedConfigurationClass(configClass);
-  }
-  // 注册方法中被@Bean注解修饰的bean
-  for (BeanMethod beanMethod : configClass.getBeanMethods()) {
-    loadBeanDefinitionsForBeanMethod(beanMethod);
-  }
-  // 注册@ImportResource注解注释的资源文件中的bean
-  loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
-  // 注册@Import注解中的ImportBeanDefinitionRegistrar接口的registerBeanDefinitions
-  loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
-}
-</code></pre><p>invokeBeanFactoryPostProcessors方法总结来说就是从Spring容器中找出BeanDefinitionRegistryPostProcessor和BeanFactoryPostProcessor接口的实现类并按照一定的规则顺序进行执行。 其中ConfigurationClassPostProcessor这个BeanDefinitionRegistryPostProcessor优先级最高，它会对项目中的@Configuration注解修饰的类(@Component、@ComponentScan、@Import、@ImportResource修饰的类也会被处理)进行解析，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loadBeanDefinitions</span><span class="params">(Set&lt;ConfigurationClass&gt; configurationModel)</span> </span>&#123;</div><div class="line">  TrackedConditionEvaluator trackedConditionEvaluator = <span class="keyword">new</span> TrackedConditionEvaluator();</div><div class="line">  <span class="keyword">for</span> (ConfigurationClass configClass : configurationModel) &#123;</div><div class="line">    <span class="comment">// 对每一个配置类，调用loadBeanDefinitionsForConfigurationClass方法</span></div><div class="line">    loadBeanDefinitionsForConfigurationClass(configClass, trackedConditionEvaluator);</div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">loadBeanDefinitionsForConfigurationClass</span><span class="params">(ConfigurationClass configClass,</span></span></div><div class="line">    TrackedConditionEvaluator trackedConditionEvaluator) &#123;</div><div class="line">  <span class="comment">// 使用条件注解判断是否需要跳过这个配置类</span></div><div class="line">  <span class="keyword">if</span> (trackedConditionEvaluator.shouldSkip(configClass)) &#123;</div><div class="line">    <span class="comment">// 跳过配置类的话在Spring容器中移除bean的注册</span></div><div class="line">    String beanName = configClass.getBeanName();</div><div class="line">    <span class="keyword">if</span> (StringUtils.hasLength(beanName) &amp;&amp; <span class="keyword">this</span>.registry.containsBeanDefinition(beanName)) &#123;</div><div class="line">      <span class="keyword">this</span>.registry.removeBeanDefinition(beanName);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">this</span>.importRegistry.removeImportingClassFor(configClass.getMetadata().getClassName());</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (configClass.isImported()) &#123;</div><div class="line">    <span class="comment">// 如果自身是被@Import注释所import的，注册自己</span></div><div class="line">    registerBeanDefinitionForImportedConfigurationClass(configClass);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 注册方法中被@Bean注解修饰的bean</span></div><div class="line">  <span class="keyword">for</span> (BeanMethod beanMethod : configClass.getBeanMethods()) &#123;</div><div class="line">    loadBeanDefinitionsForBeanMethod(beanMethod);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 注册@ImportResource注解注释的资源文件中的bean</span></div><div class="line">  loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());</div><div class="line">  <span class="comment">// 注册@Import注解中的ImportBeanDefinitionRegistrar接口的registerBeanDefinitions</span></div><div class="line">  loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>invokeBeanFactoryPostProcessors方法总结来说就是从Spring容器中找出BeanDefinitionRegistryPostProcessor和BeanFactoryPostProcessor接口的实现类并按照一定的规则顺序进行执行。 其中ConfigurationClassPostProcessor这个BeanDefinitionRegistryPostProcessor优先级最高，它会对项目中的@Configuration注解修饰的类(@Component、@ComponentScan、@Import、@ImportResource修饰的类也会被处理)进行解析，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化。</p>
 <h2 id="registerBeanPostProcessors方法"><a href="#registerBeanPostProcessors方法" class="headerlink" title="registerBeanPostProcessors方法"></a>registerBeanPostProcessors方法</h2><p>从Spring容器中找出的BeanPostProcessor接口的bean，并设置到BeanFactory的属性中。之后bean被实例化的时候会调用这个BeanPostProcessor。</p>
 <p>该方法委托给了PostProcessorRegistrationDelegate类的registerBeanPostProcessors方法执行。这里的过程跟invokeBeanFactoryPostProcessors类似：</p>
 <ol>
@@ -1764,46 +1131,21 @@ private void loadBeanDefinitionsForConfigurationClass(ConfigurationClass configC
     <link href="http://fangjian0423.github.io/2017/04/30/springboot-startup-analysis/"/>
     <id>http://fangjian0423.github.io/2017/04/30/springboot-startup-analysis/</id>
     <published>2017-04-30T12:33:33.000Z</published>
-    <updated>2017-05-14T10:46:53.000Z</updated>
+    <updated>2017-05-31T13:20:59.000Z</updated>
     
     <content type="html"><![CDATA[<p>SpringBoot的启动很简单，代码如下：</p>
-<pre><code>@SpringBootApplication
-public class MyApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(MyApplication.class, args);
-    }
-}
-</code></pre><p>从代码上可以看出，调用了SpringApplication的静态方法run。这个run方法会构造一个SpringApplication的实例，然后再调用这里实例的run方法就表示启动SpringBoot。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@SpringBootApplication</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyApplication</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">        SpringApplication.run(MyApplication.class, args);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>从代码上可以看出，调用了SpringApplication的静态方法run。这个run方法会构造一个SpringApplication的实例，然后再调用这里实例的run方法就表示启动SpringBoot。</p>
 <p>因此，想要分析SpringBoot的启动过程，我们需要熟悉SpringApplication的构造过程以及SpringApplication的run方法执行过程即可。</p>
 <p>我们以上述这段代码为例，分析SpringBoot的启动过程。</p>
 <a id="more"></a>
 <h2 id="SpringApplication的构造过程"><a href="#SpringApplication的构造过程" class="headerlink" title="SpringApplication的构造过程"></a>SpringApplication的构造过程</h2><p>SpringApplication构造的时候内部会调用一个private方法initialize：</p>
-<pre><code>public SpringApplication(Object... sources) {
-  initialize(sources); // sources目前是一个MyApplication的class对象
-}
-
-private void initialize(Object[] sources) {
-  if (sources != null &amp;&amp; sources.length &gt; 0) {
-    this.sources.addAll(Arrays.asList(sources)); // 把sources设置到SpringApplication的sources属性中，目前只是一个MyApplication类对象
-  }
-  this.webEnvironment = deduceWebEnvironment(); // 判断是否是web程序(javax.servlet.Servlet和org.springframework.web.context.ConfigurableWebApplicationContext都必须在类加载器中存在)，并设置到webEnvironment属性中
-  // 从spring.factories文件中找出key为ApplicationContextInitializer的类并实例化后设置到SpringApplication的initializers属性中。这个过程也就是找出所有的应用程序初始化器
-  setInitializers((Collection) getSpringFactoriesInstances(
-      ApplicationContextInitializer.class));
-  // 从spring.factories文件中找出key为ApplicationListener的类并实例化后设置到SpringApplication的listeners属性中。这个过程就是找出所有的应用程序事件监听器
-  setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
-  // 找出main类，这里是MyApplication类
-  this.mainApplicationClass = deduceMainApplicationClass();
-}
-</code></pre><p>ApplicationContextInitializer，应用程序初始化器，做一些初始化的工作：</p>
-<pre><code>public interface ApplicationContextInitializer&lt;C extends ConfigurableApplicationContext&gt; {
-    void initialize(C applicationContext);
-}
-</code></pre><p>ApplicationListener，应用程序事件(ApplicationEvent)监听器：</p>
-<pre><code>public interface ApplicationListener&lt;E extends ApplicationEvent&gt; extends EventListener {
-    void onApplicationEvent(E event);
-}
-</code></pre><p>这里的应用程序事件(ApplicationEvent)有应用程序启动事件(ApplicationStartedEvent)，失败事件(ApplicationFailedEvent)，准备事件(ApplicationPreparedEvent)等。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">SpringApplication</span><span class="params">(Object... sources)</span> </span>&#123;</div><div class="line">  initialize(sources); <span class="comment">// sources目前是一个MyApplication的class对象</span></div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initialize</span><span class="params">(Object[] sources)</span> </span>&#123;</div><div class="line">  <span class="keyword">if</span> (sources != <span class="keyword">null</span> &amp;&amp; sources.length &gt; <span class="number">0</span>) &#123;</div><div class="line">    <span class="keyword">this</span>.sources.addAll(Arrays.asList(sources)); <span class="comment">// 把sources设置到SpringApplication的sources属性中，目前只是一个MyApplication类对象</span></div><div class="line">  &#125;</div><div class="line">  <span class="keyword">this</span>.webEnvironment = deduceWebEnvironment(); <span class="comment">// 判断是否是web程序(javax.servlet.Servlet和org.springframework.web.context.ConfigurableWebApplicationContext都必须在类加载器中存在)，并设置到webEnvironment属性中</span></div><div class="line">  <span class="comment">// 从spring.factories文件中找出key为ApplicationContextInitializer的类并实例化后设置到SpringApplication的initializers属性中。这个过程也就是找出所有的应用程序初始化器</span></div><div class="line">  setInitializers((Collection) getSpringFactoriesInstances(</div><div class="line">      ApplicationContextInitializer.class));</div><div class="line">  <span class="comment">// 从spring.factories文件中找出key为ApplicationListener的类并实例化后设置到SpringApplication的listeners属性中。这个过程就是找出所有的应用程序事件监听器</span></div><div class="line">  setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));</div><div class="line">  <span class="comment">// 找出main类，这里是MyApplication类</span></div><div class="line">  <span class="keyword">this</span>.mainApplicationClass = deduceMainApplicationClass();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>ApplicationContextInitializer，应用程序初始化器，做一些初始化的工作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationContextInitializer</span>&lt;<span class="title">C</span> <span class="keyword">extends</span> <span class="title">ConfigurableApplicationContext</span>&gt; </span>&#123;</div><div class="line">	<span class="function"><span class="keyword">void</span> <span class="title">initialize</span><span class="params">(C applicationContext)</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>ApplicationListener，应用程序事件(ApplicationEvent)监听器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationListener</span>&lt;<span class="title">E</span> <span class="keyword">extends</span> <span class="title">ApplicationEvent</span>&gt; <span class="keyword">extends</span> <span class="title">EventListener</span> </span>&#123;</div><div class="line">	<span class="function"><span class="keyword">void</span> <span class="title">onApplicationEvent</span><span class="params">(E event)</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这里的应用程序事件(ApplicationEvent)有应用程序启动事件(ApplicationStartedEvent)，失败事件(ApplicationFailedEvent)，准备事件(ApplicationPreparedEvent)等。</p>
 <p>应用程序事件监听器跟监听事件是绑定的。比如ConfigServerBootstrapApplicationListener只跟ApplicationEnvironmentPreparedEvent事件绑定，LiquibaseServiceLocatorApplicationListener只跟ApplicationStartedEvent事件绑定，LoggingApplicationListener跟所有事件绑定等。</p>
 <p>默认情况下，initialize方法从spring.factories文件中找出的key为ApplicationContextInitializer的类有：</p>
 <ol>
@@ -1841,171 +1183,19 @@ private void initialize(Object[] sources) {
 <p>所以说SpringApplicationRunListener和ApplicationListener之间的关系是通过ApplicationEventMulticaster广播出去的SpringApplicationEvent所联系起来的。</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/startup2.jpg" alt=""></p>
 <p>SpringApplication的run方法代码如下：</p>
-<pre><code>public ConfigurableApplicationContext run(String... args) {
-  StopWatch stopWatch = new StopWatch(); // 构造一个任务执行观察器
-  stopWatch.start(); // 开始执行，记录开始时间
-  ConfigurableApplicationContext context = null;
-  configureHeadlessProperty();
-  // 获取SpringApplicationRunListeners，内部只有一个EventPublishingRunListener
-  SpringApplicationRunListeners listeners = getRunListeners(args);
-  // 上面分析过，会封装成SpringApplicationEvent事件然后广播出去给SpringApplication中的listeners所监听
-  // 这里接受ApplicationStartedEvent事件的listener会执行相应的操作
-  listeners.started();
-  try {
-    // 构造一个应用程序参数持有类
-    ApplicationArguments applicationArguments = new DefaultApplicationArguments(
-        args);
-    // 创建Spring容器
-    context = createAndRefreshContext(listeners, applicationArguments);
-    // 容器创建完成之后执行额外一些操作
-    afterRefresh(context, applicationArguments);
-    // 广播出ApplicationReadyEvent事件给相应的监听器执行
-    listeners.finished(context, null);
-    stopWatch.stop(); // 执行结束，记录执行时间
-    if (this.logStartupInfo) {
-      new StartupInfoLogger(this.mainApplicationClass)
-          .logStarted(getApplicationLog(), stopWatch);
-    }
-    return context; // 返回Spring容器
-  }
-  catch (Throwable ex) {
-    handleRunFailure(context, listeners, ex); // 这个过程报错的话会执行一些异常操作、然后广播出ApplicationFailedEvent事件给相应的监听器执行
-    throw new IllegalStateException(ex);
-  }
-}
-</code></pre><p>创建容器的方法createAndRefreshContext如下：</p>
-<pre><code>private ConfigurableApplicationContext createAndRefreshContext(
-    SpringApplicationRunListeners listeners,
-    ApplicationArguments applicationArguments) {
-  ConfigurableApplicationContext context; // 定义Spring容器
-  // 创建应用程序的环境信息。如果是web程序，创建StandardServletEnvironment；否则，创建StandardEnvironment
-  ConfigurableEnvironment environment = getOrCreateEnvironment();
-  // 配置一些环境信息。比如profile，命令行参数
-  configureEnvironment(environment, applicationArguments.getSourceArgs());
-  // 广播出ApplicationEnvironmentPreparedEvent事件给相应的监听器执行
-  listeners.environmentPrepared(environment);
-  // 环境信息的校对
-  if (isWebEnvironment(environment) &amp;&amp; !this.webEnvironment) {
-    environment = convertToStandardEnvironment(environment);
-  }
-
-  if (this.bannerMode != Banner.Mode.OFF) { // 是否在控制台上打印自定义的banner
-    printBanner(environment);
-  }
-
-  // Create, load, refresh and run the ApplicationContext
-  context = createApplicationContext(); // 创建Spring容器
-  context.setEnvironment(environment); // 设置Spring容器的环境信息
-  postProcessApplicationContext(context); // 回调方法，Spring容器创建之后做一些额外的事
-  applyInitializers(context); // SpringApplication的的初始化器开始工作
-  // 遍历调用SpringApplicationRunListener的contextPrepared方法。目前只是将这个事件广播器注册到Spring容器中
-  listeners.contextPrepared(context);
-  if (this.logStartupInfo) {
-    logStartupInfo(context.getParent() == null);
-    logStartupProfileInfo(context);
-  }
-
-  // 把应用程序参数持有类注册到Spring容器中，并且是一个单例
-  context.getBeanFactory().registerSingleton(&quot;springApplicationArguments&quot;,
-      applicationArguments);
-
-  Set&lt;Object&gt; sources = getSources();
-  Assert.notEmpty(sources, &quot;Sources must not be empty&quot;);
-  load(context, sources.toArray(new Object[sources.size()]));
-  // 广播出ApplicationPreparedEvent事件给相应的监听器执行
-  listeners.contextLoaded(context);
-
-  // Spring容器的刷新
-  refresh(context);
-  if (this.registerShutdownHook) {
-    try {
-      context.registerShutdownHook();
-    }
-    catch (AccessControlException ex) {
-      // Not allowed in some environments.
-    }
-  }
-  return context;
-}
-</code></pre><p>Spring容器的创建createApplicationContext方法如下：</p>
-<pre><code>protected ConfigurableApplicationContext createApplicationContext() {
-  Class&lt;?&gt; contextClass = this.applicationContextClass;
-  if (contextClass == null) {
-    try {
-      // 如果是web程序，那么构造org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext容器
-      // 否则构造org.springframework.context.annotation.AnnotationConfigApplicationContext容器
-      contextClass = Class.forName(this.webEnvironment
-          ? DEFAULT_WEB_CONTEXT_CLASS : DEFAULT_CONTEXT_CLASS);
-    }
-    catch (ClassNotFoundException ex) {
-      throw new IllegalStateException(
-          &quot;Unable create a default ApplicationContext, &quot;
-              + &quot;please specify an ApplicationContextClass&quot;,
-          ex);
-    }
-  }
-  return (ConfigurableApplicationContext) BeanUtils.instantiate(contextClass);
-}
-</code></pre><p>Spring容器创建之后有个回调方法postProcessApplicationContext：</p>
-<pre><code>protected void postProcessApplicationContext(ConfigurableApplicationContext context) {
-      if (this.webEnvironment) { // 如果是web程序
-          if (context instanceof ConfigurableWebApplicationContext) { // 并且也是Spring Web容器
-              ConfigurableWebApplicationContext configurableContext = (ConfigurableWebApplicationContext) context;
-              if (this.beanNameGenerator != null) { // 如果SpringApplication设置了是实例命名生成器，注册到Spring容器中
-                  configurableContext.getBeanFactory().registerSingleton(
-                          AnnotationConfigUtils.CONFIGURATION_BEAN_NAME_GENERATOR,
-                          this.beanNameGenerator);
-              }
-          }
-      }
-      if (this.resourceLoader != null) { // 如果SpringApplication设置了资源加载器，设置到Spring容器中
-          if (context instanceof GenericApplicationContext) {
-              ((GenericApplicationContext) context)
-                      .setResourceLoader(this.resourceLoader);
-          }
-          if (context instanceof DefaultResourceLoader) {
-              ((DefaultResourceLoader) context)
-                      .setClassLoader(this.resourceLoader.getClassLoader());
-          }
-      }
-  }
-</code></pre><p>初始化器做的工作，比如ContextIdApplicationContextInitializer会设置应用程序的id；AutoConfigurationReportLoggingInitializer会给应用程序添加一个条件注解解析器报告等：</p>
-<pre><code>protected void applyInitializers(ConfigurableApplicationContext context) {
-  // 遍历每个初始化器，对调用对应的initialize方法
-  for (ApplicationContextInitializer initializer : getInitializers()) {
-    Class&lt;?&gt; requiredType = GenericTypeResolver.resolveTypeArgument(
-        initializer.getClass(), ApplicationContextInitializer.class);
-    Assert.isInstanceOf(requiredType, context, &quot;Unable to call initializer.&quot;);
-    initializer.initialize(context);
-  }
-}
-</code></pre><p>Spring容器的刷新refresh方法内部会做很多很多的事情：比如BeanFactory的设置，BeanFactoryPostProcessor接口的执行、BeanPostProcessor接口的执行、自动化配置类的解析、条件注解的解析、国际化的初始化等等。这部分内容会在之后的文章中进行讲解。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> ConfigurableApplicationContext <span class="title">run</span><span class="params">(String... args)</span> </span>&#123;</div><div class="line">  StopWatch stopWatch = <span class="keyword">new</span> StopWatch(); <span class="comment">// 构造一个任务执行观察器</span></div><div class="line">  stopWatch.start(); <span class="comment">// 开始执行，记录开始时间</span></div><div class="line">  ConfigurableApplicationContext context = <span class="keyword">null</span>;</div><div class="line">  configureHeadlessProperty();</div><div class="line">  <span class="comment">// 获取SpringApplicationRunListeners，内部只有一个EventPublishingRunListener</span></div><div class="line">  SpringApplicationRunListeners listeners = getRunListeners(args);</div><div class="line">  <span class="comment">// 上面分析过，会封装成SpringApplicationEvent事件然后广播出去给SpringApplication中的listeners所监听</span></div><div class="line">  <span class="comment">// 这里接受ApplicationStartedEvent事件的listener会执行相应的操作</span></div><div class="line">  listeners.started();</div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    <span class="comment">// 构造一个应用程序参数持有类</span></div><div class="line">    ApplicationArguments applicationArguments = <span class="keyword">new</span> DefaultApplicationArguments(</div><div class="line">        args);</div><div class="line">    <span class="comment">// 创建Spring容器</span></div><div class="line">    context = createAndRefreshContext(listeners, applicationArguments);</div><div class="line">    <span class="comment">// 容器创建完成之后执行额外一些操作</span></div><div class="line">    afterRefresh(context, applicationArguments);</div><div class="line">    <span class="comment">// 广播出ApplicationReadyEvent事件给相应的监听器执行</span></div><div class="line">    listeners.finished(context, <span class="keyword">null</span>);</div><div class="line">    stopWatch.stop(); <span class="comment">// 执行结束，记录执行时间</span></div><div class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.logStartupInfo) &#123;</div><div class="line">      <span class="keyword">new</span> StartupInfoLogger(<span class="keyword">this</span>.mainApplicationClass)</div><div class="line">          .logStarted(getApplicationLog(), stopWatch);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> context; <span class="comment">// 返回Spring容器</span></div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (Throwable ex) &#123;</div><div class="line">    handleRunFailure(context, listeners, ex); <span class="comment">// 这个过程报错的话会执行一些异常操作、然后广播出ApplicationFailedEvent事件给相应的监听器执行</span></div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(ex);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>创建容器的方法createAndRefreshContext如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> ConfigurableApplicationContext <span class="title">createAndRefreshContext</span><span class="params">(</span></span></div><div class="line">    SpringApplicationRunListeners listeners,</div><div class="line">    ApplicationArguments applicationArguments) &#123;</div><div class="line">  ConfigurableApplicationContext context; <span class="comment">// 定义Spring容器</span></div><div class="line">  <span class="comment">// 创建应用程序的环境信息。如果是web程序，创建StandardServletEnvironment；否则，创建StandardEnvironment</span></div><div class="line">  ConfigurableEnvironment environment = getOrCreateEnvironment();</div><div class="line">  <span class="comment">// 配置一些环境信息。比如profile，命令行参数</span></div><div class="line">  configureEnvironment(environment, applicationArguments.getSourceArgs());</div><div class="line">  <span class="comment">// 广播出ApplicationEnvironmentPreparedEvent事件给相应的监听器执行</span></div><div class="line">  listeners.environmentPrepared(environment);</div><div class="line">  <span class="comment">// 环境信息的校对</span></div><div class="line">  <span class="keyword">if</span> (isWebEnvironment(environment) &amp;&amp; !<span class="keyword">this</span>.webEnvironment) &#123;</div><div class="line">    environment = convertToStandardEnvironment(environment);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.bannerMode != Banner.Mode.OFF) &#123; <span class="comment">// 是否在控制台上打印自定义的banner</span></div><div class="line">    printBanner(environment);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// Create, load, refresh and run the ApplicationContext</span></div><div class="line">  context = createApplicationContext(); <span class="comment">// 创建Spring容器</span></div><div class="line">  context.setEnvironment(environment); <span class="comment">// 设置Spring容器的环境信息</span></div><div class="line">  postProcessApplicationContext(context); <span class="comment">// 回调方法，Spring容器创建之后做一些额外的事</span></div><div class="line">  applyInitializers(context); <span class="comment">// SpringApplication的的初始化器开始工作</span></div><div class="line">  <span class="comment">// 遍历调用SpringApplicationRunListener的contextPrepared方法。目前只是将这个事件广播器注册到Spring容器中</span></div><div class="line">  listeners.contextPrepared(context);</div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.logStartupInfo) &#123;</div><div class="line">    logStartupInfo(context.getParent() == <span class="keyword">null</span>);</div><div class="line">    logStartupProfileInfo(context);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// 把应用程序参数持有类注册到Spring容器中，并且是一个单例</span></div><div class="line">  context.getBeanFactory().registerSingleton(<span class="string">"springApplicationArguments"</span>,</div><div class="line">      applicationArguments);</div><div class="line"></div><div class="line">  Set&lt;Object&gt; sources = getSources();</div><div class="line">  Assert.notEmpty(sources, <span class="string">"Sources must not be empty"</span>);</div><div class="line">  load(context, sources.toArray(<span class="keyword">new</span> Object[sources.size()]));</div><div class="line">  <span class="comment">// 广播出ApplicationPreparedEvent事件给相应的监听器执行</span></div><div class="line">  listeners.contextLoaded(context);</div><div class="line"></div><div class="line">  <span class="comment">// Spring容器的刷新</span></div><div class="line">  refresh(context);</div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.registerShutdownHook) &#123;</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">      context.registerShutdownHook();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (AccessControlException ex) &#123;</div><div class="line">      <span class="comment">// Not allowed in some environments.</span></div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> context;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Spring容器的创建createApplicationContext方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> ConfigurableApplicationContext <span class="title">createApplicationContext</span><span class="params">()</span> </span>&#123;</div><div class="line">  Class&lt;?&gt; contextClass = <span class="keyword">this</span>.applicationContextClass;</div><div class="line">  <span class="keyword">if</span> (contextClass == <span class="keyword">null</span>) &#123;</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">      <span class="comment">// 如果是web程序，那么构造org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext容器</span></div><div class="line">      <span class="comment">// 否则构造org.springframework.context.annotation.AnnotationConfigApplicationContext容器</span></div><div class="line">      contextClass = Class.forName(<span class="keyword">this</span>.webEnvironment</div><div class="line">          ? DEFAULT_WEB_CONTEXT_CLASS : DEFAULT_CONTEXT_CLASS);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (ClassNotFoundException ex) &#123;</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</div><div class="line">          <span class="string">"Unable create a default ApplicationContext, "</span></div><div class="line">              + <span class="string">"please specify an ApplicationContextClass"</span>,</div><div class="line">          ex);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> (ConfigurableApplicationContext) BeanUtils.instantiate(contextClass);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Spring容器创建之后有个回调方法postProcessApplicationContext：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"> <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">postProcessApplicationContext</span><span class="params">(ConfigurableApplicationContext context)</span> </span>&#123;</div><div class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.webEnvironment) &#123; <span class="comment">// 如果是web程序</span></div><div class="line">		<span class="keyword">if</span> (context <span class="keyword">instanceof</span> ConfigurableWebApplicationContext) &#123; <span class="comment">// 并且也是Spring Web容器</span></div><div class="line">			ConfigurableWebApplicationContext configurableContext = (ConfigurableWebApplicationContext) context;</div><div class="line">			<span class="keyword">if</span> (<span class="keyword">this</span>.beanNameGenerator != <span class="keyword">null</span>) &#123; <span class="comment">// 如果SpringApplication设置了是实例命名生成器，注册到Spring容器中</span></div><div class="line">				configurableContext.getBeanFactory().registerSingleton(</div><div class="line">						AnnotationConfigUtils.CONFIGURATION_BEAN_NAME_GENERATOR,</div><div class="line">						<span class="keyword">this</span>.beanNameGenerator);</div><div class="line">			&#125;</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.resourceLoader != <span class="keyword">null</span>) &#123; <span class="comment">// 如果SpringApplication设置了资源加载器，设置到Spring容器中</span></div><div class="line">		<span class="keyword">if</span> (context <span class="keyword">instanceof</span> GenericApplicationContext) &#123;</div><div class="line">			((GenericApplicationContext) context)</div><div class="line">					.setResourceLoader(<span class="keyword">this</span>.resourceLoader);</div><div class="line">		&#125;</div><div class="line">		<span class="keyword">if</span> (context <span class="keyword">instanceof</span> DefaultResourceLoader) &#123;</div><div class="line">			((DefaultResourceLoader) context)</div><div class="line">					.setClassLoader(<span class="keyword">this</span>.resourceLoader.getClassLoader());</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>初始化器做的工作，比如ContextIdApplicationContextInitializer会设置应用程序的id；AutoConfigurationReportLoggingInitializer会给应用程序添加一个条件注解解析器报告等：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">applyInitializers</span><span class="params">(ConfigurableApplicationContext context)</span> </span>&#123;</div><div class="line">  <span class="comment">// 遍历每个初始化器，对调用对应的initialize方法</span></div><div class="line">  <span class="keyword">for</span> (ApplicationContextInitializer initializer : getInitializers()) &#123;</div><div class="line">    Class&lt;?&gt; requiredType = GenericTypeResolver.resolveTypeArgument(</div><div class="line">        initializer.getClass(), ApplicationContextInitializer.class);</div><div class="line">    Assert.isInstanceOf(requiredType, context, <span class="string">"Unable to call initializer."</span>);</div><div class="line">    initializer.initialize(context);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Spring容器的刷新refresh方法内部会做很多很多的事情：比如BeanFactory的设置，BeanFactoryPostProcessor接口的执行、BeanPostProcessor接口的执行、自动化配置类的解析、条件注解的解析、国际化的初始化等等。这部分内容会在之后的文章中进行讲解。</p>
 <p>run方法中的Spring容器创建完成之后会调用afterRefresh方法，代码如下：</p>
-<pre><code>protected void afterRefresh(ConfigurableApplicationContext context,
-    ApplicationArguments args) {
-  afterRefresh(context, args.getSourceArgs()); // 目前是个空实现
-  callRunners(context, args); // 调用Spring容器中的ApplicationRunner和CommandLineRunner接口的实现类
-}
-
-private void callRunners(ApplicationContext context, ApplicationArguments args) {
-      List&lt;Object&gt; runners = new ArrayList&lt;Object&gt;();
-  // 找出Spring容器中ApplicationRunner接口的实现类
-      runners.addAll(context.getBeansOfType(ApplicationRunner.class).values());
-  // 找出Spring容器中CommandLineRunner接口的实现类
-      runners.addAll(context.getBeansOfType(CommandLineRunner.class).values());
-  // 对runners进行排序
-      AnnotationAwareOrderComparator.sort(runners);
-  // 遍历runners依次执行
-      for (Object runner : new LinkedHashSet&lt;Object&gt;(runners)) {
-          if (runner instanceof ApplicationRunner) { // 如果是ApplicationRunner，进行ApplicationRunner的run方法调用
-              callRunner((ApplicationRunner) runner, args);
-          }
-          if (runner instanceof CommandLineRunner) { // 如果是CommandLineRunner，进行CommandLineRunner的run方法调用
-              callRunner((CommandLineRunner) runner, args);
-          }
-      }
-  }
-</code></pre><p>这样run方法执行完成之后。Spring容器也已经初始化完成，各种监听器和初始化器也做了相应的工作。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"> <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">afterRefresh</span><span class="params">(ConfigurableApplicationContext context,</span></span></div><div class="line">     ApplicationArguments args) &#123;</div><div class="line">   afterRefresh(context, args.getSourceArgs()); <span class="comment">// 目前是个空实现</span></div><div class="line">   callRunners(context, args); <span class="comment">// 调用Spring容器中的ApplicationRunner和CommandLineRunner接口的实现类</span></div><div class="line"> &#125;</div><div class="line"></div><div class="line"> <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">callRunners</span><span class="params">(ApplicationContext context, ApplicationArguments args)</span> </span>&#123;</div><div class="line">	List&lt;Object&gt; runners = <span class="keyword">new</span> ArrayList&lt;Object&gt;();</div><div class="line">   <span class="comment">// 找出Spring容器中ApplicationRunner接口的实现类</span></div><div class="line">	runners.addAll(context.getBeansOfType(ApplicationRunner.class).values());</div><div class="line">   <span class="comment">// 找出Spring容器中CommandLineRunner接口的实现类</span></div><div class="line">	runners.addAll(context.getBeansOfType(CommandLineRunner.class).values());</div><div class="line">   <span class="comment">// 对runners进行排序</span></div><div class="line">	AnnotationAwareOrderComparator.sort(runners);</div><div class="line">   <span class="comment">// 遍历runners依次执行</span></div><div class="line">	<span class="keyword">for</span> (Object runner : <span class="keyword">new</span> LinkedHashSet&lt;Object&gt;(runners)) &#123;</div><div class="line">		<span class="keyword">if</span> (runner <span class="keyword">instanceof</span> ApplicationRunner) &#123; <span class="comment">// 如果是ApplicationRunner，进行ApplicationRunner的run方法调用</span></div><div class="line">			callRunner((ApplicationRunner) runner, args);</div><div class="line">		&#125;</div><div class="line">		<span class="keyword">if</span> (runner <span class="keyword">instanceof</span> CommandLineRunner) &#123; <span class="comment">// 如果是CommandLineRunner，进行CommandLineRunner的run方法调用</span></div><div class="line">			callRunner((CommandLineRunner) runner, args);</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这样run方法执行完成之后。Spring容器也已经初始化完成，各种监听器和初始化器也做了相应的工作。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>SpringBoot启动的时候，不论调用什么方法，都会构造一个SpringApplication的实例，然后调用这个实例的run方法，这样就表示启动SpringBoot。</p>
 <p>在run方法调用之前，也就是构造SpringApplication的时候会进行初始化的工作，初始化的时候会做以下几件事：</p>
 <ol>
@@ -2029,13 +1219,8 @@ private void callRunners(ApplicationContext context, ApplicationArguments args) 
     <summary type="html">
     
       &lt;p&gt;SpringBoot的启动很简单，代码如下：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;@SpringBootApplication
-public class MyApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(MyApplication.class, args);
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;从代码上可以看出，调用了SpringApplication的静态方法run。这个run方法会构造一个SpringApplication的实例，然后再调用这里实例的run方法就表示启动SpringBoot。&lt;/p&gt;
+&lt;figure class=&quot;highlight java&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;2&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;3&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;4&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;5&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;6&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@SpringBootApplication&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;class&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;MyApplication&lt;/span&gt; &lt;/span&gt;&amp;#123;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(String[] args)&lt;/span&gt; &lt;/span&gt;&amp;#123;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;        SpringApplication.run(MyApplication.class, args);&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &amp;#125;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&amp;#125;&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;从代码上可以看出，调用了SpringApplication的静态方法run。这个run方法会构造一个SpringApplication的实例，然后再调用这里实例的run方法就表示启动SpringBoot。&lt;/p&gt;
 &lt;p&gt;因此，想要分析SpringBoot的启动过程，我们需要熟悉SpringApplication的构造过程以及SpringApplication的run方法执行过程即可。&lt;/p&gt;
 &lt;p&gt;我们以上述这段代码为例，分析SpringBoot的启动过程。&lt;/p&gt;
     
@@ -3795,9 +2980,9 @@ private StepBuilderFactory steps;
     
       <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
     
-      <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
-    
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
     
   </entry>
   

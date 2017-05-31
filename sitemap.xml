@@ -1,0 +1,753 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2017/04/30/springboot-startup-analysis/</loc>
+    
+    <lastmod>2017-05-31T13:20:59.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/</loc>
+    
+    <lastmod>2017-05-31T13:18:20.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2017/05/16/springboot-condition-annotation/</loc>
+    
+    <lastmod>2017-05-31T13:16:37.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2017/05/24/spring-data-es-query-problem/</loc>
+    
+    <lastmod>2017-05-31T13:09:22.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2017/05/31/springboot-executable-jar/</loc>
+    
+    <lastmod>2017-05-31T13:05:35.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2017/05/22/springboot-embedded-servlet-container/</loc>
+    
+    <lastmod>2017-05-22T12:51:52.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/about/index.html</loc>
+    
+    <lastmod>2017-05-02T02:21:53.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2017/03/26/design-pattern/</loc>
+    
+    <lastmod>2017-03-26T07:51:53.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2017/02/22/springcloud-zuul/</loc>
+    
+    <lastmod>2017-02-23T14:08:57.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2017/02/19/springcloud-hystrix/</loc>
+    
+    <lastmod>2017-02-21T08:09:52.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2017/01/29/loadbalance/</loc>
+    
+    <lastmod>2017-01-29T11:47:10.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/04/03/jdk_arraydeque/</loc>
+    
+    <lastmod>2017-01-05T06:30:04.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2017/01/01/2016_end/</loc>
+    
+    <lastmod>2017-01-01T14:28:28.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/11/16/springboot-custom-starter/</loc>
+    
+    <lastmod>2016-11-23T07:32:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/11/13/springboot-enable-annotation/</loc>
+    
+    <lastmod>2016-11-23T07:29:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/11/09/springbatch-retry-skip/</loc>
+    
+    <lastmod>2016-11-09T04:22:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/11/04/java-annotation-retentionpolicy/</loc>
+    
+    <lastmod>2016-11-03T16:03:49.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/10/09/springboot-swagger/</loc>
+    
+    <lastmod>2016-10-09T13:50:09.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/10/07/springboot-transaction/</loc>
+    
+    <lastmod>2016-10-06T17:33:10.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/</loc>
+    
+    <lastmod>2016-09-23T17:07:18.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/09/03/netty-unittest/</loc>
+    
+    <lastmod>2016-09-03T12:47:41.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/08/30/netty-custom-protocol/</loc>
+    
+    <lastmod>2016-08-30T13:28:26.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/08/29/netty-in-action-note2/</loc>
+    
+    <lastmod>2016-08-29T12:07:20.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/08/19/netty-in-action-note1/</loc>
+    
+    <lastmod>2016-08-18T17:41:37.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/06/25/springboot-actuator/</loc>
+    
+    <lastmod>2016-06-25T07:38:28.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/06/22/springboot-with-scala/</loc>
+    
+    <lastmod>2016-06-23T06:06:31.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/06/04/java-thread-state/</loc>
+    
+    <lastmod>2016-06-04T15:53:47.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/04/10/jdk_priorityqueue/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/07/26/google-guava-intro/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/02/06/groovy_note/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/06/21/hhkb-desc/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/04/09/heap-heapsort/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/08/07/hbase-intro/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/07/31/hive-intro/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/10/29/html-left-right-menu/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/10/31/intellij_idea_uml/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/03/16/java-AtomicInteger-analysis/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/03/12/java-Object-method/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/01/01/2015_end/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/03/19/java-ReentrantLock-analysis/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/08/16/java-dynamic-proxy/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/05/10/java-arrayblockingqueue-linkedblockingqueue-analysis/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/07/24/java-poolthread/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/08/06/Backbone/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/11/22/java_threadlocal/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/08/11/Idea_SVN/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/03/22/java-threadpool-analysis/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/04/12/jdk-concurrentskiplistmap/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/03/30/jdk_hashset_linkedhashset/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/03/27/jdk_arraylist/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/03/29/jdk_linkedhashmap/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/03/29/jdk_hashmap/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/03/27/jdk_linkedlist/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/12/31/2014_end/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/04/18/java-synchronize-way/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/04/08/jdk_treeset/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/01/13/kafka-intro/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/07/30/Hexo_Tinny_duoshuo/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/11/01/logstash_build/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/03/30/mac-jdk/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/09/26/mybatis-dynamic-sql%20/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/01/06/mybatis_helper/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/12/10/mybatis_cache/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/01/11/bootstrap-grid/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/12/15/mybatis_interceptor/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/09/06/MapperScannerConfigurer-analysis/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/02/21/avro-intro/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/08/16/redis/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/04/07/jdk_treemap/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/03/08/bootstrap-grid-theory/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/05/31/scala-class-object/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/05/17/playframework-introduce/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/06/20/scala-collection/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/08/14/scala-future/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/06/12/scala-func-program/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/06/07/scala-generic/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/12/20/scala-implicit/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/05/31/scala-introduction/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/06/14/scala-partial/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/06/04/scala-pattern-match/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/06/07/scala-trait/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/10/07/scala-predef/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/12/23/scala-spray-json/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/08/18/slick-intro/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/03/07/css_boxmodel/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/01/27/spark-programming-guide/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/02/17/spark-sql/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/03/01/css_position/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/05/01/countdownlatch-cyclicbarrier-difference/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/02/10/sparkstreaming-programming-guide/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/09/21/dom-parse-xml-html/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2014/12/21/2014-12-21/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/11/07/elasticsearch-search-template/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/07/12/elasticsearch-tutorials/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/06/22/flume-channel/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/01/19/flume-channel-full-exception/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/06/21/flume-introduction/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/09/21/springboot-intro/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/07/20/flume-hdfs-sink/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/07/14/flume-notes/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/06/23/flume-sink/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/06/21/flume-source/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/07/07/flume-run/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2016/01/03/flume-transaction/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2015/10/24/front-end/</loc>
+    
+    <lastmod>2016-05-10T14:59:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/categories/index.html</loc>
+    
+    <lastmod>2016-01-17T13:58:15.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/tags/index.html</loc>
+    
+    <lastmod>2016-01-17T13:58:00.000Z</lastmod>
+    
+  </url>
+  
+</urlset>

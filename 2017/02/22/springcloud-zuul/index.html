@@ -86,32 +86,32 @@
 
 
 
-<meta name="description" content="Zuul是Netflix开发的一款提供动态路由、监控、弹性、安全的网关服务。
+<meta name="description" content="Zuul是Netflix开发的一款提供动态路由、监控、弹性、安全的网关服务。
 使用Zuul网关服务带来的好处是统一向外系统提供REST API，并额外提供了权限控制、负载均衡等功能，并且这些功能是从原先的服务中抽离出来并单独存在的。
 Zuul提供了不同类型的filter用于处理请求，这些filter可以让我们实现以下功能：
 
 权限控制和安全性：可以识别认证需要的信息和拒绝不满足条件的请求
-监控：">
+监控：监">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SpringCloud网关服务zuul介绍">
 <meta property="og:url" content="http://fangjian0423.github.io/2017/02/22/springcloud-zuul/index.html">
 <meta property="og:site_name" content="Format's Notes">
-<meta property="og:description" content="Zuul是Netflix开发的一款提供动态路由、监控、弹性、安全的网关服务。
+<meta property="og:description" content="Zuul是Netflix开发的一款提供动态路由、监控、弹性、安全的网关服务。
 使用Zuul网关服务带来的好处是统一向外系统提供REST API，并额外提供了权限控制、负载均衡等功能，并且这些功能是从原先的服务中抽离出来并单独存在的。
 Zuul提供了不同类型的filter用于处理请求，这些filter可以让我们实现以下功能：
 
 权限控制和安全性：可以识别认证需要的信息和拒绝不满足条件的请求
-监控：">
+监控：监">
 <meta property="og:image" content="https://camo.githubusercontent.com/4eb7754152028cdebd5c09d1c6f5acc7683f0094/687474703a2f2f6e6574666c69782e6769746875622e696f2f7a75756c2f696d616765732f7a75756c2d726571756573742d6c6966656379636c652e706e67">
-<meta property="og:updated_time" content="2017-02-23T14:08:57.000Z">
+<meta property="og:updated_time" content="2017-05-31T13:55:15.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SpringCloud网关服务zuul介绍">
-<meta name="twitter:description" content="Zuul是Netflix开发的一款提供动态路由、监控、弹性、安全的网关服务。
+<meta name="twitter:description" content="Zuul是Netflix开发的一款提供动态路由、监控、弹性、安全的网关服务。
 使用Zuul网关服务带来的好处是统一向外系统提供REST API，并额外提供了权限控制、负载均衡等功能，并且这些功能是从原先的服务中抽离出来并单独存在的。
 Zuul提供了不同类型的filter用于处理请求，这些filter可以让我们实现以下功能：
 
 权限控制和安全性：可以识别认证需要的信息和拒绝不满足条件的请求
-监控：">
+监控：监">
 <meta name="twitter:image" content="https://camo.githubusercontent.com/4eb7754152028cdebd5c09d1c6f5acc7683f0094/687474703a2f2f6e6574666c69782e6769746875622e696f2f7a75756c2f696d616765732f7a75756c2d726571756573742d6c6966656379636c652e706e67">
 
 
@@ -259,7 +259,7 @@ Zuul提供了不同类型的filter用于处理请求，这些filter可以让我�
       
         <li class="menu-item menu-item-search">
           
-            <a href="javascript:;" class="st-search-show-outputs">
+            <a href="javascript:;" class="popup-trigger">
           
             
               <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
@@ -274,19 +274,12 @@ Zuul提供了不同类型的filter用于处理请求，这些filter可以让我�
   
     <div class="site-search">
       
-  <form class="site-search-form">
-  <input type="text" id="st-search-input" class="st-search-input st-default-search-input" />
-</form>
-
-<script type="text/javascript">
-  (function(w,d,t,u,n,s,e){w['SwiftypeObject']=n;w[n]=w[n]||function(){
-    (w[n].q=w[n].q||[]).push(arguments);};s=d.createElement(t);
-    e=d.getElementsByTagName(t)[0];s.async=1;s.src=u;e.parentNode.insertBefore(s,e);
-  })(window,document,'script','//s.swiftypecdn.com/install/v2/st.js','_st');
-
-  _st('install', 'opcVB8zmpdXSzsKnBELd','2.0.0');
-</script>
-
+  <div class="popup">
+ <span class="search-icon fa fa-search"></span>
+ <input type="text" id="local-search-input">
+ <div id="local-search-result"></div>
+ <span class="popup-btn-close">close</span>
+</div>
 
 
     </div>
@@ -389,7 +382,7 @@ Zuul提供了不同类型的filter用于处理请求，这些filter可以让我�
       
 
       
-        <p><a href="https://github.com/Netflix/zuul" target="_blank" rel="external">Zuul</a>是Netflix开发的一款提供动态路由、监控、弹性、安全的网关服务。</p>
+        <p><a href="https://github.com/Netflix/zuul" target="_blank" rel="external">Zuul</a>是Netflix开发的一款提供动态路由、监控、弹性、安全的网关服务。</p>
 <p>使用Zuul网关服务带来的好处是统一向外系统提供REST API，并额外提供了权限控制、负载均衡等功能，并且这些功能是从原先的服务中抽离出来并单独存在的。</p>
 <p>Zuul提供了不同类型的filter用于处理请求，这些filter可以让我们实现以下功能：</p>
 <ol>
@@ -652,7 +645,7 @@ public Object run() {
 
 // setResponse方法会把response中的stream放到RequestContext中
 context.setResponseDataStream(entity);
-</code></pre><p>RibbonRoutingFilter跟SimpleHostRoutingFilter类似，区别就是它的shouldFilter方法里不是判断host方式，而是判断路由规则里是否存在serviceId。它的run方法也是使用HttpClient完成服务的调用，但是它是使用ribbon完成的。</p>
+</code></pre><p>RibbonRoutingFilter跟SimpleHostRoutingFilter类似，区别就是它的shouldFilter方法里不是判断host方式，而是判断路由规则里是否存在serviceId。它的run方法也是使用HttpClient完成服务的调用，但是它是使用ribbon完成的。</p>
 <p>访问地址：</p>
 <pre><code>http://localhost:7777/compute-service/add?a=1&amp;b=2
 </code></pre><p>由于使用了serviceId的方式，所以会触发RibbonRoutingFilter并完成服务的调用。</p>
@@ -681,7 +674,7 @@ public boolean shouldFilter() {
 </code></pre><p>SpringCloud默认还加了其它的一些拦截器，有兴趣的读者可以自行查看源代码。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Zuul内部的处理使用ZuulServlet完成，ZuulServlet继承HttpServlet，重写了service方法，service方法内部分别是pre、route、post和error类型的filter进行调用。这里的不同类型的filter执行顺序文中已经说明。</p>
 <p>要在SpringCloud中使用Zuul，需要加上@EnableZuulProxy注解。加上这个注解之后SpringCloud会构造一些bean，比如ZuulHandlerMapping、DiscoveryClientRouteLocator、各种filter等。其中DiscoveryClientRouteLocator是一个基于服务发现的路由规则生成器，它会基于zuul的配置构造路由规则。ZuulHandlerMapping是一个HandlerMapping的实现，它跟基于路由规则注册handler，其中key为路由规则对应的路径，handler都是ZuulController，ZuulController内部使用ZuulServlet进行请求的处理。</p>
-<p>Zuul把真正的服务调用放在了filter中实现。它提供了SimpleHostRoutingFilter和RibbonRoutingFilter这2个route类型的filter用于执行服务。从名字也可以看出来，SimpleHostRoutingFilter用于执行基于host方式的调用url接口，RibbonRoutingFilter基于服务发现的方式调用服务。一般我们都建议使用RibbonRoutingFilter，因为它内部使用ribbon，更加健壮。</p>
+<p>Zuul把真正的服务调用放在了filter中实现。它提供了SimpleHostRoutingFilter和RibbonRoutingFilter这2个route类型的filter用于执行服务。从名字也可以看出来，SimpleHostRoutingFilter用于执行基于host方式的调用url接口，RibbonRoutingFilter基于服务发现的方式调用服务。一般我们都建议使用RibbonRoutingFilter，因为它内部使用ribbon，更加健壮。</p>
 <h2 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h2><p>RoutesEndpoint这个endpoint使用RouteLocator中提供的所有路由规则。</p>
 <p>访问：</p>
 <pre><code>http://localhost:7777/routes

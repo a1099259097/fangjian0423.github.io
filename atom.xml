@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-05-31T13:53:46.000Z</updated>
+  <updated>2017-06-02T03:33:28.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -14,6 +14,72 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>SpringData ES中一些底层原理的分析</title>
+    <link href="http://fangjian0423.github.io/2017/06/02/spring-data-es-analysis/"/>
+    <id>http://fangjian0423.github.io/2017/06/02/spring-data-es-analysis/</id>
+    <published>2017-06-02T12:33:33.000Z</published>
+    <updated>2017-06-02T03:33:28.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>之前写过一篇<a href="http://fangjian0423.github.io/2017/05/24/spring-data-es-query-problem/">SpringData ES 关于字段名和索引中的列名字不一致导致的查询问题</a>，顺便深入学习下Spring Data Elasticsearch。</p>
+<p><a href="https://github.com/spring-projects/spring-data-elasticsearch" target="_blank" rel="external">Spring Data Elasticsearch</a>是<a href="http://projects.spring.io/spring-data/" target="_blank" rel="external">Spring Data</a>针对Elasticsearch的实现。</p>
+<p>它跟Spring Data一样，提供了Repository接口，我们只需要定义一个新的接口并继承这个Repository接口，然后就可以注入这个新的接口使用了。</p>
+<p>定义接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Repository</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">TaskRepository</span> <span class="keyword">extends</span> <span class="title">ElasticsearchRepository</span>&lt;<span class="title">Task</span>, <span class="title">String</span>&gt; </span>&#123; &#125;</div></pre></td></tr></table></figure>
+<p>注入接口进行使用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Autowired</span></div><div class="line"><span class="keyword">private</span> TaskRepository taskRepository;</div><div class="line"></div><div class="line">....</div><div class="line">taskRepository.save(task);</div></pre></td></tr></table></figure>
+<a id="more"></a>
+<h2 id="Repository接口的代理生成"><a href="#Repository接口的代理生成" class="headerlink" title="Repository接口的代理生成"></a>Repository接口的代理生成</h2><p>上面的例子中TaskRepository是个接口，而我们却直接注入了这个接口并调用方法；很明显，这是错误的。</p>
+<p>其实SpringData ES内部基于这个TaskRepository接口构造一个SimpleElasticsearchRepository，真正被注入的是这个SimpleElasticsearchRepository。</p>
+<p>这个过程是如何实现的呢？  来分析一下。</p>
+<p>ElasticsearchRepositoriesAutoConfiguration自动化配置类会导入ElasticsearchRepositoriesRegistrar这个ImportBeanDefinitionRegistrar。</p>
+<p>ElasticsearchRepositoriesRegistrar继承自AbstractRepositoryConfigurationSourceSupport，是个ImportBeanDefinitionRegistrar接口的实现类，会被Spring容器调用registerBeanDefinitions进行自定义bean的注册。</p>
+<p>ElasticsearchRepositoriesRegistrar委托给RepositoryConfigurationDelegate完成bean的解析。</p>
+<p>整个解析过程可以分3个步骤：</p>
+<ol>
+<li>找出模块中的org.springframework.data.repository.Repository接口的实现类或者org.springframework.data.repository.RepositoryDefinition注解的修饰类，并会过滤掉org.springframework.data.repository.NoRepositoryBean注解的修饰类。找出后封装到RepositoryConfiguration中</li>
+<li>遍历这些RepositoryConfiguration，然后构造成BeanDefinition并注册到Spring容器中。需要注意的是这些RepositoryConfiguration会以beanClass为ElasticsearchRepositoryFactoryBean这个类的方式被注册，并把对应的Repository接口当做构造参数传递给ElasticsearchRepositoryFactoryBean，还会设置相应的属性比如elasticsearchOperations、evaluationContextProvider、namedQueries、repositoryBaseClass、lazyInitqueryLookupStrategyKey</li>
+<li>ElasticsearchRepositoryFactoryBean被实例化的时候设置对应的构造参数和属性。设置完毕以后调用afterPropertiesSet方法(实现了InitializingBean接口)。在afterPropertiesSet方法内部会去创建RepositoryFactorySupport类，并进行一些初始化，比如namedQueries、repositoryBaseClass等。然后通过这个RepositoryFactorySupport的getRepository方法基于Repository接口创建出代理类，并使用AOP添加了几个MethodInterceptor</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 遍历基于第1步条件得到的RepositoryConfiguration集合</span></div><div class="line"><span class="keyword">for</span> (RepositoryConfiguration&lt;? extends RepositoryConfigurationSource&gt; configuration : extension</div><div class="line">    .getRepositoryConfigurations(configurationSource, resourceLoader, inMultiStoreMode)) &#123;</div><div class="line">  <span class="comment">// 构造出BeanDefinitionBuilder</span></div><div class="line">  BeanDefinitionBuilder definitionBuilder = builder.build(configuration);</div><div class="line"></div><div class="line">  extension.postProcess(definitionBuilder, configurationSource);</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (isXml) &#123;</div><div class="line">    <span class="comment">// 设置elasticsearchOperations属性</span></div><div class="line">    extension.postProcess(definitionBuilder, (XmlRepositoryConfigurationSource) configurationSource);</div><div class="line">  &#125; <span class="keyword">else</span> &#123;</div><div class="line">    <span class="comment">// 设置elasticsearchOperations属性</span></div><div class="line">    extension.postProcess(definitionBuilder, (AnnotationRepositoryConfigurationSource) configurationSource);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// 使用命名策略生成bean的名字</span></div><div class="line">  AbstractBeanDefinition beanDefinition = definitionBuilder.getBeanDefinition();</div><div class="line">  String beanName = beanNameGenerator.generateBeanName(beanDefinition, registry);</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (LOGGER.isDebugEnabled()) &#123;</div><div class="line">    LOGGER.debug(REPOSITORY_REGISTRATION, extension.getModuleName(), beanName,</div><div class="line">        configuration.getRepositoryInterface(), extension.getRepositoryFactoryClassName());</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  beanDefinition.setAttribute(FACTORY_BEAN_OBJECT_TYPE, configuration.getRepositoryInterface());</div><div class="line">  <span class="comment">// 注册到Spring容器中</span></div><div class="line">  registry.registerBeanDefinition(beanName, beanDefinition);</div><div class="line">  definitions.add(<span class="keyword">new</span> BeanComponentDefinition(beanDefinition, beanName));</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// build方法</span></div><div class="line"><span class="function"><span class="keyword">public</span> BeanDefinitionBuilder <span class="title">build</span><span class="params">(RepositoryConfiguration&lt;?&gt; configuration)</span> </span>&#123;</div><div class="line"></div><div class="line">  Assert.notNull(registry, <span class="string">"BeanDefinitionRegistry must not be null!"</span>);</div><div class="line">  Assert.notNull(resourceLoader, <span class="string">"ResourceLoader must not be null!"</span>);</div><div class="line">  <span class="comment">// 得到factoryBeanName，这里会使用extension.getRepositoryFactoryClassName()去获得</span></div><div class="line">  <span class="comment">// extension.getRepositoryFactoryClassName()返回的正是ElasticsearchRepositoryFactoryBean</span></div><div class="line">  String factoryBeanName = configuration.getRepositoryFactoryBeanName();</div><div class="line">  factoryBeanName = StringUtils.hasText(factoryBeanName) ? factoryBeanName</div><div class="line">      : extension.getRepositoryFactoryClassName();</div><div class="line">  <span class="comment">// 基于factoryBeanName构造BeanDefinitionBuilder</span></div><div class="line">  BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(factoryBeanName);</div><div class="line"></div><div class="line">  builder.getRawBeanDefinition().setSource(configuration.getSource());</div><div class="line">  <span class="comment">// 设置ElasticsearchRepositoryFactoryBean的构造参数，这里是对应的Repository接口</span></div><div class="line">  <span class="comment">// 设置一些的属性值</span></div><div class="line">  builder.addConstructorArgValue(configuration.getRepositoryInterface());</div><div class="line">  builder.addPropertyValue(<span class="string">"queryLookupStrategyKey"</span>, configuration.getQueryLookupStrategyKey());</div><div class="line">  builder.addPropertyValue(<span class="string">"lazyInit"</span>, configuration.isLazyInit());</div><div class="line">  builder.addPropertyValue(<span class="string">"repositoryBaseClass"</span>, configuration.getRepositoryBaseClassName());</div><div class="line"></div><div class="line">  NamedQueriesBeanDefinitionBuilder definitionBuilder = <span class="keyword">new</span> NamedQueriesBeanDefinitionBuilder(</div><div class="line">      extension.getDefaultNamedQueryLocation());</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (StringUtils.hasText(configuration.getNamedQueriesLocation())) &#123;</div><div class="line">    definitionBuilder.setLocations(configuration.getNamedQueriesLocation());</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  builder.addPropertyValue(<span class="string">"namedQueries"</span>, definitionBuilder.build(configuration.getSource()));</div><div class="line">  <span class="comment">// 查找是否有对应Repository接口的自定义实现类</span></div><div class="line">  String customImplementationBeanName = registerCustomImplementation(configuration);</div><div class="line">  <span class="comment">// 存在自定义实现类的话，设置到属性中</span></div><div class="line">  <span class="keyword">if</span> (customImplementationBeanName != <span class="keyword">null</span>) &#123;</div><div class="line">    builder.addPropertyReference(<span class="string">"customImplementation"</span>, customImplementationBeanName);</div><div class="line">    builder.addDependsOn(customImplementationBeanName);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  RootBeanDefinition evaluationContextProviderDefinition = <span class="keyword">new</span> RootBeanDefinition(</div><div class="line">      ExtensionAwareEvaluationContextProvider.class);</div><div class="line">  evaluationContextProviderDefinition.setSource(configuration.getSource());</div><div class="line">  <span class="comment">// 设置一些的属性值</span></div><div class="line">  builder.addPropertyValue(<span class="string">"evaluationContextProvider"</span>, evaluationContextProviderDefinition);</div><div class="line"></div><div class="line">  <span class="keyword">return</span> builder;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// RepositoryFactorySupport的getRepository方法，获得Repository接口的代理类</span></div><div class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">getRepository</span><span class="params">(Class&lt;T&gt; repositoryInterface, Object customImplementation)</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="comment">// 获取Repository的元数据</span></div><div class="line">  RepositoryMetadata metadata = getRepositoryMetadata(repositoryInterface);</div><div class="line">  <span class="comment">// 获取Repository的自定义实现类</span></div><div class="line">  Class&lt;?&gt; customImplementationClass = <span class="keyword">null</span> == customImplementation ? <span class="keyword">null</span> : customImplementation.getClass();</div><div class="line">  <span class="comment">// 根据元数据和自定义实现类得到Repository的RepositoryInformation信息类</span></div><div class="line">  <span class="comment">// 获取信息类的时候如果发现repositoryBaseClass是空的话会根据meta中的信息去自动匹配</span></div><div class="line">  <span class="comment">// 具体匹配过程在下面的getRepositoryBaseClass方法中说明</span></div><div class="line">  RepositoryInformation information = getRepositoryInformation(metadata, customImplementationClass);</div><div class="line">  <span class="comment">// 验证</span></div><div class="line">  validate(information, customImplementation);</div><div class="line">  <span class="comment">// 得到最终的目标类实例，会通过repositoryBaseClass去查找</span></div><div class="line">  Object target = getTargetRepository(information);</div><div class="line"></div><div class="line">  <span class="comment">// 创建代理工厂</span></div><div class="line">  ProxyFactory result = <span class="keyword">new</span> ProxyFactory();</div><div class="line">  result.setTarget(target);</div><div class="line">  result.setInterfaces(<span class="keyword">new</span> Class[] &#123; repositoryInterface, Repository.class &#125;);</div><div class="line">  <span class="comment">// 进行aop相关的设置</span></div><div class="line">  result.addAdvice(SurroundingTransactionDetectorMethodInterceptor.INSTANCE);</div><div class="line">  result.addAdvisor(ExposeInvocationInterceptor.ADVISOR);</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (TRANSACTION_PROXY_TYPE != <span class="keyword">null</span>) &#123;</div><div class="line">    result.addInterface(TRANSACTION_PROXY_TYPE);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 使用RepositoryProxyPostProcessor处理</span></div><div class="line">  <span class="keyword">for</span> (RepositoryProxyPostProcessor processor : postProcessors) &#123;</div><div class="line">    processor.postProcess(result, information);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (IS_JAVA_8) &#123;</div><div class="line">    <span class="comment">// 如果是JDK8的话，添加DefaultMethodInvokingMethodInterceptor</span></div><div class="line">    result.addAdvice(<span class="keyword">new</span> DefaultMethodInvokingMethodInterceptor());</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// 添加QueryExecutorMethodInterceptor</span></div><div class="line">  result.addAdvice(<span class="keyword">new</span> QueryExecutorMethodInterceptor(information, customImplementation, target));</div><div class="line">  <span class="comment">// 使用代理工厂创建出代理类，这里是使用jdk内置的代理模式</span></div><div class="line">  <span class="keyword">return</span> (T) result.getProxy(classLoader);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// 目标类的获取</span></div><div class="line"><span class="keyword">protected</span> Class&lt;?&gt; getRepositoryBaseClass(RepositoryMetadata metadata) &#123;</div><div class="line">  <span class="comment">// 如果Repository接口属于QueryDsl，抛出异常。目前还不支持</span></div><div class="line">  <span class="keyword">if</span> (isQueryDslRepository(metadata.getRepositoryInterface())) &#123;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"QueryDsl Support has not been implemented yet."</span>);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 如果主键是数值类型的话，repositoryBaseClass为NumberKeyedRepository</span></div><div class="line">  <span class="keyword">if</span> (Integer.class.isAssignableFrom(metadata.getIdType())</div><div class="line">      || Long.class.isAssignableFrom(metadata.getIdType())</div><div class="line">      || Double.class.isAssignableFrom(metadata.getIdType())) &#123;</div><div class="line">    <span class="keyword">return</span> NumberKeyedRepository.class;</div><div class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (metadata.getIdType() == String.class) &#123;</div><div class="line">    <span class="comment">// 如果主键是String类型的话，repositoryBaseClass为SimpleElasticsearchRepository</span></div><div class="line">    <span class="keyword">return</span> SimpleElasticsearchRepository.class;</div><div class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (metadata.getIdType() == UUID.class) &#123;</div><div class="line">    <span class="comment">// 如果主键是UUID类型的话，repositoryBaseClass为UUIDElasticsearchRepository</span></div><div class="line">    <span class="keyword">return</span> UUIDElasticsearchRepository.class;</div><div class="line">  &#125; <span class="keyword">else</span> &#123;</div><div class="line">    <span class="comment">// 否则报错</span></div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Unsupported ID type "</span> + metadata.getIdType());</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>ElasticsearchRepositoryFactoryBean是一个FactoryBean接口的实现类，getObject方法返回的上面提到的getRepository方法返回的代理对象；getObjectType方法返回的是对应Repository接口类型。</p>
+<p>我们文章一开始提到的注入TaskRepository的时候，实际上这个对象是ElasticsearchRepositoryFactoryBean类型的实例，只不过ElasticsearchRepositoryFactoryBean实现了FactoryBean接口，所以注入的时候会得到一个代理对象，这个代理对象是由jdk内置的代理生成的，并且它的target对象是SimpleElasticsearchRepository(主键是String类型)。</p>
+<h2 id="SpringData-ES中ElasticsearchOperations的介绍"><a href="#SpringData-ES中ElasticsearchOperations的介绍" class="headerlink" title="SpringData ES中ElasticsearchOperations的介绍"></a>SpringData ES中ElasticsearchOperations的介绍</h2><p>ElasticsearchTemplate实现了ElasticsearchOperations接口。</p>
+<p>ElasticsearchOperations接口是SpringData对Elasticsearch操作的一层封装，比如有创建索引createIndex方法、获取索引的设置信息getSetting方法、查询对象queryForObject方法、分页查询方法queryForPage、删除文档delete方法、更新文档update方法等等。</p>
+<p>ElasticsearchTemplate是具体的实现类，它有这些属性：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// elasticsearch提供的基于java的客户端连接接口。java对es集群的操作使用这个接口完成</span></div><div class="line"><span class="keyword">private</span> Client client;</div><div class="line"><span class="comment">// 一个转换器接口，定义了2个方法，分别可以获得MappingContext和ConversionService</span></div><div class="line"><span class="comment">// MappingContext接口用于获取所有的持久化实体和这些实体的属性</span></div><div class="line"><span class="comment">// ConversionService目前在SpringData ES中没有被使用</span></div><div class="line"><span class="keyword">private</span> ElasticsearchConverter elasticsearchConverter;</div><div class="line"><span class="comment">// 内部使用EntityMapper完成对象到json字符串和json字符串到对象的映射。默认使用jackson完成映射，可自定义</span></div><div class="line"><span class="keyword">private</span> ResultsMapper resultsMapper;</div><div class="line"><span class="comment">// 查询超时时间</span></div><div class="line"><span class="keyword">private</span> String searchTimeout;</div></pre></td></tr></table></figure>
+<p>Client接口在ElasticsearchAutoConfiguration自动化配置类里被构造：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Bean</span></div><div class="line"><span class="meta">@ConditionalOnMissingBean</span></div><div class="line"><span class="function"><span class="keyword">public</span> Client <span class="title">elasticsearchClient</span><span class="params">()</span> </span>&#123;</div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    <span class="keyword">return</span> createClient();</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (Exception ex) &#123;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(ex);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>ElasticsearchTemplate、ElasticsearchConverter以及SimpleElasticsearchMappingContext在ElasticsearchDataAutoConfiguration自动化配置类里被构造：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Bean</span></div><div class="line"><span class="meta">@ConditionalOnMissingBean</span></div><div class="line"><span class="function"><span class="keyword">public</span> ElasticsearchTemplate <span class="title">elasticsearchTemplate</span><span class="params">(Client client,</span></span></div><div class="line">    ElasticsearchConverter converter) &#123;</div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ElasticsearchTemplate(client, converter);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (Exception ex) &#123;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(ex);</div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="meta">@Bean</span></div><div class="line"><span class="meta">@ConditionalOnMissingBean</span></div><div class="line"><span class="function"><span class="keyword">public</span> ElasticsearchConverter <span class="title">elasticsearchConverter</span><span class="params">(</span></span></div><div class="line">    SimpleElasticsearchMappingContext mappingContext) &#123;</div><div class="line">  <span class="keyword">return</span> <span class="keyword">new</span> MappingElasticsearchConverter(mappingContext);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="meta">@Bean</span></div><div class="line"><span class="meta">@ConditionalOnMissingBean</span></div><div class="line"><span class="function"><span class="keyword">public</span> SimpleElasticsearchMappingContext <span class="title">mappingContext</span><span class="params">()</span> </span>&#123;</div><div class="line">  <span class="keyword">return</span> <span class="keyword">new</span> SimpleElasticsearchMappingContext();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>需要注意的是这个bean被自动化配置类构造的前提是它们在Spring容器中并不存在。</p>
+<h2 id="Repository的调用过程"><a href="#Repository的调用过程" class="headerlink" title="Repository的调用过程"></a>Repository的调用过程</h2><p>以自定义的TaskRepository的save方法为例，大致的执行流程如下所示：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/SpringData-ES-seq.png" alt=""></p>
+<p>SimpleElasticsearchRepository的save方法具体的分析在<a href="http://fangjian0423.github.io/2017/05/24/spring-data-es-query-problem/">SpringData ES 关于字段名和索引中的列名字不一致导致的查询问题</a>中分析过。</p>
+<p>像自定义的Repository查询方法，或者Repository接口的自定义实现类的操作这些底层，可以去QueryExecutorMethodInterceptor中查看，本文就不做具体分析了。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;之前写过一篇&lt;a href=&quot;http://fangjian0423.github.io/2017/05/24/spring-data-es-query-problem/&quot;&gt;SpringData ES 关于字段名和索引中的列名字不一致导致的查询问题&lt;/a&gt;，顺便深入学习下Spring Data Elasticsearch。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/spring-projects/spring-data-elasticsearch&quot;&gt;Spring Data Elasticsearch&lt;/a&gt;是&lt;a href=&quot;http://projects.spring.io/spring-data/&quot;&gt;Spring Data&lt;/a&gt;针对Elasticsearch的实现。&lt;/p&gt;
+&lt;p&gt;它跟Spring Data一样，提供了Repository接口，我们只需要定义一个新的接口并继承这个Repository接口，然后就可以注入这个新的接口使用了。&lt;/p&gt;
+&lt;p&gt;定义接口：&lt;/p&gt;
+&lt;figure class=&quot;highlight java&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;2&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@Repository&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;class&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;TaskRepository&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;ElasticsearchRepository&lt;/span&gt;&amp;lt;&lt;span class=&quot;title&quot;&gt;Task&lt;/span&gt;, &lt;span class=&quot;title&quot;&gt;String&lt;/span&gt;&amp;gt; &lt;/span&gt;&amp;#123; &amp;#125;&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;注入接口进行使用：&lt;/p&gt;
+&lt;figure class=&quot;highlight java&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;2&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;3&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;4&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;5&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@Autowired&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;private&lt;/span&gt; TaskRepository taskRepository;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;....&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;taskRepository.save(task);&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+    
+    </summary>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
+    
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="elasticsearch" scheme="http://fangjian0423.github.io/tags/elasticsearch/"/>
+    
+  </entry>
   
   <entry>
     <title>SpringBoot源码分析之SpringBoot可执行文件解析</title>
@@ -2980,9 +3046,9 @@ private StepBuilderFactory steps;
     
       <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
     
-      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
-    
       <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
     
   </entry>
   
@@ -3716,393 +3782,6 @@ try {
 &lt;p&gt;比如我们的自定义协议CucstomProtocol结构如下：&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;| version | header | content |
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中version表示版本号，long类型；header是一个uuid，string类型，content则是具体的内容，string类型。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="netty" scheme="http://fangjian0423.github.io/categories/netty/"/>
-    
-    
-      <category term="nio" scheme="http://fangjian0423.github.io/tags/nio/"/>
-    
-      <category term="netty" scheme="http://fangjian0423.github.io/tags/netty/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Netty in Action笔记(二)</title>
-    <link href="http://fangjian0423.github.io/2016/08/29/netty-in-action-note2/"/>
-    <id>http://fangjian0423.github.io/2016/08/29/netty-in-action-note2/</id>
-    <published>2016-08-29T12:36:52.000Z</published>
-    <updated>2016-08-29T12:07:20.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>主要记录ChannelHandler、Codec以及Bootstrap的作用，还有Netty内置的一些ChannelHandler、Codec，以及Bootstrap的分类。</p>
-<a id="more"></a>
-<h2 id="第六章"><a href="#第六章" class="headerlink" title="第六章"></a>第六章</h2><p>介绍Netty中的Channel、ChannelHandler、ChannelHandlerContext以及ChannelPipeline。</p>
-<h3 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h3><p>定义：一个Channel表示一个通道，跟io中的stream的角色一样，但是有几点不同。 1. stream是单向的，只支持读或者写，channel是双向的，既支持读也支持写。2. stream是阻塞的，channel是并行的。</p>
-<p>其中Channel的生命周期状态如下：</p>
-<table>
-<thead>
-<tr>
-<th>状态说明</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>channelUnregistered</td>
-<td>channel创建之后，还未注册到EventLoop</td>
-</tr>
-<tr>
-<td>channelRegistered</td>
-<td>channel注册到了对应的EventLoop</td>
-</tr>
-<tr>
-<td>channelActive</td>
-<td>channel处于活跃状态，活跃状态表示已经连接到了远程服务器，现在可以接收和发送数据</td>
-</tr>
-<tr>
-<td>channelInactive</td>
-<td>channel未连接到远程服务器</td>
-</tr>
-</tbody>
-</table>
-<p>一个Channel正常的生命周期如下：</p>
-<p>channelRegistered -&gt; channelActice -&gt; channelInactive -&gt; channelUnregistered</p>
-<p>在另外一种特殊情况下，会发生多次channelRegistered和channelUnregistered，这是因为用户可以从EventLoop上取消注册Channel来阻止事件的执行并在之后重新注册。状态变化如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty03.png" alt=""></p>
-<h3 id="ChannelHandler"><a href="#ChannelHandler" class="headerlink" title="ChannelHandler"></a>ChannelHandler</h3><p>ChannelHandler有2种类型：</p>
-<ol>
-<li>Inbound Handler: 处理inbound数据(接收到的数据)以及所有类型的channel状态修改事件</li>
-<li>Outbound Handler: 处理outbound数据(发送出去的数据)并且可以拦截各种操作，比如bind、connect、disconnect、close、write等操作</li>
-</ol>
-<p>Inbound和Outbound Handler都属于ChannelHandler，它们都可以被添加到ChannelPipeline中，它们内部也提供了handlerAdded、handlerRemoved这两种方法分别在ChannelHandler添加到ChannelPipeline和ChannelHandler从ChannelPipeline中被删除的时候触发。</p>
-<h4 id="ChannelInboundHandler"><a href="#ChannelInboundHandler" class="headerlink" title="ChannelInboundHandler"></a>ChannelInboundHandler</h4><p>ChannelInboundHandler方法在两种情况下触发：channel状态的改变和channel接收到数据。</p>
-<p>一些方法说明：</p>
-<table>
-<thead>
-<tr>
-<th>方法名</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>channelRegistered(..)</td>
-<td>Channel注册到EventLoop，并且可以处理IO请求</td>
-</tr>
-<tr>
-<td>channelUnregistered(…)</td>
-<td>Channel从EventLoop中被取消注册，并且不能处理任何IO请求</td>
-</tr>
-<tr>
-<td>channelActive(…)</td>
-<td>Channel已经连接到远程服务器，并准备好了接收数据</td>
-</tr>
-<tr>
-<td>channelInactive(…)</td>
-<td>Channel还没有连接到远程服务器</td>
-</tr>
-<tr>
-<td>channelReadComplete(…)</td>
-<td>Channel的读取操作已经完成</td>
-</tr>
-<tr>
-<td>channelRead(…)</td>
-<td>有数据可以读取的时候触发</td>
-</tr>
-<tr>
-<td>userEventTriggered(…)</td>
-<td>当用户调用Channel.fireUserEventTriggered方法的时候触发，用户可以传递一个自定义的对象当这个方法里</td>
-</tr>
-</tbody>
-</table>
-<p>ChannelInboundHandler有一个实现ChannelInboundHandlerAdapter，它实现了所有的方法，我们只需要继承这个类然后复写需要的方法即可。</p>
-<p>ChannelInboundHandler中的channelRead方法中有读取的ByteBuf。由于Netty在ByteBuf的使用上使用了池的概念，当不需要这个ByteBuf的时候需要进行资源的释放以减少内存的消耗。</p>
-<pre><code>@Override
-public void channelRead(ChannelHandlerContext ctx, Object msg) {
-      // do something
-      ReferenceCountUtil.release(msg);
-}
-</code></pre><p>Netty内部提供了一个SimpleChannelInboundHandler类，这个类读取数据会自动释放资源。它继承ChannelInboundHandlerAdapter并复写了channelRead方法，在channelRead方法里面finally代码里会自动release资源，并提供了channelRead0方法：</p>
-<pre><code>@Override
-public void channelRead0(ChannelHandlerContext ctx, Object msg) {
-      // do something, do not need release
-}
-</code></pre><p>所以一般使用ChannelInboundHandler的话，有3种方法。 </p>
-<ol>
-<li>直接实现ChannelInBoundHandler接口 </li>
-<li>继承ChannelInboundHandlerAdapter</li>
-<li>继承SimpleChannelInboundHandler</li>
-</ol>
-<p>第1种基本不用，第3种用来处理接收消息，第2种用来处理事件状态的改变</p>
-<h4 id="ChannelOutboundHandler"><a href="#ChannelOutboundHandler" class="headerlink" title="ChannelOutboundHandler"></a>ChannelOutboundHandler</h4><p>ChannelOutboundHandler方法在两种情况下触发：发送数据和拦截操作。</p>
-<p>ChannelOutboundHandler有一个强大的功能，可以按需推迟一个操作，这使得处理请求可以用到更为复杂的策略。比如，如果写数据到远端被暂停，你可以推迟flush操作，稍后再试。</p>
-<p>一些方法说明：</p>
-<table>
-<thead>
-<tr>
-<th>方法名</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>bind(..)</td>
-<td>请求绑定channel到本地地址</td>
-</tr>
-<tr>
-<td>connect(…)</td>
-<td>channel连接到远程地址</td>
-</tr>
-<tr>
-<td>disconnect(…)</td>
-<td>channel从远程服务器上断开</td>
-</tr>
-<tr>
-<td>close(…)</td>
-<td>关闭channel</td>
-</tr>
-<tr>
-<td>deregister(…)</td>
-<td>取消channel在eventloop上的注册</td>
-</tr>
-<tr>
-<td>read(…)</td>
-<td>在channel中读数据</td>
-</tr>
-<tr>
-<td>flush(…)</td>
-<td>flush数据到远程服务器</td>
-</tr>
-<tr>
-<td>write(…)</td>
-<td>写数据到远程服务器</td>
-</tr>
-</tbody>
-</table>
-<p>ChannelOutboundHandler有一个实现ChannelOutboundHandlerAdapter，它实现了所有的方法，我们只需要继承这个类然后复写需要的方法即可。</p>
-<p>在outboundhandler中有时候也需要释放资源，当消息被消费并且不再需要传递给下一个outbound handler的时候，调用ReferenceCountUtil.release(message)释放消息。</p>
-<p>当消息被写回去或者channel关闭的时候，这个消息的资源会被自动释放，所以没有一个类似SimpleChannelInboundHandler的概念。</p>
-<h3 id="ChannelHandlerContext"><a href="#ChannelHandlerContext" class="headerlink" title="ChannelHandlerContext"></a>ChannelHandlerContext</h3><p>当ChannelHandler被添加到ChannelPipeline中的时候，ChannelHandlerContext会被创建。<br>所以说ChannelHandlerContext属于ChannelHandler。</p>
-<p>可以通过ChannelHandlerContext的channel方法得到Channel和pipeline方法得到ChannelPipeline。</p>
-<p>ChannelHandlerContext可以被保留下来并且在其他地方进行调用，比如在其他线程，或者在handler外部进行调用。</p>
-<p>可以使用以下方法保留ChannelHandlerContext：</p>
-<pre><code>class WriterHandler extends ChannelHandlerAdapter {
-  private ChannelHandlerContext ctx;
-
-  @Override
-  public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-      this.ctx = ctx;
-  }
-
-  public void send(String msg) {
-      ctx.write(msg);
-  }
-}
-</code></pre><p>Netty中提供了一个@Sharable注解用来将一个实例的ChannelHandler添加到多个ChannelPipeline中，如果不加上这个注解，被多个ChannelPipeline使用的话会抛出异常。</p>
-<h3 id="ChannelPipeline"><a href="#ChannelPipeline" class="headerlink" title="ChannelPipeline"></a>ChannelPipeline</h3><p>多个ChannelHandler可以组成一个ChannelPipeline，里面的每个ChannelHandler可以转发给下一个ChannelHandler。</p>
-<p>ChannelPipeline内部的所有ChannelHandler的处理流程图：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty01.png" alt=""></p>
-<p>ChannelPipeline提供了多种方法用于添加或删除或代替ChannelHandler，比如addLast, addFirst, remove, replace等方法。</p>
-<h2 id="第七章"><a href="#第七章" class="headerlink" title="第七章"></a>第七章</h2><p>介绍Netty中的编码器、解码器。我们知道网络中传输的是字节-ByteBuf。我们需要对ByteBuf进行一些解码用于解码成熟悉的POJO，对ByteBuf进行编码用于网络传输。</p>
-<h3 id="Decoder"><a href="#Decoder" class="headerlink" title="Decoder"></a>Decoder</h3><p>解码器，针对的是inbound的数据，也就是读取数据的解码。</p>
-<p>2种类型：</p>
-<ol>
-<li>bytes到message的解码(ByteToMessageDecoder和ReplayingDecoder)</li>
-<li>message到message的解码(MessageToMessageDecoder)</li>
-</ol>
-<p>decoders的作用是把inbound中读取的数据从一种格式转换成另一种格式，由于decoders处理的是inbound中的数据，所以它也是ChannelInboundHandler的一种实现类。</p>
-<p>ByteToMessageDecoder和ReplayingDecoder属于bytes到message的解码。</p>
-<p>一个ByteToMessageDecoder例子，将byte转换成integer：</p>
-<pre><code>public class ToIntegerDecoder extends ByteToMessageDecoder {
-    @Override  protected void decode(ChannelHandlerContext ctx, ByteBuf in,     List&lt;Object&gt; out) throws Exception {
-        if(in.readableBytes() &gt;= 4) {
-            out.add(in.readInt());
-        }
-    }    
-}
-</code></pre><p>处理流程图如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty04.png" alt=""></p>
-<p>如果使用ReplayingDecoder，不需要进行可读字节的判断，直接添加到List里即可。跟ToIntegerDecoder实现一样的功能，ReplayingDecoder只需要这样即可。(但是有一定的局限性：1.不是所有的操作都被ByteBuf支持 2.ByteBuf.readableBytes方法大部分时间不会返回期望的值)</p>
-<pre><code>public class ToIntegerDecoder2 extends ReplayingDecoder&lt;Void&gt; {
-    @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List&lt;Object&gt;     out) throws Exception {
-        out.add(in.readInt());
-    }
-}
-</code></pre><p>一个MessageToMessageDecoder例子，将integer转换成string：</p>
-<pre><code>public class IntegerToStringDecoder extends MessageToMessageDecoder&lt;Integer&gt; {
-    @Override
-    protected void decode(ChannelHandlerContext ctx, Integer msg, List&lt;Object&gt; out) throws Exception {
-        out.add(String.valueOf(msg));
-    }
-}
-</code></pre><p>处理流程图如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty05.png" alt=""></p>
-<h3 id="Encoder"><a href="#Encoder" class="headerlink" title="Encoder"></a>Encoder</h3><p>编码器，针对的是outbound的数据，也就是发送出去的数据的编码。</p>
-<p>2种类型：</p>
-<ol>
-<li>message到message的编码(MessageToMessageEncoder)</li>
-<li>message到byte的编码(MessageToByteEncoder)</li>
-</ol>
-<p>decoders的作用是把outbound中发送出去的数据从一种格式转换成另一种格式，由于eecoders处理的是outbound中的数据，所以它也是ChannelOutboundHandler的一种实现类。</p>
-<p>一个MessageToByteEncoder例子，将integer转换成byte：</p>
-<pre><code>public class IntegerToByteEncoder extends MessageToByteEncoder&lt;Integer&gt; {
-    @Override
-    protected void encode(ChannelHandlerContext ctx, Integer msg, ByteBuf out) throws Exception {
-        out.writeInt(msg);
-    }
-}
-</code></pre><p>处理流程图如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty06.png" alt=""></p>
-<p>一个MessageToMessageEncoder例子，将integer转换成string：</p>
-<pre><code>public class IntegerToStringEncoder extends MessageToMessageEncoder&lt;Integer&gt; {
-    @Override
-    protected void encode(ChannelHandlerContext ctx, Integer msg, List&lt;Object&gt; out) throws Exception {
-        out.add(String.valueOf(msg));
-    }
-}
-</code></pre><p>处理流程图如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty07.png" alt=""></p>
-<h3 id="Codec"><a href="#Codec" class="headerlink" title="Codec"></a>Codec</h3><p>编解码器，既支持编码器的功能，也支持解码器的功能。</p>
-<p>2种类型：</p>
-<ol>
-<li>ByteToMessageCodec：message到byte的编解码</li>
-<li>MessageToMessageCodec：message到message的编解码</li>
-</ol>
-<h3 id="CombinedChannelDuplexHandler"><a href="#CombinedChannelDuplexHandler" class="headerlink" title="CombinedChannelDuplexHandler"></a>CombinedChannelDuplexHandler</h3><p>结合解码器和编码器在一起可能会牺牲可重用性。为了避免这种方式，可以使用CombinedChannelDuplexHandler。</p>
-<p>CombinedChannelDuplexHandler也就是codec的另外一种方式，如果已经有个encoder和decoder，不需要重新写了codec，直接使用CombinedChannelDuplexHandler整合这个encoder和decoder即可。</p>
-<p>上面的ToIntegerDecoder和IntegerToByteEncoder就可以构成一个编解码器，直接使用CombinedChannelDuplexHandler即可。</p>
-<pre><code>public class CombinedByteIntegerCodec extends CombinedChannelDuplexHandler&lt;ToIntegerDecoder, IntegerToByteEncoder&gt; {
-    public CombinedByteIntegerCodec() {
-        super(new ToIntegerDecoder(), new IntegerToByteEncoder());
-    }
-}
-</code></pre><h2 id="第八章"><a href="#第八章" class="headerlink" title="第八章"></a>第八章</h2><p>主要说明jetty内置的一些ChannelHandler和Codec。</p>
-<p>使用SSL/TLS加密Netty程序的话，可以使用内置的SslHandler。</p>
-<p>要构建Http应用的话，可以使用HttpClientCodec/HttpServerCodec(http客户端和服务端的编解码)以及HttpObjectAggregator(Http的消息聚合)。</p>
-<p>可以使用HttpContentDecompressor和HttpContentCompressor对http的内容进行解压和压缩。</p>
-<p>还有一些WebSocket、SPDY，一些空置链接、超时链接等处理的内置解决方案。</p>
-<h2 id="第九章"><a href="#第九章" class="headerlink" title="第九章"></a>第九章</h2><p>主要讲解Bootstrap中Netty中的作用。</p>
-<p>之前分析过各种ChannelHandler，各种Codec，以及把这两个东西添加到Channel 的ChannelPipeline中。有了这些东西之后，该用什么把他们整合起来呢，那就是Bootstrap。</p>
-<p>Bootstrap分别ServerBootstrap(服务端)和Bootstrap(客户端)，它们都继承AbstractBootstrap。</p>
-<h3 id="Bootstrap"><a href="#Bootstrap" class="headerlink" title="Bootstrap"></a>Bootstrap</h3><p>客户端服务启动类，内部提供的一些方法如下：</p>
-<table>
-<thead>
-<tr>
-<th>方法名</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>group(..)</td>
-<td>设置Bootstrap使用的EventLoopGroup，用来处理Channel的IO操作</td>
-</tr>
-<tr>
-<td>channel(..)</td>
-<td>Channel的类型，比如有NioSocketChannel, OioSocketChannel等</td>
-</tr>
-<tr>
-<td>channelFactory(..)</td>
-<td>如果Channel没有没有参数的构造函数，需要使用ChannelFactory构造Channel</td>
-</tr>
-<tr>
-<td>localAddress(..)</td>
-<td>Channel需要绑定的地址和端口，可以不调用，使用connect或者bind再进行设置</td>
-</tr>
-<tr>
-<td>option(..)</td>
-<td>一些可选的设置，使用ChannelOptions完成。比如keep-alive时间，超时时间</td>
-</tr>
-<tr>
-<td>handler(..)</td>
-<td>设置ChannelHandler处理事件</td>
-</tr>
-<tr>
-<td>clone(..)</td>
-<td>复制一个新的Bootstrap，AbstractBootstrap实现了Cloneable接口</td>
-</tr>
-<tr>
-<td>remoteAddress()..)</td>
-<td>设置远程地址，也可以在调用connect方法的时候设置</td>
-</tr>
-<tr>
-<td>connect()..)</td>
-<td>链接到远程地址</td>
-</tr>
-<tr>
-<td>bind()..)</td>
-<td>绑定本地端口</td>
-</tr>
-</tbody>
-</table>
-<p>需要注意的是如果EventLoopGroup选择的是NioEventLoopGroup，那么对应的channel需要选择NioSocketChannel，否则会抛出兼容性的错误异常。</p>
-<h3 id="ServerBootstrap"><a href="#ServerBootstrap" class="headerlink" title="ServerBootstrap"></a>ServerBootstrap</h3><p>服务端服务启动类，内部提供的一些方法如下：</p>
-<table>
-<thead>
-<tr>
-<th>方法名</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>group(..)</td>
-<td>设置ServerBootstrap使用的EventLoopGroup，用来处理ServerChannel的IO操作并接收Channel</td>
-</tr>
-<tr>
-<td>channel(..)</td>
-<td>ServerChannel的类型，比如有NioServerSocketChannel, OioServerSocketChannel等</td>
-</tr>
-<tr>
-<td>channelFactory(..)</td>
-<td>如果ServerChannel没有没有参数的构造函数，需要使用ChannelFactory构造ServerChannel</td>
-</tr>
-<tr>
-<td>localAddress(..)</td>
-<td>ServerChannel需要绑定的地址和端口，可以不调用，使用connect或者bind再进行设置</td>
-</tr>
-<tr>
-<td>option(..)</td>
-<td>一些ServerChannel可选的设置，使用ChannelOptions完成。比如keep-alive时间，超时时间</td>
-</tr>
-<tr>
-<td>childOption(..)</td>
-<td>被ServerChannel接收的Channel的可选的设置，使用ChannelOptions完成</td>
-</tr>
-<tr>
-<td>handler(..)</td>
-<td>设置ServerChannel的ChannelHandler处理事件</td>
-</tr>
-<tr>
-<td>childHandler(..)</td>
-<td>设置被ServerChannel接收的Channel的ChannelHandler处理事件</td>
-</tr>
-<tr>
-<td>clone(..)</td>
-<td>复制一个新的ServerBootstrap，AbstractBootstrap实现了Cloneable接口</td>
-</tr>
-<tr>
-<td>bind()..)</td>
-<td>绑定本地端口</td>
-</tr>
-</tbody>
-</table>
-<p>ServerBootstrap的处理过程：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty08.png" alt=""></p>
-<p>ServerBootstrap调用bind绑定地址和端口的时候，会创建ServerChannel。这个ServerChannel会接收客户的各个链接，针对各个链接创建Channel。</p>
-<p>handler方法就是为ServerChannel服务的，而childHandler是给被ServerChannel接收的Channel服务器的。所以说只要服务器已起来，handler中的ChannelHandler就会触发，而有链接被ServerChannel接收之后childHandler中的ChannelHandler才会触发。</p>
-<h3 id="从一个已经存在的Channel中使用Bootstrap启动客户端"><a href="#从一个已经存在的Channel中使用Bootstrap启动客户端" class="headerlink" title="从一个已经存在的Channel中使用Bootstrap启动客户端"></a>从一个已经存在的Channel中使用Bootstrap启动客户端</h3><p>在ServerBootstrap接收到新的Channel的时候准备启动Bootstrap客户端的时候，可以使用一个全新的EventLoop用于处理Channel的IO模型。</p>
-<p>但是没有必要，可以跟ServerBootstrap共享同一个EventLoop，因为一个EventLoop是跟一个线程绑定的，如果使用了多个EventLoop的话，那就相当于需要进行线程的上下文切换，需要消耗一定的资源。</p>
-<p>1个在ServerBootstrap接收到链接之后，使用Bootstrap链接另外一个地址的处理过程：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty09.png" alt=""></p>
-<p>其中第3点就是ServerChannel接收到的新的Channel，第5点是Bootstrap创建的连接到远程服务器的Channel，它们使用同一个EventLoop。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;主要记录ChannelHandler、Codec以及Bootstrap的作用，还有Netty内置的一些ChannelHandler、Codec，以及Bootstrap的分类。&lt;/p&gt;
     
     </summary>
     

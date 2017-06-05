@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-06-02T15:34:02.000Z</updated>
+  <updated>2017-06-05T03:45:26.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -14,6 +14,143 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>SpringBoot源码分析系列</title>
+    <link href="http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/"/>
+    <id>http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/</id>
+    <published>2017-06-05T11:40:30.000Z</published>
+    <updated>2017-06-05T03:45:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>自己总结和学习的SpringBoot源码，包括一些例子代码和文章。</p>
+<p>本系列不涉及SpringBoot的入门，主要针对想深入学习SpringBoot的读者。</p>
+<p>目前已经有的文章：</p>
+<ol>
+<li><a href="http://fangjian0423.github.io/2017/04/30/springboot-startup-analysis/">SpringBoot源码分析之SpringBoot的启动过程</a></li>
+<li><a href="http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/">SpringBoot源码分析之Spring容器的refresh过程</a></li>
+<li><a href="http://fangjian0423.github.io/2017/05/16/springboot-condition-annotation/">SpringBoot源码分析之条件注解的底层实现</a></li>
+<li><a href="http://fangjian0423.github.io/2017/05/22/springboot-embedded-servlet-container/">SpringBoot源码分析之内置Servlet容器</a></li>
+<li><a href="http://fangjian0423.github.io/2017/05/31/springboot-executable-jar/">SpringBoot源码分析之SpringBoot可执行文件解析</a></li>
+<li><a href="http://fangjian0423.github.io/2017/06/05/springboot-factory-loading-mechanism">SpringBoot源码分析之工厂加载机制</a></li>
+</ol>
+<p>每篇文章都会写一些例子进行验证，上传到了<a href="https://github.com/fangjian0423/springboot-analysis" target="_blank" rel="external">https://github.com/fangjian0423/springboot-analysis</a></p>
+<p>我不能保证写的每个地方都是对的，有问题的地方还请指出来，一起学习!</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;自己总结和学习的SpringBoot源码，包括一些例子代码和文章。&lt;/p&gt;
+&lt;p&gt;本系列不涉及SpringBoot的入门，主要针对想深入学习SpringBoot的读者。&lt;/p&gt;
+&lt;p&gt;目前已经有的文章：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&quot;http://fangji
+    
+    </summary>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
+    
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springboot源码分析" scheme="http://fangjian0423.github.io/tags/springboot%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>SpringBoot源码分析之工厂加载机制</title>
+    <link href="http://fangjian0423.github.io/2017/06/05/springboot-factory-loading-mechanism/"/>
+    <id>http://fangjian0423.github.io/2017/06/05/springboot-factory-loading-mechanism/</id>
+    <published>2017-06-05T11:30:30.000Z</published>
+    <updated>2017-06-05T01:25:09.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在之前的一些文章中，我们提到过从spring.factories中找出key为XXX的类。比如@EnableAutoConfiguration注解对应的EnableAutoConfigurationImportSelector中的selectImport方法会在spring.factories文件中找出key为EnableAutoConfiguration对应的值。这些类都是自动化配置类：</p>
+<pre><code>// 这个spring.factories文件在spring-boot-autoconfigure模块的 META-INF/spring.factories中
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration,\
+org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
+org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration,\
+org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration,\
+org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration,\
+org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration,\
+org.springframework.boot.autoconfigure.cloud.CloudAutoConfiguration,\
+org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration,\
+org.springframework.boot.autoconfigure.context.MessageSourceAutoConfiguration,\
+org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration,\
+org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
+......
+</code></pre><a id="more"></a>
+<p>代码的实现，EnableAutoConfigurationImportSelector的selectImport方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="keyword">public</span> String[] selectImports(AnnotationMetadata metadata) &#123;</div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    <span class="comment">// 获取注解的属性</span></div><div class="line">    AnnotationAttributes attributes = getAttributes(metadata);</div><div class="line">    <span class="comment">// 读取spring.factories属性文件中的数据</span></div><div class="line">    List&lt;String&gt; configurations = getCandidateConfigurations(metadata,</div><div class="line">        attributes);</div><div class="line">    <span class="comment">// 删除重复的配置类</span></div><div class="line">    configurations = removeDuplicates(configurations);</div><div class="line">    <span class="comment">// 找到@EnableAutoConfiguration注解中定义的需要被过滤的配置类</span></div><div class="line">    Set&lt;String&gt; exclusions = getExclusions(metadata, attributes);</div><div class="line">    <span class="comment">// 删除这些需要被过滤的配置类</span></div><div class="line">    configurations.removeAll(exclusions);</div><div class="line">    <span class="comment">// 配置类做排序</span></div><div class="line">    configurations = sort(configurations);</div><div class="line">    <span class="comment">// 记录配置类的处理信息到ConditionEvaluationReport中</span></div><div class="line">    recordWithConditionEvaluationReport(configurations, exclusions);</div><div class="line">    <span class="comment">// 返回最终得到的自动化配置类</span></div><div class="line">    <span class="keyword">return</span> configurations.toArray(<span class="keyword">new</span> String[configurations.size()]);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (IOException ex) &#123;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(ex);</div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">protected</span> List&lt;String&gt; <span class="title">getCandidateConfigurations</span><span class="params">(AnnotationMetadata metadata,</span></span></div><div class="line">    AnnotationAttributes attributes) &#123;</div><div class="line">  <span class="comment">// 调用SpringFactoriesLoader的loadFactoryNames静态方法</span></div><div class="line">  <span class="comment">// getSpringFactoriesLoaderFactoryClass方法返回的是EnableAutoConfiguration类对象</span></div><div class="line">  <span class="keyword">return</span> SpringFactoriesLoader.loadFactoryNames(</div><div class="line">      getSpringFactoriesLoaderFactoryClass(), getBeanClassLoader());</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> List&lt;String&gt; <span class="title">loadFactoryNames</span><span class="params">(Class&lt;?&gt; factoryClass, ClassLoader classLoader)</span> </span>&#123;</div><div class="line">  <span class="comment">// 解析出properties文件中需要的key值</span></div><div class="line">  String factoryClassName = factoryClass.getName();</div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    <span class="comment">// 常量FACTORIES_RESOURCE_LOCATION的值为META-INF/spring.factories</span></div><div class="line">    <span class="comment">// 使用类加载器找META-INF/spring.factories资源</span></div><div class="line">    Enumeration&lt;URL&gt; urls = (classLoader != <span class="keyword">null</span> ? classLoader.getResources(FACTORIES_RESOURCE_LOCATION) :</div><div class="line">        ClassLoader.getSystemResources(FACTORIES_RESOURCE_LOCATION));</div><div class="line">    List&lt;String&gt; result = <span class="keyword">new</span> ArrayList&lt;String&gt;();</div><div class="line">    <span class="comment">// 遍历找到的资源</span></div><div class="line">    <span class="keyword">while</span> (urls.hasMoreElements()) &#123;</div><div class="line">      URL url = urls.nextElement();</div><div class="line">      <span class="comment">// 使用属性文件加载资源</span></div><div class="line">      Properties properties = PropertiesLoaderUtils.loadProperties(<span class="keyword">new</span> UrlResource(url));</div><div class="line">      <span class="comment">// 找出key为参数factoryClass类对象对应的全名称对应的值</span></div><div class="line">      String factoryClassNames = properties.getProperty(factoryClassName);</div><div class="line">      <span class="comment">// 以逗号分隔添加到结果集中</span></div><div class="line">      result.addAll(Arrays.asList(StringUtils.commaDelimitedListToStringArray(factoryClassNames)));</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> result;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (IOException ex) &#123;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Unable to load ["</span> + factoryClass.getName() +</div><div class="line">        <span class="string">"] factories from location ["</span> + FACTORIES_RESOURCE_LOCATION + <span class="string">"]"</span>, ex);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Spring Framework内部使用一种<strong>工厂加载机制(Factory Loading Mechanism)</strong>。这种机制使用SpringFactoriesLoader完成，SpringFactoriesLoader使用loadFactories方法加载并实例化从META-INF目录里的spring.factories文件出来的工厂，这些spring.factories文件都是从classpath里的jar包里找出来的。</p>
+<p>spring.factories文件是以Java的Properties格式存在，key是接口或抽象类的全名、value是以逗号 “ , “ 分隔的实现类，比如：</p>
+<pre><code>example.MyService=example.MyServiceImpl1,example.MyServiceImpl2
+</code></pre><p>其中example.MyService是接口的全名，example.MyServiceImpl1和example.MyServiceImpl2是这个接口的两种实现。</p>
+<p>可通过SpringFactoriesLoader完成：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">List&lt;String&gt; classes = SpringFactoriesLoader.loadFactoryNames(EnableAutoConfiguration.class, <span class="keyword">this</span>.getClass().getClassLoader());</div><div class="line">classes.forEach(clazz -&gt; &#123;</div><div class="line">    System.out.println(<span class="string">"==== "</span> + clazz);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>总结：</p>
+<p>工厂加载机制是Spring内部提供的一个约定俗成的加载方式。只需要在模块的META-INF目录下定义Properties格式的spring.factories文件中，这个Properties格式的文件中的key是接口或抽象类的全名，value是以逗号 “ , “ 分隔的实现类。</p>
+<p>SpringBoot中的autoconfigure模块中的spring.factories就存在于META-INF目录下：</p>
+<pre><code>├── META-INF
+│   ├── MANIFEST.MF
+│   ├── additional-spring-configuration-metadata.json
+│   ├── maven
+│   │   └── org.springframework.boot
+│   │       └── spring-boot-autoconfigure
+│   │           ├── pom.properties
+│   │           └── pom.xml
+│   ├── spring-configuration-metadata.json
+│   └── spring.factories
+├── org
+│   └── springframework
+│       └── boot
+│           └── autoconfigure
+│               ├── AbstractDependsOnBeanFactoryPostProcessor.class
+....
+</code></pre><p>而且也定义了一些配置，比如自动化配置信息：</p>
+<pre><code>org.springframework.boot.autoconfigure.EnableAutoConfiguration=...
+</code></pre><p>应用初始化器：</p>
+<pre><code>org.springframework.context.ApplicationContextInitializer=...
+</code></pre><p>应用监听器：</p>
+<pre><code>org.springframework.context.ApplicationListener=...
+</code></pre><p>模板可用提供器：</p>
+<pre><code>org.springframework.boot.autoconfigure.template.TemplateAvailabilityProvider=...
+</code></pre><p>等等。</p>
+<p>我们只需要遵守这个机制并在对应的文件中写出需要加载的接口和实例即可，或者自己使用SpringFactoriesLoader实现加载。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在之前的一些文章中，我们提到过从spring.factories中找出key为XXX的类。比如@EnableAutoConfiguration注解对应的EnableAutoConfigurationImportSelector中的selectImport方法会在spring.factories文件中找出key为EnableAutoConfiguration对应的值。这些类都是自动化配置类：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;// 这个spring.factories文件在spring-boot-autoconfigure模块的 META-INF/spring.factories中
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration,\
+org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
+org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration,\
+org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration,\
+org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration,\
+org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration,\
+org.springframework.boot.autoconfigure.cloud.CloudAutoConfiguration,\
+org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration,\
+org.springframework.boot.autoconfigure.context.MessageSourceAutoConfiguration,\
+org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration,\
+org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
+......
+&lt;/code&gt;&lt;/pre&gt;
+    
+    </summary>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
+    
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springboot源码分析" scheme="http://fangjian0423.github.io/tags/springboot%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/"/>
+    
+  </entry>
   
   <entry>
     <title>SpringData ES中一些底层原理的分析</title>
@@ -3487,310 +3624,6 @@ public void save() {
     
     
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Netty的单元测试</title>
-    <link href="http://fangjian0423.github.io/2016/09/03/netty-unittest/"/>
-    <id>http://fangjian0423.github.io/2016/09/03/netty-unittest/</id>
-    <published>2016-09-03T13:04:52.000Z</published>
-    <updated>2016-09-03T12:47:41.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>我们在编写完Netty程序之后，会需要进行ChannelHandler的一些测试。</p>
-<p>在初学Netty的时候，我们都是直接起一个Server，然后再写一个Client去连接Server，看传输的数据和接收到的数据是否正确。</p>
-<p>在<a href="https://book.douban.com/subject/24700704/" target="_blank" rel="external">Netty in Action</a>书中的Transport和Unit-test your code这两章就提出了可以使用EmbeddedChannel进行ChanndlHandler的单元测试。</p>
-<a id="more"></a>
-<h2 id="EmbeddedChannel介绍"><a href="#EmbeddedChannel介绍" class="headerlink" title="EmbeddedChannel介绍"></a>EmbeddedChannel介绍</h2><p>EmbeddedChannel中提供了一些方法：</p>
-<table>
-<thead>
-<tr>
-<th>方法名</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>writeInbound</td>
-<td>写数据到Channel中，但是这些数据只会被ChannelPipeline中的inbound handler处理。如果可以从EmbeddedChannel的readInbound方法中读取出数据的话，就返回true</td>
-</tr>
-<tr>
-<td>readInbound</td>
-<td>读取在EmbeddedChannel上被所有inbound handler处理过的数据，如果已经没有数据可以读取就返回null</td>
-</tr>
-<tr>
-<td>writeInbound</td>
-<td>写数据到Channel中，但是这些数据只会被ChannelPipeline中的outbound handler处理。如果可以从EmbeddedChannel的readOutbound方法中读取出数据的话，就返回true</td>
-</tr>
-<tr>
-<td>readOutbound</td>
-<td>读取在EmbeddedChannel上被所有outbound handler处理过的数据，如果已经没有数据可以读取就返回null</td>
-</tr>
-<tr>
-<td>finish</td>
-<td>标记EmbeddedChannel已经完成。如果可以从inbound或者outbound中返回数据，该方法就返回true。这个方法还会关闭Channel</td>
-</tr>
-</tbody>
-</table>
-<p>下图就是EmbeddedChannel的处理流程图：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty10.png" alt=""></p>
-<p>使用writeInbound方法写入的数据，并经过Pipeline中所有的inbound handler，之后可以使用readInbound方法读取经过inbound handler之后的数据。</p>
-<p>使用writeOutbound方法写入的数据，并经过Pipeline中所有的outbound handler，之后可以使用readOutbound方法读取经过outbound handler之后的数据。</p>
-<p>调用finish方法可以标记EmbeddedChannel已经完成。</p>
-<h2 id="Inbound-Handler的测试"><a href="#Inbound-Handler的测试" class="headerlink" title="Inbound Handler的测试"></a>Inbound Handler的测试</h2><p>Netty内部提供了一个FixedLengthFrameDecoder解码器用于把长度不固定的字节转换成固定长度的字节，处理流程图如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty11.png" alt=""></p>
-<p>针对这个Decoder编写单元测试。</p>
-<p>由于是个Decoder，针对的是inbound中的数据，所以需要使用的方法是writeInbound和readInbound：</p>
-<pre><code>ByteBuf buf = Unpooled.buffer(); // 构造heap buffer
-for(int i = 0; i &lt; 9; i ++) { // 写入9个字节
-    buf.writeByte(i);
-}
-
-ByteBuf input = buf.copy();
-
-// 构造EmbeddedChannel，并在Pipeline中加入FixedLengthFrameDecoder
-EmbeddedChannel channel = new EmbeddedChannel(new FixedLengthFrameDecoder(3));
-
-// 使用writeInbound方法写入数据
-Assert.assertTrue(channel.writeInbound(input));
-// 标记EmbeddedChannel状态已经complete
-Assert.assertTrue(channel.finish());
-
-// 读取经过FixedLengthFrameDecoder处理过后的字节
-Assert.assertEquals(buf.readBytes(3), channel.readInbound());
-Assert.assertEquals(buf.readBytes(3), channel.readInbound());
-Assert.assertEquals(buf.readBytes(3), channel.readInbound());
-Assert.assertNull(channel.readInbound());
-</code></pre><p>我们在<a href="http://fangjian0423.github.io/2016/08/30/netty-custom-protocol/">使用Netty编写自定义的协议</a>文章中编写的自定义协议CustomProtocol的解码器，并最后通过一个server和client的编写完成了测试。</p>
-<p>现在我们可以使用EmbeddedChannel进行Decoder的unit test：</p>
-<pre><code>EmbeddedChannel channel = new EmbeddedChannel(new CustomProtocolDecoder());
-String uuid = UUID.randomUUID().toString();
-channel.writeInbound(new CustomProtocol(1024l, uuid, &quot;content content&quot;));
-Assert.assertTrue(channel.finish());
-
-CustomProtocol customProtocol = (CustomProtocol) channel.readInbound();
-// 判断是否正确
-Assert.assertEquals(1024l, customProtocol.getVersion());
-Assert.assertEquals(uuid, customProtocol.getHeader());
-Assert.assertEquals(&quot;content content&quot;, customProtocol.getContent());
-Assert.assertNull(channel.readInbound());
-</code></pre><h2 id="Outbound-Handler的测试"><a href="#Outbound-Handler的测试" class="headerlink" title="Outbound Handler的测试"></a>Outbound Handler的测试</h2><p>AbsIntegerEncoder对所有的int数据取绝对值。处理流过图如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/netty12.png" alt=""></p>
-<pre><code>public class AbsIntegerEncoder extends MessageToMessageEncoder&lt;ByteBuf&gt; {
-    @Override
-    protected void encode(ChannelHandlerContext ctx, ByteBuf msg, List&lt;Object&gt; out) throws Exception {
-        while(msg.readableBytes() &gt;= 4) {
-            int value = Math.abs(msg.readInt());
-            out.add(value);
-        }
-    }
-}
-</code></pre><p>针对这个Encoder编写单元测试。</p>
-<p>由于是个Encoder，针对的是outbound中的数据，所以需要使用的方法是writeOutbound和readOutbound：</p>
-<pre><code>ByteBuf buf = Unpooled.buffer(); // 构造heap buffer
-for(int i = 1; i &lt; 10; i ++) { // 写入10个负数
-    buf.writeInt(i * -1);
-}
-// 构造EmbeddedChannel，并在Pipeline中加入AbsIntegerEncoder
-EmbeddedChannel channel = new EmbeddedChannel(new AbsIntegerEncoder());
-// 使用writeOutbound方法写入数据
-Assert.assertTrue(channel.writeOutbound(buf));
-// 标记EmbeddedChannel状态已经complete
-Assert.assertTrue(channel.finish());
-
-// 测试是否所有的int数据都取了绝对值
-for(int i = 1; i &lt; 10; i ++) {
-    Assert.assertEquals(i, (int)channel.readOutbound());
-}
-Assert.assertNull(channel.readOutbound());
-</code></pre><p>同理我们可以使用EmbeddedChannel进行CustomProtocol的Encoder的unit test：</p>
-<pre><code>EmbeddedChannel channel = new EmbeddedChannel(new CustomProtocolEncoder());
-String uuid = UUID.randomUUID().toString();
-
-channel.writeOutbound(new CustomProtocol(1024l, uuid, &quot;content content&quot;));
-Assert.assertTrue(channel.finish());
-
-ByteBuf buf = (ByteBuf) channel.readOutbound();
-Assert.assertEquals(1024l, buf.readLong());
-byte[] headerBytes = new byte[36];
-buf.readBytes(headerBytes);
-Assert.assertEquals(uuid, new String(headerBytes));
-byte[] contentBytes = new byte[buf.readableBytes()];
-buf.readBytes(contentBytes);
-Assert.assertEquals(&quot;content content&quot;, new String(contentBytes));
-Assert.assertNull(channel.readOutbound());
-</code></pre>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;我们在编写完Netty程序之后，会需要进行ChannelHandler的一些测试。&lt;/p&gt;
-&lt;p&gt;在初学Netty的时候，我们都是直接起一个Server，然后再写一个Client去连接Server，看传输的数据和接收到的数据是否正确。&lt;/p&gt;
-&lt;p&gt;在&lt;a href=&quot;https://book.douban.com/subject/24700704/&quot;&gt;Netty in Action&lt;/a&gt;书中的Transport和Unit-test your code这两章就提出了可以使用EmbeddedChannel进行ChanndlHandler的单元测试。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="netty" scheme="http://fangjian0423.github.io/categories/netty/"/>
-    
-    
-      <category term="nio" scheme="http://fangjian0423.github.io/tags/nio/"/>
-    
-      <category term="netty" scheme="http://fangjian0423.github.io/tags/netty/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>使用Netty编写自定义的协议</title>
-    <link href="http://fangjian0423.github.io/2016/08/30/netty-custom-protocol/"/>
-    <id>http://fangjian0423.github.io/2016/08/30/netty-custom-protocol/</id>
-    <published>2016-08-30T14:04:52.000Z</published>
-    <updated>2016-08-30T13:28:26.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>Netty内部提供的Codec用于处理消息的编解码问题，比如Http，Ftp，SMTP这些协议，都需要进行编解码。</p>
-<p>Netty内部直接提供了Http协议的Codec组件用于编解码Http协议。</p>
-<p>在开发过程中，有时候我们需要构建一些适应自己业务的应用层协议，Netty可以很方便地实现自定义协议。</p>
-<p>比如我们的自定义协议CucstomProtocol结构如下：</p>
-<pre><code>| version | header | content |
-</code></pre><p>其中version表示版本号，long类型；header是一个uuid，string类型，content则是具体的内容，string类型。</p>
-<a id="more"></a>
-<p>对应的POJO如下：</p>
-<pre><code>public class CustomProtocol {
-    private long version; // 版本
-    private String header; // 头信息(UUID)
-    private String content; // 具体内容
-    // GET SET ...
-    @Override
-    public String toString() {
-        return &quot;CustomProtocol{&quot; +
-                &quot;version=&quot; + version +
-                &quot;, header=&apos;&quot; + header + &apos;\&apos;&apos; +
-                &quot;, content=&apos;&quot; + content + &apos;\&apos;&apos; +
-                &apos;}&apos;;
-    }
-}
-</code></pre><p>解码器把byte转换成CustomProtocol，在server中使用：</p>
-<pre><code>public class CustomProtocolDecoder extends ByteToMessageDecoder {
-    @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List&lt;Object&gt; out) throws Exception {
-        long version = in.readLong(); // 读取version
-
-        byte[] headerBytes = new byte[36];
-        in.readBytes(headerBytes); // 读取header
-
-        String header = new String(headerBytes);
-
-        byte[] contentBytes = new byte[in.readableBytes()]; // 读取content
-        in.readBytes(contentBytes);
-
-        out.add(new CustomProtocol(version, header, new String(contentBytes)));
-    }
-}
-</code></pre><p>编码器把CustomProtocol转换成byte，在client中使用：</p>
-<pre><code>public class CustomProtocolEncoder extends MessageToByteEncoder&lt;CustomProtocol&gt; {
-    @Override
-    protected void encode(ChannelHandlerContext ctx, CustomProtocol msg, ByteBuf out) throws Exception {
-        out.writeLong(msg.getVersion());
-        out.writeBytes(msg.getHeader().getBytes());
-        out.writeBytes(msg.getContent().getBytes());
-    }
-}
-</code></pre><p>server代码：</p>
-<pre><code>ServerBootstrap serverBootstrap = new ServerBootstrap();
-EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
-EventLoopGroup childEventLoopGroup = new NioEventLoopGroup();
-
-try {
-    serverBootstrap
-            .group(eventLoopGroup, childEventLoopGroup)
-            .channel(NioServerSocketChannel.class)
-            .childHandler(new ChannelInitializer&lt;Channel&gt;() {
-                @Override
-                protected void initChannel(Channel ch) throws Exception {
-                    ch.pipeline().addLast(new CustomProtocolDecoder()); // 解码器
-                    ch.pipeline().addLast(new ServerHandler()); // 打印数据
-                }
-            });
-
-    ChannelFuture future = serverBootstrap.bind(&quot;localhost&quot;, 9999).sync();
-
-    future.channel().closeFuture().sync();
-} catch (Exception e) {
-    e.printStackTrace();
-} finally {
-    try {
-        eventLoopGroup.shutdownGracefully().sync();
-        childEventLoopGroup.shutdownGracefully().sync();
-    } catch (Exception e1) {
-        e1.printStackTrace();
-    }
-}
-</code></pre><p>ServerHandler用于打印接收到的数据，并写数据回去给客户端表示接收到了数据：</p>
-<pre><code>public class ServerHandler extends SimpleChannelInboundHandler&lt;CustomProtocol&gt; {
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, CustomProtocol msg) throws Exception {
-        System.out.println(&quot;server receive: &quot; + msg);
-        ctx.writeAndFlush(Unpooled.copiedBuffer(&quot;server get&quot;, CharsetUtil.UTF_8)).addListener(ChannelFutureListener.CLOSE);
-    }
-}
-</code></pre><p>client代码：</p>
-<pre><code>Bootstrap bootstrap = new Bootstrap();
-
-EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
-
-try {
-    bootstrap
-            .group(eventLoopGroup)
-            .channel(NioSocketChannel.class)
-            .handler(new ChannelInitializer&lt;Channel&gt;() {
-                @Override
-                protected void initChannel(Channel ch) throws Exception {
-                    ch.pipeline().addLast(new CustomProtocolEncoder()); // 编码器
-                    ch.pipeline().addLast(new ClientHandler()); // 接收服务端数据
-                }
-            });
-    ChannelFuture channelFuture = bootstrap.connect(&quot;localhost&quot;, 9999).sync();
-
-    channelFuture.channel().writeAndFlush(new CustomProtocol(1024l, UUID.randomUUID().toString(), &quot;content detail&quot;));
-
-    channelFuture.channel().closeFuture().sync();
-} catch (Exception e) {
-    e.printStackTrace();
-} finally {
-    try {
-        eventLoopGroup.shutdownGracefully().sync();
-    } catch (InterruptedException e) {
-        e.printStackTrace();
-    }
-}
-</code></pre><p>ClientHandler用于接收服务端返回回来的数据：</p>
-<pre><code>public class ClientHandler extends SimpleChannelInboundHandler&lt;ByteBuf&gt; {
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
-        System.out.println(&quot;send success, response is: &quot; + msg.toString(CharsetUtil.UTF_8));
-    }
-}
-</code></pre><p>启动服务端和客户端之后，服务端收到客户端发来的CustomProtocol：</p>
-<pre><code>server receive: CustomProtocol{version=1024, header=&apos;6ed7fa3d-7d54-4add-9081-d659d4b37d3f&apos;, content=&apos;content detail&apos;}
-</code></pre><p>之后客户端也收到服务端成功接收数据的反馈：</p>
-<pre><code>send success, response is: server get
-</code></pre>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;Netty内部提供的Codec用于处理消息的编解码问题，比如Http，Ftp，SMTP这些协议，都需要进行编解码。&lt;/p&gt;
-&lt;p&gt;Netty内部直接提供了Http协议的Codec组件用于编解码Http协议。&lt;/p&gt;
-&lt;p&gt;在开发过程中，有时候我们需要构建一些适应自己业务的应用层协议，Netty可以很方便地实现自定义协议。&lt;/p&gt;
-&lt;p&gt;比如我们的自定义协议CucstomProtocol结构如下：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;| version | header | content |
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中version表示版本号，long类型；header是一个uuid，string类型，content则是具体的内容，string类型。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="netty" scheme="http://fangjian0423.github.io/categories/netty/"/>
-    
-    
-      <category term="nio" scheme="http://fangjian0423.github.io/tags/nio/"/>
-    
-      <category term="netty" scheme="http://fangjian0423.github.io/tags/netty/"/>
     
   </entry>
   

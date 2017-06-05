@@ -63,7 +63,7 @@
     <link href="http://fangjian0423.github.io/2017/06/05/springboot-factory-loading-mechanism/"/>
     <id>http://fangjian0423.github.io/2017/06/05/springboot-factory-loading-mechanism/</id>
     <published>2017-06-05T11:30:30.000Z</published>
-    <updated>2017-06-05T01:25:09.000Z</updated>
+    <updated>2017-06-05T12:14:00.000Z</updated>
     
     <content type="html"><![CDATA[<p>在之前的一些文章中，我们提到过从spring.factories中找出key为XXX的类。比如@EnableAutoConfiguration注解对应的EnableAutoConfigurationImportSelector中的selectImport方法会在spring.factories文件中找出key为EnableAutoConfiguration对应的值。这些类都是自动化配置类：</p>
 <pre><code>// 这个spring.factories文件在spring-boot-autoconfigure模块的 META-INF/spring.factories中
@@ -90,7 +90,7 @@ org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
 <p>可通过SpringFactoriesLoader完成：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">List&lt;String&gt; classes = SpringFactoriesLoader.loadFactoryNames(EnableAutoConfiguration.class, <span class="keyword">this</span>.getClass().getClassLoader());</div><div class="line">classes.forEach(clazz -&gt; &#123;</div><div class="line">    System.out.println(<span class="string">"==== "</span> + clazz);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
 <p>总结：</p>
-<p>工厂加载机制是Spring内部提供的一个约定俗成的加载方式。只需要在模块的META-INF目录下定义Properties格式的spring.factories文件中，这个Properties格式的文件中的key是接口或抽象类的全名，value是以逗号 “ , “ 分隔的实现类。</p>
+<p>工厂加载机制是Spring内部提供的一个约定俗成的加载方式。只需要在模块的META-INF目录下定义Properties格式的spring.factories文件，这个Properties格式的文件中的key是接口或抽象类的全名，value是以逗号 “ , “ 分隔的实现类。</p>
 <p>SpringBoot中的autoconfigure模块中的spring.factories就存在于META-INF目录下：</p>
 <pre><code>├── META-INF
 │   ├── MANIFEST.MF

@@ -362,6 +362,15 @@
 
           
           
+             <span id="/2017/06/05/springboot-source-analysis-summary/" class="leancloud_visitors" data-flag-title="SpringBoot源码分析系列">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
 
           
         </div>
@@ -387,11 +396,153 @@
 <li><a href="http://fangjian0423.github.io/2017/05/22/springboot-embedded-servlet-container/">SpringBoot源码分析之内置Servlet容器</a></li>
 <li><a href="http://fangjian0423.github.io/2017/05/31/springboot-executable-jar/">SpringBoot源码分析之SpringBoot可执行文件解析</a></li>
 <li><a href="http://fangjian0423.github.io/2017/06/05/springboot-factory-loading-mechanism">SpringBoot源码分析之工厂加载机制</a></li>
+<li><a href="http://fangjian0423.github.io/2017/06/10/springboot-environment-analysis">SpringBoot源码分析之配置环境的构造过程</a></li>
 </ol>
 <p>每篇文章都会写一些例子进行验证，上传到了<a href="https://github.com/fangjian0423/springboot-analysis" target="_blank" rel="external">https://github.com/fangjian0423/springboot-analysis</a></p>
 <p>我不能保证写的每个地方都是对的，有问题的地方还请指出来，一起学习!</p>
 
           
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/06/10/springboot-environment-analysis/" itemprop="url">
+                  SpringBoot源码分析之配置环境的构造过程
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-06-10T19:30:30+08:00" content="2017-06-10">
+              2017-06-10
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/springboot/" itemprop="url" rel="index">
+                    <span itemprop="name">springboot</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2017/06/10/springboot-environment-analysis/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/06/10/springboot-environment-analysis/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2017/06/10/springboot-environment-analysis/" class="leancloud_visitors" data-flag-title="SpringBoot源码分析之配置环境的构造过程">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>SpringBoot把配置文件的加载封装成了PropertySourceLoader接口，该接口的定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">PropertySourceLoader</span> </span>&#123;</div><div class="line">	<span class="comment">// 支持的文件后缀</span></div><div class="line">	String[] getFileExtensions();</div><div class="line">	<span class="comment">// 把资源Resource加载成属性源PropertySource</span></div><div class="line">	PropertySource&lt;?&gt; load(String name, Resource resource, String profile)</div><div class="line">			<span class="keyword">throws</span> IOException;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>PropertySource是Spring对name/value键值对的封装接口。该定义了getSource()方法，这个方法会返回得到属性源的源头。比如MapPropertySource的源头就是一个Map，PropertiesPropertySource的源头就是一个Properties。</p>
+<p>PropertySource目前的实现类有不少，比如上面提到的MapPropertySource和PropertiesPropertySource，还有RandomValuePropertySource(source是Random)、SimpleCommandLinePropertySource(source是CommandLineArgs，命令行参数)、ServletConfigPropertySource(source是ServletConfig)等等。</p>
+<p>PropertySourceLoader接口目前有两个实现类：PropertiesPropertySourceLoader和YamlPropertySourceLoader。</p>
+<p>PropertiesPropertySourceLoader支持从xml或properties格式的文件中加载数据。</p>
+<p>YamlPropertySourceLoader支持从yml或者yaml格式的文件中加载数据。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2017/06/10/springboot-environment-analysis/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
         
       
     </div>
@@ -497,6 +648,15 @@
           
 
           
+          
+             <span id="/2017/06/05/springboot-factory-loading-mechanism/" class="leancloud_visitors" data-flag-title="SpringBoot源码分析之工厂加载机制">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
           
 
           
@@ -639,6 +799,15 @@ org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
 
           
           
+             <span id="/2017/06/02/spring-data-es-analysis/" class="leancloud_visitors" data-flag-title="SpringData ES中一些底层原理的分析">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
 
           
         </div>
@@ -770,6 +939,15 @@ org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
           
 
           
+          
+             <span id="/2017/05/31/springboot-executable-jar/" class="leancloud_visitors" data-flag-title="SpringBoot源码分析之SpringBoot可执行文件解析">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
           
 
           
@@ -924,6 +1102,15 @@ org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
 
           
           
+             <span id="/2017/05/24/spring-data-es-query-problem/" class="leancloud_visitors" data-flag-title="SpringData ES 关于字段名和索引中的列名字不一致导致的查询问题">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
 
           
         </div>
@@ -1057,6 +1244,15 @@ org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
 
           
           
+             <span id="/2017/05/22/springboot-embedded-servlet-container/" class="leancloud_visitors" data-flag-title="SpringBoot源码分析之内置Servlet容器">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
 
           
         </div>
@@ -1184,6 +1380,15 @@ org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
           
 
           
+          
+             <span id="/2017/05/16/springboot-condition-annotation/" class="leancloud_visitors" data-flag-title="SpringBoot源码分析之条件注解的底层实现">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
           
 
           
@@ -1315,6 +1520,15 @@ org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
 
           
           
+             <span id="/2017/05/10/springboot-context-refresh/" class="leancloud_visitors" data-flag-title="SpringBoot源码分析之Spring容器的refresh过程">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
 
           
         </div>
@@ -1443,6 +1657,15 @@ org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
 
           
           
+             <span id="/2017/04/30/springboot-startup-analysis/" class="leancloud_visitors" data-flag-title="SpringBoot源码分析之SpringBoot的启动过程">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
 
           
         </div>
@@ -1464,132 +1687,6 @@ org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
 <p>我们以上述这段代码为例，分析SpringBoot的启动过程。</p>
           <div class="post-more-link text-center">
             <a class="btn" href="/2017/04/30/springboot-startup-analysis/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/03/26/design-pattern/" itemprop="url">
-                  记录自己理解的一些设计模式
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2017-03-26T15:33:29+08:00" content="2017-03-26">
-              2017-03-26
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/architecture/" itemprop="url" rel="index">
-                    <span itemprop="name">architecture</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2017/03/26/design-pattern/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/03/26/design-pattern/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>记录一下自己理解的一些设计模式，并尽量使用表达清楚的例子进行讲解。</p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2017/03/26/design-pattern/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1668,7 +1765,7 @@ org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">107</span>
+              <span class="site-state-item-count">108</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -1748,7 +1845,7 @@ org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
             <ul class="links-of-blogroll-list">
               
                 <li class="links-of-blogroll-item">
-                  <a href="http://spring4all.com/" title="Spring For All社区" target="_blank">Spring For All社区</a>
+                  <a href="http://spring4all.com/" title="Spring4All社区" target="_blank">Spring4All社区</a>
                 </li>
               
                 <li class="links-of-blogroll-item">
@@ -2048,6 +2145,113 @@ org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
   
 
   
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("j0kf51JIU0t3ut5Blb5fX00b-gzGzoHsz", "9xlMXFV1I8vh3NoBMzCIwsH5");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
 
   
 

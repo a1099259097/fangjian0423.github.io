@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://fangjian0423.github.io/about/index.html</loc>
+    
+    <lastmod>2017-06-10T08:29:37.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/</loc>
     
     <lastmod>2017-06-10T08:06:34.000Z</lastmod>
@@ -12,13 +19,6 @@
     <loc>http://fangjian0423.github.io/2017/06/10/springboot-environment-analysis/</loc>
     
     <lastmod>2017-06-10T08:05:24.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://fangjian0423.github.io/about/index.html</loc>
-    
-    <lastmod>2017-06-10T08:02:23.000Z</lastmod>
     
   </url>
   

@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-06-10T08:05:24.000Z</updated>
+  <updated>2017-06-11T11:10:25.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -14,6 +14,88 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Spring自定义类扫描器</title>
+    <link href="http://fangjian0423.github.io/2017/06/11/spring-custom-component-provider/"/>
+    <id>http://fangjian0423.github.io/2017/06/11/spring-custom-component-provider/</id>
+    <published>2017-06-11T10:41:50.000Z</published>
+    <updated>2017-06-11T11:10:25.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在我们刚开始接触Spring的时候，要定义bean的话需要在xml中编写，比如：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"myBean"</span> <span class="attr">class</span>=<span class="string">"your.pkg"</span>/&gt;</span></div></pre></td></tr></table></figure>
+<p>后来发现如果bean比较多，会需要写很多的bean标签，太麻烦了。于是出现了一个component-scan注解。这个注解直接指定包名就可以，它会去扫描这个包下所有的class，然后判断是否解析：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">context:component-scan</span> <span class="attr">base-package</span>=<span class="string">"your.pkg"</span>/&gt;</span></div></pre></td></tr></table></figure>
+<p>再后来，由于注解Annotation的流行，出现了@ComponentScan注解，作用跟component-scan标签一样，跟@Configuration注解配合使用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@ComponentScan</span>(basePackages = &#123;<span class="string">"your.pkg"</span>, <span class="string">"other.pkg"</span>&#125;)</div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Application</span> </span>&#123; ... &#125;</div></pre></td></tr></table></figure>
+<p>不论是component-scan标签，还是@ComponentScan注解。它们扫描或解析的bean只能是Spring内部所定义的，比如@Component、@Service、@Controller或@Repository。如果有一些自定义的注解，比如@Consumer、这个注解修饰的类是不会被扫描到的。这个时候我们就得自定义扫描器完成这个操作。</p>
+<a id="more"></a>
+<h2 id="Spring内置的扫描器"><a href="#Spring内置的扫描器" class="headerlink" title="Spring内置的扫描器"></a>Spring内置的扫描器</h2><p>component-scan标签底层使用ClassPathBeanDefinitionScanner这个类完成扫描工作的。@ComponentScan注解配合@Configuration注解使用，底层使用ComponentScanAnnotationParser解析器完成解析工作。</p>
+<p>ComponentScanAnnotationParser解析器内部使用了ClassPathBeanDefinitionScanner扫描器，ClassPathBeanDefinitionScanner扫描器内部的处理过程整理如下：</p>
+<ol>
+<li>遍历basePackages，根据每个basePackage找出这个包下的所有的class。比如basePackage为your/pkg，会找出your.pkg包下所有的class。找出之后封装成Resource接口集合，这个Resource接口是Spring对资源的封装，有FileSystemResource、ClassPathResource、UrlResource实现等</li>
+<li>遍历找到的Resource集合，通过includeFilters和excludeFilters判断是否解析。这里的includeFilters和excludeFilters是TypeFilter接口类型的集合，是ClassPathBeanDefinitionScanner内部的属性。TypeFilter接口是一个用于判断类型是否满足要求的类型过滤器。excludeFilters中只要有一个TypeFilter满足条件，这个Resource就会被过滤。includeFilters中只要有一个TypeFilter满足条件，这个Resource就不会被过滤</li>
+<li>如果没有被过滤。把Resource封装成ScannedGenericBeanDefinition添加到BeanDefinition结果集中</li>
+<li>返回最后的BeanDefinition结果集</li>
+</ol>
+<p>TypeFilter接口的定义：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">TypeFilter</span> </span>&#123;</div><div class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">match</span><span class="params">(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory)</span></span></div><div class="line">			<span class="keyword">throws</span> IOException;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>TypeFilter接口目前有AnnotationTypeFilter实现类(类是否有注解修饰)、RegexPatternTypeFilter(类名是否满足正则表达式)等。</p>
+<p>ClassPathBeanDefinitionScanner继承ClassPathScanningCandidateComponentProvider类。</p>
+<p>ClassPathScanningCandidateComponentProvider内部的构造函数提供了一个useDefaultFilters参数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">ClassPathScanningCandidateComponentProvider</span><span class="params">(<span class="keyword">boolean</span> useDefaultFilters)</span> </span>&#123;</div><div class="line">  <span class="keyword">this</span>(useDefaultFilters, <span class="keyword">new</span> StandardEnvironment());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>useDefaultFilters这个参数表示是否使用默认的TypeFilter，如果设置为true，会添加默认的TypeFilter：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">registerDefaultFilters</span><span class="params">()</span> </span>&#123;</div><div class="line">  <span class="keyword">this</span>.includeFilters.add(<span class="keyword">new</span> AnnotationTypeFilter(Component.class));</div><div class="line">  ClassLoader cl = ClassPathScanningCandidateComponentProvider.class.getClassLoader();</div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    <span class="keyword">this</span>.includeFilters.add(<span class="keyword">new</span> AnnotationTypeFilter(</div><div class="line">        ((Class&lt;? extends Annotation&gt;) ClassUtils.forName(<span class="string">"javax.annotation.ManagedBean"</span>, cl)), <span class="keyword">false</span>));</div><div class="line">    logger.debug(<span class="string">"JSR-250 'javax.annotation.ManagedBean' found and supported for component scanning"</span>);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (ClassNotFoundException ex) &#123;</div><div class="line">    <span class="comment">// JSR-250 1.1 API (as included in Java EE 6) not available - simply skip.</span></div><div class="line">  &#125;</div><div class="line">  <span class="keyword">try</span> &#123;</div><div class="line">    <span class="keyword">this</span>.includeFilters.add(<span class="keyword">new</span> AnnotationTypeFilter(</div><div class="line">        ((Class&lt;? extends Annotation&gt;) ClassUtils.forName(<span class="string">"javax.inject.Named"</span>, cl)), <span class="keyword">false</span>));</div><div class="line">    logger.debug(<span class="string">"JSR-330 'javax.inject.Named' annotation found and supported for component scanning"</span>);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">catch</span> (ClassNotFoundException ex) &#123;</div><div class="line">    <span class="comment">// JSR-330 API not available - simply skip.</span></div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>我们看到这里includeFilters加上了AnnotationTypeFilter，并且对应的注解是@Component。@Service、@Controller或@Repository注解它们内部都是被@Component注解所修饰的，所以它们也会被识别。</p>
+<h2 id="自定义扫描功能"><a href="#自定义扫描功能" class="headerlink" title="自定义扫描功能"></a>自定义扫描功能</h2><p>一般情况下，我们要自定义扫描功能的话，可以直接使用ClassPathScanningCandidateComponentProvider完成，加上一些自定义的TypeFilter即可。或者写个自定义扫描器继承ClassPathScanningCandidateComponentProvider，并在内部添加自定义的TypeFilter。后者相当于对前者的封装。</p>
+<p>我们就以一个简单的例子说明一下自定义扫描的实现，直接使用ClassPathScanningCandidateComponentProvider。</p>
+<p>项目结构如下：</p>
+<pre><code>./
+└── spring
+    └── study
+        └── componentprovider
+            ├── annotation
+            │   └──  Consumer.java
+            ├── bean
+            │   ├── ConsumerWithComponentAnnotation.java
+            │   ├── ConsumerWithConsumerAnnotation.java
+            │   ├── ConsumerWithInterface.java
+            │   ├── ConsumerWithNothing.java
+            │   └── ProducerWithInterface.java
+            └── interfaze
+                ├── IConsumer.java
+                └── IProducer.java
+</code></pre><p>我们直接使用ClassPathScanningCandidateComponentProvider扫描spring.study.componentprovider.bean包下的class：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">ClassPathScanningCandidateComponentProvider provider = <span class="keyword">new</span> ClassPathScanningCandidateComponentProvider(<span class="keyword">false</span>); <span class="comment">// 不使用默认的TypeFilter</span></div><div class="line">provider.addIncludeFilter(<span class="keyword">new</span> AnnotationTypeFilter(Consumer.class));</div><div class="line">provider.addIncludeFilter(<span class="keyword">new</span> AssignableTypeFilter(IConsumer.class));</div><div class="line">Set&lt;BeanDefinition&gt; beanDefinitionSet = provider.findCandidateComponents(<span class="string">"spring.study.componentprovider.bean"</span>);</div></pre></td></tr></table></figure>
+<p>这里扫描出来的类只有2个，分别是ConsumerWithConsumerAnnotation(被@Consumer注解修饰)和ConsumerWithInterface(实现了IConsumer接口)。ConsumerWithComponentAnnotation使用@Component注解，ConsumerWithNothing没实现任何借口，没使用任何注解，ProducerWithInterface实现了IProducer接口；所以这3个类不会被识别。</p>
+<p>如果我们要自定义ComponentProvider，继承ClassPathScanningCandidateComponentProvider类即可。</p>
+<p>RepositoryComponentProvider这个类是SpringData模块提供的，继承自ClassPathScanningCandidateComponentProvider，主要是为了识别SpringData相关的类。</p>
+<p>它内部定义了一些自定义TypeFilter，比如InterfaceTypeFilter(识别接口的TypeFilter，目标比较是个接口，而不是实现类)、AllTypeFilter(保存存储TypeList集合，这个集合内部所有的TypeFilter必须全部满足条件才能被识别)等。</p>
+<p>有兴趣的读者可以查看源码。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在我们刚开始接触Spring的时候，要定义bean的话需要在xml中编写，比如：&lt;/p&gt;
+&lt;figure class=&quot;highlight xml&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;tag&quot;&gt;&amp;lt;&lt;span class=&quot;name&quot;&gt;bean&lt;/span&gt; &lt;span class=&quot;attr&quot;&gt;id&lt;/span&gt;=&lt;span class=&quot;string&quot;&gt;&quot;myBean&quot;&lt;/span&gt; &lt;span class=&quot;attr&quot;&gt;class&lt;/span&gt;=&lt;span class=&quot;string&quot;&gt;&quot;your.pkg&quot;&lt;/span&gt;/&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;后来发现如果bean比较多，会需要写很多的bean标签，太麻烦了。于是出现了一个component-scan注解。这个注解直接指定包名就可以，它会去扫描这个包下所有的class，然后判断是否解析：&lt;/p&gt;
+&lt;figure class=&quot;highlight xml&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;tag&quot;&gt;&amp;lt;&lt;span class=&quot;name&quot;&gt;context:component-scan&lt;/span&gt; &lt;span class=&quot;attr&quot;&gt;base-package&lt;/span&gt;=&lt;span class=&quot;string&quot;&gt;&quot;your.pkg&quot;&lt;/span&gt;/&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;再后来，由于注解Annotation的流行，出现了@ComponentScan注解，作用跟component-scan标签一样，跟@Configuration注解配合使用：&lt;/p&gt;
+&lt;figure class=&quot;highlight java&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;2&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;@ComponentScan&lt;/span&gt;(basePackages = &amp;#123;&lt;span class=&quot;string&quot;&gt;&quot;your.pkg&quot;&lt;/span&gt;, &lt;span class=&quot;string&quot;&gt;&quot;other.pkg&quot;&lt;/span&gt;&amp;#125;)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;class&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;Application&lt;/span&gt; &lt;/span&gt;&amp;#123; ... &amp;#125;&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;不论是component-scan标签，还是@ComponentScan注解。它们扫描或解析的bean只能是Spring内部所定义的，比如@Component、@Service、@Controller或@Repository。如果有一些自定义的注解，比如@Consumer、这个注解修饰的类是不会被扫描到的。这个时候我们就得自定义扫描器完成这个操作。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
+    
+    
+      <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+  </entry>
   
   <entry>
     <title>SpringBoot源码分析之配置环境的构造过程</title>
@@ -124,7 +206,7 @@ my.name: 2
     <link href="http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/"/>
     <id>http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/</id>
     <published>2017-06-05T11:40:30.000Z</published>
-    <updated>2017-06-10T08:06:34.000Z</updated>
+    <updated>2017-06-11T11:03:54.000Z</updated>
     
     <content type="html"><![CDATA[<p>自己总结和学习的SpringBoot源码，包括一些例子代码和文章。</p>
 <p>本系列不涉及SpringBoot的入门，主要针对想深入学习SpringBoot的读者。</p>
@@ -137,6 +219,10 @@ my.name: 2
 <li><a href="http://fangjian0423.github.io/2017/05/31/springboot-executable-jar/">SpringBoot源码分析之SpringBoot可执行文件解析</a></li>
 <li><a href="http://fangjian0423.github.io/2017/06/05/springboot-factory-loading-mechanism">SpringBoot源码分析之工厂加载机制</a></li>
 <li><a href="http://fangjian0423.github.io/2017/06/10/springboot-environment-analysis">SpringBoot源码分析之配置环境的构造过程</a></li>
+</ol>
+<p>另外也会写一些Spring相关的知识：</p>
+<ol>
+<li><a href="http://fangjian0423.github.io/2017/06/11/spring-custom-component-provider/">Spring自定义类扫描器</a></li>
 </ol>
 <p>每篇文章都会写一些例子进行验证，上传到了<a href="https://github.com/fangjian0423/springboot-analysis" target="_blank" rel="external">https://github.com/fangjian0423/springboot-analysis</a></p>
 <p>我不能保证写的每个地方都是对的，有问题的地方还请指出来，一起学习!</p>
@@ -3288,9 +3374,9 @@ private StepBuilderFactory steps;
     
       <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
     
-      <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
-    
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
     
   </entry>
   
@@ -3491,129 +3577,6 @@ Annotation attribute pairs : [code, 200]
     
     
       <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Swagger在SpringBoot中的使用</title>
-    <link href="http://fangjian0423.github.io/2016/10/09/springboot-swagger/"/>
-    <id>http://fangjian0423.github.io/2016/10/09/springboot-swagger/</id>
-    <published>2016-10-09T14:11:23.000Z</published>
-    <updated>2016-10-09T13:50:09.000Z</updated>
-    
-    <content type="html"><![CDATA[<p><a href="http://swagger.io/" target="_blank" rel="external">Swagger</a>是一个规范和完整的框架，用于生成、描述、调用和可视化 RESTful 风格的 Web 服务。</p>
-<p>在SpringBoot中要使用Swagger的话，可以使用<a href="https://github.com/springfox/springfox" target="_blank" rel="external">springfox</a>。</p>
-<p>在sbt中添加依赖即可：</p>
-<pre><code>libraryDependencies += &quot;io.springfox&quot; % &quot;springfox-swagger2&quot; % &quot;2.6.0&quot;
-libraryDependencies += &quot;io.springfox&quot; % &quot;springfox-swagger-ui&quot; % &quot;2.6.0&quot;
-</code></pre><p>查看springfox-swagger2中的源码，发现springfox并不是通过autoconfigure实现和swagger的整合的，而是基于Spring的方式Import各种bean构造Swagger。</p>
-<p>所以本文指的Swagger在SpringBoot中的使用同样也可以在Spring中使用。</p>
-<a id="more"></a>
-<p>要整合Spring和Swagger的话需要这么做。</p>
-<ol>
-<li>加上@EnableSwagger2注解</li>
-<li>构造一个Docket</li>
-</ol>
-<p>以下代码就是例子：</p>
-<pre><code>@EnableSwagger2
-@Configuration
-public class SwaggerConfiguration {
-
-    @Bean
-    public Docket userDocket() {
-        ApiInfo apiInfo = new ApiInfo(&quot;A Simple of SpringBoot-Swagger&quot;,// 大标题
-                &quot;two controllers: UserController and DeptController&quot;,// 小标题
-                &quot;1.0&quot;,// 版本
-                &quot;NO terms of service&quot;,
-                new Contact(&quot;format&quot;, &quot;fangjian0423.github.io&quot;, &quot;fangjian0423@gmail.com&quot;), // 作者信息
-                &quot;The Apache License, Version 2.0&quot;,// 开源许可证
-                &quot;http://www.apache.org/licenses/LICENSE-2.0.html&quot;// 许可证详情
-        );
-        return new Docket(DocumentationType.SWAGGER_2)
-                .select()
-                .paths(Predicates.or(PathSelectors.regex(&quot;/user/.*&quot;), PathSelectors.regex(&quot;/dept/.*&quot;)))
-                .build()
-                .apiInfo(apiInfo);
-    }
-
-}
-</code></pre><p>需要注意的是path方法表示要构造的url，这里使用了or连接了 /user/.*<em> 和 /dept/.*</em> 这2个地址，这里用的是正则的匹配方式。</p>
-<p>UserController：</p>
-<pre><code>@RestController
-@RequestMapping(Array(&quot;/user&quot;))
-class UserController {
-
-  @ApiOperation(nickname = &quot;test method&quot;, value = &quot;just a test method&quot;)
-  @RequestMapping(value = Array(&quot;/demo&quot;), method = Array(RequestMethod.POST, RequestMethod.GET))
-  def demo(): String = {
-    &quot;Hello Swagger&quot;
-  }
-
-  @RequestMapping(value = Array(&quot;/get/{id}&quot;), method = Array(RequestMethod.GET))
-  def get(@PathVariable id: String): String = {
-    s&quot;get ${id}&quot;
-  }
-
-  @RequestMapping(value = Array(&quot;/delete/{id}&quot;), method = Array(RequestMethod.POST))
-  def delete(
-              @ApiParam(name = &quot;id&quot;, value = &quot;the identity of user&quot;, required = true)
-              @PathVariable id: String
-              ): String = {
-    s&quot;delete ${id}&quot;
-  }
-
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = &quot;name&quot;, value = &quot;the name of user&quot;, required = true, paramType = &quot;form&quot;, dataType = &quot;string&quot;),
-      new ApiImplicitParam(name = &quot;age&quot;, value = &quot;the age of user&quot;, required = true, paramType = &quot;form&quot;, dataType = &quot;int&quot;)
-    )
-  )
-
-  @RequestMapping(value = Array(&quot;/add&quot;), method = Array(RequestMethod.POST))
-  def add(req: HttpServletRequest): String = {
-    s&quot;${req.getParameter(&quot;name&quot;)}-${req.getParameter(&quot;age&quot;)}&quot;
-  }
-
-}
-</code></pre><p>Swagger默认会去找被@RequestMapping注解的方法。</p>
-<p>@ApiOperation注解用于说明接口的作用，作用在方法上，如果没有使用这个注解，会去@RequestMapping中的value和method等属性。</p>
-<p>@ApiParam注解用来额外说明参数的meta data。</p>
-<p>@ApiImplicitParams注解也用来额外说明参数，当参数不在方法里声明的时候，可以使用这个注解。需要注意的是这个注解只能作用在方法上。</p>
-<p>Swagger还提供了@ApiModel、@ApiResponse、@Example等诸多注解用于说明接口的作用。</p>
-<p>另外一个Controller: </p>
-<pre><code>@RestController
-@RequestMapping(Array(&quot;/dept&quot;))
-class DeptController {
-
-  @ApiOperation(nickname = &quot;dept test method&quot;, value = &quot;dept just a test method&quot;)
-  @RequestMapping(value = Array(&quot;/demo&quot;), method = Array(RequestMethod.POST, RequestMethod.GET))
-  def demo(): String = {
-    &quot;Hello Swagger&quot;
-  }
-
-}
-</code></pre><p>Swagger展示如下：</p>
-<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/swagger01.png" alt="image"></p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;&lt;a href=&quot;http://swagger.io/&quot;&gt;Swagger&lt;/a&gt;是一个规范和完整的框架，用于生成、描述、调用和可视化 RESTful 风格的 Web 服务。&lt;/p&gt;
-&lt;p&gt;在SpringBoot中要使用Swagger的话，可以使用&lt;a href=&quot;https://github.com/springfox/springfox&quot;&gt;springfox&lt;/a&gt;。&lt;/p&gt;
-&lt;p&gt;在sbt中添加依赖即可：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;libraryDependencies += &amp;quot;io.springfox&amp;quot; % &amp;quot;springfox-swagger2&amp;quot; % &amp;quot;2.6.0&amp;quot;
-libraryDependencies += &amp;quot;io.springfox&amp;quot; % &amp;quot;springfox-swagger-ui&amp;quot; % &amp;quot;2.6.0&amp;quot;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;查看springfox-swagger2中的源码，发现springfox并不是通过autoconfigure实现和swagger的整合的，而是基于Spring的方式Import各种bean构造Swagger。&lt;/p&gt;
-&lt;p&gt;所以本文指的Swagger在SpringBoot中的使用同样也可以在Spring中使用。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
-    
-    
-      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
-    
-      <category term="swagger" scheme="http://fangjian0423.github.io/tags/swagger/"/>
     
   </entry>
   

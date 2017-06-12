@@ -87,24 +87,24 @@
 
 
 <meta name="description" content="在我们刚开始接触Spring的时候，要定义bean的话需要在xml中编写，比如：
-1&amp;lt;bean id=&quot;myBean&quot; class=&quot;your.pkg&quot;/&amp;gt;
+1&amp;lt;bean id=&quot;myBean&quot; class=&quot;your.pkg.YourClass&quot;/&amp;gt;
 后来发现如果bean比较多，会需要写很多的bean标签，太麻烦了。于是出现了一个component-scan注解。这个注解直接指定包名就可以，它会去扫描这个包下所有的class，然后判断是否解析：
-1&amp;lt;context:com">
+1&amp;lt;c">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring自定义类扫描器">
 <meta property="og:url" content="http://fangjian0423.github.io/2017/06/11/spring-custom-component-provider/index.html">
 <meta property="og:site_name" content="Format's Notes">
 <meta property="og:description" content="在我们刚开始接触Spring的时候，要定义bean的话需要在xml中编写，比如：
-1&amp;lt;bean id=&quot;myBean&quot; class=&quot;your.pkg&quot;/&amp;gt;
+1&amp;lt;bean id=&quot;myBean&quot; class=&quot;your.pkg.YourClass&quot;/&amp;gt;
 后来发现如果bean比较多，会需要写很多的bean标签，太麻烦了。于是出现了一个component-scan注解。这个注解直接指定包名就可以，它会去扫描这个包下所有的class，然后判断是否解析：
-1&amp;lt;context:com">
-<meta property="og:updated_time" content="2017-06-11T11:10:25.000Z">
+1&amp;lt;c">
+<meta property="og:updated_time" content="2017-06-12T01:03:15.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring自定义类扫描器">
 <meta name="twitter:description" content="在我们刚开始接触Spring的时候，要定义bean的话需要在xml中编写，比如：
-1&amp;lt;bean id=&quot;myBean&quot; class=&quot;your.pkg&quot;/&amp;gt;
+1&amp;lt;bean id=&quot;myBean&quot; class=&quot;your.pkg.YourClass&quot;/&amp;gt;
 后来发现如果bean比较多，会需要写很多的bean标签，太麻烦了。于是出现了一个component-scan注解。这个注解直接指定包名就可以，它会去扫描这个包下所有的class，然后判断是否解析：
-1&amp;lt;context:com">
+1&amp;lt;c">
 
 
 
@@ -384,7 +384,7 @@
 
       
         <p>在我们刚开始接触Spring的时候，要定义bean的话需要在xml中编写，比如：</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"myBean"</span> <span class="attr">class</span>=<span class="string">"your.pkg"</span>/&gt;</span></div></pre></td></tr></table></figure>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"myBean"</span> <span class="attr">class</span>=<span class="string">"your.pkg.YourClass"</span>/&gt;</span></div></pre></td></tr></table></figure>
 <p>后来发现如果bean比较多，会需要写很多的bean标签，太麻烦了。于是出现了一个component-scan注解。这个注解直接指定包名就可以，它会去扫描这个包下所有的class，然后判断是否解析：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">context:component-scan</span> <span class="attr">base-package</span>=<span class="string">"your.pkg"</span>/&gt;</span></div></pre></td></tr></table></figure>
 <p>再后来，由于注解Annotation的流行，出现了@ComponentScan注解，作用跟component-scan标签一样，跟@Configuration注解配合使用：</p>

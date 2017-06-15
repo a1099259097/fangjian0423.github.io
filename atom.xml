@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-06-12T01:03:15.000Z</updated>
+  <updated>2017-06-15T14:49:22.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -16,11 +16,75 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>Spring类注册笔记</title>
+    <link href="http://fangjian0423.github.io/2017/06/15/spring-bean-register-note/"/>
+    <id>http://fangjian0423.github.io/2017/06/15/spring-bean-register-note/</id>
+    <published>2017-06-15T14:14:37.000Z</published>
+    <updated>2017-06-15T14:49:22.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>对Spring类注册功能做个笔记，包括内置的一些扫描器以及这些扫描器的用途和注意点；还有bean注册相关的接口介绍；最后就是这些扫描器在SpringBoot上的使用。</p>
+<a id="more"></a>
+<h2 id="扫描器"><a href="#扫描器" class="headerlink" title="扫描器"></a>扫描器</h2><ol>
+<li>BeanDefinitionReader接口。目前有3种实现，分别是GroovyBeanDefinitionReader(groovy文件的读取器)、PropertiesBeanDefinitionReader(Properties文件的读取器)和XmlBeanDefinitionReader(xml文件的读取器)。这3个实现类都继承AbstractBeanDefinitionReader，AbstractBeanDefinitionReader抽象类内部有个BeanDefinitionRegistry接口类型的属性，BeanDefinitionRegistry接口存在的意义在于对bean数据的管理，包括bean的注册、删除、查找等。这3个实现类内部最终对bean的注册都是通过BeanDefinitionRegistry完成的，不同点在于它们处理过程不一样，比如xml文件的解析和properties文件的解析这个过程不一样</li>
+<li>AnnotatedBeanDefinitionReader类。独立的一个类，用来注册单独的类，也是使用BeanDefinitionRegistry接口类型的属性完成bean的注册</li>
+<li>ClassPathScanningCandidateComponentProvider类。独立的一个类，用来找出具体包下的bean信息，内部有2个TypeFilter集合属性，includeFilters和excludeFilters，分别用于对找出的bean信息做匹配，includeFilters中的TypeFilter只要有一个满足，就不会过滤；excludeFilters中的TypeFilter只要有一个满足，就会被过滤。ClassPathBeanDefinitionScanner是ClassPathScanningCandidateComponentProvider类的子类，提供了scan方法，这个scan方法会找出包下的bean信息并使用BeanDefinitionRegistry接口类型的属性完成bean的注册</li>
+<li>ConfigurationClassParser类。独立的一个类，用来解析被@Configuration注解修饰的配置类。在<br><a href="http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/">SpringBoot源码分析之Spring容器的refresh过程</a>文章中分析过ConfigurationClassParser的作用。简单点来说就是ConfigurationClassParser会解析被@Configuration注解修饰的类，然后再处理这个类内部被其它注解修饰的情况，比如@Import注解、@ComponentScan注解、@ImportResource注解、@Bean注解等。这里解析过程中也会遇到其它被@Configuration注解修饰的类，这些类会放到ConfigurationClassParser的configurationClasses属性中然后被ConfigurationClassBeanDefinitionReader处理</li>
+<li>ConfigurationClassBeanDefinitionReader，独立的一个类，处理ConfigurationClassParser解析出的被@Configuration注解修饰的配置类，会处理配置类内部的被@Bean注解修饰的方法、@ImportResource注解修饰的资源、@Import注解修饰的ImportBeanDefinitionRegistrar接口。最后使用BeanDefinitionRegistry注册</li>
+<li>ComponentScanAnnotationParser，独立的一个类，@ComponentScan注解对应的解析器，内部使用ClassPathBeanDefinitionScanner完成</li>
+</ol>
+<h2 id="扫描器注意点"><a href="#扫描器注意点" class="headerlink" title="扫描器注意点"></a>扫描器注意点</h2><ol>
+<li>第4点和第5点提到的ConfigurationClassParser和ConfigurationClassBeanDefinitionReader在ConfigurationClassPostProcessor这个BeanFactoryPostProcessor中使用；它们都是跟@Configuration注解修饰的类有关系</li>
+<li>AnnotatedBeanDefinitionReader构造的时候会使用AnnotationConfigUtils的registerAnnotationConfigProcessors方法预先注册一些processor bean，比如ConfigurationClassPostProcessor、AutowiredAnnotationBeanPostProcessor、RequiredAnnotationBeanPostProcessor、CommonAnnotationBeanPostProcessor</li>
+<li>ClassPathBeanDefinitionScanner扫描具体包下的类，扫描完之后根据includeAnnotationConfig属性是否使用AnnotationConfigUtils的registerAnnotationConfigProcessors方法预先注册一些processor bean。includeAnnotationConfig属性默认是true，可修改</li>
+<li>AnnotatedBeanDefinitionReader和ClassPathBeanDefinitionScanner加入processor的原因在于它们注册或者扫描出来的类在Spring容器的后续处理过程中进行另外的处理。比如扫描出来配置类(被@Configuration注解修饰的类)，会被ConfigurationClassPostProcessor处理(解析内部结构)，比如类中的一些被@Autowired注解修饰的属性会被AutowiredAnnotationBeanPostProcessor处理等等</li>
+</ol>
+<h2 id="一些接口"><a href="#一些接口" class="headerlink" title="一些接口"></a>一些接口</h2><ol>
+<li>BeanDefinition接口：描述bean实例，包括属性值、构造方法的参数值、是否单例、是否抽象、作用域scope、对应的class名字等<br>1.1 AnnotatedBeanDefinition接口是BeanDefinition接口的子接口，包括了实例的注解信息<br>1.2 ScannedGenericBeanDefinition类是AnnotatedBeanDefinition接口的实现类，ClassPathScanningCandidateComponentProvider扫描出来的类信息就会封装成ScannedGenericBeanDefinition，这是一个被扫描到的类定义<br>1.3 AnnotatedGenericBeanDefinition类也是AnnotatedBeanDefinition接口的实现类，在AnnotatedBeanDefinitionReader读取器读取类后封装成的，这是一个被注解过的类定义</li>
+<li>BeanDefinitionRegistry接口：持有BeanDefinition信息的注册中心，可以注册新的BeanDefinition、删除老的BeanDefinition、获取注册中心的BeanDefinition。这个接口是Spring提供的唯一一个可以操作BeanDefinition数据的接口<br>2.1 SimpleBeanDefinitionRegistry是一个简单的BeanDefinitionRegistry接口的实现类，内部使用Map<string, beandefinition="">类型的map存储BeanDefinition信息<br>2.2 DefaultListableBeanFactory这个BeanFactory接口的实现类也实现了BeanDefinitionRegistry接口，内部也是使用Map<string, beandefinition="">类型的map存储BeanDefinition信息<br>2.3 通用的Spring容器GenericApplicationContext也是BeanDefinitionRegistry接口的实现类，它使用内部属性DefaultListableBeanFactory完成BeanDefinitionRegistry接口的功能(DefaultListableBeanFactory实现了BeanDefinitionRegistry接口)</string,></string,></li>
+<li>BeanFactory接口：Spring bean容器，用来管理bean的容器</li>
+<li>ApplicationContext：应用程序上下文接口，我一般喜欢叫Spring容器。它不仅仅包括bean相关的操作，还包括了很多其它的东西(毕竟是跟应用程序相关的)，比如环境信息的设置、事件触发器、国际化等。 是一个全局的概念</li>
+</ol>
+<h2 id="扫描器在SpringBoot中的使用"><a href="#扫描器在SpringBoot中的使用" class="headerlink" title="扫描器在SpringBoot中的使用"></a>扫描器在SpringBoot中的使用</h2><p>SpringBoot中的SpringApplication类提供了run方法，run方法内部有一个参数叫做source，是Object类型的(有重载的方法，支持多个source，类型是Object数组)。</p>
+<p>SpringBoot通过一个叫做BeanDefinitionLoader类的加载器去加载这些source。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">load</span><span class="params">(Object source)</span> </span>&#123;</div><div class="line">  Assert.notNull(source, <span class="string">"Source must not be null"</span>);</div><div class="line">  <span class="keyword">if</span> (source <span class="keyword">instanceof</span> Class&lt;?&gt;) &#123;</div><div class="line">    <span class="keyword">return</span> load((Class&lt;?&gt;) source);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">if</span> (source <span class="keyword">instanceof</span> Resource) &#123;</div><div class="line">    <span class="keyword">return</span> load((Resource) source);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">if</span> (source <span class="keyword">instanceof</span> Package) &#123;</div><div class="line">    <span class="keyword">return</span> load((Package) source);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">if</span> (source <span class="keyword">instanceof</span> CharSequence) &#123;</div><div class="line">    <span class="keyword">return</span> load((CharSequence) source);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Invalid source type "</span> + source.getClass());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>目前支持4种类型的source，分别是：</p>
+<ol>
+<li>Class类型：使用AnnotatedBeanDefinitionReader读取器加载</li>
+<li>Resource类型：使用XmlBeanDefinitionReader读取器加载</li>
+<li>Package类型：使用ClassPathBeanDefinitionScanner扫描器加载</li>
+<li>CharSequence：识别这个字符串信息。如果是Class类型，用第1种；如果是Resource类型，用第2种；如果是Package类型，用第3种</li>
+</ol>
+<p>Class类型：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@SpringBootApplication</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyApplication</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">        <span class="comment">// Class类型，使用AnnotatedBeanDefinitionReader加载</span></div><div class="line">        <span class="comment">// 加载完毕之后使用ConfigurationClassPostProcessor进行后续的处理</span></div><div class="line">        SpringApplication.run(MyApplication.class, args);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Resource类型：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">SpringApplication.run(</div><div class="line"><span class="keyword">new</span> Object[] &#123;</div><div class="line">        MyApplication.class</div><div class="line">        , <span class="keyword">new</span> ClassPathResource(<span class="string">"beans.xml"</span>) <span class="comment">// 使用XmlBeanDefinitionReader加载</span></div><div class="line">&#125;</div><div class="line">, args);</div></pre></td></tr></table></figure>
+<p>Package类型：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">SpringApplication.run(</div><div class="line"><span class="keyword">new</span> Object[] &#123;</div><div class="line">        MyApplication.class</div><div class="line">        , <span class="keyword">new</span> ClassPathResource(<span class="string">"beans.xml"</span>)</div><div class="line">        , OtherBean.class.getPackage() <span class="comment">// 使用ClassPathBeanDefinitionScanner加载</span></div><div class="line">&#125;</div><div class="line">, args);</div></pre></td></tr></table></figure>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;对Spring类注册功能做个笔记，包括内置的一些扫描器以及这些扫描器的用途和注意点；还有bean注册相关的接口介绍；最后就是这些扫描器在SpringBoot上的使用。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
+    
+    
+      <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Spring自定义类扫描器</title>
     <link href="http://fangjian0423.github.io/2017/06/11/spring-custom-component-provider/"/>
     <id>http://fangjian0423.github.io/2017/06/11/spring-custom-component-provider/</id>
     <published>2017-06-11T10:41:50.000Z</published>
-    <updated>2017-06-12T01:03:15.000Z</updated>
+    <updated>2017-06-14T07:13:21.000Z</updated>
     
     <content type="html"><![CDATA[<p>在我们刚开始接触Spring的时候，要定义bean的话需要在xml中编写，比如：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"myBean"</span> <span class="attr">class</span>=<span class="string">"your.pkg.YourClass"</span>/&gt;</span></div></pre></td></tr></table></figure>
@@ -206,7 +270,7 @@ my.name: 2
     <link href="http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/"/>
     <id>http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/</id>
     <published>2017-06-05T11:40:30.000Z</published>
-    <updated>2017-06-11T11:03:54.000Z</updated>
+    <updated>2017-06-15T14:51:53.000Z</updated>
     
     <content type="html"><![CDATA[<p>自己总结和学习的SpringBoot源码，包括一些例子代码和文章。</p>
 <p>本系列不涉及SpringBoot的入门，主要针对想深入学习SpringBoot的读者。</p>
@@ -223,6 +287,7 @@ my.name: 2
 <p>另外也会写一些Spring相关的知识：</p>
 <ol>
 <li><a href="http://fangjian0423.github.io/2017/06/11/spring-custom-component-provider/">Spring自定义类扫描器</a></li>
+<li><a href="http://fangjian0423.github.io/2017/06/15/spring-bean-register-note/">Spring类注册笔记</a></li>
 </ol>
 <p>每篇文章都会写一些例子进行验证，上传到了<a href="https://github.com/fangjian0423/springboot-analysis" target="_blank" rel="external">https://github.com/fangjian0423/springboot-analysis</a></p>
 <p>我不能保证写的每个地方都是对的，有问题的地方还请指出来，一起学习!</p>
@@ -1969,9 +2034,9 @@ targetable.newMethod(); // new method
       <category term="architecture" scheme="http://fangjian0423.github.io/categories/architecture/"/>
     
     
-      <category term="architecture" scheme="http://fangjian0423.github.io/tags/architecture/"/>
-    
       <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="architecture" scheme="http://fangjian0423.github.io/tags/architecture/"/>
     
   </entry>
   
@@ -3377,206 +3442,6 @@ private StepBuilderFactory steps;
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
     
       <category term="springbatch" scheme="http://fangjian0423.github.io/tags/springbatch/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>java Annotation的RetentionPolicy介绍</title>
-    <link href="http://fangjian0423.github.io/2016/11/04/java-annotation-retentionpolicy/"/>
-    <id>http://fangjian0423.github.io/2016/11/04/java-annotation-retentionpolicy/</id>
-    <published>2016-11-03T16:01:06.000Z</published>
-    <updated>2016-11-03T16:03:49.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>Java Annotation对应的Retention有3种，在RetentionPolicy中定义，有3种：</p>
-<ol>
-<li>SOURCE. 注解保留在源代码中，但是编译的时候会被编译器所丢弃。比如@Override, @SuppressWarnings</li>
-<li>CLASS. 这是默认的policy。注解会被保留在class文件中，但是在运行时期间就不会识别这个注解。</li>
-<li>RUNTIME. 注解会被保留在class文件中，同时运行时期间也会被识别。所以可以使用反射机制获取注解信息。比如@Deprecated</li>
-</ol>
-<a id="more"></a>
-<h2 id="RUNTIME"><a href="#RUNTIME" class="headerlink" title="RUNTIME"></a>RUNTIME</h2><p>大部分情况下，我们都是使用RUNTIME这个Policy。</p>
-<p>下面就是一个RUNTIME Annotation的例子。</p>
-<p>先定义Annotation：</p>
-<pre><code>@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface MyClassRuntimeAnno {
-    String name();
-    int level() default 1;
-}
-</code></pre><p>然后在CLASS前面使用这个Annotation。</p>
-<pre><code>@MyClassRuntimeAnno(name = &quot;simple&quot;, level = 10)
-public class SimpleObj {
-}
-</code></pre><p>最后写一个testcase通过反射可以获取这个类的Annotation进行后续操作。</p>
-<pre><code>@Test
-public void testGetAnnotation() {
-    Annotation[] annotations = SimpleObj.class.getAnnotations();
-    System.out.println(Arrays.toString(annotations));
-    MyClassRuntimeAnno myClassAnno = SimpleObj.class.getAnnotation(MyClassRuntimeAnno.class);
-    System.out.println(myClassAnno.name() + &quot;, &quot; + myClassAnno.level());
-    System.out.println(myClassAnno == annotations[0]);
-}
-</code></pre><h2 id="SOURCE"><a href="#SOURCE" class="headerlink" title="SOURCE"></a>SOURCE</h2><p>SOURCE这个policy表示注解保留在源代码中，但是编译的时候会被编译器所丢弃。 由于在编译的过程中这个注解还被保留着，所以在编译过程中可以针对这个policy进行一些操作。比如在自动生成java代码的场景下使用。最常见的就是<a href="https://projectlombok.org/" target="_blank" rel="external">lombok</a>的使用了，可以自动生成field的get和set方法以及toString方法，构造器等；消除了冗长的java代码。</p>
-<p>SOURCE这个policy可以使用jdk中的javax.annotation.processing.*包中的processor处理器进行注解的处理过程。</p>
-<p>以1个编译过程中会打印类中的方法的例子来说明SOUCRE这个policy的作用：</p>
-<p>首先定义一个Printer注解：</p>
-<pre><code>@Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.METHOD)
-public @interface Printer {
-}
-</code></pre><p>然后一个类的方法使用这个注解：</p>
-<pre><code>public class SimpleObject {
-
-    @Printer
-    public void methodA() {
-
-    }
-
-    public void methodB() {
-
-    }
-
-}
-</code></pre><p>创建对应的Processor：</p>
-<pre><code>@SupportedAnnotationTypes({&quot;me.format.annotaion.Printer&quot;})
-public class PrintProcessor extends AbstractProcessor {
-    @Override
-    public boolean process(Set&lt;? extends TypeElement&gt; annotations, RoundEnvironment roundEnv) {
-        Messager messager = processingEnv.getMessager();
-        messager.printMessage(Diagnostic.Kind.NOTE, &quot;start to use PrintProcessor ..&quot;);
-
-
-        Set&lt;? extends Element&gt; rootElements = roundEnv.getRootElements();
-        messager.printMessage(Diagnostic.Kind.NOTE, &quot;root classes: &quot;);
-        for(Element root : rootElements) {
-            messager.printMessage(Diagnostic.Kind.NOTE, &quot;&gt;&gt; &quot; + root.toString());
-        }
-        messager.printMessage(Diagnostic.Kind.NOTE, &quot;annotation: &quot;);
-        for(TypeElement te : annotations) {
-            messager.printMessage(Diagnostic.Kind.NOTE, &quot;&gt;&gt;&gt; &quot; + te.toString());
-            Set&lt;? extends Element&gt; elements = roundEnv.getElementsAnnotatedWith(te);
-            for(Element ele : elements) {
-                messager.printMessage(Diagnostic.Kind.NOTE, &quot;&gt;&gt;&gt;&gt; &quot; + ele.toString());
-            }
-        }
-
-        return true;
-    }
-    @Override
-    public SourceVersion getSupportedSourceVersion() {
-        return SourceVersion.latestSupported();
-    }
-}
-</code></pre><p>然后先使用javac编译Printer和PrintProcessor：</p>
-<pre><code>javac -d classes src/main/java/me/format/annotation/Printer.java src/main/java/me/format/annotation/PrintProcessor.java
-</code></pre><p>最后再使用javac中的processor参数处理：</p>
-<pre><code>javac -cp classes -processor me.format.annotation.PrintProcessor -d classes src/main/java/me/format/annotation/SimpleObject.java
-</code></pre><p>控制台打印出：</p>
-<pre><code>注: start to use PrintProcessor ..
-注: root classes: 
-注: &gt;&gt; hello.annotation.SimpleObject
-注: annotation: 
-注: &gt;&gt;&gt; hello.annotation.Printer
-注: &gt;&gt;&gt;&gt; methodA()
-</code></pre><h2 id="CLASS"><a href="#CLASS" class="headerlink" title="CLASS"></a>CLASS</h2><p>CLASS和RUNTIME的唯一区别是RUNTIME在运行时期间注解是存在的，而CLASS则不存在。</p>
-<p>我们通过<a href="http://asm.ow2.org/" target="_blank" rel="external">asm</a>来获取class文件里的annotation。</p>
-<p>首先定义注解：</p>
-<p>policy为CLASS的注解。</p>
-<pre><code>@Retention(RetentionPolicy.CLASS)
-@Target(ElementType.TYPE)
-public @interface Meta {
-
-    String name();
-
-}
-</code></pre><p>policy为RUNTIME的注解。</p>
-<pre><code>@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface Header {
-
-    int code();
-
-}
-</code></pre><p>使用注解：</p>
-<pre><code>@Meta(name = &quot;obj&quot;)
-@Header(code = 200)
-public class AnnotationObject {
-
-    private String val;
-
-    public String getVal() {
-        return val;
-    }
-
-    public void setVal(String val) {
-        this.val = val;
-    }
-}
-</code></pre><p>编译这3个java文件得到字节码文件AnnotationObject.class：</p>
-<pre><code>javac -d classes src/main/java/me/format/annotaion/AnnotationObject.java src/main/java/me/format/annotation/Meta.java src/main/java/me/format/annotation/Header.java
-</code></pre><p>使用asm获取字节码文件中的注解：</p>
-<pre><code>ClassNode classNode = new ClassNode();
-
-ClassReader cr = new ClassReader(new FileInputStream(&quot;classes/me/format/annotation/AnnotationObject.class&quot;));
-
-cr.accept(classNode, 0);
-
-System.out.println(&quot;Class Name: &quot; + classNode.name);
-System.out.println(&quot;Source File: &quot; + classNode.sourceFile);
-
-System.out.println(&quot;invisible: &quot;);
-AnnotationNode anNode = null;
-for (Object annotation : classNode.invisibleAnnotations) {
-    anNode = (AnnotationNode) annotation;
-    System.out.println(&quot;Annotation Descriptor : &quot; + anNode.desc);
-    System.out.println(&quot;Annotation attribute pairs : &quot; + anNode.values);
-}
-
-System.out.println(&quot;visible: &quot;);
-for (Object annotation : classNode.visibleAnnotations) {
-    anNode = (AnnotationNode) annotation;
-    System.out.println(&quot;Annotation Descriptor : &quot; + anNode.desc);
-    System.out.println(&quot;Annotation attribute pairs : &quot; + anNode.values);
-}
-</code></pre><p>打印出：</p>
-<pre><code>Class Name: me/format/annotation/AnnotationObject
-Source File: AnnotationObject.java
-invisible: 
-Annotation Descriptor : Lme/format/annotation/Meta;
-Annotation attribute pairs : [name, obj]
-visible: 
-Annotation Descriptor : Lme/format/annotation/Header;
-Annotation attribute pairs : [code, 200]
-</code></pre><p>其中policy为CLASS的注解编译完后不可见，而policy为RUNTIME的注解编译后可见。</p>
-<p>同样，我们可以使用javap查看编译后的信息：</p>
-<pre><code>javap -v me.format.annotation.AnnotationObject
-</code></pre><p>会打印出注解的visible信息：</p>
-<pre><code>#16 = Utf8               AnnotationObject.java
-#17 = Utf8               RuntimeVisibleAnnotations
-#18 = Utf8               Lhello/annotation/Header;
-#19 = Utf8               code
-#20 = Integer            200
-#21 = Utf8               RuntimeInvisibleAnnotations
-#22 = Utf8               Lhello/annotation/Meta;
-#23 = Utf8               name
-#24 = Utf8               obj
-</code></pre>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;Java Annotation对应的Retention有3种，在RetentionPolicy中定义，有3种：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;SOURCE. 注解保留在源代码中，但是编译的时候会被编译器所丢弃。比如@Override, @SuppressWarnings&lt;/li&gt;
-&lt;li&gt;CLASS. 这是默认的policy。注解会被保留在class文件中，但是在运行时期间就不会识别这个注解。&lt;/li&gt;
-&lt;li&gt;RUNTIME. 注解会被保留在class文件中，同时运行时期间也会被识别。所以可以使用反射机制获取注解信息。比如@Deprecated&lt;/li&gt;
-&lt;/ol&gt;
-    
-    </summary>
-    
-      <category term="java" scheme="http://fangjian0423.github.io/categories/java/"/>
-    
-    
-      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
     
   </entry>
   

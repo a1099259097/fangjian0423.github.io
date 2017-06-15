@@ -2,16 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://fangjian0423.github.io/2017/06/11/spring-custom-component-provider/</loc>
+    <loc>http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/</loc>
     
-    <lastmod>2017-06-12T01:03:15.000Z</lastmod>
+    <lastmod>2017-06-15T14:51:53.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/</loc>
+    <loc>http://fangjian0423.github.io/2017/06/15/spring-bean-register-note/</loc>
     
-    <lastmod>2017-06-11T11:03:54.000Z</lastmod>
+    <lastmod>2017-06-15T14:49:22.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://fangjian0423.github.io/2017/06/11/spring-custom-component-provider/</loc>
+    
+    <lastmod>2017-06-14T07:13:21.000Z</lastmod>
     
   </url>
   
@@ -268,7 +275,7 @@
   </url>
   
   <url>
-    <loc>http://fangjian0423.github.io/2015/12/23/scala-spray-json/</loc>
+    <loc>http://fangjian0423.github.io/2016/01/01/2015_end/</loc>
     
     <lastmod>2016-05-10T14:59:25.000Z</lastmod>
     
@@ -387,14 +394,14 @@
   </url>
   
   <url>
-    <loc>http://fangjian0423.github.io/2016/01/01/2015_end/</loc>
+    <loc>http://fangjian0423.github.io/2016/05/10/java-arrayblockingqueue-linkedblockingqueue-analysis/</loc>
     
     <lastmod>2016-05-10T14:59:25.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://fangjian0423.github.io/2016/05/10/java-arrayblockingqueue-linkedblockingqueue-analysis/</loc>
+    <loc>http://fangjian0423.github.io/2015/12/23/scala-spray-json/</loc>
     
     <lastmod>2016-05-10T14:59:25.000Z</lastmod>
     

@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-06-20T16:02:27.000Z</updated>
+  <updated>2017-06-21T01:41:33.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -16,11 +16,11 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>Spring内部的BeanPostProcessor总结</title>
+    <title>Spring内部的BeanPostProcessor接口总结</title>
     <link href="http://fangjian0423.github.io/2017/06/20/spring-bean-post-processor/"/>
     <id>http://fangjian0423.github.io/2017/06/20/spring-bean-post-processor/</id>
     <published>2017-06-20T11:30:30.000Z</published>
-    <updated>2017-06-20T16:02:27.000Z</updated>
+    <updated>2017-06-21T01:41:33.000Z</updated>
     
     <content type="html"><![CDATA[<p>Spring内部提供了一个BeanPostProcessor接口，这个接口的作用在于对于新构造的实例可以做一些自定义的修改。比如如何构造、属性值的修改、构造器的选择等等。</p>
 <p>只要我们实现了这个接口，便可以对构造的bean进行自定义的修改。</p>
@@ -2105,9 +2105,9 @@ targetable.newMethod(); // new method
       <category term="architecture" scheme="http://fangjian0423.github.io/categories/architecture/"/>
     
     
-      <category term="architecture" scheme="http://fangjian0423.github.io/tags/architecture/"/>
-    
       <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="architecture" scheme="http://fangjian0423.github.io/tags/architecture/"/>
     
   </entry>
   

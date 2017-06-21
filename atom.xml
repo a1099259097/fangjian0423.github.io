@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-06-21T01:41:33.000Z</updated>
+  <updated>2017-06-21T01:49:27.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://fangjian0423.github.io/2017/06/20/spring-bean-post-processor/"/>
     <id>http://fangjian0423.github.io/2017/06/20/spring-bean-post-processor/</id>
     <published>2017-06-20T11:30:30.000Z</published>
-    <updated>2017-06-21T01:41:33.000Z</updated>
+    <updated>2017-06-21T01:49:27.000Z</updated>
     
     <content type="html"><![CDATA[<p>Spring内部提供了一个BeanPostProcessor接口，这个接口的作用在于对于新构造的实例可以做一些自定义的修改。比如如何构造、属性值的修改、构造器的选择等等。</p>
 <p>只要我们实现了这个接口，便可以对构造的bean进行自定义的修改。</p>
@@ -340,7 +340,7 @@ my.name: 2
     <link href="http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/"/>
     <id>http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/</id>
     <published>2017-06-05T11:40:30.000Z</published>
-    <updated>2017-06-20T15:50:59.000Z</updated>
+    <updated>2017-06-21T01:52:17.000Z</updated>
     
     <content type="html"><![CDATA[<p>自己总结和学习的SpringBoot源码，包括一些例子代码和文章。</p>
 <p>本系列不涉及SpringBoot的入门，主要针对想深入学习SpringBoot的读者。</p>
@@ -358,7 +358,7 @@ my.name: 2
 <ol>
 <li><a href="http://fangjian0423.github.io/2017/06/11/spring-custom-component-provider/">Spring自定义类扫描器</a></li>
 <li><a href="http://fangjian0423.github.io/2017/06/15/spring-bean-register-note/">Spring类注册笔记</a></li>
-<li><a href="http://fangjian0423.github.io/2017/06/20/spring-bean-post-processor/">Spring内部的BeanPostProcessor总结</a></li>
+<li><a href="http://fangjian0423.github.io/2017/06/20/spring-bean-post-processor/">Spring内部的BeanPostProcessor接口总结</a></li>
 </ol>
 <p>每篇文章都会写一些例子进行验证，上传到了<a href="https://github.com/fangjian0423/springboot-analysis" target="_blank" rel="external">https://github.com/fangjian0423/springboot-analysis</a></p>
 <p>我不能保证写的每个地方都是对的，有问题的地方还请指出来，一起学习!</p>

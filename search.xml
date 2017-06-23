@@ -68,7 +68,7 @@
   <entry>
     <title><![CDATA[SpringBoot源码分析系列]]></title>
     <url>%2F2017%2F06%2F05%2Fspringboot-source-analysis-summary%2F</url>
-    <content type="text"><![CDATA[自己总结和学习的SpringBoot源码，包括一些例子代码和文章。 本系列不涉及SpringBoot的入门，主要针对想深入学习SpringBoot的读者。 目前已经有的文章： SpringBoot源码分析之SpringBoot的启动过程 SpringBoot源码分析之Spring容器的refresh过程 SpringBoot源码分析之条件注解的底层实现 SpringBoot源码分析之内置Servlet容器 SpringBoot源码分析之SpringBoot可执行文件解析 SpringBoot源码分析之工厂加载机制 SpringBoot源码分析之配置环境的构造过程 另外也会写一些Spring相关的知识： Spring自定义类扫描器 Spring类注册笔记 Spring内部的BeanPostProcessor接口总结 每篇文章都会写一些例子进行验证，上传到了https://github.com/fangjian0423/springboot-analysis 我不能保证写的每个地方都是对的，有问题的地方还请指出来，一起学习!]]></content>
+    <content type="text"><![CDATA[自己总结和学习的SpringBoot源码，包括一些例子代码和文章。 本系列不涉及SpringBoot的入门，主要针对想深入学习SpringBoot的读者。 目前已经有的文章： SpringBoot源码分析之SpringBoot的启动过程 SpringBoot源码分析之Spring容器的refresh过程 SpringBoot源码分析之条件注解的底层实现 SpringBoot源码分析之内置Servlet容器 SpringBoot源码分析之SpringBoot可执行文件解析 SpringBoot源码分析之工厂加载机制 SpringBoot源码分析之配置环境的构造过程 另外也会写一些Spring相关的知识： Spring自定义类扫描器 Spring类注册笔记 Spring内部的BeanPostProcessor接口总结 Spring内置的BeanPostProcessor总结 每篇文章都会写一些例子进行验证，上传到了https://github.com/fangjian0423/springboot-analysis 我不能保证写的每个地方都是对的，有问题的地方还请指出来，一起学习!]]></content>
       <categories>
         <category>springboot</category>
       </categories>

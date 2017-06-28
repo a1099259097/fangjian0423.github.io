@@ -2,9 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://fangjian0423.github.io/2017/06/28/springboot-application-exit/</loc>
+    
+    <lastmod>2017-06-28T02:21:17.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/</loc>
     
-    <lastmod>2017-06-23T17:29:23.000Z</lastmod>
+    <lastmod>2017-06-28T01:56:28.000Z</lastmod>
     
   </url>
   

@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-06-23T17:23:46.000Z</updated>
+  <updated>2017-06-28T02:21:17.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -14,6 +14,72 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>SpringBoot应用程序的关闭</title>
+    <link href="http://fangjian0423.github.io/2017/06/28/springboot-application-exit/"/>
+    <id>http://fangjian0423.github.io/2017/06/28/springboot-application-exit/</id>
+    <published>2017-06-28T01:15:30.000Z</published>
+    <updated>2017-06-28T02:21:17.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>SpringBoot应用程序的关闭目前总结起来有4种方式：</p>
+<ol>
+<li>Rest接口：使用spring-boot-starter-actuator模块里的ShutdownEndpoint</li>
+<li>SpringApplication的exit静态方法：直接调用该静态方法即可</li>
+<li>JMX：使用SpringBoot内部提供的MXBean</li>
+<li>使用第三方进程管理工具</li>
+</ol>
+<a id="more"></a>
+<h2 id="Rest接口"><a href="#Rest接口" class="headerlink" title="Rest接口"></a>Rest接口</h2><p>Rest接口使用Endpoint暴露出来，需要引入<a href="https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready-endpoints" target="_blank" rel="external">spring-boot-starter-actuator</a>这个stater。</p>
+<p>这个关闭应用程序对应的Endpoint是ShutdownEndpoint，直接调用ShutdownEndpoint提供的rest接口即可。得先开启ShutdownEndpoint(默认不开启)，以及不进行安全监测：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">endpoints<span class="selector-class">.shutdown</span><span class="selector-class">.enabled</span>: true</div><div class="line">endpoints<span class="selector-class">.shutdown</span><span class="selector-class">.sensitive</span>: false</div></pre></td></tr></table></figure>
+<p>然后调用rest接口：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">curl -X POST http://localhost:8080/shutdown</div></pre></td></tr></table></figure>
+<p>可以使用spring-security进行安全监测：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">endpoints<span class="selector-class">.shutdown</span><span class="selector-class">.sensitive</span>: true</div><div class="line">security<span class="selector-class">.user</span><span class="selector-class">.name</span>: admin</div><div class="line">security<span class="selector-class">.user</span><span class="selector-class">.password</span>: admin</div><div class="line">management<span class="selector-class">.security</span><span class="selector-class">.role</span>: SUPERUSER</div></pre></td></tr></table></figure>
+<p>然后使用用户名和密码进行调用：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">curl -u admin:admin -X POST http://127.0.0.1:8080/shutdown</div></pre></td></tr></table></figure>
+<p>这个ShutdownEndpoint底层其实就是调用了Spring容器的close方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> Map&lt;String, Object&gt; <span class="title">invoke</span><span class="params">()</span> </span>&#123;</div><div class="line"></div><div class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.context == <span class="keyword">null</span>) &#123;</div><div class="line">		<span class="keyword">return</span> Collections.&lt;String, Object&gt;singletonMap(<span class="string">"message"</span>,</div><div class="line">				<span class="string">"No context to shutdown."</span>);</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	<span class="keyword">try</span> &#123;</div><div class="line">		<span class="keyword">return</span> Collections.&lt;String, Object&gt;singletonMap(<span class="string">"message"</span>,</div><div class="line">				<span class="string">"Shutting down, bye..."</span>);</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">finally</span> &#123;</div><div class="line"></div><div class="line">		<span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</div><div class="line">			<span class="meta">@Override</span></div><div class="line">			<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">				<span class="keyword">try</span> &#123;</div><div class="line">					Thread.sleep(<span class="number">500L</span>);</div><div class="line">				&#125;</div><div class="line">				<span class="keyword">catch</span> (InterruptedException ex) &#123;</div><div class="line">					<span class="comment">// Swallow exception and continue</span></div><div class="line">				&#125;</div><div class="line">				ShutdownEndpoint.<span class="keyword">this</span>.context.close();</div><div class="line">			&#125;</div><div class="line">		&#125;).start();</div><div class="line"></div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="SpringApplication的exit静态方法"><a href="#SpringApplication的exit静态方法" class="headerlink" title="SpringApplication的exit静态方法"></a>SpringApplication的exit静态方法</h2><p>SpringApplication提供了一个exit静态方法，用于关闭Spring容器，该方法还有一个参数exitCodeGenerators表示ExitCodeGenerator接口的数组。ExitCodeGenerator接口是一个生成退出码exitCode的生成器。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">exit</span><span class="params">(ApplicationContext context,</span></span></div><div class="line">		ExitCodeGenerator... exitCodeGenerators) &#123;</div><div class="line">	Assert.notNull(context, <span class="string">"Context must not be null"</span>);</div><div class="line">	<span class="keyword">int</span> exitCode = <span class="number">0</span>; <span class="comment">// 默认的退出码是0</span></div><div class="line">	<span class="keyword">try</span> &#123;</div><div class="line">		<span class="keyword">try</span> &#123;</div><div class="line">			<span class="comment">// 构造ExitCodeGenerator集合</span></div><div class="line">			ExitCodeGenerators generators = <span class="keyword">new</span> ExitCodeGenerators();</div><div class="line">			<span class="comment">// 获得Spring容器中所有的ExitCodeGenerator类型的bean</span></div><div class="line">			Collection&lt;ExitCodeGenerator&gt; beans = context</div><div class="line">					.getBeansOfType(ExitCodeGenerator.class).values();</div><div class="line">			<span class="comment">// 集合加上参数中的ExitCodeGenerator数组</span></div><div class="line">			generators.addAll(exitCodeGenerators);</div><div class="line">			<span class="comment">// 集合加上Spring容器中的ExitCodeGenerator集合</span></div><div class="line">			generators.addAll(beans);</div><div class="line">			<span class="comment">// 遍历每个ExitCodeGenerator，得到最终的退出码exitCode</span></div><div class="line">			<span class="comment">// 这里每个ExitCodeGenerator生成的退出码如果比0大，那么取最大的</span></div><div class="line">			<span class="comment">// 如果比0小，那么取最小的</span></div><div class="line">			exitCode = generators.getExitCode();</div><div class="line">			<span class="keyword">if</span> (exitCode != <span class="number">0</span>) &#123; <span class="comment">// 如果退出码exitCode不为0，发布ExitCodeEvent事件</span></div><div class="line">				context.publishEvent(<span class="keyword">new</span> ExitCodeEvent(context, exitCode));</div><div class="line">			&#125;</div><div class="line">		&#125;</div><div class="line">		<span class="keyword">finally</span> &#123;</div><div class="line">			<span class="comment">// 关闭Spring容器</span></div><div class="line">			close(context);</div><div class="line">		&#125;</div><div class="line"></div><div class="line">	&#125;</div><div class="line">	<span class="keyword">catch</span> (Exception ex) &#123;</div><div class="line">		ex.printStackTrace();</div><div class="line">		exitCode = (exitCode == <span class="number">0</span> ? <span class="number">1</span> : exitCode);</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">return</span> exitCode;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>我们写个Controller直接调用exit方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Autowired</span></div><div class="line"><span class="keyword">private</span> ApplicationContext applicationContext;</div><div class="line"></div><div class="line"><span class="meta">@PostMapping</span>(<span class="string">"/stop"</span>)</div><div class="line"><span class="function"><span class="keyword">public</span> String <span class="title">stop</span><span class="params">()</span> </span>&#123;</div><div class="line">		<span class="comment">// 加上自己的权限验证</span></div><div class="line">    SpringApplication.exit(applicationContext);</div><div class="line">    <span class="keyword">return</span> <span class="string">"ok"</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="JMX"><a href="#JMX" class="headerlink" title="JMX"></a>JMX</h2><p><a href="https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready-endpoints" target="_blank" rel="external">spring-boot-starter-actuator</a>这个stater内部会构造ShutdownEndpointMBean。</p>
+<p>使用jconsole可以看到这个MBean：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/springboot-stop01.png" alt=""></p>
+<p>SpringBoot内部也提供了一个SpringApplicationAdminMXBean，但是需要开启：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">spring<span class="selector-class">.application</span><span class="selector-class">.admin</span><span class="selector-class">.enabled</span>: true</div></pre></td></tr></table></figure>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/springboot-stop02.png" alt=""></p>
+<h2 id="使用第三方进程管理工具"><a href="#使用第三方进程管理工具" class="headerlink" title="使用第三方进程管理工具"></a>使用第三方进程管理工具</h2><p>比如我们的应用程序部署在linux系统上，可以借助一些第三方的进程管理工具管理应用程序的运行，比如<a href="http://www.supervisord.org/" target="_blank" rel="external">supervisor</a>。</p>
+<p>设置program：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">[program:stop-application]</div><div class="line">command=java -jar /yourjar.jar</div><div class="line">process_name=%(program_name)s</div><div class="line">startsecs=10</div><div class="line">autostart=false</div><div class="line">autorestart=false</div><div class="line">stdout_logfile=/tmp/stop.log</div><div class="line">stderr_logfile=/tmp/stop-error.log</div></pre></td></tr></table></figure>
+<p>使用supervisorctl进入控制台操作应用程序：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">supervisor&gt; status</div><div class="line">stop-application                 STOPPED   Jun 27 03:50 PM</div><div class="line">supervisor&gt; start stop-application</div><div class="line">stop-application: started</div><div class="line">supervisor&gt; status</div><div class="line">stop-application                 RUNNING   pid 27918, uptime 0:00:11</div><div class="line">supervisor&gt; stop stop-application</div><div class="line">stop-application: stopped</div><div class="line">supervisor&gt; status</div><div class="line">stop-application                 STOPPED   Jun 27 03:50 PM</div></pre></td></tr></table></figure>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;SpringBoot应用程序的关闭目前总结起来有4种方式：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Rest接口：使用spring-boot-starter-actuator模块里的ShutdownEndpoint&lt;/li&gt;
+&lt;li&gt;SpringApplication的exit静态方法：直接调用该静态方法即可&lt;/li&gt;
+&lt;li&gt;JMX：使用SpringBoot内部提供的MXBean&lt;/li&gt;
+&lt;li&gt;使用第三方进程管理工具&lt;/li&gt;
+&lt;/ol&gt;
+    
+    </summary>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
+    
+    
+      <category term="spring" scheme="http://fangjian0423.github.io/tags/spring/"/>
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+  </entry>
   
   <entry>
     <title>Spring内置的BeanPostProcessor总结</title>
@@ -420,7 +486,7 @@ my.name: 2
     <link href="http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/"/>
     <id>http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/</id>
     <published>2017-06-05T11:40:30.000Z</published>
-    <updated>2017-06-23T17:29:23.000Z</updated>
+    <updated>2017-06-28T01:56:28.000Z</updated>
     
     <content type="html"><![CDATA[<p>自己总结和学习的SpringBoot源码，包括一些例子代码和文章。</p>
 <p>本系列不涉及SpringBoot的入门，主要针对想深入学习SpringBoot的读者。</p>
@@ -434,14 +500,19 @@ my.name: 2
 <li><a href="http://fangjian0423.github.io/2017/06/05/springboot-factory-loading-mechanism">SpringBoot源码分析之工厂加载机制</a></li>
 <li><a href="http://fangjian0423.github.io/2017/06/10/springboot-environment-analysis">SpringBoot源码分析之配置环境的构造过程</a></li>
 </ol>
-<p>另外也会写一些Spring相关的知识：</p>
+<p>另外也会写一些Spring和SpringBoot相关的文章。</p>
+<p>Spring：</p>
 <ol>
 <li><a href="http://fangjian0423.github.io/2017/06/11/spring-custom-component-provider/">Spring自定义类扫描器</a></li>
 <li><a href="http://fangjian0423.github.io/2017/06/15/spring-bean-register-note/">Spring类注册笔记</a></li>
 <li><a href="http://fangjian0423.github.io/2017/06/20/spring-bean-post-processor/">Spring内部的BeanPostProcessor接口总结</a></li>
 <li><a href="http://fangjian0423.github.io/2017/06/24/spring-embedded-bean-post-processor/">Spring内置的BeanPostProcessor总结</a></li>
 </ol>
-<p>每篇文章都会写一些例子进行验证，上传到了<a href="https://github.com/fangjian0423/springboot-analysis" target="_blank" rel="external">https://github.com/fangjian0423/springboot-analysis</a></p>
+<p>SpringBoot：</p>
+<ol>
+<li><a href="http://fangjian0423.github.io/2017/06/28/springboot-application-exit/">SpringBoot应用程序的关闭</a></li>
+</ol>
+<p>会写一些例子记录学习的过程，上传到<a href="https://github.com/fangjian0423/springboot-analysis" target="_blank" rel="external">github</a>。</p>
 <p>我不能保证写的每个地方都是对的，有问题的地方还请指出来，一起学习!</p>
 ]]></content>
     
@@ -3003,248 +3074,6 @@ host: 192.168.31.113, port: 2223, uri: http://192.168.31.113:2223
     
     
       <category term="杂事" scheme="http://fangjian0423.github.io/tags/%E6%9D%82%E4%BA%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>SpringBoot编写自定义的starter</title>
-    <link href="http://fangjian0423.github.io/2016/11/16/springboot-custom-starter/"/>
-    <id>http://fangjian0423.github.io/2016/11/16/springboot-custom-starter/</id>
-    <published>2016-11-15T17:40:32.000Z</published>
-    <updated>2016-11-23T07:32:21.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>在之前的文章中，我们分析过SpringBoot内部的<a href="http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/">自动化配置原理</a>和<a href="http://fangjian0423.github.io/2016/11/13/springboot-enable-annotation/">自动化配置注解开关原理</a>。</p>
-<p>我们先简单分析一下<a href="https://github.com/mybatis/spring-boot-starter" target="_blank" rel="external">mybatis starter</a>的编写，然后再编写自定义的starter。</p>
-<p>mybatis中的autoconfigure模块中使用了一个叫做MybatisAutoConfiguration的自动化配置类。</p>
-<p>这个MybatisAutoConfiguration需要在这些Condition条件下才会执行：</p>
-<ol>
-<li>@ConditionalOnClass({ SqlSessionFactory.class, SqlSessionFactoryBean.class })。需要SqlSessionFactory和SqlSessionFactoryBean在classpath中都存在</li>
-<li>@ConditionalOnBean(DataSource.class)。 spring factory中需要存在一个DataSource的bean</li>
-<li>@AutoConfigureAfter(DataSourceAutoConfiguration.class)。需要在DataSourceAutoConfiguration自动化配置之后进行配置，因为mybatis需要数据源的支持</li>
-</ol>
-<p>同时在META-INF目录下有个spring.factories这个properties文件，而且它的key为org.springframework.boot.autoconfigure.EnableAutoConfiguration，这样才会被springboot加载：</p>
-<pre><code># Auto Configure
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
-</code></pre><p>有了这些东西之后，mybatis相关的配置会被自动加入到spring container中，只要在maven中加入starter即可：</p>
-<pre><code>&lt;dependency&gt;
-    &lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
-    &lt;artifactId&gt;mybatis-spring-boot-starter&lt;/artifactId&gt;
-    &lt;version&gt;1.1.1&lt;/version&gt;
-&lt;/dependency&gt;
-</code></pre><a id="more"></a>
-<h2 id="编写自定义的starter"><a href="#编写自定义的starter" class="headerlink" title="编写自定义的starter"></a>编写自定义的starter</h2><p>接下来，我们来编写自定义的starter：log-starter。</p>
-<p>这个starter内部定义了一个注解，使用这个注解修饰方法之后，该方法的调用会在日志中被打印并且还会打印出方法的耗时。starter支持exclude配置，在exclude中出现的方法不会进行计算。</p>
-<p>pom文件：</p>
-<pre><code>&lt;parent&gt;
-    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-    &lt;artifactId&gt;spring-boot-starters&lt;/artifactId&gt;
-    &lt;version&gt;1.3.5.RELEASE&lt;/version&gt;
-&lt;/parent&gt;
-
-&lt;dependencies&gt;
-    &lt;dependency&gt;
-        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-        &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;
-    &lt;/dependency&gt;
-&lt;/dependencies&gt;
-</code></pre><p>定义修饰方法的注解@Log：</p>
-<pre><code>package me.format.springboot.log.annotation;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;    
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Log { }
-</code></pre><p>然后是配置类：</p>
-<pre><code>package me.format.springboot.log.autoconfigure;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.util.StringUtils;
-
-import javax.annotation.PostConstruct;
-
-@ConfigurationProperties(prefix = &quot;mylog&quot;)
-public class LogProperties {
-
-    private String exclude;
-
-    private String[] excludeArr;
-
-    @PostConstruct
-    public void init() {
-        this.excludeArr = StringUtils.split(exclude, &quot;,&quot;);
-    }
-
-    public String getExclude() {
-        return exclude;
-    }
-
-    public void setExclude(String exclude) {
-        this.exclude = exclude;
-    }
-
-    public String[] getExcludeArr() {
-        return excludeArr;
-    }
-}
-</code></pre><p>接下来是AutoConfiguration：</p>
-<pre><code>package me.format.springboot.log.autoconfigure;
-
-import me.format.springboot.log.annotation.Log;
-import me.format.springboot.log.aop.LogMethodInterceptor;
-import org.aopalliance.aop.Advice;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.aop.Pointcut;
-import org.springframework.aop.support.AbstractPointcutAdvisor;
-import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-
-import javax.annotation.PostConstruct;
-
-@Configuration
-@EnableConfigurationProperties(LogProperties.class)
-public class LogAutoConfiguration extends AbstractPointcutAdvisor {
-
-    private Logger logger = LoggerFactory.getLogger(LogAutoConfiguration.class);
-
-    private Pointcut pointcut;
-
-    private Advice advice;
-
-    @Autowired
-    private LogProperties logProperties;
-
-    @PostConstruct
-    public void init() {
-        logger.info(&quot;init LogAutoConfiguration start&quot;);
-        this.pointcut = new AnnotationMatchingPointcut(null, Log.class);
-        this.advice = new LogMethodInterceptor(logProperties.getExcludeArr());
-        logger.info(&quot;init LogAutoConfiguration end&quot;);
-    }
-
-    @Override
-    public Pointcut getPointcut() {
-        return this.pointcut;
-    }
-
-    @Override
-    public Advice getAdvice() {
-        return this.advice;
-    }
-
-}
-</code></pre><p>由于计算方法调用的时候需要使用aop相关的lib，所以我们的AutoConfiguration继承了AbstractPointcutAdvisor。这样就有了Pointcut和Advice。Pointcut是一个支持注解的修饰方法的Pointcut，Advice则自己实现：</p>
-<pre><code>package me.format.springboot.log.aop;
-
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-import java.util.List;
-
-public class LogMethodInterceptor implements MethodInterceptor {
-    private Logger logger = LoggerFactory.getLogger(LogMethodInterceptor.class);
-    private List&lt;String&gt; exclude;
-    public LogMethodInterceptor(String[] exclude) {
-        this.exclude = Arrays.asList(exclude);
-    }
-    @Override
-    public Object invoke(MethodInvocation invocation) throws Throwable {
-        String methodName = invocation.getMethod().getName();
-        if(exclude.contains(methodName)) {
-            return invocation.proceed();
-        }
-        long start = System.currentTimeMillis();
-        Object result = invocation.proceed();
-        long end = System.currentTimeMillis();
-        logger.info(&quot;====method({}), cost({}) &quot;, methodName, (end - start));
-        return result;
-    }
-}
-</code></pre><p>最后resources/META-INF/spring.factories中加入这个AutoConfiguration：</p>
-<pre><code>org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-me.format.springboot.log.autoconfigure.LogAutoConfiguration
-</code></pre><p>我们在项目中使用这个log-starter：</p>
-<pre><code>&lt;dependency&gt;
-    &lt;groupId&gt;me.format.springboot&lt;/groupId&gt;
-    &lt;artifactId&gt;log-starter&lt;/artifactId&gt;
-    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
-&lt;/dependency&gt;
-</code></pre><p>使用配置：</p>
-<pre><code>mylog.exclude=core,log
-</code></pre><p>然后编写一个简单的Service：</p>
-<pre><code>@Service
-public class SimpleService {
-
-    @Log
-    public void test(int num) {
-        System.out.println(&quot;----test---- &quot; + num);
-    }
-
-    @Log
-    public void core(int num) {
-        System.out.println(&quot;----core---- &quot; + num);
-    }
-
-    public void work(int num) {
-        System.out.println(&quot;----work---- &quot; + num);
-    }
-
-}
-</code></pre><p>使用单元测试分别调用这3个方法，由于work方法没有加上@Log注解，core方法虽然加上了@Log注解，但是在配置中被exclude了，只有test方法可以正常计算耗时：</p>
-<pre><code>----test---- 666
-2016-11-16 01:29:32.255  INFO 41010 --- [           main] m.f.s.log.aop.LogMethodInterceptor       : ====method(test),     cost(36) 
-----work---- 666
-----core---- 666
-</code></pre><p>总结：</p>
-<p>自定义springboot的starter，注意这两点。</p>
-<ol>
-<li>如果自动化配置类需要在程序启动的时候就加载，可以在META-INF/spring.factories文件中定义。如果本次加载还需要其他一些lib的话，可以使用ConditionalOnClass注解协助</li>
-<li>如果自动化配置类要在使用自定义注解后才加载，可以使用自定义注解+@Import注解或@ImportSelector注解完成</li>
-</ol>
-<p>参考：</p>
-<p><a href="http://www.jianshu.com/p/85460c1d835a" target="_blank" rel="external">http://www.jianshu.com/p/85460c1d835a</a></p>
-<p><a href="http://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-developing-auto-configuration.html" target="_blank" rel="external">http://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-developing-auto-configuration.html</a></p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;在之前的文章中，我们分析过SpringBoot内部的&lt;a href=&quot;http://fangjian0423.github.io/2016/06/12/springboot-autoconfig-analysis/&quot;&gt;自动化配置原理&lt;/a&gt;和&lt;a href=&quot;http://fangjian0423.github.io/2016/11/13/springboot-enable-annotation/&quot;&gt;自动化配置注解开关原理&lt;/a&gt;。&lt;/p&gt;
-&lt;p&gt;我们先简单分析一下&lt;a href=&quot;https://github.com/mybatis/spring-boot-starter&quot;&gt;mybatis starter&lt;/a&gt;的编写，然后再编写自定义的starter。&lt;/p&gt;
-&lt;p&gt;mybatis中的autoconfigure模块中使用了一个叫做MybatisAutoConfiguration的自动化配置类。&lt;/p&gt;
-&lt;p&gt;这个MybatisAutoConfiguration需要在这些Condition条件下才会执行：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;@ConditionalOnClass({ SqlSessionFactory.class, SqlSessionFactoryBean.class })。需要SqlSessionFactory和SqlSessionFactoryBean在classpath中都存在&lt;/li&gt;
-&lt;li&gt;@ConditionalOnBean(DataSource.class)。 spring factory中需要存在一个DataSource的bean&lt;/li&gt;
-&lt;li&gt;@AutoConfigureAfter(DataSourceAutoConfiguration.class)。需要在DataSourceAutoConfiguration自动化配置之后进行配置，因为mybatis需要数据源的支持&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;同时在META-INF目录下有个spring.factories这个properties文件，而且它的key为org.springframework.boot.autoconfigure.EnableAutoConfiguration，这样才会被springboot加载：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;# Auto Configure
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;有了这些东西之后，mybatis相关的配置会被自动加入到spring container中，只要在maven中加入starter即可：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;&amp;lt;dependency&amp;gt;
-    &amp;lt;groupId&amp;gt;org.mybatis.spring.boot&amp;lt;/groupId&amp;gt;
-    &amp;lt;artifactId&amp;gt;mybatis-spring-boot-starter&amp;lt;/artifactId&amp;gt;
-    &amp;lt;version&amp;gt;1.1.1&amp;lt;/version&amp;gt;
-&amp;lt;/dependency&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-    
-    </summary>
-    
-      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
-    
-    
-      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
     
   </entry>
   

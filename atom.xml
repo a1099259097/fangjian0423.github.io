@@ -2499,9 +2499,9 @@ targetable.newMethod(); // new method
       <category term="architecture" scheme="http://fangjian0423.github.io/categories/architecture/"/>
     
     
-      <category term="architecture" scheme="http://fangjian0423.github.io/tags/architecture/"/>
-    
       <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="architecture" scheme="http://fangjian0423.github.io/tags/architecture/"/>
     
   </entry>
   

@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-08-23T07:23:47.000Z</updated>
+  <updated>2017-08-23T07:38:42.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://fangjian0423.github.io/2017/08/23/springboot-logging-system/"/>
     <id>http://fangjian0423.github.io/2017/08/23/springboot-logging-system/</id>
     <published>2017-08-23T07:32:34.000Z</published>
-    <updated>2017-08-23T07:23:47.000Z</updated>
+    <updated>2017-08-23T07:38:42.000Z</updated>
     
     <content type="html"><![CDATA[<p>SpringBoot对日志的配置和加载进行了封装，让我们可以很方便地使用一些日志框架，只需要定义对应日志框架的配置文件，比如LogBack、Log4j、Log4j2等，代码内部便可以直接使用。</p>
 <p>比如我们在resources目录下定义了一个logback.xml文件，文件内容是logback相关的配置，然后就可以直接在代码在使用Logger记录日志啦。</p>
@@ -2038,7 +2038,7 @@ org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration -- O
     <link href="http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/"/>
     <id>http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/</id>
     <published>2017-05-10T11:55:21.000Z</published>
-    <updated>2017-08-07T08:51:09.000Z</updated>
+    <updated>2017-08-23T07:38:35.000Z</updated>
     
     <content type="html"><![CDATA[<p>上一篇文章中，我们分析了SpringBoot的启动过程：构造SpringApplication并调用它的run方法。其中构造SpringApplication的时候会初始化一些监听器和初始化器；run方法调用的过程中会有对应的监听器监听，并且会创建Spring容器。</p>
 <p>Spring容器创建之后，会调用它的refresh方法，refresh的时候会做很多事情：比如完成配置类的解析、各种BeanFactoryPostProcessor和BeanPostProcessor的注册、国际化配置的初始化、web内置容器的构造等等。</p>
@@ -2104,7 +2104,7 @@ org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration -- O
 <p>这个时候这些bean只是被加载到了Spring容器中。下面这段代码是ConfigurationClassBeanDefinitionReader的解析bean过程：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loadBeanDefinitions</span><span class="params">(Set&lt;ConfigurationClass&gt; configurationModel)</span> </span>&#123;</div><div class="line">  TrackedConditionEvaluator trackedConditionEvaluator = <span class="keyword">new</span> TrackedConditionEvaluator();</div><div class="line">  <span class="keyword">for</span> (ConfigurationClass configClass : configurationModel) &#123;</div><div class="line">    <span class="comment">// 对每一个配置类，调用loadBeanDefinitionsForConfigurationClass方法</span></div><div class="line">    loadBeanDefinitionsForConfigurationClass(configClass, trackedConditionEvaluator);</div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">loadBeanDefinitionsForConfigurationClass</span><span class="params">(ConfigurationClass configClass,</span></span></div><div class="line">    TrackedConditionEvaluator trackedConditionEvaluator) &#123;</div><div class="line">  <span class="comment">// 使用条件注解判断是否需要跳过这个配置类</span></div><div class="line">  <span class="keyword">if</span> (trackedConditionEvaluator.shouldSkip(configClass)) &#123;</div><div class="line">    <span class="comment">// 跳过配置类的话在Spring容器中移除bean的注册</span></div><div class="line">    String beanName = configClass.getBeanName();</div><div class="line">    <span class="keyword">if</span> (StringUtils.hasLength(beanName) &amp;&amp; <span class="keyword">this</span>.registry.containsBeanDefinition(beanName)) &#123;</div><div class="line">      <span class="keyword">this</span>.registry.removeBeanDefinition(beanName);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">this</span>.importRegistry.removeImportingClassFor(configClass.getMetadata().getClassName());</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (configClass.isImported()) &#123;</div><div class="line">    <span class="comment">// 如果自身是被@Import注释所import的，注册自己</span></div><div class="line">    registerBeanDefinitionForImportedConfigurationClass(configClass);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 注册方法中被@Bean注解修饰的bean</span></div><div class="line">  <span class="keyword">for</span> (BeanMethod beanMethod : configClass.getBeanMethods()) &#123;</div><div class="line">    loadBeanDefinitionsForBeanMethod(beanMethod);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 注册@ImportResource注解注释的资源文件中的bean</span></div><div class="line">  loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());</div><div class="line">  <span class="comment">// 注册@Import注解中的ImportBeanDefinitionRegistrar接口的registerBeanDefinitions</span></div><div class="line">  loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>invokeBeanFactoryPostProcessors方法总结来说就是从Spring容器中找出BeanDefinitionRegistryPostProcessor和BeanFactoryPostProcessor接口的实现类并按照一定的规则顺序进行执行。 其中ConfigurationClassPostProcessor这个BeanDefinitionRegistryPostProcessor优先级最高，它会对项目中的@Configuration注解修饰的类(@Component、@ComponentScan、@Import、@ImportResource修饰的类也会被处理)进行解析，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化。</p>
-<p>下面这图就是对ConfigurationClassPostProcessor后置器的总结：</p>
+<p>下面这图就是对ConfigurationClassPostProcessor后置器的总结：</p>
 <p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/configuration-annotation-process.png" alt=""></p>
 <h2 id="registerBeanPostProcessors方法"><a href="#registerBeanPostProcessors方法" class="headerlink" title="registerBeanPostProcessors方法"></a>registerBeanPostProcessors方法</h2><p>从Spring容器中找出的BeanPostProcessor接口的bean，并设置到BeanFactory的属性中。之后bean被实例化的时候会调用这个BeanPostProcessor。</p>
 <p>该方法委托给了PostProcessorRegistrationDelegate类的registerBeanPostProcessors方法执行。这里的过程跟invokeBeanFactoryPostProcessors类似：</p>

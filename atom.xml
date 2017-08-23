@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-07-29T02:31:22.000Z</updated>
+  <updated>2017-08-23T07:23:47.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -14,6 +14,90 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>SpringBoot源码分析之日志系统的构造</title>
+    <link href="http://fangjian0423.github.io/2017/08/23/springboot-logging-system/"/>
+    <id>http://fangjian0423.github.io/2017/08/23/springboot-logging-system/</id>
+    <published>2017-08-23T07:32:34.000Z</published>
+    <updated>2017-08-23T07:23:47.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>SpringBoot对日志的配置和加载进行了封装，让我们可以很方便地使用一些日志框架，只需要定义对应日志框架的配置文件，比如LogBack、Log4j、Log4j2等，代码内部便可以直接使用。</p>
+<p>比如我们在resources目录下定义了一个logback.xml文件，文件内容是logback相关的配置，然后就可以直接在代码在使用Logger记录日志啦。</p>
+<p>下图是SpringBoot对日志功能的封装：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/logging-system.png" alt=""></p>
+<a id="more"></a>
+<h2 id="LoggingSystem内部结构"><a href="#LoggingSystem内部结构" class="headerlink" title="LoggingSystem内部结构"></a>LoggingSystem内部结构</h2><p>从图中也可以发现目前SpringBoot支持4种类型的日志，分别是JDK内置的Log(JavaLoggingSystem)、Log4j(Log4JLoggingSystem)、Log4j2(Log4J2LoggingSystem)以及Logback(LogbackLoggingSystem)。</p>
+<p>LoggingSystem是个抽象类，内部有这几个方法：</p>
+<ol>
+<li>beforeInitialize方法：日志系统初始化之前需要处理的事情。抽象方法，不同的日志架构进行不同的处理</li>
+<li>initialize方法：初始化日志系统。默认不进行任何处理，需子类进行初始化工作</li>
+<li>cleanUp方法：日志系统的清除工作。默认不进行任何处理，需子类进行清除工作</li>
+<li>getShutdownHandler方法：返回一个Runnable用于当jvm退出的时候处理日志系统关闭后需要进行的操作，默认返回null，也就是什么都不做</li>
+<li>setLogLevel方法：抽象方法，用于设置对应logger的级别</li>
+</ol>
+<p>AbstractLoggingSystem抽象类继承LoggingSystem抽象类，进行了一些扩展，重点在于initialize方法：</p>
+<ol>
+<li>实现了beforeInitialize方法，但是内部不做任何处理</li>
+<li>复写了initialize方法，具体过程如下</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initialize</span><span class="params">(LoggingInitializationContext initializationContext,</span></span></div><div class="line">		String configLocation, LogFile logFile) &#123;</div><div class="line">	<span class="comment">// 如果传递了日志配置文件，调用initializeWithSpecificConfig方法，使用指定的文件</span></div><div class="line">	<span class="keyword">if</span> (StringUtils.hasLength(configLocation)) &#123;</div><div class="line">		initializeWithSpecificConfig(initializationContext, configLocation, logFile);</div><div class="line">		<span class="keyword">return</span>;</div><div class="line">	&#125;</div><div class="line">	<span class="comment">// 没有传递日志配置文件的话调用initializeWithConventions方法，使用约定俗成的方式</span></div><div class="line">	initializeWithConventions(initializationContext, logFile);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initializeWithSpecificConfig</span><span class="params">(</span></span></div><div class="line">		LoggingInitializationContext initializationContext, String configLocation,</div><div class="line">		LogFile logFile) &#123;</div><div class="line">	<span class="comment">// 处理日志配置文件中的占位符</span></div><div class="line">	configLocation = SystemPropertyUtils.resolvePlaceholders(configLocation);</div><div class="line">	loadConfiguration(initializationContext, configLocation, logFile);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initializeWithConventions</span><span class="params">(</span></span></div><div class="line">		LoggingInitializationContext initializationContext, LogFile logFile) &#123;</div><div class="line">	<span class="comment">// 获取自初始化的日志配置文件，该方法会使用getStandardConfigLocations抽象方法得到的文件数组</span></div><div class="line">	<span class="comment">// 然后进行遍历，如果文件存在，返回对应的文件目录。注意这里的文件指的是classpath下的文件</span></div><div class="line">	String config = getSelfInitializationConfig();</div><div class="line">	<span class="comment">// 如果找到对应的日志配置文件并且logFile为null(logFile为null表示只有console会输出)</span></div><div class="line">	<span class="keyword">if</span> (config != <span class="keyword">null</span> &amp;&amp; logFile == <span class="keyword">null</span>) &#123;</div><div class="line">		<span class="comment">// 调用reinitialize方法重新初始化</span></div><div class="line">		<span class="comment">// 默认的reinitialize方法不做任何处理，logback,log4j和log4j2覆盖了这个方法，会进行处理</span></div><div class="line">		reinitialize(initializationContext);</div><div class="line">		<span class="keyword">return</span>;</div><div class="line">	&#125;</div><div class="line">	<span class="comment">// 如果没有找到对应的日志配置文件</span></div><div class="line">	<span class="keyword">if</span> (config == <span class="keyword">null</span>) &#123;</div><div class="line">		<span class="comment">// 调用getSpringInitializationConfig方法获取日志配置文件</span></div><div class="line">		<span class="comment">// 该方法与getSelfInitializationConfig方法的区别在于getStandardConfigLocations方法得到的文件数组内部遍历的逻辑</span></div><div class="line">		<span class="comment">// getSelfInitializationConfig方法直接遍历并判断classpath下是否存在对应的文件</span></div><div class="line">		<span class="comment">// getSpringInitializationConfig方法遍历后判断的文件名会在后缀前加上 "-spring" 字符串</span></div><div class="line">		<span class="comment">// 比如查找logback.xml文件，getSelfInitializationConfig会直接查找classpath下是否存在logback.xml文件，而getSpringInitializationConfig方法会判断classpath下是否存在logback-spring.xml文件</span></div><div class="line">		config = getSpringInitializationConfig();</div><div class="line">	&#125;</div><div class="line">	<span class="comment">// 如果找到了对应的日志配置文件</span></div><div class="line">	<span class="keyword">if</span> (config != <span class="keyword">null</span>) &#123;</div><div class="line">		<span class="comment">// 调用loadConfiguration抽象方法，让子类实现</span></div><div class="line">		loadConfiguration(initializationContext, config, logFile);</div><div class="line">		<span class="keyword">return</span>;</div><div class="line">	&#125;</div><div class="line">	<span class="comment">// 还是没找到日志配置文件的话，调用loadDefaults抽象方法加载，让子类实现</span></div><div class="line">	loadDefaults(initializationContext, logFile);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">protected</span> <span class="keyword">abstract</span> String[] getStandardConfigLocations();</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">loadConfiguration</span><span class="params">(</span></span></div><div class="line">		LoggingInitializationContext initializationContext, String location,</div><div class="line">		LogFile logFile);</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">loadDefaults</span><span class="params">(</span></span></div><div class="line">		LoggingInitializationContext initializationContext, LogFile logFile);</div></pre></td></tr></table></figure>
+<p>以LogbackLoggingSystem类为例，分析具体的初始化过程。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// LogbackLoggingSystem.class</span></div><div class="line"></div><div class="line"><span class="comment">// 根据上面AbstractLoggingSystem的分析</span></div><div class="line"><span class="comment">// 使用logback日志库的时候会查找classpath下是否存在这些文件</span></div><div class="line"><span class="comment">// logback-test.groovy、logback-test.xml、logback.groovy、logback.xml以及</span></div><div class="line"><span class="comment">// logback-test-spring.groovy、logback-test-spring.xml、logback-spring.groovy、logback-spring.xml</span></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="keyword">protected</span> String[] getStandardConfigLocations() &#123;</div><div class="line">	<span class="keyword">return</span> <span class="keyword">new</span> String[] &#123; <span class="string">"logback-test.groovy"</span>, <span class="string">"logback-test.xml"</span>, <span class="string">"logback.groovy"</span>,</div><div class="line">			<span class="string">"logback.xml"</span> &#125;;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// logback具体的初始化加载过程</span></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">loadConfiguration</span><span class="params">(LoggingInitializationContext initializationContext,</span></span></div><div class="line">		String location, LogFile logFile) &#123;</div><div class="line">	<span class="comment">// 调用父类Slf4JLoggingSystem的loadConfiguration方法</span></div><div class="line">	<span class="keyword">super</span>.loadConfiguration(initializationContext, location, logFile);</div><div class="line">	<span class="comment">// 获取slf4j内部的LoggerContext</span></div><div class="line">	LoggerContext loggerContext = getLoggerContext();</div><div class="line">	<span class="comment">// logback环境的一些配置配置处理</span></div><div class="line">	stopAndReset(loggerContext);</div><div class="line">	<span class="keyword">try</span> &#123;</div><div class="line">		configureByResourceUrl(initializationContext, loggerContext,</div><div class="line">				ResourceUtils.getURL(location));</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">catch</span> (Exception ex) &#123;</div><div class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</div><div class="line">				<span class="string">"Could not initialize Logback logging from "</span> + location, ex);</div><div class="line">	&#125;</div><div class="line">	List&lt;Status&gt; statuses = loggerContext.getStatusManager().getCopyOfStatusList();</div><div class="line">	StringBuilder errors = <span class="keyword">new</span> StringBuilder();</div><div class="line">	<span class="keyword">for</span> (Status status : statuses) &#123;</div><div class="line">		<span class="keyword">if</span> (status.getLevel() == Status.ERROR) &#123;</div><div class="line">			errors.append(errors.length() &gt; <span class="number">0</span> ? <span class="string">"\n"</span> : <span class="string">""</span>);</div><div class="line">			errors.append(status.toString());</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">if</span> (errors.length() &gt; <span class="number">0</span>) &#123;</div><div class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</div><div class="line">				<span class="string">"Logback configuration error "</span> + <span class="string">"detected: \n"</span> + errors);</div><div class="line">	&#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// 没找到日志配置文件的话使用loadDefaults方法加载</span></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">loadDefaults</span><span class="params">(LoggingInitializationContext initializationContext,</span></span></div><div class="line">		LogFile logFile) &#123;</div><div class="line">	<span class="comment">// 获取slf4j内部的LoggerContext</span></div><div class="line">	LoggerContext context = getLoggerContext();</div><div class="line">	stopAndReset(context);</div><div class="line">	LogbackConfigurator configurator = <span class="keyword">new</span> LogbackConfigurator(context);</div><div class="line">	context.putProperty(<span class="string">"LOG_LEVEL_PATTERN"</span>,</div><div class="line">			initializationContext.getEnvironment().resolvePlaceholders(</div><div class="line">					<span class="string">"$&#123;logging.pattern.level:$&#123;LOG_LEVEL_PATTERN:%5p&#125;&#125;"</span>));</div><div class="line">	<span class="comment">// 构造默认的console Appender。如果logFile不为空，还会构造file Appender</span></div><div class="line">	<span class="keyword">new</span> DefaultLogbackConfiguration(initializationContext, logFile)</div><div class="line">			.apply(configurator);</div><div class="line">	context.setPackagingDataEnabled(<span class="keyword">true</span>);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// logback的清除工作</span></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">cleanUp</span><span class="params">()</span> </span>&#123;</div><div class="line">	<span class="keyword">super</span>.cleanUp();</div><div class="line">	getLoggerContext().getStatusManager().clear();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// 动态设置logger的level</span></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setLogLevel</span><span class="params">(String loggerName, LogLevel level)</span> </span>&#123;</div><div class="line">	getLogger(loggerName).setLevel(LEVELS.get(level));</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// 清除后的一些工作</span></div><div class="line"><span class="comment">// ShutdownHandler会调用LoggerContext的stop方法</span></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> Runnable <span class="title">getShutdownHandler</span><span class="params">()</span> </span>&#123;</div><div class="line">	<span class="keyword">return</span> <span class="keyword">new</span> ShutdownHandler();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="LoggingSystem的初始化"><a href="#LoggingSystem的初始化" class="headerlink" title="LoggingSystem的初始化"></a>LoggingSystem的初始化</h2><p>LoggingApplicationListener是ApplicationListener接口的实现类，会被springboot使用工厂加载机制加载：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">// spring-boot-version.jar/META-INF/spring.factories</div><div class="line"># Application Listeners</div><div class="line">org.springframework.context.ApplicationListener=\</div><div class="line">org.springframework.boot.builder.ParentContextCloserApplicationListener,\</div><div class="line">org.springframework.boot.context.FileEncodingApplicationListener,\</div><div class="line">org.springframework.boot.context.config.AnsiOutputApplicationListener,\</div><div class="line">org.springframework.boot.context.config.ConfigFileApplicationListener,\</div><div class="line">org.springframework.boot.context.config.DelegatingApplicationListener,\</div><div class="line">org.springframework.boot.liquibase.LiquibaseServiceLocatorApplicationListener,\</div><div class="line">org.springframework.boot.logging.ClasspathLoggingApplicationListener,\</div><div class="line">org.springframework.boot.logging.LoggingApplicationListener</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// SpringApplication.class</span></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initialize</span><span class="params">(Object[] sources)</span> </span>&#123;</div><div class="line">	<span class="keyword">if</span> (sources != <span class="keyword">null</span> &amp;&amp; sources.length &gt; <span class="number">0</span>) &#123;</div><div class="line">		<span class="keyword">this</span>.sources.addAll(Arrays.asList(sources));</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">this</span>.webEnvironment = deduceWebEnvironment();</div><div class="line">	setInitializers((Collection) getSpringFactoriesInstances(</div><div class="line">			ApplicationContextInitializer.class));</div><div class="line">	<span class="comment">// 使用工厂加载机制找到这些Listener</span></div><div class="line">	setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));</div><div class="line">	<span class="keyword">this</span>.mainApplicationClass = deduceMainApplicationClass();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// LoggingApplicationListener.class</span></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onApplicationEvent</span><span class="params">(ApplicationEvent event)</span> </span>&#123;</div><div class="line">	<span class="comment">// SpringApplication的run方法执行的时候触发该事件</span></div><div class="line">	<span class="keyword">if</span> (event <span class="keyword">instanceof</span> ApplicationStartedEvent) &#123;</div><div class="line">		<span class="comment">// onApplicationStartedEvent方法内部会先得到LoggingSystem，然后调用beforeInitialize方法</span></div><div class="line">		onApplicationStartedEvent((ApplicationStartedEvent) event);</div><div class="line">	&#125;</div><div class="line">	<span class="comment">// 环境信息准备好，ApplicationContext创建之前触发该事件</span></div><div class="line">	<span class="keyword">else</span> <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ApplicationEnvironmentPreparedEvent) &#123;</div><div class="line">		<span class="comment">// onApplicationEnvironmentPreparedEvent方法内部会做一下几个事情</span></div><div class="line">		<span class="comment">// 1. 读取配置文件中"logging."开头的配置，比如logging.pattern.level, logging.pattern.console等设置到系统属性中</span></div><div class="line">		<span class="comment">// 2. 构造一个LogFile(LogFile是对日志对外输出文件的封装)，使用LogFile的静态方法get构造，会使用配置文件中logging.file和logging.path配置构造</span></div><div class="line">		<span class="comment">// 3. 判断配置中是否配置了debug并为true，如果是，设置level的DEBUG，然后继续查看是否配置了trace并为true，如果是，设置level的TRACE</span></div><div class="line">		<span class="comment">// 4. 构造LoggingInitializationContext，查看是否配置了logging.config，如有配置，调用LoggingSystem的initialize方法并带上该参数，否则调用initialize方法并且configLocation为null</span></div><div class="line">		<span class="comment">// 5. 设置一些比如org.springframework.boot、org.springframework、org.apache.tomcat、org.apache.catalina、org.eclipse.jetty、org.hibernate.tool.hbm2ddl、org.hibernate.SQL这些包的log level，跟第3步的level一样</span></div><div class="line">		<span class="comment">// 6. 查看是否配置了logging.register-shutdown-hook，如配置并设置为true，使用addShutdownHook的addShutdownHook方法加入LoggingSystem的getShutdownHandler</span></div><div class="line">		onApplicationEnvironmentPreparedEvent(</div><div class="line">				(ApplicationEnvironmentPreparedEvent) event);</div><div class="line">	&#125;</div><div class="line">	<span class="comment">// Spring容器创建好，并进行了部分操作之后触发该事件</span></div><div class="line">	<span class="keyword">else</span> <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ApplicationPreparedEvent) &#123;</div><div class="line">		<span class="comment">// onApplicationPreparedEvent方法内部会把LoggingSystem注册到BeanFactory中(前期是BeanFactory中不存在name为springBootLoggingSystem的实例)</span></div><div class="line">		onApplicationPreparedEvent((ApplicationPreparedEvent) event);</div><div class="line">	&#125;</div><div class="line">	<span class="comment">// Spring容器关闭的时候触发该事件</span></div><div class="line">	<span class="keyword">else</span> <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ContextClosedEvent &amp;&amp; ((ContextClosedEvent) event)</div><div class="line">			.getApplicationContext().getParent() == <span class="keyword">null</span>) &#123;</div><div class="line">		<span class="comment">// onContextClosedEvent方法内部调用LoggingSystem的cleanUp方法进行清除工作</span></div><div class="line">		onContextClosedEvent();</div><div class="line">	&#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">onApplicationStartedEvent</span><span class="params">(ApplicationStartedEvent event)</span> </span>&#123;</div><div class="line">	<span class="comment">// 一开始先使用LoggingSystem的静态方法get获取LoggingSystem</span></div><div class="line">	<span class="comment">// 静态方法get会从下面那段static代码块中得到的Map中进行遍历</span></div><div class="line">	<span class="comment">// 如果对应的key(key是某个类的全名)在classloader中存在，那么会构造该key对应的value对应的LoggingSystem</span></div><div class="line">	<span class="keyword">this</span>.loggingSystem = LoggingSystem</div><div class="line">			.get(event.getSpringApplication().getClassLoader());</div><div class="line">	<span class="keyword">this</span>.loggingSystem.beforeInitialize();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">static</span> &#123;</div><div class="line">	Map&lt;String, String&gt; systems = <span class="keyword">new</span> LinkedHashMap&lt;String, String&gt;();</div><div class="line">	systems.put(<span class="string">"ch.qos.logback.core.Appender"</span>,</div><div class="line">			<span class="string">"org.springframework.boot.logging.logback.LogbackLoggingSystem"</span>);</div><div class="line">	systems.put(<span class="string">"org.apache.logging.log4j.core.impl.Log4jContextFactory"</span>,</div><div class="line">			<span class="string">"org.springframework.boot.logging.log4j2.Log4J2LoggingSystem"</span>);</div><div class="line">	systems.put(<span class="string">"org.apache.log4j.PropertyConfigurator"</span>,</div><div class="line">			<span class="string">"org.springframework.boot.logging.log4j.Log4JLoggingSystem"</span>);</div><div class="line">	systems.put(<span class="string">"java.util.logging.LogManager"</span>,</div><div class="line">			<span class="string">"org.springframework.boot.logging.java.JavaLoggingSystem"</span>);</div><div class="line">	SYSTEMS = Collections.unmodifiableMap(systems);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">onApplicationEnvironmentPreparedEvent</span><span class="params">(</span></span></div><div class="line">		ApplicationEnvironmentPreparedEvent event) &#123;</div><div class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.loggingSystem == <span class="keyword">null</span>) &#123;</div><div class="line">		<span class="keyword">this</span>.loggingSystem = LoggingSystem</div><div class="line">				.get(event.getSpringApplication().getClassLoader());</div><div class="line">	&#125;</div><div class="line">	initialize(event.getEnvironment(), event.getSpringApplication().getClassLoader());</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">onApplicationPreparedEvent</span><span class="params">(ApplicationPreparedEvent event)</span> </span>&#123;</div><div class="line">	ConfigurableListableBeanFactory beanFactory = event.getApplicationContext()</div><div class="line">			.getBeanFactory();</div><div class="line">	<span class="keyword">if</span> (!beanFactory.containsBean(LOGGING_SYSTEM_BEAN_NAME)) &#123;</div><div class="line">		beanFactory.registerSingleton(LOGGING_SYSTEM_BEAN_NAME, <span class="keyword">this</span>.loggingSystem);</div><div class="line">	&#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">onContextClosedEvent</span><span class="params">()</span> </span>&#123;</div><div class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.loggingSystem != <span class="keyword">null</span>) &#123;</div><div class="line">		<span class="keyword">this</span>.loggingSystem.cleanUp();</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>spring-boot-starter模块内部会引用spring-boot-starter-logging模块，这个starter-logging模块内部会引入logback相关的依赖。这一依赖会导致LoggingSystem的静态方法get获取LoggingSystem的时候会得到LogbackLoggingSystem。</p>
+<p>因此默认情况下，springboot程序基本都是使用logback作为默认的日志。</p>
+<h2 id="一些例子"><a href="#一些例子" class="headerlink" title="一些例子"></a>一些例子</h2><p>前提都是以LogbackLoggingSystem作为日志系统。</p>
+<h3 id="项目里没有任何日志的配置"><a href="#项目里没有任何日志的配置" class="headerlink" title="项目里没有任何日志的配置"></a>项目里没有任何日志的配置</h3><p>由于没有任何配置，进行initialize的时候日志配置文件为null，最后只能调用loadDefaults方法进行加载，LogbackLoggingSystem的loadDefaults方法，由于logFile为null，所以最终只构造了一个ConsoleAppender。</p>
+<p>所以项目没有任何日志配置的情况下，控制台依旧能打印出项目的启动信息。</p>
+<h3 id="项目里没有任何logback的配置，只有yaml中配置了logging-file和logging-path"><a href="#项目里没有任何logback的配置，只有yaml中配置了logging-file和logging-path" class="headerlink" title="项目里没有任何logback的配置，只有yaml中配置了logging.file和logging.path"></a>项目里没有任何logback的配置，只有yaml中配置了logging.file和logging.path</h3><p>logging.file和logging.path的配置在LogFile这个日志文件类中生效。</p>
+<p>比如yaml配置如下(只定义了logging.file)：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="attr">logging:</span></div><div class="line"><span class="attr">  file:</span> /tmp/temp.log</div></pre></td></tr></table></figure>
+<p>这个配置导致了调用initialize方法的时候logFile存在，这样不止有ConsoleAppender，还有一个FileAppender，这个FileAppender对应的文件就是LogFile文件，也就是 /tmp/temp.log日志文件。</p>
+<p>比如yaml配置如下(只定义了logging.path)：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="attr">logging:</span></div><div class="line"><span class="attr">  path:</span> /tmp</div></pre></td></tr></table></figure>
+<p>这个时候FileAppender对应的file是/tmp/spring.log文件。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// LogFile.class</span></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</div><div class="line">	<span class="comment">// 如果配置了logging.file，直接使用该文件</span></div><div class="line">	<span class="keyword">if</span> (StringUtils.hasLength(<span class="keyword">this</span>.file)) &#123;</div><div class="line">		<span class="keyword">return</span> <span class="keyword">this</span>.file;</div><div class="line">	&#125;</div><div class="line">	<span class="comment">// 否则使用logging.path目录，在该目录下创建spring.log日志文件</span></div><div class="line">	String path = <span class="keyword">this</span>.path;</div><div class="line">	<span class="keyword">if</span> (!path.endsWith(<span class="string">"/"</span>)) &#123;</div><div class="line">		path = path + <span class="string">"/"</span>;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">return</span> StringUtils.applyRelativePath(path, <span class="string">"spring.log"</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>所以我们如果配置了logging.path和logging.file，那么生效的只有logging.file配置。</p>
+<h3 id="resources下有logback-xml配置-相当于就是classpath下存在logback-xml文件"><a href="#resources下有logback-xml配置-相当于就是classpath下存在logback-xml文件" class="headerlink" title="resources下有logback.xml配置(相当于就是classpath下存在logback.xml文件)"></a>resources下有logback.xml配置(相当于就是classpath下存在logback.xml文件)</h3><p>之前分析过，LogbackLoggingSystem中的getStandardConfigLocations方法返回以下文件：</p>
+<ol>
+<li>logback-test.groovy或者logback-test-spring.groovy</li>
+<li>logback-test.xml或者logback-test-spring.xml</li>
+<li>logback.groovy或者logback-spring.groovy</li>
+<li>logback.xml或者logback-spring.xml</li>
+</ol>
+<p>在resources目录下定义logback-spring.xml文件，内容如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="php"><span class="meta">&lt;?</span>xml version=<span class="string">"1.0"</span> encoding=<span class="string">"UTF-8"</span><span class="meta">?&gt;</span></span></div><div class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">"STDOUT"</span> <span class="attr">class</span>=<span class="string">"ch.qos.logback.core.ConsoleAppender"</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">encoder</span>&gt;</span></div><div class="line">            <span class="comment">&lt;!--&lt;pattern&gt;%d&#123;YYYY-MM-dd HH:mm:ss.SSS&#125; [%thread] %-5level %logger[%line] &amp;#45;&amp;#45; %msg%n&lt;/pattern&gt;--&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>%d&#123;YYYY-MM-dd&#125; [%thread] %-5level %logger[%line] -- %msg%n<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></div><div class="line"></div><div class="line">    <span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">"INFO"</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">"STDOUT"</span>/&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">root</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>这时logging.file配置失效，这是因为没有调用loadDefaults方法(loadDefaults方法内部会把LogFile构造成FileAppender)，而是调用了loadConfiguration方法，该方法会根据logback.xml文件中的配置去构造Appender。</p>
+<h3 id="resources下有my-logback-xml配置"><a href="#resources下有my-logback-xml配置" class="headerlink" title="resources下有my-logback.xml配置"></a>resources下有my-logback.xml配置</h3><p>由于LogbackLoggingSystem中没有对my-logback.xml路径的解析，所有不会被识别，但是可以在yaml中篇日志logging.config配置：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="attr">logging:</span></div><div class="line"><span class="attr">  config:</span> classpath:my-logback.xml</div></pre></td></tr></table></figure>
+<p>这样配置就能识别my-logback.xml文件。</p>
+<h2 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h2><p>最新版的SpringBoot内部提供了一个NoOpLoggingSystem，这个日志系统内部什么都不做，构造过程如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> LoggingSystem <span class="title">get</span><span class="params">(ClassLoader classLoader)</span> </span>&#123;</div><div class="line">	<span class="comment">// SYSTEM_PROPERTY静态变量是LoggingSystem的类全名</span></div><div class="line">	String loggingSystem = System.getProperty(SYSTEM_PROPERTY);</div><div class="line">	<span class="keyword">if</span> (StringUtils.hasLength(loggingSystem)) &#123;</div><div class="line">		<span class="keyword">if</span> (NONE.equals(loggingSystem)) &#123; <span class="comment">// None静态变量是值是none</span></div><div class="line">			<span class="keyword">return</span> <span class="keyword">new</span> NoOpLoggingSystem();</div><div class="line">		&#125;</div><div class="line">		<span class="keyword">return</span> get(classLoader, loggingSystem);</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">for</span> (Map.Entry&lt;String, String&gt; entry : SYSTEMS.entrySet()) &#123;</div><div class="line">		<span class="keyword">if</span> (ClassUtils.isPresent(entry.getKey(), classLoader)) &#123;</div><div class="line">			<span class="keyword">return</span> get(classLoader, entry.getValue());</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"No suitable logging system located"</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>所以程序启动的时候加上 -Dorg.springframework.boot.logging.LoggingSystem=none就可以构造NoOpLoggingSystem这个日志系统。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;SpringBoot对日志的配置和加载进行了封装，让我们可以很方便地使用一些日志框架，只需要定义对应日志框架的配置文件，比如LogBack、Log4j、Log4j2等，代码内部便可以直接使用。&lt;/p&gt;
+&lt;p&gt;比如我们在resources目录下定义了一个logback.xml文件，文件内容是logback相关的配置，然后就可以直接在代码在使用Logger记录日志啦。&lt;/p&gt;
+&lt;p&gt;下图是SpringBoot对日志功能的封装：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://7x2wh6.com1.z0.glb.clouddn.com/logging-system.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/categories/springboot/"/>
+    
+    
+      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
+    
+      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
+    
+      <category term="springboot源码分析" scheme="http://fangjian0423.github.io/tags/springboot%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/"/>
+    
+  </entry>
   
   <entry>
     <title>SpringMVC处理流程图</title>
@@ -758,7 +842,7 @@ my.name: 2
     <link href="http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/"/>
     <id>http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/</id>
     <published>2017-06-05T11:40:30.000Z</published>
-    <updated>2017-06-28T01:56:28.000Z</updated>
+    <updated>2017-08-23T07:24:36.000Z</updated>
     
     <content type="html"><![CDATA[<p>自己总结和学习的SpringBoot源码，包括一些例子代码和文章。</p>
 <p>本系列不涉及SpringBoot的入门，主要针对想深入学习SpringBoot的读者。</p>
@@ -771,6 +855,7 @@ my.name: 2
 <li><a href="http://fangjian0423.github.io/2017/05/31/springboot-executable-jar/">SpringBoot源码分析之SpringBoot可执行文件解析</a></li>
 <li><a href="http://fangjian0423.github.io/2017/06/05/springboot-factory-loading-mechanism">SpringBoot源码分析之工厂加载机制</a></li>
 <li><a href="http://fangjian0423.github.io/2017/06/10/springboot-environment-analysis">SpringBoot源码分析之配置环境的构造过程</a></li>
+<li><a href="http://fangjian0423.github.io/2017/08/23/springboot-logging-system/">SpringBoot源码分析之日志系统的构造</a></li>
 </ol>
 <p>另外也会写一些Spring和SpringBoot相关的文章。</p>
 <p>Spring：</p>
@@ -1953,7 +2038,7 @@ org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration -- O
     <link href="http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/"/>
     <id>http://fangjian0423.github.io/2017/05/10/springboot-context-refresh/</id>
     <published>2017-05-10T11:55:21.000Z</published>
-    <updated>2017-05-31T13:18:20.000Z</updated>
+    <updated>2017-08-07T08:51:09.000Z</updated>
     
     <content type="html"><![CDATA[<p>上一篇文章中，我们分析了SpringBoot的启动过程：构造SpringApplication并调用它的run方法。其中构造SpringApplication的时候会初始化一些监听器和初始化器；run方法调用的过程中会有对应的监听器监听，并且会创建Spring容器。</p>
 <p>Spring容器创建之后，会调用它的refresh方法，refresh的时候会做很多事情：比如完成配置类的解析、各种BeanFactoryPostProcessor和BeanPostProcessor的注册、国际化配置的初始化、web内置容器的构造等等。</p>
@@ -2019,6 +2104,8 @@ org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration -- O
 <p>这个时候这些bean只是被加载到了Spring容器中。下面这段代码是ConfigurationClassBeanDefinitionReader的解析bean过程：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loadBeanDefinitions</span><span class="params">(Set&lt;ConfigurationClass&gt; configurationModel)</span> </span>&#123;</div><div class="line">  TrackedConditionEvaluator trackedConditionEvaluator = <span class="keyword">new</span> TrackedConditionEvaluator();</div><div class="line">  <span class="keyword">for</span> (ConfigurationClass configClass : configurationModel) &#123;</div><div class="line">    <span class="comment">// 对每一个配置类，调用loadBeanDefinitionsForConfigurationClass方法</span></div><div class="line">    loadBeanDefinitionsForConfigurationClass(configClass, trackedConditionEvaluator);</div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">loadBeanDefinitionsForConfigurationClass</span><span class="params">(ConfigurationClass configClass,</span></span></div><div class="line">    TrackedConditionEvaluator trackedConditionEvaluator) &#123;</div><div class="line">  <span class="comment">// 使用条件注解判断是否需要跳过这个配置类</span></div><div class="line">  <span class="keyword">if</span> (trackedConditionEvaluator.shouldSkip(configClass)) &#123;</div><div class="line">    <span class="comment">// 跳过配置类的话在Spring容器中移除bean的注册</span></div><div class="line">    String beanName = configClass.getBeanName();</div><div class="line">    <span class="keyword">if</span> (StringUtils.hasLength(beanName) &amp;&amp; <span class="keyword">this</span>.registry.containsBeanDefinition(beanName)) &#123;</div><div class="line">      <span class="keyword">this</span>.registry.removeBeanDefinition(beanName);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">this</span>.importRegistry.removeImportingClassFor(configClass.getMetadata().getClassName());</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (configClass.isImported()) &#123;</div><div class="line">    <span class="comment">// 如果自身是被@Import注释所import的，注册自己</span></div><div class="line">    registerBeanDefinitionForImportedConfigurationClass(configClass);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 注册方法中被@Bean注解修饰的bean</span></div><div class="line">  <span class="keyword">for</span> (BeanMethod beanMethod : configClass.getBeanMethods()) &#123;</div><div class="line">    loadBeanDefinitionsForBeanMethod(beanMethod);</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 注册@ImportResource注解注释的资源文件中的bean</span></div><div class="line">  loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());</div><div class="line">  <span class="comment">// 注册@Import注解中的ImportBeanDefinitionRegistrar接口的registerBeanDefinitions</span></div><div class="line">  loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>invokeBeanFactoryPostProcessors方法总结来说就是从Spring容器中找出BeanDefinitionRegistryPostProcessor和BeanFactoryPostProcessor接口的实现类并按照一定的规则顺序进行执行。 其中ConfigurationClassPostProcessor这个BeanDefinitionRegistryPostProcessor优先级最高，它会对项目中的@Configuration注解修饰的类(@Component、@ComponentScan、@Import、@ImportResource修饰的类也会被处理)进行解析，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化。</p>
+<p>下面这图就是对ConfigurationClassPostProcessor后置器的总结：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/configuration-annotation-process.png" alt=""></p>
 <h2 id="registerBeanPostProcessors方法"><a href="#registerBeanPostProcessors方法" class="headerlink" title="registerBeanPostProcessors方法"></a>registerBeanPostProcessors方法</h2><p>从Spring容器中找出的BeanPostProcessor接口的bean，并设置到BeanFactory的属性中。之后bean被实例化的时候会调用这个BeanPostProcessor。</p>
 <p>该方法委托给了PostProcessorRegistrationDelegate类的registerBeanPostProcessors方法执行。这里的过程跟invokeBeanFactoryPostProcessors类似：</p>
 <ol>
@@ -2532,344 +2619,6 @@ targetable.newMethod(); // new method
       <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
     
       <category term="architecture" scheme="http://fangjian0423.github.io/tags/architecture/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>SpringCloud网关服务zuul介绍</title>
-    <link href="http://fangjian0423.github.io/2017/02/22/springcloud-zuul/"/>
-    <id>http://fangjian0423.github.io/2017/02/22/springcloud-zuul/</id>
-    <published>2017-02-22T13:33:22.000Z</published>
-    <updated>2017-05-31T13:55:15.000Z</updated>
-    
-    <content type="html"><![CDATA[<p><a href="https://github.com/Netflix/zuul" target="_blank" rel="external">Zuul</a>是Netflix开发的一款提供动态路由、监控、弹性、安全的网关服务。</p>
-<p>使用Zuul网关服务带来的好处是统一向外系统提供REST API，并额外提供了权限控制、负载均衡等功能，并且这些功能是从原先的服务中抽离出来并单独存在的。</p>
-<p>Zuul提供了不同类型的filter用于处理请求，这些filter可以让我们实现以下功能：</p>
-<ol>
-<li>权限控制和安全性：可以识别认证需要的信息和拒绝不满足条件的请求</li>
-<li>监控：监控请求信息</li>
-<li>动态路由：根据需要动态地路由请求到后台的不同集群</li>
-<li>压力测试</li>
-<li>负载均衡</li>
-<li>静态资源处理：直接在zuul处理静态资源的响应而不需要转发这些请求到内部集群中</li>
-</ol>
-<a id="more"></a>
-<h2 id="Zuul的执行过程介绍"><a href="#Zuul的执行过程介绍" class="headerlink" title="Zuul的执行过程介绍"></a>Zuul的执行过程介绍</h2><p>Zuul基于Servlet实现，它封装了Servlet提供的相关接口，并提供了一个全新的api。</p>
-<p><strong>ZuulFilter</strong>是一个基础的抽象类，定义了一些抽象方法：</p>
-<ol>
-<li>filterType方法: filter的类型，有”pre”, “route”, “post”, “error”, “static”</li>
-<li>filterOrder方法：优先级，级别越高，越快被执行</li>
-<li>shouldFilter方法：开关，如果是true，run方法会执行，否则不会执行</li>
-<li>run方法：filter执行的逻辑操作</li>
-</ol>
-<p><strong>ZuulServlet</strong>是一个继承自HttpServlet的子类，使用Zuul所有的请求都会被这个Servlet接收并处理。</p>
-<p>ZuulServlet覆盖了HttpServlet的service方法，所以不论是get/post/put/delete等方法都会执行相同的操作：</p>
-<pre><code>@Override
-public void service(javax.servlet.ServletRequest servletRequest, javax.servlet.ServletResponse servletResponse) throws ServletException, IOException {
-    try {
-        init((HttpServletRequest) servletRequest, (HttpServletResponse) servletResponse); // 初始化ZuulRunner，也就是包装request和response，并设置到RequestContext中，RequestContext使用ThreadLocal获得，每个线程独立保存一份，用于存储各种信息，比如request，response，监控信息，异常信息，成功信息，执行时间等等
-
-        // Marks this request as having passed through the &quot;Zuul engine&quot;, as opposed to servlets
-        // explicitly bound in web.xml, for which requests will not have the same data attached
-        RequestContext context = RequestContext.getCurrentContext();
-        context.setZuulEngineRan();
-
-        try {
-            preRoute(); // 执行 pre 类型的filter
-        } catch (ZuulException e) {
-            error(e); // pre 类型的filter执行报错的话执行 error 类型的filter
-            postRoute(); // 执行 post 类型的filter
-            return;
-        }
-        try {
-            route(); // pre 类型的filter执行成功后，执行 route 类型的filter
-        } catch (ZuulException e) {
-            error(e); //route 类型的filter执行报错的话执行 error 类型的filter
-            postRoute(); // 执行 post 类型的filter
-            return;
-        }
-        try {
-            postRoute(); // route 类型的filter执行成功后，执行 post 类型的filter
-        } catch (ZuulException e) {
-            error(e); //post 类型的filter执行报错的话执行 error 类型的filter
-            return;
-        }
-
-    } catch (Throwable e) {
-        error(new ZuulException(e, 500, &quot;UNHANDLED_EXCEPTION_&quot; + e.getClass().getName())); // 发生其他没有catch的错误的话，执行 error 类型的filter
-    } finally {
-        RequestContext.getCurrentContext().unset();
-    }
-}
-</code></pre><p>下图是<a href="https://github.com/Netflix/zuul/wiki/How-it-Works" target="_blank" rel="external">zuul wiki</a>上对filter的执行过程说明。</p>
-<p><img src="https://camo.githubusercontent.com/4eb7754152028cdebd5c09d1c6f5acc7683f0094/687474703a2f2f6e6574666c69782e6769746875622e696f2f7a75756c2f696d616765732f7a75756c2d726571756573742d6c6966656379636c652e706e67" alt="filter"></p>
-<p>从上面的service方法中我们也可以得出：先执行pre类型的filter；如果pre filter执行失败那么执行error和post类型的filter，pre filter执行成功的话执行route类型的filter；如果route filter执行失败那么执行error和post类型的filter，route filter执行成功的话执行post filter；如果post filter执行失败那么执行error类型的filter，post filter执行成功的话，结束。上述过程中执行失败指的是ZuulException被catch，如果是其他Exception的话，那么执行error类型的filter，然后结束。</p>
-<p>ZuulServlet里的preRoute(), route(), postRoute(), error()方法详情：</p>
-<pre><code>ZuulRunner.java
-public void preRoute() throws ZuulException {
-    FilterProcessor.getInstance().preRoute();
-}
-
-FilterProcessor.java
-public void preRoute() throws ZuulException {
-    try {
-        runFilters(&quot;pre&quot;);
-    } catch (Throwable e) {
-        if (e instanceof ZuulException) {
-            throw (ZuulException) e;
-        }
-        throw new ZuulException(e, 500, &quot;UNCAUGHT_EXCEPTION_IN_PRE_FILTER_&quot; + e.getClass().getName());
-    }
-}
-
-public Object runFilters(String sType) throws Throwable {
-    if (RequestContext.getCurrentContext().debugRouting()) {
-        Debug.addRoutingDebug(&quot;Invoking {&quot; + sType + &quot;} type filters&quot;);
-    }
-    boolean bResult = false;
-    List&lt;ZuulFilter&gt; list = FilterLoader.getInstance().getFiltersByType(sType); // 获得对应类型的filter集合
-    if (list != null) {
-        for (int i = 0; i &lt; list.size(); i++) { // 遍历这些类型的filter集合
-            ZuulFilter zuulFilter = list.get(i);
-            Object result = processZuulFilter(zuulFilter); // 调用processZuulFilter方法
-            if (result != null &amp;&amp; result instanceof Boolean) {
-                bResult |= ((Boolean) result);
-            }
-        }
-    }
-    return bResult;
-}
-
-public Object processZuulFilter(ZuulFilter filter) throws ZuulException {
-
-    RequestContext ctx = RequestContext.getCurrentContext();
-    boolean bDebug = ctx.debugRouting();
-    final String metricPrefix = &quot;zuul.filter-&quot;;
-    long execTime = 0; // 执行时间
-    String filterName = &quot;&quot;;
-    try {
-        long ltime = System.currentTimeMillis(); // 执行前的时间
-        filterName = filter.getClass().getSimpleName(); // 获取filter名字
-
-        RequestContext copy = null;
-        Object o = null;
-        Throwable t = null;
-
-        if (bDebug) {
-            Debug.addRoutingDebug(&quot;Filter &quot; + filter.filterType() + &quot; &quot; + filter.filterOrder() + &quot; &quot; + filterName);
-            copy = ctx.copy();
-        }
-
-        ZuulFilterResult result = filter.runFilter(); // 调用ZuulFilter的runFilter方法得到ZuulFilterResult，这个类是对filter执行结果的包装，包括返回值、异常信息、状态
-        ExecutionStatus s = result.getStatus(); // 得到ZuulFilterResult的状态信息
-        execTime = System.currentTimeMillis() - ltime; // 得到filter的执行时间
-
-        switch (s) { // 针对不同的ZuulFilterResult的状态做不同处理
-            case FAILED: // 如果是FAILED状态，说错run方法执行失败了
-                t = result.getException(); // 得到失败的异常
-                ctx.addFilterExecutionSummary(filterName, ExecutionStatus.FAILED.name(), execTime); // 失败信息加到RequestContext中
-                break;
-            case SUCCESS: // 如果是SUCCESS状态，说明run方法正确执行完毕
-                o = result.getResult(); // 得到run方法返回的结果
-                ctx.addFilterExecutionSummary(filterName, ExecutionStatus.SUCCESS.name(), execTime); // 成功信息加到RequestContext中
-                if (bDebug) {
-                    Debug.addRoutingDebug(&quot;Filter {&quot; + filterName + &quot; TYPE:&quot; + filter.filterType() + &quot; ORDER:&quot; + filter.filterOrder() + &quot;} Execution time = &quot; + execTime + &quot;ms&quot;);
-                    Debug.compareContextState(filterName, copy);
-                }
-                break;
-            default: // 其他状态的话不做处理
-                break;
-        }
-
-        if (t != null) throw t; // 如果是FAILED状态，抛出这个Exception
-
-        usageNotifier.notify(filter, s); // 记录监控信息
-        return o;
-
-    } catch (Throwable e) { // 如果发生了一些其它没有catch的异常
-        if (bDebug) {
-            Debug.addRoutingDebug(&quot;Running Filter failed &quot; + filterName + &quot; type:&quot; + filter.filterType() + &quot; order:&quot; + filter.filterOrder() + &quot; &quot; + e.getMessage());
-        }
-        usageNotifier.notify(filter, ExecutionStatus.FAILED); // 记录监控信息
-        if (e instanceof ZuulException) {
-            throw (ZuulException) e;
-        } else { // 封装成ZuulException并抛出
-            ZuulException ex = new ZuulException(e, &quot;Filter threw Exception&quot;, 500, filter.filterType() + &quot;:&quot; + filterName);
-            ctx.addFilterExecutionSummary(filterName, ExecutionStatus.FAILED.name(), execTime);
-            throw ex;
-        }
-    }
-}
-
-ZuulFilter.java
-public ZuulFilterResult runFilter() {
-    ZuulFilterResult zr = new ZuulFilterResult();
-    if (!isFilterDisabled()) { // 如果对应的zuul filter没有被disable
-        if (shouldFilter()) { // shouldFilter开关是否开启
-            Tracer t = TracerFactory.instance().startMicroTracer(&quot;ZUUL::&quot; + this.getClass().getSimpleName()); // 设置监控信息
-            try {
-                Object res = run(); // 调用ZuulFilter的run方法
-                zr = new ZuulFilterResult(res, ExecutionStatus.SUCCESS); // 把结果封装到ZuulFilterResult中，并设置状态为SUCCESS
-            } catch (Throwable e) { // 如果发生了异常
-                t.setName(&quot;ZUUL::&quot; + this.getClass().getSimpleName() + &quot; failed&quot;); // 完善监控信息
-                zr = new ZuulFilterResult(ExecutionStatus.FAILED); // 把ZuulFilterResult状态设置为FAILED
-                zr.setException(e); // 设置异常信息
-            } finally {
-                t.stopAndLog();
-            }
-        } else {
-            zr = new ZuulFilterResult(ExecutionStatus.SKIPPED); // zuul filter被disable的话，把ZuulFilterResult状态设置为SKIPPED
-        }
-    }
-    return zr;
-}
-</code></pre><h2 id="在SpringCloud中使用Zuul"><a href="#在SpringCloud中使用Zuul" class="headerlink" title="在SpringCloud中使用Zuul"></a>在SpringCloud中使用Zuul</h2><p>在SpringCloud中使用Zuul，加上@EnableZuulProxy注解，这个注解会import ZuulProxyConfiguration配置类。ZuulProxyConfiguration配置类继承ZuulConfiguration类，ZuulConfiguration配置类使用zuul开头的配置。</p>
-<p>在这个例子中，本地端口2222有了compute-service服务。这个zuul的服务地址暴露在7777端口下。</p>
-<p>我们定义了一个规则：</p>
-<pre><code>zuul.routes.api-a-url.path=/api-a-url/**
-zuul.routes.api-a-url.url=http://localhost:2222/
-</code></pre><p>这个routes对应的类型是Map<string, zuulroute="">，key为String，value是一个ZuulRoute。ZuulRoute中定义了一些属性，有：</string,></p>
-<pre><code>private String id; // 标识一个路由规则
-private String path; // 拦截路径，比如 /api-a-url/**
-private String serviceId; // Eureka服务发现中的serviceId
-private String url; //不使用服务发现中的服务，独立的一个url
-private boolean stripPrefix = true;
-private Boolean retryable; // 是否会retry
-private Set&lt;String&gt; sensitiveHeaders = new LinkedHashSet&lt;&gt;();
-</code></pre><p>上面的api-a-url就是对应map中的key，path和url对应ZuulRoute中的path和url属性。</p>
-<p>在ZuulProxyConfiguration配置类中，构造了很多bean，比如有ZuulController、ZuulHandlerMapping、DiscoveryClientRouteLocator、各种filter等bean。</p>
-<p>其中ZuulController内部使用了ZuulServlet处理http请求，DiscoveryClientRouteLocator使用ZuulProperties中的route解析路由规则，然后封装成org.springframework.cloud.netflix.zuul.filters.Route在getRoutes方法中返回，这个方法会在RoutesEndpoint和ZuulHandlerMapping中被调用。</p>
-<p>另外DiscoveryClientRouteLocator会基于服务发现中心中的服务信息，再去寻找对应的路由规则。由于例子中有个本地端口为2222的compute-service服务。所以会被解析并放到路由规则里，这样路由规则里就有2个规则：</p>
-<ol>
-<li>path为/api-a-url/**，url为<a href="http://localhost:2222/" target="_blank" rel="external">http://localhost:2222/</a></li>
-<li>path为/compute-service/**，serviceId为compute-service</li>
-</ol>
-<p>ZuulHandlerMapping是一个HandlerMapping，用于处理请求的映射关系。在SpringMVC中，默认是使用RequestMappingHandlerMapping处理，而在Zuul中，使用ZuulHandlerMapping处理地址映射关系。它内部有个注册handler方法：</p>
-<pre><code>private void registerHandlers() {
-  Collection&lt;Route&gt; routes = this.routeLocator.getRoutes(); // 得到路由规则
-  if (routes.isEmpty()) {
-    this.logger.warn(&quot;No routes found from RouteLocator&quot;);
-  }
-  else {
-    for (Route route : routes) { // 注册路由规则中的地址，对应了handler是zuul属性，这个zuul也就是ZuulController
-      registerHandler(route.getFullPath(), this.zuul);
-    }
-  }
-}
-</code></pre><p>例子中路由规则里对应的路径有2个，分别是/api-a-url/<strong>和/compute-service/</strong>，它们对应的handler都是ZuulController。</p>
-<p>访问地址：</p>
-<pre><code>http://localhost:7777/api-a-url/add?a=1&amp;b=2
-</code></pre><p>在ZuulHandlerMapping中的规则路径中发现了/api-a-url/**，于是传递给ZuulController处理，ZuulController传递给ZuulServlet处理。</p>
-<p>讲到这里，细心的读者可能会发现一个问题：<strong>我们前面讲了这么多关于filter的各种细节，但是真正的服务调用是在哪里执行的?</strong></p>
-<p>Zuul把真正的服务调用也放在了filter中处理，并在产生的结果放在了RequestContext中。</p>
-<p>其中有route类型的filter中使用HttpClient执行，执行结果的stream放到了RequestContext。</p>
-<p>post类型的filter读取这个stream并使用response write出去。</p>
-<p>我们来简单看下这个过程中一些filter的各自实现。</p>
-<p>SimpleHostRoutingFilter这个route类型的filter的shouldFilter方法：</p>
-<pre><code>@Override
-public boolean shouldFilter() {
-  // 如果对应的地址是使用host方式，才会生效
-  return RequestContext.getCurrentContext().getRouteHost() != null
-      &amp;&amp; RequestContext.getCurrentContext().sendZuulResponse();
-}
-</code></pre><p>run方法：</p>
-<pre><code>@Override
-public Object run() {
-  RequestContext context = RequestContext.getCurrentContext();
-  HttpServletRequest request = context.getRequest();
-  MultiValueMap&lt;String, String&gt; headers = this.helper
-      .buildZuulRequestHeaders(request);
-  MultiValueMap&lt;String, String&gt; params = this.helper
-      .buildZuulRequestQueryParams(request);
-  String verb = getVerb(request);
-  InputStream requestEntity = getRequestBody(request);
-  if (request.getContentLength() &lt; 0) {
-    context.setChunkedRequestBody();
-  }
-
-  String uri = this.helper.buildZuulRequestURI(request);
-  this.helper.addIgnoredHeaders();
-
-  try {
-    HttpResponse response = forward(this.httpClient, verb, uri, request, headers,
-        params, requestEntity); // 使用HttpClient调用remoteHost
-    setResponse(response); // 设置remoteHost调用的结果
-  }
-  catch (Exception ex) {
-    context.set(&quot;error.status_code&quot;,
-        HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    context.set(&quot;error.exception&quot;, ex);
-  }
-  return null;
-}
-
-// setResponse方法会把response中的stream放到RequestContext中
-context.setResponseDataStream(entity);
-</code></pre><p>RibbonRoutingFilter跟SimpleHostRoutingFilter类似，区别就是它的shouldFilter方法里不是判断host方式，而是判断路由规则里是否存在serviceId。它的run方法也是使用HttpClient完成服务的调用，但是它是使用ribbon完成的。</p>
-<p>访问地址：</p>
-<pre><code>http://localhost:7777/compute-service/add?a=1&amp;b=2
-</code></pre><p>由于使用了serviceId的方式，所以会触发RibbonRoutingFilter并完成服务的调用。</p>
-<p>当使用Eureka服务发现的时候，建议使用serviceId的方式，而不是直接host的方式。因为基于serviceId的方式会使用ribbon完成服务的调用，ribbon中又使用了hystrix和loadbalance等功能，有更好的健壮性。</p>
-<p>SendResponseFilter是一个post类型的，它会写回服务调用产生的结果。</p>
-<pre><code>@Override
-public boolean shouldFilter() {
-  // RibbonRoutingFilter和SimpleHostRoutingFilter都会写入stream数据到RequestContext中的responseDataStream中，所以这个filter会生效
-  return !RequestContext.getCurrentContext().getZuulResponseHeaders().isEmpty()
-      || RequestContext.getCurrentContext().getResponseDataStream() != null
-      || RequestContext.getCurrentContext().getResponseBody() != null;
-}
-
-@Override
-  public Object run() {
-      try {
-          addResponseHeaders();
-    // 最终在RequestContext中使用response write这个stream
-          writeResponse();
-      }
-      catch (Exception ex) {
-          ReflectionUtils.rethrowRuntimeException(ex);
-      }
-      return null;
-  }
-</code></pre><p>SpringCloud默认还加了其它的一些拦截器，有兴趣的读者可以自行查看源代码。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Zuul内部的处理使用ZuulServlet完成，ZuulServlet继承HttpServlet，重写了service方法，service方法内部分别是pre、route、post和error类型的filter进行调用。这里的不同类型的filter执行顺序文中已经说明。</p>
-<p>要在SpringCloud中使用Zuul，需要加上@EnableZuulProxy注解。加上这个注解之后SpringCloud会构造一些bean，比如ZuulHandlerMapping、DiscoveryClientRouteLocator、各种filter等。其中DiscoveryClientRouteLocator是一个基于服务发现的路由规则生成器，它会基于zuul的配置构造路由规则。ZuulHandlerMapping是一个HandlerMapping的实现，它跟基于路由规则注册handler，其中key为路由规则对应的路径，handler都是ZuulController，ZuulController内部使用ZuulServlet进行请求的处理。</p>
-<p>Zuul把真正的服务调用放在了filter中实现。它提供了SimpleHostRoutingFilter和RibbonRoutingFilter这2个route类型的filter用于执行服务。从名字也可以看出来，SimpleHostRoutingFilter用于执行基于host方式的调用url接口，RibbonRoutingFilter基于服务发现的方式调用服务。一般我们都建议使用RibbonRoutingFilter，因为它内部使用ribbon，更加健壮。</p>
-<h2 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h2><p>RoutesEndpoint这个endpoint使用RouteLocator中提供的所有路由规则。</p>
-<p>访问：</p>
-<pre><code>http://localhost:7777/routes
-</code></pre><p>得到路由规则：</p>
-<pre><code>{
-    /api-a-url/**: &quot;http://localhost:2222/&quot;,
-    /compute-service/**: &quot;compute-service&quot;
-}
-</code></pre><p>Zuul声称自己可以使用static类型的filter用于处理静态资源，也提供了一个StaticResponseFilter的一个基类，但是查看ZuulServlet的源码发现没有哪段逻辑是处理静态资源的。 上了github发现专门有个<a href="https://github.com/spring-cloud/spring-cloud-netflix/issues/1001" target="_blank" rel="external">issue</a>说明目前还不支持自定义的filter。</p>
-<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://github.com/Netflix/zuul/" target="_blank" rel="external">https://github.com/Netflix/zuul/</a></p>
-<p><a href="https://github.com/Netflix/zuul/wiki" target="_blank" rel="external">https://github.com/Netflix/zuul/wiki</a></p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;&lt;a href=&quot;https://github.com/Netflix/zuul&quot;&gt;Zuul&lt;/a&gt;是Netflix开发的一款提供动态路由、监控、弹性、安全的网关服务。&lt;/p&gt;
-&lt;p&gt;使用Zuul网关服务带来的好处是统一向外系统提供REST API，并额外提供了权限控制、负载均衡等功能，并且这些功能是从原先的服务中抽离出来并单独存在的。&lt;/p&gt;
-&lt;p&gt;Zuul提供了不同类型的filter用于处理请求，这些filter可以让我们实现以下功能：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;权限控制和安全性：可以识别认证需要的信息和拒绝不满足条件的请求&lt;/li&gt;
-&lt;li&gt;监控：监控请求信息&lt;/li&gt;
-&lt;li&gt;动态路由：根据需要动态地路由请求到后台的不同集群&lt;/li&gt;
-&lt;li&gt;压力测试&lt;/li&gt;
-&lt;li&gt;负载均衡&lt;/li&gt;
-&lt;li&gt;静态资源处理：直接在zuul处理静态资源的响应而不需要转发这些请求到内部集群中&lt;/li&gt;
-&lt;/ol&gt;
-    
-    </summary>
-    
-      <category term="springcloud" scheme="http://fangjian0423.github.io/categories/springcloud/"/>
-    
-    
-      <category term="springcloud" scheme="http://fangjian0423.github.io/tags/springcloud/"/>
-    
-      <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
     
   </entry>
   

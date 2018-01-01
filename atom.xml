@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://fangjian0423.github.io/"/>
-  <updated>2017-08-24T15:00:40.000Z</updated>
+  <updated>2018-01-01T07:20:05.000Z</updated>
   <id>http://fangjian0423.github.io/</id>
   
   <author>
@@ -14,6 +14,56 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>2017总结</title>
+    <link href="http://fangjian0423.github.io/2018/01/01/2017_end/"/>
+    <id>http://fangjian0423.github.io/2018/01/01/2017_end/</id>
+    <published>2018-01-01T07:05:04.000Z</published>
+    <updated>2018-01-01T07:20:05.000Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="2017年总结"><a href="#2017年总结" class="headerlink" title="2017年总结"></a>2017年总结</h2><p>4个月没写博客了.. 现在都有点不太会写博客了。</p>
+<p>因为真的太忙了，忙到每天回家都已经23点左右了，不过成长地也很快。</p>
+<p>在16年的总结上，还没定17年的计划，转眼17年已过去。 17年个人的情况可以总结为3个词：不顺、意外、忙碌。</p>
+<h2 id="不顺"><a href="#不顺" class="headerlink" title="不顺"></a>不顺</h2><p>过完春节就决定换工作了，在原公司差不多1年多时间没学到新的知识点了，也太舒适了，同时很多同事对老板的一些行为、决策表示不能理解，而且原公司也一直融资失败。这样的状态已经持续了1年多了。本来16年4月份已经收到了一个还不错的offer，但是选择了留下来。想想也是挺后悔的。</p>
+<p>总结了一下小公司的一些特点：</p>
+<ol>
+<li>如果产品的方向错了，不论做什么(包括996)都是没用的，没办法用时间来弥补方向上的错误</li>
+<li>团队和老板也很重要，很多事情不能老板一个人说了算。比如方向错了，老板一意孤行，合伙人得跟老板一样讨论，老板也得听得进去</li>
+<li>产品是要大家一起认可的，大家认可的话才能把产品做好</li>
+</ol>
+<p>17年年初重新开始面试，不过令我感到意外的是很多公司收到我的简历之后居然连个面试的机会都没有。询问了几个内推人之后表示hr这关没通过，难以理解。不过也面了几家还不错的公司，有拒绝，也收到了几个offer，拒绝的公司大多希望候选人都是比较资深的架构师，而我目前还没达到这个水准。经过几番考虑，决定去杭州，4月底入职。</p>
+<p>入职之后发现很多工程师技术水平比较差，而且也没有学习的动力，对编程也没什么激情，没有深入挖掘的兴趣和动力。于是决定在公司内部做一些分享来提高工程师水平，但是效果比较差，基本上听完之后没什么反馈了。</p>
+<h2 id="意外"><a href="#意外" class="headerlink" title="意外"></a>意外</h2><p>6月底的时候突然来了一个阿里的面试电话(来杭州后买了个杭州号码；打的是上海号码，还好上海号码没有注销..)。 接到电话后面试官问我有没有兴趣来阿里中间件，我表示没有兴趣(之前面试AE部门面到了hr，结果挂了，期间面了很多轮，时间很长、很累，结果却挂了)。但是面试官依旧不罢休，说了一大堆话.. 最终妥协开始面试..</p>
+<p>最终一共面了6轮(2轮电话面试，1轮笔试，1轮视频面试，1轮交叉面以及hr终面)后通过，8月底入职。</p>
+<p>很多事情就是这样的。当你很想去实现或者完成某件事的时候，你会发现很难做到；而当你不想去实现或者完成的时候，结果会意外地做到。</p>
+<h2 id="忙碌"><a href="#忙碌" class="headerlink" title="忙碌"></a>忙碌</h2><p>入职阿里到现在刚好4个月时间。入职的第一天印象还很深刻，9点不到就来到了1号楼；之后排成两列领取入职资料、工卡、设备，然后上课上到大概中午16点；上完课去找师兄，师兄带着我认识了项目组的成员；开发环境安装，项目组产品认识，代码查看。</p>
+<p>目前我所在的项目组非常忙。忙到整整4个月没有写过1篇博客.. 不过成长也很快，接触了以前想着学习的技术。</p>
+<p>在阿里，工作的方式我是很习惯的，因为之前看过一些框架的源码，都是debug一层一层去看的；在阿里也是类似的场景，所以非常习惯。但是工作的节奏、时间点上有一点不习惯。不过经历了这4个月，也已经习惯了。 18年会挤出时间写博客，要保持对技术的热情！</p>
+<p>总结一下这4个月的感受:</p>
+<ol>
+<li>每个人都很优秀也都很努力</li>
+<li>忙，真的忙。比以前待过的所有公司都要忙上一大截</li>
+<li>食堂又便宜又好吃</li>
+<li>百阿认识了一群很不错的小伙伴</li>
+<li>节奏，变化很快</li>
+</ol>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>这1年的经历跌宕起伏，不过结果是好的。路还很长。</p>
+<p>18年的目标就是研究公司内部的中间件，希望能把这些中间件都能吃透! 当然还有工作上新接触的技术点的深入研究，工作日常等，这些都非常有挑战性。 希望18年一切顺利！</p>
+]]></content>
+    
+    <summary type="html">
+    
+      2017年总结
+    
+    </summary>
+    
+      <category term="总结" scheme="http://fangjian0423.github.io/categories/%E6%80%BB%E7%BB%93/"/>
+    
+    
+      <category term="杂事" scheme="http://fangjian0423.github.io/tags/%E6%9D%82%E4%BA%8B/"/>
+    
+  </entry>
   
   <entry>
     <title>SpringBoot源码分析之日志系统的构造</title>
@@ -842,7 +892,7 @@ my.name: 2
     <link href="http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/"/>
     <id>http://fangjian0423.github.io/2017/06/05/springboot-source-analysis-summary/</id>
     <published>2017-06-05T11:40:30.000Z</published>
-    <updated>2017-08-23T07:24:36.000Z</updated>
+    <updated>2018-01-01T07:15:28.000Z</updated>
     
     <content type="html"><![CDATA[<p>自己总结和学习的SpringBoot源码，包括一些例子代码和文章。</p>
 <p>本系列不涉及SpringBoot的入门，主要针对想深入学习SpringBoot的读者。</p>
@@ -871,6 +921,8 @@ my.name: 2
 </ol>
 <p>会写一些例子记录学习的过程，上传到<a href="https://github.com/fangjian0423/springboot-analysis" target="_blank" rel="external">github</a>。</p>
 <p>我不能保证写的每个地方都是对的，有问题的地方还请指出来，一起学习!</p>
+<p>画了个脑图总结了下sb的特性：</p>
+<p><img src="http://7x2wh6.com1.z0.glb.clouddn.com/SpringBoot.png" alt="SpringBoot"></p>
 ]]></content>
     
     <summary type="html">
@@ -2275,350 +2327,6 @@ org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration -- O
       <category term="springboot" scheme="http://fangjian0423.github.io/tags/springboot/"/>
     
       <category term="springboot源码分析" scheme="http://fangjian0423.github.io/tags/springboot%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>记录自己理解的一些设计模式</title>
-    <link href="http://fangjian0423.github.io/2017/03/26/design-pattern/"/>
-    <id>http://fangjian0423.github.io/2017/03/26/design-pattern/</id>
-    <published>2017-03-26T07:33:29.000Z</published>
-    <updated>2017-03-26T07:51:53.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>记录一下自己理解的一些设计模式，并尽量使用表达清楚的例子进行讲解。</p>
-<a id="more"></a>
-<h2 id="策略模式"><a href="#策略模式" class="headerlink" title="策略模式"></a>策略模式</h2><p>策略模式应该是最基础的一个设计模式，它是对行为的一个抽象。jdk中的Comparator比较器就是一个使用策略设计模式的策略。</p>
-<p>比如有一个Student学生类，有name和age两个属性。如果有个需求需要打印学生名单，并按照字母顺序排序，可以使用Comparator接口并在内部使用name进行比较即可。 如果哪一天需要按照年龄进行排序，那么只需要修改Comparator即可，也就是使用一个新的策略，其它完全不变。</p>
-<h2 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h2><p>工厂模式的意义在于对象的创建、管理可以使用工厂去管理，而不是创建者自身。最典型的工厂模式使用者就是Spring，Spring内部的容器就是一个工厂，所有的bean都由这个容器管理，包括它们的创建、销毁、注入都被这个容器管理。</p>
-<p>工厂模式分简单工厂和抽象工厂。它们的区别在于抽象工厂抽象程度更高，把工厂也抽象成了一个接口，这样可以再每添加一个新的对象的时候而不需要修改工厂的代码。</p>
-<p>比如有个Repository接口，用于存储数据，有DatabaseRepository，CacheRepository，FileRepository分别在数据库，缓存，文件中存储数据，定义如下：</p>
-<pre><code>public interface Repository {
-    void save(Object obj);
-}
-
-class DatabaseRepository implements Repository {
-    @Override
-    public void save(Object obj) {
-        System.out.println(&quot;save in database&quot;);
-    }
-}
-class CacheRepository implements Repository {
-    @Override
-    public void save(Object obj) {
-        System.out.println(&quot;save in cache&quot;);
-    }
-}
-class FileRepository implements Repository {
-    @Override
-    public void save(Object obj) {
-        System.out.println(&quot;save in file&quot;);
-    }
-}
-</code></pre><h3 id="简单工厂的使用"><a href="#简单工厂的使用" class="headerlink" title="简单工厂的使用"></a>简单工厂的使用</h3><pre><code>public class RepositoryFactory {
-
-    public Repository create(String type) {
-        Repository repository = null;
-        switch (type) {
-            case &quot;db&quot;:
-                repository = new DatabaseRepository();
-                break;
-            case &quot;cache&quot;:
-                repository = new CacheRepository();
-                break;
-            case &quot;file&quot;:
-                repository = new FileRepository();
-                break;
-        }
-        return repository;
-    }
-
-    public static void main(String[] args) {
-        RepositoryFactory factory = new RepositoryFactory();
-        factory.create(&quot;db&quot;).save(new Object());
-        factory.create(&quot;cache&quot;).save(new Object());
-        factory.create(&quot;file&quot;).save(new Object());
-    }
-}
-</code></pre><p>简单工厂的弊端在于每添加一个新的Repository，都必须修改RepositoryFactory中的代码</p>
-<h3 id="抽象工厂的使用"><a href="#抽象工厂的使用" class="headerlink" title="抽象工厂的使用"></a>抽象工厂的使用</h3><pre><code>public interface RepositoryFactoryProvider {
-    Repository create();
-}
-
-class DatabaseRepositoryFactory implements RepositoryFactoryProvider {
-    @Override
-    public Repository create() {
-        return new DatabaseRepository();
-    }
-}
-class CacheRepositoryFactory implements RepositoryFactoryProvider {
-    @Override
-    public Repository create() {
-        return new CacheRepository();
-    }
-}
-class FileRepositoryFactory implements RepositoryFactoryProvider {
-    @Override
-    public Repository create() {
-        return new FileRepository();
-    }
-}
-</code></pre><p>抽象工厂的测试：</p>
-<pre><code>RepositoryFactoryProvider dbProvider = new DatabaseRepositoryFactory();
-dbProvider.create().save(new Object());
-RepositoryFactoryProvider cacheProvider = new CacheRepositoryFactory();
-cacheProvider.create().save(new Object());
-RepositoryFactoryProvider fileProvider = new FileRepositoryFactory();
-fileProvider.create().save(new Object());
-</code></pre><p>抽象工厂把工厂也进行了抽象话，所以添加一个新的Repository的话，只需要新增一个RepositoryFactory即可，原有代码不需要修改。</p>
-<h2 id="装饰者模式"><a href="#装饰者模式" class="headerlink" title="装饰者模式"></a>装饰者模式</h2><p>装饰者模式的作用就在于它可以在不改变原有类的基础上动态地给类添加新的功能。之前写过一篇<a href="http://www.cnblogs.com/fangjian0423/p/mybatis-cache.html" target="_blank" rel="external">通过源码分析MyBatis的缓存</a>文章，mybatis中的query就是使用了装饰者设计模式。</p>
-<p>用一段简单的代码来模拟一下mybatis中query的实现原理：</p>
-<pre><code>@Data
-@AllArgsConstructor
-@ToString
-class Result { // 查询结果类，相当于一个domain
-  private Object obj;
-  private String sql;
-}
-
-public interface Query { // 查询接口，有简单查询和缓存查询
-  Result query(String sql);
-}
-
-public class SimpleQuery implements Query { // 简单查询，相当于直接查询数据库，这里直接返回Result，相当于是数据库查询的结果
-  @Override
-  public Result query(String sql) {
-      return new Result(new Object(), sql);
-  }
-}
-
-public class CacheQuery implements Query { // 缓存查询，如果查询相同的sql，不直接查询数据库，而是返回map中存在的Result
-  private Query query;
-  private Map&lt;String, Result&gt; cache = new HashMap&lt;&gt;();
-  public CacheQuery(Query query) {
-      this.query = query;
-  }
-  @Override
-  public Result query(String sql) {
-      if(cache.containsKey(sql)) {
-          return cache.get(sql);
-      }
-      Result result = query.query(sql);
-      cache.put(sql, result);
-      return result;
-  }
-}
-</code></pre><p>测试：</p>
-<pre><code>Query simpleQuery = new SimpleQuery();
-System.out.println(simpleQuery.query(&quot;select * from t_student&quot;) == simpleQuery.query(&quot;select * from t_student&quot;)); // false
-Query cacheQuery = new CacheQuery(simpleQuery);
-System.out.println(cacheQuery.query(&quot;select * from t_student&quot;) == cacheQuery.query(&quot;select * from t_student&quot;)); // true
-</code></pre><p>这里CacheQuery就是一个装饰类，SimpleQuery是一个被装饰者。我们通过装饰者设计模式动态地给SimpleQuery添加了缓存功能，而不需要修改SimpleQuery的代码。</p>
-<p>当然，装饰者模式也有缺点，就是会存在太多的类。</p>
-<p>如果我们需要添加一个过滤的查询(sql中有敏感字的就直接返回null，而不查询数据库)，只需要可以添加一个FilterQuery装饰者即可：</p>
-<pre><code>public class FilterQuery implements Query {
-    private Query query;
-    private List&lt;String&gt; words = new ArrayList&lt;&gt;();
-    public FilterQuery(Query query) {
-        this.query = query;
-        words.add(&quot;fuck&quot;);
-        words.add(&quot;sex&quot;);
-    }
-    @Override
-    public Result query(String sql) {
-        for(String word : words) {
-            if(sql.contains(word)) return null;
-        }
-        return query.query(sql);
-    }
-}
-
-Query filterQuery = new FilterQuery(simpleQuery);
-System.out.println(filterQuery.query(&quot;select * from t_student where name = &apos;fuck&apos;&quot;));  // null
-System.out.println(filterQuery.query(&quot;select * from t_student where name = &apos;format&apos;&quot;)); // Result(obj=java.lang.Object@1b4fb997, sql=select * from t_student where name = &apos;format&apos;)
-</code></pre><h2 id="代理模式"><a href="#代理模式" class="headerlink" title="代理模式"></a>代理模式</h2><p>代理模式的作用是使用一个代理类来代替原先类进行操作。比较常见的就是aop中就是使用代理模式完成事务的处理。</p>
-<p>代理模式分静态代理和动态代理，静态代理的原理就是对目标对象进行封装，最后调用目标对象的方法即可。</p>
-<p>动态代理跟静态代理的区别就是动态代理中的代理类是程序运行的时候生成的。Spring中对于接口的代理使用jdk内置的Proxy和InvocationHandler实现，对于类的代理使用cglib完成。</p>
-<p>以1个UserService为例，使用jdk自带的代理模式完成计算方法调用时间的需求：</p>
-<pre><code>// UserService接口
-public interface IUserService {
-    void printAll();
-}
-// UserService实现类
-class UserService implements IUserService {
-    @Override
-    public void printAll() {
-        System.out.println(&quot;print all users&quot;);
-    }
-}
-// InvocationHandler策略，这里打印了方法调用前后的时间
-@AllArgsConstructor
-class UserInvocationHandler implements InvocationHandler {
-    private IUserService userService;
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        System.out.println(&quot;start : &quot; + System.currentTimeMillis());
-        Object result = method.invoke(userService, args);
-        System.out.println(&quot;end : &quot; + System.currentTimeMillis());
-        return result;
-    }
-}
-</code></pre><p>测试：</p>
-<pre><code>IUserService userService = new UserService();
-UserInvocationHandler uih = new UserInvocationHandler(userService);
-IUserService proxy = (IUserService) Proxy.newProxyInstance(userService.getClass().getClassLoader(), new Class[] {IUserService.class}, uih);
-proxy.printAll(); // 打印出start : 1489665566456  print all users  end : 1489665566457
-</code></pre><h2 id="组合模式"><a href="#组合模式" class="headerlink" title="组合模式"></a>组合模式</h2><p>组合模式经常跟策略模式配合使用，用来组合所有的策略，并遍历这些策略找出满足条件的策略。之前写过一篇<a href="http://www.cnblogs.com/fangjian0423/p/springMVC-xml-json-convert.html" target="_blank" rel="external">SpringMVC关于json、xml自动转换的原理研究</a>文章，里面springmvc把返回的返回值映射给用户的response做了一层抽象，封装到了HandlerMethodReturnValueHandler策略接口中。</p>
-<p>在HandlerMethodReturnValueHandlerComposite类中，使用存在的HandlerMethodReturnValueHandler对返回值进行处理，在HandlerMethodReturnValueHandlerComposite内部的代码如下：</p>
-<pre><code>// 策略集合
-private final List&lt;HandlerMethodReturnValueHandler&gt; returnValueHandlers = new ArrayList&lt;HandlerMethodReturnValueHandler&gt;();
-
-@Override
-public void handleReturnValue(Object returnValue, MethodParameter returnType,
-    ModelAndViewContainer mavContainer, NativeWebRequest webRequest) throws Exception {
-    // 调用selectHandler方法
-    HandlerMethodReturnValueHandler handler = selectHandler(returnValue, returnType);
-    if (handler == null) {
-      throw new IllegalArgumentException(&quot;Unknown return value type: &quot; + returnType.getParameterType().getName());
-    }
-    handler.handleReturnValue(returnValue, returnType, mavContainer, webRequest); // 使用找到的handler进行处理
-}
-
-private HandlerMethodReturnValueHandler selectHandler(Object value, MethodParameter returnType) {
-    boolean isAsyncValue = isAsyncReturnValue(value, returnType);
-    // 遍历存在的HandlerMethodReturnValueHandler
-    for (HandlerMethodReturnValueHandler handler : this.returnValueHandlers) {
-      if (isAsyncValue &amp;&amp; !(handler instanceof AsyncHandlerMethodReturnValueHandler)) {
-        continue;
-      }
-      if (handler.supportsReturnType(returnType)) { // 找到匹配的handler
-        return handler;
-      }
-    }
-    return null;
-}
-</code></pre><h2 id="模板模式"><a href="#模板模式" class="headerlink" title="模板模式"></a>模板模式</h2><p>跟策略模式类似，模板模式会先定义好实现的逻辑步骤，但是具体的实现方式由子类完成，跟策略模式的区别就是模板模式是有逻辑步骤的。比如要给院系里的学生排序，并取出排名第一的学生。这里就有2个步骤，分别是排序和取出第一名学生。</p>
-<p>一段伪代码：</p>
-<pre><code>public abstract class AbstractStudentGetter {
-    public final Student getStudent(List&lt;Student&gt; students) {
-        sort(students); // 第一步
-        if(!CollectionUtils.isEmpty(students)) {
-            return students.get(0);  // 第二步
-        }
-        return null;
-    }
-    abstract public void sort(List&lt;Student&gt; students);
-}
-class AgeStudentGetter extends AbstractStudentGetter { // 取出年纪最大的学生
-    @Override
-    public void sort(List&lt;Student&gt; students) {
-        students.sort(new Comparator&lt;Student&gt;() {
-            @Override
-            public int compare(Student s1, Student s2) {
-                return s2.getAge() - s1.getAge();
-            }
-        });
-    }
-}
-class NameStudentGetter extends AbstractStudentGetter { // 按照名字字母排序取出第一个学生
-    @Override
-    public void sort(List&lt;Student&gt; students) {
-        students.sort(new Comparator&lt;Student&gt;() {
-            @Override
-            public int compare(Student s1, Student s2) {
-                return s2.getName().compareTo(s1.getName());
-            }
-        });
-    }
-}
-</code></pre><p>测试：</p>
-<pre><code>AbstractStudentGetter ageGetter = new AgeStudentGetter();
-AbstractStudentGetter nameGetter = new NameStudentGetter();
-
-List&lt;Student&gt; students = new ArrayList&lt;&gt;();
-students.add(new Student(&quot;jim&quot;, 22));
-students.add(new Student(&quot;format&quot;, 25));
-
-System.out.println(ageGetter.getStudent(students)); // Student(name=format, age=25)
-System.out.println(nameGetter.getStudent(students)); // Student(name=jim, age=22)
-</code></pre><h2 id="观察者设计模式"><a href="#观察者设计模式" class="headerlink" title="观察者设计模式"></a>观察者设计模式</h2><p>观察者设计模式主要的使用场景在于一个对象变化之后，依赖该对象的对象会收到通知。典型的例子就是rss的订阅，当订阅了博客的rss之后，当博客更新之后，订阅者就会收到新的订阅信息。</p>
-<p>jdk内置提供了Observable和Observer，用来实现观察者模式：</p>
-<pre><code>// 定义一个Observable
-public class MetricsObserable extends Observable {
-    private Map&lt;String, Long&gt; counterMap = new HashMap&lt;&gt;();
-    public void updateCounter(String key, Long value) {
-        counterMap.put(key, value);
-        setChanged();
-        notifyObservers(counterMap);
-    }
-}
-// Observer
-public class AdminA implements Observer {
-    @Override
-    public void update(Observable o, Object arg) {
-        System.out.println(&quot;adminA: &quot; + arg);
-    }
-}
-public class AdminB implements Observer {
-    @Override
-    public void update(Observable o, Object arg) {
-        System.out.println(&quot;adminB: &quot; + arg);
-    }
-}
-</code></pre><p>测试：</p>
-<pre><code>MetricsObserable metricsObserable = new MetricsObserable();
-metricsObserable.addObserver(new AdminA());
-metricsObserable.addObserver(new AdminB());
-metricsObserable.updateCounter(&quot;request-count&quot;, 100l);
-</code></pre><p>打印出：</p>
-<pre><code>adminB: {request-count=100}
-adminA: {request-count=100}
-</code></pre><h2 id="享元模式"><a href="#享元模式" class="headerlink" title="享元模式"></a>享元模式</h2><p>线程池中会构造几个核心线程用于处理，这些线程会去取阻塞队列里的任务然后进行执行。这些线程就是会被共享、且被重复使用的。因为线程的创建、销毁、调度都是需要消耗资源的，没有必要每次创建新的线程，而是共用一些线程。这就是享元模式的使用。类似的还有jdbc连接池，对象池等。</p>
-<p>之前有一次面试被问到：</p>
-<pre><code>Integer.valueOf(&quot;1&quot;) == Integer.valueOf(&quot;1&quot;) // true还是false
-</code></pre><p>当时回答的是false，后来翻了下Integer的源码发现Integer里面有个内部类IntegerCache，用于缓存一些共用的Integer。这个缓存的范围可以在jvm启动的时候进行设置。</p>
-<p>其实后来想想也应该这么做，我们没有必要每次使用对象的时候都返回新的对象，可以共享这些对象，因为新对象的创建都是需要消耗内存的。</p>
-<h2 id="适配器模式"><a href="#适配器模式" class="headerlink" title="适配器模式"></a>适配器模式</h2><p>适配器模式比较好理解。像生活中插线口的插头有2个口的，也有3个口的。如果电脑的电源插口只有3个口的，但是我们需要一个2个口的插口的话，这个时候就需要使用插座来外接这个3个口的插头，插座上有2个口的插头。</p>
-<p>这个例子跟我们编程一样，当用户系统的接口跟我们系统内部的接口不一致时，我们可以使用适配器来完成接口的转换。</p>
-<p>使用继承的方式实现类的适配：</p>
-<pre><code>public class Source {
-    public void method() {
-        System.out.println(&quot;source method&quot;);
-    }
-}
-interface Targetable {
-    void method();
-    void newMethod();
-}
-class Adapter extends Source implements Targetable {
-    @Override
-    public void newMethod() {
-        System.out.println(&quot;new method&quot;);
-    }
-}
-</code></pre><p>测试：</p>
-<pre><code>Targetable targetable = new Adapter();
-targetable.method(); // source method
-targetable.newMethod(); // new method
-</code></pre><p>上述方式是用接口和继承的方式实现适配器模式。当然我们也可以使用组合的方式实现(把Source当成属性放到Adapter中)。</p>
-<h2 id="单例模式"><a href="#单例模式" class="headerlink" title="单例模式"></a>单例模式</h2><p>单例模式比较好理解，Spring就是典型的例子。被Spring中的容器管理的对象都有对应的scope，配置成singleton说明这个对象就是单例，也就是在Spring容器的生命周期中，这个类只有1个实例。</p>
-<p>java中单例模式的写法也有好多种。比如懒汉式、饿汉式、内部类方式、枚举方式等。</p>
-<p>需要注意的如果使用dcl的话需要初始化过程，这篇<a href="http://cmsblogs.com/?p=2161&amp;from=timeline&amp;isappinstalled=0" target="_blank" rel="external">Java内存模型之从JMM角度分析DCL</a>文章中说明了dcl的正确用法。</p>
-<p>Effectice java中推荐的单例方式写法是使用枚举类型的方式。</p>
-<h2 id="外观模式"><a href="#外观模式" class="headerlink" title="外观模式"></a>外观模式</h2><p>外观模式用来包装一组接口用于方便使用。 比如系统中分10个模块，有个功能需要组合使用所有的模块，这个时候就需要一个包装类包装这10个接口，然后进行业务逻辑的调用。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;记录一下自己理解的一些设计模式，并尽量使用表达清楚的例子进行讲解。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="architecture" scheme="http://fangjian0423.github.io/categories/architecture/"/>
-    
-    
-      <category term="java" scheme="http://fangjian0423.github.io/tags/java/"/>
-    
-      <category term="architecture" scheme="http://fangjian0423.github.io/tags/architecture/"/>
     
   </entry>
   
